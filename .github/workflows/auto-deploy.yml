@@ -44,5 +44,5 @@ jobs:
           echo "${{ secrets.NEXUS_PASSWORD }}" | docker login -u "${{ secrets.NEXUS_USER_NAME }}" --password-stdin nexus.ppustage.dev
           docker push nexus.ppustage.dev/preonsurl:${rev}
           docker push nexus.ppustage.dev/preonsurl:latest
-          docker push nexus.ppustage.dev/short-urls:${rev}
+          docker push nexus.ppustage.dev/short-urls:${rev} 
           docker push nexus.ppustage.dev/short-urls:latest
