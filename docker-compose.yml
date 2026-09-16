@@ -18,8 +18,15 @@ services:
       API_KEY: preons-secret-api-key-2026
       SHORTENER_DOMAIN: http://localhost:8081
       SHORTENER_SECRET: PREONS-URL-SECRET-KEY-123456789
+      JAVA_OPTS: "-XX:+UseG1GC -Xms128m -Xmx512m -Xss512k -XX:MaxMetaspaceSize=160m -XX:+ExitOnOutOfMemoryError"
     volumes:
       - app_logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 600M
+        reservations:
+          memory: 256M
     depends_on:
       mariadb:
         condition: service_healthy
