@@ -2,6 +2,8 @@ package com.preonsurl.apis.web;
 
 import com.preonsurl.apis.service.ShortUrlService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -16,6 +18,8 @@ import java.util.Set;
 
 @Controller
 public class ServingController {
+
+    private static final Logger log = LoggerFactory.getLogger(ServingController.class);
 
     private final ShortUrlService shortUrlService;
 
@@ -50,9 +54,14 @@ public class ServingController {
         String referer = request.getHeader("Referer");
 
         Optional<String> originalUrl = shortUrlService.resolveAndRecordClick(null, shortCode, ipAddress, userAgent, referer);
-        return originalUrl
-                .map(url -> ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build())
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found"));
+        if (originalUrl.isPresent()) {
+            String target = originalUrl.get();
+            log.info("Redirecting root code='{}' -> '{}' [IP={}]", shortCode, target, ipAddress);
+            return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
+        } else {
+            log.warn("Short code not found: '{}' [IP={}]", shortCode, ipAddress);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found");
+        }
     }
 
     @GetMapping("/{dirType:[a-zA-Z0-9_-]+}/{shortCode:[a-zA-Z0-9]+}")
@@ -70,9 +79,14 @@ public class ServingController {
         String referer = request.getHeader("Referer");
 
         Optional<String> originalUrl = shortUrlService.resolveAndRecordClick(dirType, shortCode, ipAddress, userAgent, referer);
-        return originalUrl
-                .map(url -> ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build())
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found"));
+        if (originalUrl.isPresent()) {
+            String target = originalUrl.get();
+            log.info("Redirecting directory code='{}/{}' -> '{}' [IP={}]", dirType, shortCode, target, ipAddress);
+            return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
+        } else {
+            log.warn("Directory short code not found: '{}/{}' [IP={}]", dirType, shortCode, ipAddress);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found");
+        }
     }
 
     private String extractClientIp(HttpServletRequest request) {

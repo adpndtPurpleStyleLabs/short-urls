@@ -134,6 +134,19 @@ Settings can be customized in `src/main/resources/application.properties` or ove
 | `preonsurl.shortener.worker-count` | — | `4` | Number of background worker threads generating codes |
 | `preonsurl.shortener.bucket-capacity` | — | `100` | Pre-buffered capacity per worker bucket |
 | `preonsurl.shortener.secret` | `SHORTENER_SECRET` | *(internal key)* | Secret key for Feistel obfuscation |
+| `logging.file.path` | `LOG_PATH` | `logs` | Directory for application and error log files |
+
+---
+
+## Production Logging Architecture
+
+PreonsURL utilizes a production-grade Logback setup defined in [logback-spring.xml](src/main/resources/logback-spring.xml):
+
+- **Day-Wise Rolling Files**: Logs roll over every night at midnight (`%d{yyyy-MM-dd}`).
+- **1 Month Retention**: Keeps exactly **30 days** of historical day-wise log files (`<maxHistory>30</maxHistory>`).
+- **Automatic Gzip Compression**: Historical files are compressed into `.gz` format (`preonsurl-2026-09-16.0.log.gz`) to optimize disk space.
+- **Dedicated Error Log**: Errors (level `ERROR`) are simultaneously piped into `logs/preonsurl-error.log` (also with 30-day retention) for immediate issue detection.
+- **Disk Protection Caps**: Configured with a `10GB` total size cap and `100MB` per-file rotation limit to prevent disk saturation.
 
 ---
 

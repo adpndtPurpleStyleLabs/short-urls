@@ -16,8 +16,9 @@ RUN ./mvnw clean package -DskipTests
 FROM eclipse-temurin:25-jre-noble AS runner
 WORKDIR /app
 
-# Create unprivileged application user
-RUN groupadd -r preons && useradd -r -g preons -d /app preons
+# Create unprivileged application user and pre-create log directory with correct permissions
+RUN groupadd -r preons && useradd -r -g preons -d /app preons \
+    && mkdir -p /app/logs && chown -R preons:preons /app
 USER preons
 
 # Copy application jar from builder
@@ -27,6 +28,7 @@ EXPOSE 8081
 
 ENV SERVER_PORT=8081 \
     SPRING_PROFILES_ACTIVE=docker \
+    LOG_PATH=/app/logs \
     JAVA_OPTS="-XX:+UseZGC -XX:MaxRAMPercentage=75.0"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

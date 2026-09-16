@@ -9,6 +9,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8081
+      LOG_PATH: /app/logs
       DB_HOST: mariadb
       DB_PORT: 3306
       DB_NAME: preonsurl
@@ -17,6 +18,8 @@ services:
       API_KEY: preons-secret-api-key-2026
       SHORTENER_DOMAIN: http://localhost:8081
       SHORTENER_SECRET: PREONS-URL-SECRET-KEY-123456789
+    volumes:
+      - app_logs:/app/logs
     depends_on:
       mariadb:
         condition: service_healthy
@@ -45,4 +48,6 @@ services:
 
 volumes:
   mariadb_data:
+    driver: local
+  app_logs:
     driver: local
