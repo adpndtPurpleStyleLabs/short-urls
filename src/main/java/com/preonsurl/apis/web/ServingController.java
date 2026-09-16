@@ -7,8 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,11 +20,20 @@ public class ServingController {
     private final ShortUrlService shortUrlService;
 
     private static final Set<String> RESERVED_WORDS = Set.of(
-            "create", "site", "css", "js", "images", "error", "favicon.ico", "api", "actuator"
+            "create", "error", "favicon.ico", "api", "actuator", "health"
     );
 
     public ServingController(ShortUrlService shortUrlService) {
         this.shortUrlService = shortUrlService;
+    }
+
+    @GetMapping("/")
+    @ResponseBody
+    public ResponseEntity<?> root() {
+        return ResponseEntity.ok(Map.of(
+                "service", "preonsurl",
+                "status", "UP"
+        ));
     }
 
     @GetMapping("/{shortCode:[a-zA-Z0-9]+}")

@@ -1,0 +1,48 @@
+name: Auto Build & Deploy Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Build, Package & Push Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'maven'
+
+      - name: Grant Execute Permission for Maven Wrapper
+        run: chmod +x ./mvnw
+
+      - name: Run Tests
+        run: ./mvnw clean test -B
+
+      - name: Build Docker Image
+        run: |
+          rev=$(git rev-parse --short HEAD)
+          echo "Building image for commit: ${rev}"
+          docker build --build-arg GIT_COMMIT=${rev} -t preonsurl:${rev} -t preonsurl:latest .
+          docker tag preonsurl:${rev} nexus.ppustage.dev/preonsurl:${rev}
+          docker tag preonsurl:latest nexus.ppustage.dev/preonsurl:latest
+          docker tag preonsurl:${rev} nexus.ppustage.dev/short-urls:${rev}
+          docker tag preonsurl:latest nexus.ppustage.dev/short-urls:latest
+
+      - name: Log in and Push to Nexus Registry
+        run: |
+          rev=$(git rev-parse --short HEAD)
+          echo "${{ secrets.NEXUS_PASSWORD }}" | docker login -u "${{ secrets.NEXUS_USER_NAME }}" --password-stdin nexus.ppustage.dev
+          docker push nexus.ppustage.dev/preonsurl:${rev}
+          docker push nexus.ppustage.dev/preonsurl:latest
+          docker push nexus.ppustage.dev/short-urls:${rev}
+          docker push nexus.ppustage.dev/short-urls:latest

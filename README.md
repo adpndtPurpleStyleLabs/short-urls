@@ -91,17 +91,12 @@ preonsurl/
 │   │   │   │   └── web/                     # REST Controllers
 │   │   │   │       ├── CreateController.java
 │   │   │   │       └── ServingController.java
-│   │   │   └── site/                        # Frontend UI Controllers
-│   │   │       └── web/HomeController.java
 │   │   └── resources/
-│   │       ├── application.properties       # Default & MariaDB configuration
-│   │       ├── static/                      # Static assets (CSS, JS)
-│   │       └── templates/                   # Thymeleaf templates
+│   │       └── application.properties       # Default & MariaDB configuration
 │   └── test/
 │       ├── java/com/preonsurl/              # Integration and Unit tests
 │       │   ├── apis/CreateControllerTest.java
-│       │   ├── apis/ServingControllerTest.java
-│       │   └── site/web/HomeControllerTest.java
+│       │   └── apis/ServingControllerTest.java
 │       └── resources/
 │           └── application.properties       # H2 In-Memory DB configuration for tests
 ```
@@ -235,7 +230,7 @@ Location: https://billing.example.com/statements/2026/invoice-84820
 ```
 *Automated tests run against an in-memory H2 database with MySQL compatibility mode, requiring no live MariaDB connection.*
 
-### Run the Application
+### Run the Application Locally
 ```bash
 # Using default configuration
 ./mvnw spring-boot:run
@@ -243,3 +238,50 @@ Location: https://billing.example.com/statements/2026/invoice-84820
 # Or with custom MariaDB connection
 DB_HOST=192.168.1.50 DB_USER=preons DB_PASSWORD=secret ./mvnw spring-boot:run
 ```
+
+---
+
+## Running with Docker & Docker Compose
+
+PreonsURL includes complete Docker and Docker Compose configurations that launch both the application and MariaDB (with automated schema execution on first startup).
+
+### 1. Start Application & MariaDB with Docker Compose
+```bash
+docker compose up -d --build
+```
+This will:
+- Spin up `mariadb:11.4` on port `3306`.
+- Automatically initialize the database and tables using [schema-mariadb.sql](schema-mariadb.sql).
+- Build and start the `preonsurl-app` container on port `8081` once the database healthcheck passes.
+
+### 2. View Logs
+```bash
+docker compose logs -f app
+```
+
+### 3. Stop Services
+```bash
+docker compose down
+```
+*(Add `-v` if you also want to delete persistent database volumes: `docker compose down -v`)*
+
+---
+
+### Manual Docker Build
+If you want to build and run the standalone Docker container:
+```bash
+# Build Docker image
+docker build -t preonsurl:latest .
+
+# Run container connected to an existing MariaDB
+docker run -d \
+  --name preonsurl \
+  -p 8081:8081 \
+  -e DB_HOST=host.docker.internal \
+  -e DB_PORT=3306 \
+  -e DB_USER=preons \
+  -e DB_PASSWORD=preonspass \
+  -e API_KEY=preons-secret-api-key-2026 \
+  preonsurl:latest
+```
+

@@ -37,6 +37,14 @@ class ServingControllerTest {
     }
 
     @Test
+    void rootEndpointReturnsApiStatus() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.service").value("preonsurl"))
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
     void servingRootShortCodeRedirectsToOriginalUrlAndLogsAccess() throws Exception {
         ShortUrl shortUrl = new ShortUrl(
                 "abcXYZ1",

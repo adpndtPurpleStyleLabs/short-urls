@@ -1,0 +1,48 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: preonsurl-app
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8081
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_NAME: preonsurl
+      DB_USER: preons
+      DB_PASSWORD: preonspass
+      API_KEY: preons-secret-api-key-2026
+      SHORTENER_DOMAIN: http://localhost:8081
+      SHORTENER_SECRET: PREONS-URL-SECRET-KEY-123456789
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mariadb:
+    image: mariadb:11.4
+    container_name: preonsurl-mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: preonsurl
+      MARIADB_USER: preons
+      MARIADB_PASSWORD: preonspass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./schema-mariadb.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:
+    driver: local
