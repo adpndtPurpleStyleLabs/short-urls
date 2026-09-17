@@ -23,6 +23,6 @@ public interface ShortUrlRepository extends JpaRepository<ShortUrl, Long> {
     boolean existsByShortCode(String shortCode);
 
     @Modifying
-    @Query("UPDATE ShortUrl s SET s.clickCount = s.clickCount + 1, s.updatedAt = CURRENT_TIMESTAMP WHERE s.id = :id")
+    @Query("UPDATE ShortUrl s SET s.clickCount = s.clickCount + 1, s.updatedAt = CURRENT_INSTANT WHERE s.id = :id")
     void incrementClickCount(@Param("id") Long id);
 }

@@ -6,18 +6,27 @@ import com.preonsurl.apis.entity.ShortUrl;
 import com.preonsurl.apis.entity.ShortUrlAccessLog;
 import com.preonsurl.apis.repository.ShortUrlAccessLogRepository;
 import com.preonsurl.apis.repository.ShortUrlRepository;
+import com.preonsurl.apis.exception.UrlExpiredException;
 import com.preonsurl.core.ShortCodePool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Service
 public class ShortUrlService {
-
+    private static final Logger log = LoggerFactory.getLogger(ShortUrlService.class);
+    private final int DEFAULT_EXPIRE_YEARS = 10;
     private final ShortUrlRepository repository;
     private final ShortUrlAccessLogRepository accessLogRepository;
     private final ShortCodePool codePool;
@@ -35,10 +44,17 @@ public class ShortUrlService {
 
     @Transactional
     public CreateShortUrlResponse createOrGetShortUrl(CreateShortUrlRequest request) {
-        String originalUrl = request.getUrl();
+        String originalUrl = request.url();
         validateUrl(originalUrl);
+        Instant expiresAt = ZonedDateTime.now(ZoneOffset.UTC)
+                .plusYears(DEFAULT_EXPIRE_YEARS)
+                .toInstant();
 
-        String normalizedDirType = normalizeDirType(request.getDirType());
+        if (request.expire() != null && request.expire().enabled()) {
+            expiresAt = request.expire().expireAt();
+        }
+
+        String normalizedDirType = normalizeDirType(request.dirType());
 
         // Check if a short URL already exists for the same URL and dirType
         Optional<ShortUrl> existing;
@@ -55,7 +71,8 @@ public class ShortUrlService {
                     found.getShortCode(),
                     found.getOriginalUrl(),
                     found.getDirType(),
-                    true
+                    true,
+                    found.getExpireAt()
             );
         }
 
@@ -71,7 +88,7 @@ public class ShortUrlService {
         }
 
         // Save to database
-        ShortUrl shortUrl = new ShortUrl(code, originalUrl, normalizedDirType, fullShortUrl);
+        ShortUrl shortUrl = new ShortUrl(code, originalUrl, normalizedDirType, fullShortUrl, expiresAt);
         ShortUrl saved = repository.save(shortUrl);
 
         return new CreateShortUrlResponse(
@@ -79,7 +96,8 @@ public class ShortUrlService {
                 saved.getShortCode(),
                 saved.getOriginalUrl(),
                 saved.getDirType(),
-                false
+                false,
+                saved.getExpireAt()
         );
     }
 
@@ -96,6 +114,12 @@ public class ShortUrlService {
 
         if (optionalShortUrl.isPresent()) {
             ShortUrl entity = optionalShortUrl.get();
+
+            if (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt())) {
+                log.warn("Short URL expired: code='{}', dirType='{}', expireAt='{}'", shortCode, normalizedDirType, entity.getExpireAt());
+                throw new UrlExpiredException("Short URL has expired");
+            }
+
             repository.incrementClickCount(entity.getId());
 
             ShortUrlAccessLog accessLog = new ShortUrlAccessLog(

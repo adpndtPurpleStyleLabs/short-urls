@@ -9,6 +9,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -76,10 +79,13 @@ class CreateControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.originalUrl").value("https://example.com/products/item1"))
-                .andExpect(jsonPath("$.shortCode").isNotEmpty())
-                .andExpect(jsonPath("$.shortUrl", startsWith("http://localhost:8081/")))
-                .andExpect(jsonPath("$.existing").value(false));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Short URL created successfully"))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/products/item1"))
+                .andExpect(jsonPath("$.data.shortCode").isNotEmpty())
+                .andExpect(jsonPath("$.data.shortUrl", startsWith("http://localhost:8081/")))
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andExpect(jsonPath("$.data.expireAt").isNotEmpty());
 
         assertEquals(1, shortUrlRepository.count());
     }
@@ -98,11 +104,13 @@ class CreateControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.originalUrl").value("https://example.com/invoices/999"))
-                .andExpect(jsonPath("$.dirType").value("invoice"))
-                .andExpect(jsonPath("$.shortCode").isNotEmpty())
-                .andExpect(jsonPath("$.shortUrl", startsWith("http://localhost:8081/invoice/")))
-                .andExpect(jsonPath("$.existing").value(false));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/invoices/999"))
+                .andExpect(jsonPath("$.data.dirType").value("invoice"))
+                .andExpect(jsonPath("$.data.shortCode").isNotEmpty())
+                .andExpect(jsonPath("$.data.shortUrl", startsWith("http://localhost:8081/invoice/")))
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andExpect(jsonPath("$.data.expireAt").isNotEmpty());
 
         assertEquals(1, shortUrlRepository.count());
     }
@@ -122,15 +130,17 @@ class CreateControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.existing").value(false));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.existing").value(false));
 
         // Second creation for same URL and dirType
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.existing").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.existing").value(true));
 
         assertEquals(1, shortUrlRepository.count(), "Should not create a duplicate row in DB");
     }
@@ -148,7 +158,8 @@ class CreateControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.existing").value(false));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.existing").value(false));
     }
 
     @Test
@@ -164,15 +175,40 @@ class CreateControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Bad Request"));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Only http:// and https:// URLs are supported"));
     }
 
     @Test
     void createWithEmptyUrlReturns400BadRequest() throws Exception {
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"url\":\"\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithCustomExpireAtSucceeds() throws Exception {
+        Instant customExpire = Instant.now().plus(5, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS);
+        String payload = """
+                {
+                    "url": "https://example.com/custom-expire",
+                    "expire": {
+                        "enabled": true,
+                        "expireAt": "%s"
+                    }
+                }
+                """.formatted(customExpire.toString());
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.expireAt", notNullValue()));
+
+        assertEquals(1, shortUrlRepository.count());
     }
 }

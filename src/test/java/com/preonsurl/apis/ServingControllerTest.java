@@ -11,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,7 +42,7 @@ class ServingControllerTest {
     void rootEndpointReturnsApiStatus() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.service").value("preonsurl"))
+                .andExpect(jsonPath("$.service").value("your-shortner"))
                 .andExpect(jsonPath("$.status").value("UP"));
     }
 
@@ -102,7 +104,8 @@ class ServingControllerTest {
     void servingNonExistentShortCodeReturns404NotFoundAndDoesNotLog() throws Exception {
         mockMvc.perform(get("/nonexistent123"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Short URL not found"));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Short URL not found"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for 404");
     }
@@ -111,8 +114,47 @@ class ServingControllerTest {
     void servingNonExistentDirectoryShortCodeReturns404NotFoundAndDoesNotLog() throws Exception {
         mockMvc.perform(get("/invoice/unknown999"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Short URL not found"));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Short URL not found"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for 404");
+    }
+
+    @Test
+    void servingExpiredRootShortCodeReturns410GoneAndDoesNotLog() throws Exception {
+        ShortUrl shortUrl = new ShortUrl(
+                "expRoot",
+                "https://example.com/expired-root",
+                null,
+                "http://localhost:8081/expRoot",
+                Instant.now().minus(1, ChronoUnit.HOURS)
+        );
+        shortUrlRepository.save(shortUrl);
+
+        mockMvc.perform(get("/expRoot"))
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Short URL has expired"));
+
+        assertEquals(0, accessLogRepository.count(), "No access log should be recorded for expired URL");
+    }
+
+    @Test
+    void servingExpiredDirectoryShortCodeReturns410GoneAndDoesNotLog() throws Exception {
+        ShortUrl shortUrl = new ShortUrl(
+                "expDir",
+                "https://example.com/expired-dir",
+                "promo",
+                "http://localhost:8081/promo/expDir",
+                Instant.now().minus(1, ChronoUnit.HOURS)
+        );
+        shortUrlRepository.save(shortUrl);
+
+        mockMvc.perform(get("/promo/expDir"))
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Short URL has expired"));
+
+        assertEquals(0, accessLogRepository.count(), "No access log should be recorded for expired URL");
     }
 }

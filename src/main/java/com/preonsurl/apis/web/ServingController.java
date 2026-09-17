@@ -1,5 +1,7 @@
 package com.preonsurl.apis.web;
 
+import com.preonsurl.apis.dto.ApiResponse;
+import com.preonsurl.apis.exception.UrlExpiredException;
 import com.preonsurl.apis.service.ShortUrlService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -34,58 +36,65 @@ public class ServingController {
     @GetMapping("/")
     @ResponseBody
     public ResponseEntity<?> root() {
-        return ResponseEntity.ok(Map.of(
-                "service", "preonsurl",
-                "status", "UP"
-        ));
+        return ResponseEntity.ok(Map.of("service", "your-shortner", "status", "UP"));
     }
 
     @GetMapping("/{shortCode:[a-zA-Z0-9]+}")
-    public ResponseEntity<?> serveRootShortCode(
-            @PathVariable("shortCode") String shortCode,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> serveRootShortCode(@PathVariable String shortCode, HttpServletRequest request) {
         if (RESERVED_WORDS.contains(shortCode.toLowerCase())) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Short URL not found"));
         }
 
         String ipAddress = extractClientIp(request);
         String userAgent = request.getHeader("User-Agent");
         String referer = request.getHeader("Referer");
+        try {
+            Optional<String> originalUrl = shortUrlService.resolveAndRecordClick(null, shortCode, ipAddress, userAgent, referer);
 
-        Optional<String> originalUrl = shortUrlService.resolveAndRecordClick(null, shortCode, ipAddress, userAgent, referer);
-        if (originalUrl.isPresent()) {
-            String target = originalUrl.get();
-            log.info("Redirecting root code='{}' -> '{}' [IP={}]", shortCode, target, ipAddress);
-            return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
-        } else {
+            if (originalUrl.isPresent()) {
+                String target = originalUrl.get();
+                log.info("Redirecting root code='{}' -> '{}' [IP={}]", shortCode, target, ipAddress);
+
+                return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
+            }
+
             log.warn("Short code not found: '{}' [IP={}]", shortCode, ipAddress);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found");
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Short URL not found"));
+        } catch (UrlExpiredException e) {
+            log.warn("Short code expired: '{}' [IP={}]", shortCode, ipAddress);
+            return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("Short URL has expired"));
         }
     }
 
     @GetMapping("/{dirType:[a-zA-Z0-9_-]+}/{shortCode:[a-zA-Z0-9]+}")
     public ResponseEntity<?> serveDirectoryShortCode(
-            @PathVariable("dirType") String dirType,
-            @PathVariable("shortCode") String shortCode,
+            @PathVariable String dirType,
+            @PathVariable String shortCode,
             HttpServletRequest request
     ) {
         if (RESERVED_WORDS.contains(dirType.toLowerCase())) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Short URL not found"));
         }
 
         String ipAddress = extractClientIp(request);
         String userAgent = request.getHeader("User-Agent");
         String referer = request.getHeader("Referer");
 
-        Optional<String> originalUrl = shortUrlService.resolveAndRecordClick(dirType, shortCode, ipAddress, userAgent, referer);
-        if (originalUrl.isPresent()) {
-            String target = originalUrl.get();
-            log.info("Redirecting directory code='{}/{}' -> '{}' [IP={}]", dirType, shortCode, target, ipAddress);
-            return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
-        } else {
+        try {
+            Optional<String> originalUrl = shortUrlService.resolveAndRecordClick(dirType, shortCode, ipAddress, userAgent, referer);
+
+            if (originalUrl.isPresent()) {
+                String target = originalUrl.get();
+                log.info("Redirecting directory code='{}/{}' -> '{}' [IP={}]", dirType, shortCode, target, ipAddress);
+                return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
+            }
             log.warn("Directory short code not found: '{}/{}' [IP={}]", dirType, shortCode, ipAddress);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found");
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Short URL not found"));
+        } catch (UrlExpiredException e) {
+            log.warn("Directory short code expired: '{}/{}' [IP={}]", dirType, shortCode, ipAddress);
+            return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("Short URL has expired"));
         }
     }
 
