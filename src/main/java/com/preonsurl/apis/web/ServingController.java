@@ -3,7 +3,7 @@ package com.preonsurl.apis.web;
 import com.preonsurl.apis.dto.ApiResponse;
 import com.preonsurl.apis.exception.UrlExpiredException;
 import com.preonsurl.apis.exception.UrlUsageLimitExceededException;
-import com.preonsurl.apis.service.ShortUrlService;
+import com.preonsurl.apis.service.ShortUrlServingCacheService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +24,14 @@ public class ServingController {
 
     private static final Logger log = LoggerFactory.getLogger(ServingController.class);
 
-    private final ShortUrlService shortUrlService;
+    private final ShortUrlServingCacheService servingCacheService;
 
     private static final Set<String> RESERVED_WORDS = Set.of(
             "create", "error", "favicon.ico", "api", "actuator", "health"
     );
 
-    public ServingController(ShortUrlService shortUrlService) {
-        this.shortUrlService = shortUrlService;
+    public ServingController(ShortUrlServingCacheService servingCacheService) {
+        this.servingCacheService = servingCacheService;
     }
 
     @GetMapping("/")
@@ -50,7 +50,7 @@ public class ServingController {
         String userAgent = request.getHeader("User-Agent");
         String referer = request.getHeader("Referer");
         try {
-            Optional<String> originalUrl = shortUrlService.resolveAndRecordClick(null, shortCode, ipAddress, userAgent, referer);
+            Optional<String> originalUrl = servingCacheService.resolveAndServe(null, shortCode, ipAddress, userAgent, referer);
 
             if (originalUrl.isPresent()) {
                 String target = originalUrl.get();
@@ -86,7 +86,7 @@ public class ServingController {
         String referer = request.getHeader("Referer");
 
         try {
-            Optional<String> originalUrl = shortUrlService.resolveAndRecordClick(dirType, shortCode, ipAddress, userAgent, referer);
+            Optional<String> originalUrl = servingCacheService.resolveAndServe(dirType, shortCode, ipAddress, userAgent, referer);
 
             if (originalUrl.isPresent()) {
                 String target = originalUrl.get();

@@ -4,6 +4,7 @@ import com.preonsurl.apis.entity.ShortUrl;
 import com.preonsurl.apis.entity.ShortUrlAccessLog;
 import com.preonsurl.apis.repository.ShortUrlAccessLogRepository;
 import com.preonsurl.apis.repository.ShortUrlRepository;
+import com.preonsurl.apis.service.ShortUrlServingCacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -32,8 +35,12 @@ class ServingControllerTest {
     @Autowired
     private ShortUrlAccessLogRepository accessLogRepository;
 
+    @Autowired
+    private ShortUrlServingCacheService servingCacheService;
+
     @BeforeEach
     void setUp() {
+        servingCacheService.getLruCache().clear();
         accessLogRepository.deleteAll();
         shortUrlRepository.deleteAll();
     }
@@ -63,17 +70,23 @@ class ServingControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "https://example.com/target-page"));
 
-        ShortUrl updated = shortUrlRepository.findByShortCode("abcXYZ1").orElseThrow();
-        assertEquals(1, updated.getClickCount(), "Click count should be incremented to 1");
+        // Verify placed in LRU cache
+        assertTrue(servingCacheService.getLruCache().containsKey(null, "abcXYZ1"), "Should be placed in LRU cache");
 
-        List<ShortUrlAccessLog> logs = accessLogRepository.findByShortCodeOrderByAccessedAtDesc("abcXYZ1");
-        assertEquals(1, logs.size(), "One access log record should be created");
-        ShortUrlAccessLog log = logs.get(0);
-        assertEquals(saved.getId(), log.getShortUrlId());
-        assertEquals("abcXYZ1", log.getShortCode());
-        assertEquals("203.0.113.195", log.getIpAddress());
-        assertEquals("PreonsBrowser/1.0", log.getUserAgent());
-        assertEquals("https://google.com", log.getReferer());
+        // Verify background event increments click count and logs access
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            ShortUrl updated = shortUrlRepository.findByShortCode("abcXYZ1").orElseThrow();
+            assertEquals(1, updated.getClickCount(), "Click count should be incremented to 1");
+
+            List<ShortUrlAccessLog> logs = accessLogRepository.findByShortCodeOrderByAccessedAtDesc("abcXYZ1");
+            assertEquals(1, logs.size(), "One access log record should be created");
+            ShortUrlAccessLog log = logs.get(0);
+            assertEquals(saved.getId(), log.getShortUrlId());
+            assertEquals("abcXYZ1", log.getShortCode());
+            assertEquals("203.0.113.195", log.getIpAddress());
+            assertEquals("PreonsBrowser/1.0", log.getUserAgent());
+            assertEquals("https://google.com", log.getReferer());
+        });
     }
 
     @Test
@@ -91,13 +104,17 @@ class ServingControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "https://example.com/billing/invoice/456"));
 
-        ShortUrl updated = shortUrlRepository.findByShortCode("inv1234").orElseThrow();
-        assertEquals(1, updated.getClickCount(), "Click count should be incremented to 1");
+        assertTrue(servingCacheService.getLruCache().containsKey("invoice", "inv1234"), "Should be placed in LRU cache");
 
-        List<ShortUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
-        assertEquals(1, logs.size(), "Access log should be saved for directory short code");
-        assertEquals("inv1234", logs.get(0).getShortCode());
-        assertEquals("TestAgent", logs.get(0).getUserAgent());
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            ShortUrl updated = shortUrlRepository.findByShortCode("inv1234").orElseThrow();
+            assertEquals(1, updated.getClickCount(), "Click count should be incremented to 1");
+
+            List<ShortUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
+            assertEquals(1, logs.size(), "Access log should be saved for directory short code");
+            assertEquals("inv1234", logs.get(0).getShortCode());
+            assertEquals("TestAgent", logs.get(0).getUserAgent());
+        });
     }
 
     @Test
@@ -108,6 +125,7 @@ class ServingControllerTest {
                 .andExpect(jsonPath("$.message").value("Short URL not found"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for 404");
+        assertFalse(servingCacheService.getLruCache().containsKey(null, "nonexistent123"));
     }
 
     @Test
@@ -118,6 +136,7 @@ class ServingControllerTest {
                 .andExpect(jsonPath("$.message").value("Short URL not found"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for 404");
+        assertFalse(servingCacheService.getLruCache().containsKey("invoice", "unknown999"));
     }
 
     @Test
@@ -137,6 +156,7 @@ class ServingControllerTest {
                 .andExpect(jsonPath("$.message").value("Short URL has expired"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for expired URL");
+        assertFalse(servingCacheService.getLruCache().containsKey(null, "expRoot"), "Expired URL must not be in LRU");
     }
 
     @Test
@@ -156,6 +176,7 @@ class ServingControllerTest {
                 .andExpect(jsonPath("$.message").value("Short URL has expired"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for expired URL");
+        assertFalse(servingCacheService.getLruCache().containsKey("promo", "expDir"), "Expired URL must not be in LRU");
     }
 
     @Test
@@ -175,11 +196,16 @@ class ServingControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "https://example.com/one-time"));
 
-        ShortUrl afterFirst = shortUrlRepository.findByShortCode("onceCode").orElseThrow();
-        assertEquals(1, afterFirst.getClickCount(), "Usage should be incremented to 1");
-        assertEquals(1, accessLogRepository.count(), "One access log should be recorded");
+        // Usage limit reached on 1st serve -> must be evicted from LRU cache
+        assertFalse(servingCacheService.getLruCache().containsKey(null, "onceCode"), "Breached limit must be evicted from LRU");
 
-        // 2nd request -> Exceeded limit -> 410 Gone
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            ShortUrl afterFirst = shortUrlRepository.findByShortCode("onceCode").orElseThrow();
+            assertEquals(1, afterFirst.getClickCount(), "Usage should be incremented to 1");
+            assertEquals(1, accessLogRepository.count(), "One access log should be recorded");
+        });
+
+        // 2nd request -> Exceeded limit -> checks in DB and responds as expired / limit reached
         mockMvc.perform(get("/onceCode"))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.success").value(false))
@@ -202,21 +228,25 @@ class ServingControllerTest {
         );
         shortUrlRepository.save(shortUrl);
 
-        // 1st request -> OK
+        // 1st request -> OK, in cache
         mockMvc.perform(get("/deals/twoCode"))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "https://example.com/twice"));
 
-        // 2nd request -> OK
+        // 2nd request -> OK, limit reached, evicted from cache
         mockMvc.perform(get("/deals/twoCode"))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "https://example.com/twice"));
 
-        ShortUrl afterSecond = shortUrlRepository.findByDirTypeAndShortCode("deals", "twoCode").orElseThrow();
-        assertEquals(2, afterSecond.getClickCount(), "Usage should be incremented to 2");
-        assertEquals(2, accessLogRepository.count());
+        assertFalse(servingCacheService.getLruCache().containsKey("deals", "twoCode"), "Should be evicted after 2nd serve");
 
-        // 3rd request -> 410 Gone
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            ShortUrl afterSecond = shortUrlRepository.findByDirTypeAndShortCode("deals", "twoCode").orElseThrow();
+            assertEquals(2, afterSecond.getClickCount(), "Usage should be incremented to 2");
+            assertEquals(2, accessLogRepository.count());
+        });
+
+        // 3rd request -> checks in DB, responds as limit reached
         mockMvc.perform(get("/deals/twoCode"))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.success").value(false))
@@ -245,8 +275,12 @@ class ServingControllerTest {
                     .andExpect(header().string("Location", "https://example.com/unlimited"));
         }
 
-        ShortUrl afterFive = shortUrlRepository.findByShortCode("unlimitedCode").orElseThrow();
-        assertEquals(5, afterFive.getClickCount(), "Usage should be incremented to 5");
-        assertEquals(5, accessLogRepository.count());
+        assertTrue(servingCacheService.getLruCache().containsKey(null, "unlimitedCode"), "Unlimited entry remains in LRU");
+
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            ShortUrl afterFive = shortUrlRepository.findByShortCode("unlimitedCode").orElseThrow();
+            assertEquals(5, afterFive.getClickCount(), "Usage should be incremented to 5");
+            assertEquals(5, accessLogRepository.count());
+        });
     }
 }
