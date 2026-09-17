@@ -40,7 +40,7 @@ class CreateControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isUnauthorized())
@@ -55,7 +55,7 @@ class CreateControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", INVALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
@@ -71,7 +71,7 @@ class CreateControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
@@ -93,7 +93,7 @@ class CreateControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
@@ -117,7 +117,7 @@ class CreateControllerTest {
                 """;
 
         // First creation
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
@@ -143,7 +143,7 @@ class CreateControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .header("Authorization", "Bearer " + VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
@@ -159,7 +159,7 @@ class CreateControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/create")
+        mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
