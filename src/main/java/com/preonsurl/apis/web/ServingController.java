@@ -2,6 +2,7 @@ package com.preonsurl.apis.web;
 
 import com.preonsurl.apis.dto.ApiResponse;
 import com.preonsurl.apis.exception.UrlExpiredException;
+import com.preonsurl.apis.exception.UrlUsageLimitExceededException;
 import com.preonsurl.apis.service.ShortUrlService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -64,6 +65,9 @@ public class ServingController {
         } catch (UrlExpiredException e) {
             log.warn("Short code expired: '{}' [IP={}]", shortCode, ipAddress);
             return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("Short URL has expired"));
+        } catch (UrlUsageLimitExceededException e) {
+            log.warn("Short code usage limit exceeded: '{}' [IP={}]", shortCode, ipAddress);
+            return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("Short URL usage limit reached"));
         }
     }
 
@@ -95,6 +99,9 @@ public class ServingController {
         } catch (UrlExpiredException e) {
             log.warn("Directory short code expired: '{}/{}' [IP={}]", dirType, shortCode, ipAddress);
             return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("Short URL has expired"));
+        } catch (UrlUsageLimitExceededException e) {
+            log.warn("Directory short code usage limit exceeded: '{}/{}' [IP={}]", dirType, shortCode, ipAddress);
+            return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("Short URL usage limit reached"));
         }
     }
 
