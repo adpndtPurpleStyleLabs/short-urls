@@ -7,6 +7,7 @@ import com.preonsurl.apis.entity.ShortUrlAccessLog;
 import com.preonsurl.apis.repository.ShortUrlAccessLogRepository;
 import com.preonsurl.apis.repository.ShortUrlRepository;
 import com.preonsurl.apis.exception.UrlExpiredException;
+import com.preonsurl.apis.exception.UrlUsageLimitExceededException;
 import com.preonsurl.core.ShortCodePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +73,8 @@ public class ShortUrlService {
                     found.getOriginalUrl(),
                     found.getDirType(),
                     true,
-                    found.getExpireAt()
+                    found.getExpireAt(),
+                    found.getUsageLimit()
             );
         }
 
@@ -88,7 +90,7 @@ public class ShortUrlService {
         }
 
         // Save to database
-        ShortUrl shortUrl = new ShortUrl(code, originalUrl, normalizedDirType, fullShortUrl, expiresAt);
+        ShortUrl shortUrl = new ShortUrl(code, originalUrl, normalizedDirType, fullShortUrl, expiresAt, request.usageLimit());
         ShortUrl saved = repository.save(shortUrl);
 
         return new CreateShortUrlResponse(
@@ -97,7 +99,8 @@ public class ShortUrlService {
                 saved.getOriginalUrl(),
                 saved.getDirType(),
                 false,
-                saved.getExpireAt()
+                saved.getExpireAt(),
+                saved.getUsageLimit()
         );
     }
 
@@ -118,6 +121,12 @@ public class ShortUrlService {
             if (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt())) {
                 log.warn("Short URL expired: code='{}', dirType='{}', expireAt='{}'", shortCode, normalizedDirType, entity.getExpireAt());
                 throw new UrlExpiredException("Short URL has expired");
+            }
+
+            if (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit()) {
+                log.warn("Short URL usage limit reached: code='{}', dirType='{}', clickCount='{}', usageLimit='{}'",
+                        shortCode, normalizedDirType, entity.getClickCount(), entity.getUsageLimit());
+                throw new UrlUsageLimitExceededException("Short URL usage limit reached");
             }
 
             repository.incrementClickCount(entity.getId());

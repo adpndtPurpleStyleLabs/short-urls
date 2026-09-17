@@ -30,13 +30,9 @@ public class CreateController {
     )
     public ResponseEntity<ApiResponse<CreateShortUrlResponse>> createShortUrl(@RequestBody @Valid CreateShortUrlRequest request) {
         try {
-            CreateShortUrlRequest normalizedRequest = new CreateShortUrlRequest(
-                            request.url().trim(),
-                            request.dirType(),
-                            request.expire()
-            );
-            CreateShortUrlResponse response = shortUrlService.createOrGetShortUrl(normalizedRequest);
-            log.info("Short URL processed: code='{}', dirType='{}', existing={}, url='{}'", response.shortCode(), response.dirType(),response.existing(), response.originalUrl());
+
+            CreateShortUrlResponse response = shortUrlService.createOrGetShortUrl(request);
+            log.info("Short URL processed: code='{}', dirType='{}', existing={}, url='{}', usageLimit={}", response.shortCode(), response.dirType(), response.existing(), response.originalUrl(), response.usageLimit());
             return ResponseEntity.ok(ApiResponse.success(response, "Short URL created successfully"));
         } catch (IllegalArgumentException e) {
             log.warn("Invalid short URL create request: {}", e.getMessage());

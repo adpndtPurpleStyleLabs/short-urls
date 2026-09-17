@@ -157,4 +157,96 @@ class ServingControllerTest {
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for expired URL");
     }
+
+    @Test
+    void servingShortCodeWithUsageLimitOnceSucceedsFirstTimeAndFailsSecondTime() throws Exception {
+        ShortUrl shortUrl = new ShortUrl(
+                "onceCode",
+                "https://example.com/one-time",
+                null,
+                "http://localhost:8081/onceCode",
+                Instant.now().plus(1, ChronoUnit.DAYS),
+                1L
+        );
+        shortUrlRepository.save(shortUrl);
+
+        // 1st request -> Succeeds and redirects
+        mockMvc.perform(get("/onceCode"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/one-time"));
+
+        ShortUrl afterFirst = shortUrlRepository.findByShortCode("onceCode").orElseThrow();
+        assertEquals(1, afterFirst.getClickCount(), "Usage should be incremented to 1");
+        assertEquals(1, accessLogRepository.count(), "One access log should be recorded");
+
+        // 2nd request -> Exceeded limit -> 410 Gone
+        mockMvc.perform(get("/onceCode"))
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Short URL usage limit reached"));
+
+        ShortUrl afterSecond = shortUrlRepository.findByShortCode("onceCode").orElseThrow();
+        assertEquals(1, afterSecond.getClickCount(), "Usage should still be 1 (not incremented on exceeded)");
+        assertEquals(1, accessLogRepository.count(), "Access log should not be recorded on exceeded");
+    }
+
+    @Test
+    void servingDirectoryShortCodeWithUsageLimitEnforced() throws Exception {
+        ShortUrl shortUrl = new ShortUrl(
+                "twoCode",
+                "https://example.com/twice",
+                "deals",
+                "http://localhost:8081/deals/twoCode",
+                Instant.now().plus(1, ChronoUnit.DAYS),
+                2L
+        );
+        shortUrlRepository.save(shortUrl);
+
+        // 1st request -> OK
+        mockMvc.perform(get("/deals/twoCode"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/twice"));
+
+        // 2nd request -> OK
+        mockMvc.perform(get("/deals/twoCode"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/twice"));
+
+        ShortUrl afterSecond = shortUrlRepository.findByDirTypeAndShortCode("deals", "twoCode").orElseThrow();
+        assertEquals(2, afterSecond.getClickCount(), "Usage should be incremented to 2");
+        assertEquals(2, accessLogRepository.count());
+
+        // 3rd request -> 410 Gone
+        mockMvc.perform(get("/deals/twoCode"))
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Short URL usage limit reached"));
+
+        ShortUrl afterThird = shortUrlRepository.findByDirTypeAndShortCode("deals", "twoCode").orElseThrow();
+        assertEquals(2, afterThird.getClickCount(), "Usage should not be incremented after reaching limit");
+        assertEquals(2, accessLogRepository.count());
+    }
+
+    @Test
+    void servingShortCodeWithUnlimitedUsageCanBeAccessedMultipleTimes() throws Exception {
+        ShortUrl shortUrl = new ShortUrl(
+                "unlimitedCode",
+                "https://example.com/unlimited",
+                null,
+                "http://localhost:8081/unlimitedCode",
+                Instant.now().plus(1, ChronoUnit.DAYS),
+                null
+        );
+        shortUrlRepository.save(shortUrl);
+
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(get("/unlimitedCode"))
+                    .andExpect(status().isFound())
+                    .andExpect(header().string("Location", "https://example.com/unlimited"));
+        }
+
+        ShortUrl afterFive = shortUrlRepository.findByShortCode("unlimitedCode").orElseThrow();
+        assertEquals(5, afterFive.getClickCount(), "Usage should be incremented to 5");
+        assertEquals(5, accessLogRepository.count());
+    }
 }

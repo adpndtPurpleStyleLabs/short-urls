@@ -8,8 +8,20 @@ public record CreateShortUrlResponse(
         String originalUrl,
         String dirType,
         boolean existing,
-        Instant expireAt
+        Instant expireAt,
+        Long usageLimit
 ) {
+    public CreateShortUrlResponse(
+            String shortUrl,
+            String shortCode,
+            String originalUrl,
+            String dirType,
+            boolean existing,
+            Instant expireAt
+    ) {
+        this(shortUrl, shortCode, originalUrl, dirType, existing, expireAt, null);
+    }
+
     public Instant expiresAt() {
         return expireAt;
     }

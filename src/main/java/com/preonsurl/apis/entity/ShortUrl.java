@@ -41,6 +41,9 @@ public class ShortUrl {
     @Column(name = "expire_at", nullable = false)
     private Instant expireAt;
 
+    @Column(name = "usage_limit")
+    private Long usageLimit;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -54,11 +57,7 @@ public class ShortUrl {
             String fullShortUrl,
             Instant expireAt
     ) {
-        this.shortCode = shortCode;
-        this.originalUrl = originalUrl;
-        this.dirType = dirType;
-        this.fullShortUrl = fullShortUrl;
-        this.expireAt = expireAt;
+        this(shortCode, originalUrl, dirType, fullShortUrl, expireAt, null);
     }
 
     public ShortUrl(
@@ -67,7 +66,23 @@ public class ShortUrl {
             String dirType,
             String fullShortUrl
     ) {
-        this(shortCode, originalUrl, dirType, fullShortUrl, Instant.now().plus(3650, java.time.temporal.ChronoUnit.DAYS));
+        this(shortCode, originalUrl, dirType, fullShortUrl, Instant.now().plus(3650, java.time.temporal.ChronoUnit.DAYS), null);
+    }
+
+    public ShortUrl(
+            String shortCode,
+            String originalUrl,
+            String dirType,
+            String fullShortUrl,
+            Instant expireAt,
+            Long usageLimit
+    ) {
+        this.shortCode = shortCode;
+        this.originalUrl = originalUrl;
+        this.dirType = dirType;
+        this.fullShortUrl = fullShortUrl;
+        this.expireAt = expireAt;
+        this.usageLimit = usageLimit;
     }
 
     @PrePersist

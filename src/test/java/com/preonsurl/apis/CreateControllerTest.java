@@ -211,4 +211,101 @@ class CreateControllerTest {
 
         assertEquals(1, shortUrlRepository.count());
     }
+
+    @Test
+    void createWithUsageLimitOnceSucceeds() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/once-test",
+                    "usageLimit": "once"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.usageLimit").value(1));
+
+        assertEquals(1, shortUrlRepository.count());
+    }
+
+    @Test
+    void createWithUsageLimitUnlimitedSucceeds() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/unlimited-test",
+                    "usageLimit": "unlimited"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.usageLimit").doesNotExist());
+
+        assertEquals(1, shortUrlRepository.count());
+    }
+
+    @Test
+    void createWithUsageLimitNumberSucceeds() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/number-limit-test",
+                    "usageLimit": 5
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.usageLimit").value(5));
+
+        assertEquals(1, shortUrlRepository.count());
+    }
+
+    @Test
+    void createWithUsageLimitNullSucceeds() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/null-limit-test",
+                    "usageLimit": null
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.usageLimit").doesNotExist());
+
+        assertEquals(1, shortUrlRepository.count());
+    }
+
+    @Test
+    void createWithInvalidUsageLimitReturns400BadRequest() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/invalid-limit-test",
+                    "usageLimit": "invalid_val"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
 }
