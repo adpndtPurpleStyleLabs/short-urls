@@ -90,7 +90,7 @@ public class ShortUrlService {
         }
 
         // Save to database
-        ShortUrl shortUrl = new ShortUrl(code, originalUrl, normalizedDirType, fullShortUrl, expiresAt, request.usageLimit());
+        ShortUrl shortUrl = new ShortUrl(code, originalUrl, normalizedDirType, fullShortUrl, expiresAt, request.resolvedUsageLimit());
         ShortUrl saved = repository.save(shortUrl);
 
         return new CreateShortUrlResponse(
