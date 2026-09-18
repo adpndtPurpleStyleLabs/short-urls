@@ -4,6 +4,10 @@ import com.preonsurl.apis.dto.ApiResponse;
 import com.preonsurl.apis.dto.CreateShortUrlRequest;
 import com.preonsurl.apis.dto.CreateShortUrlResponse;
 import com.preonsurl.apis.service.ShortUrlService;
+import com.preonsurl.apis.config.OpenApiConfig;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Short URL Creation", description = "Endpoints for creating and retrieving shortened URLs")
 @RestController
 @RequestMapping("/link")
 public class CreateController {
@@ -24,6 +29,14 @@ public class CreateController {
         this.shortUrlService = shortUrlService;
     }
 
+    @Operation(
+            summary = "Create or retrieve short URL",
+            description = "Creates a new shortened URL with optional directory grouping, expiration date, and usage limit ('once', 'unlimited', or a positive integer). Requires API key authentication.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
     @PostMapping(value = "/create",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE

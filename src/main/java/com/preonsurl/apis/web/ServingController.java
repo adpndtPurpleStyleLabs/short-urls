@@ -14,11 +14,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@Tag(name = "Short URL Redirection", description = "Endpoints for redirecting shortened URLs to destination target URLs")
 @Controller
 public class ServingController {
 
@@ -27,19 +30,25 @@ public class ServingController {
     private final ShortUrlServingCacheService servingCacheService;
 
     private static final Set<String> RESERVED_WORDS = Set.of(
-            "create", "error", "favicon.ico", "api", "actuator", "health"
+            "create", "error", "favicon.ico", "api", "actuator", "health",
+            "swagger-ui", "swagger-ui.html", "v3", "swagger-resources", "webjars", "api-docs", "docs"
     );
 
     public ServingController(ShortUrlServingCacheService servingCacheService) {
         this.servingCacheService = servingCacheService;
     }
 
+    @Operation(summary = "Service Health Check", description = "Returns service health status")
     @GetMapping("/")
     @ResponseBody
     public ResponseEntity<?> root() {
         return ResponseEntity.ok(Map.of("service", "your-shortner", "status", "UP"));
     }
 
+    @Operation(
+            summary = "Redirect root short URL",
+            description = "Resolves the given short code using LRU cache and redirects with HTTP 302 Found to destination URL. Returns 410 Gone if expired or usage limit exceeded."
+    )
     @GetMapping("/{shortCode:[a-zA-Z0-9]+}")
     public ResponseEntity<?> serveRootShortCode(@PathVariable String shortCode, HttpServletRequest request) {
         if (RESERVED_WORDS.contains(shortCode.toLowerCase())) {
@@ -71,6 +80,10 @@ public class ServingController {
         }
     }
 
+    @Operation(
+            summary = "Redirect directory short URL",
+            description = "Resolves directory short code (dirType/shortCode) using LRU cache and redirects with HTTP 302 Found to destination URL. Returns 410 Gone if expired or usage limit exceeded."
+    )
     @GetMapping("/{dirType:[a-zA-Z0-9_-]+}/{shortCode:[a-zA-Z0-9]+}")
     public ResponseEntity<?> serveDirectoryShortCode(
             @PathVariable String dirType,

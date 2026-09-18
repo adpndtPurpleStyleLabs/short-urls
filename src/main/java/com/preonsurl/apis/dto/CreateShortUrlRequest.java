@@ -5,11 +5,21 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.time.Instant;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Request payload for creating a shortened URL")
 public record CreateShortUrlRequest(
         @NotBlank(message = "url cannot be empty")
+        @Schema(description = "Original target URL to shorten (must start with http:// or https://)", example = "https://example.com/products/item1", requiredMode = Schema.RequiredMode.REQUIRED)
         String url,
+
+        @Schema(description = "Optional directory prefix for grouping short URLs (e.g., 'deals', 'invoice')", example = "invoice", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         String dirType,
+
+        @Schema(description = "Optional expiration policy", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         ExpireRequest expire,
+
+        @Schema(description = "Usage limit: 'once', 'unlimited', a positive integer, or null for unlimited", example = "5", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         Object usageLimit
 ) {
     public CreateShortUrlRequest(String url, String dirType, ExpireRequest expire) {
