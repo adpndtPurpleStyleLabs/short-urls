@@ -111,7 +111,7 @@ public class AuthAndLinkSecurityIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isBadRequest())
@@ -156,7 +156,7 @@ public class AuthAndLinkSecurityIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(post("/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginPayload))
                 .andExpect(status().isUnauthorized())

@@ -25,10 +25,9 @@ USER preons
 COPY --from=builder /app/target/preonsurl-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8081
-
 ENV SERVER_PORT=8081 \
     SPRING_PROFILES_ACTIVE=docker \
     LOG_PATH=/app/logs \
-    JAVA_OPTS="-XX:+UseG1GC -Xms128m -Xmx512m -Xss512k -XX:MaxMetaspaceSize=160m -XX:+ExitOnOutOfMemoryError"
+    JAVA_OPTS="-XX:+UseG1GC -XX:+UseCompactObjectHeaders -Xms128m -Xmx512m -Xss512k -XX:MaxMetaspaceSize=160m -XX:+ExitOnOutOfMemoryError"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
