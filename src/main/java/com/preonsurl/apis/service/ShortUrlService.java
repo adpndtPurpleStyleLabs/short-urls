@@ -4,14 +4,18 @@ import com.preonsurl.apis.dto.CreateShortUrlRequest;
 import com.preonsurl.apis.dto.CreateShortUrlResponse;
 import com.preonsurl.apis.entity.ShortUrl;
 import com.preonsurl.apis.entity.ShortUrlAccessLog;
+import com.preonsurl.apis.entity.ShortUrlTag;
 import com.preonsurl.apis.repository.ShortUrlAccessLogRepository;
 import com.preonsurl.apis.repository.ShortUrlRepository;
+import com.preonsurl.apis.repository.ShortUrlTagRepository;
 import com.preonsurl.apis.exception.UrlExpiredException;
+import com.preonsurl.apis.exception.UrlNotFoundException;
 import com.preonsurl.apis.exception.UrlUsageLimitExceededException;
 import com.preonsurl.core.ShortCodePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +24,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -30,23 +35,35 @@ public class ShortUrlService {
     private final int DEFAULT_EXPIRE_YEARS = 10;
     private final ShortUrlRepository repository;
     private final ShortUrlAccessLogRepository accessLogRepository;
+    private final ShortUrlTagRepository tagRepository;
     private final ShortCodePool codePool;
     private final String domain;
 
     public ShortUrlService(ShortUrlRepository repository,
                            ShortUrlAccessLogRepository accessLogRepository,
+                           ShortUrlTagRepository tagRepository,
                            ShortCodePool codePool,
                            @Value("${preonsurl.shortener.domain:http://localhost:8081}") String domain) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
+        this.tagRepository = tagRepository;
         this.codePool = codePool;
         this.domain = domain.endsWith("/") ? domain.substring(0, domain.length() - 1) : domain;
     }
 
     @Transactional
     public CreateShortUrlResponse createOrGetShortUrl(CreateShortUrlRequest request) {
+        return createOrGetShortUrl(request, null);
+    }
+
+    @Transactional
+    public CreateShortUrlResponse createOrGetShortUrl(CreateShortUrlRequest request, Long userId) {
         String originalUrl = request.url();
         validateUrl(originalUrl);
+        if(request.expire().enabled()){
+            request.expire().validate();
+        }
+
         Instant expiresAt = ZonedDateTime.now(ZoneOffset.UTC)
                 .plusYears(DEFAULT_EXPIRE_YEARS)
                 .toInstant();
@@ -64,6 +81,18 @@ public class ShortUrlService {
                 ShortUrl existing = existingBySlug.get();
                 if (existing.getOriginalUrl().equals(originalUrl) &&
                         java.util.Objects.equals(existing.getDirType(), normalizedDirType)) {
+                    if (existing.getUserId() == null && userId != null) {
+                        existing.setUserId(userId);
+                        repository.save(existing);
+                    }
+                    if (existing.getNote() == null && request.notes() != null && !request.notes().isBlank()) {
+                        existing.setNote(request.notes().trim());
+                        repository.save(existing);
+                    }
+                    List<String> tags = saveTags(existing.getId(), userId, request.tags());
+                    if (tags.isEmpty()) {
+                        tags = tagRepository.findByUrlId(existing.getId()).stream().map(ShortUrlTag::getTag).toList();
+                    }
                     return new CreateShortUrlResponse(
                             existing.getFullShortUrl(),
                             existing.getShortCode(),
@@ -71,7 +100,9 @@ public class ShortUrlService {
                             existing.getDirType(),
                             true,
                             existing.getExpireAt(),
-                            existing.getUsageLimit()
+                            existing.getUsageLimit(),
+                            existing.getNote(),
+                            tags
                     );
                 }
                 throw new IllegalArgumentException("Slug '" + customSlug + "' is already in use");
@@ -87,6 +118,18 @@ public class ShortUrlService {
 
             if (existing.isPresent()) {
                 ShortUrl found = existing.get();
+                if (found.getUserId() == null && userId != null) {
+                    found.setUserId(userId);
+                    repository.save(found);
+                }
+                if (found.getNote() == null && request.notes() != null && !request.notes().isBlank()) {
+                    found.setNote(request.notes().trim());
+                    repository.save(found);
+                }
+                List<String> tags = saveTags(found.getId(), userId, request.tags());
+                if (tags.isEmpty()) {
+                    tags = tagRepository.findByUrlId(found.getId()).stream().map(ShortUrlTag::getTag).toList();
+                }
                 return new CreateShortUrlResponse(
                         found.getFullShortUrl(),
                         found.getShortCode(),
@@ -94,7 +137,9 @@ public class ShortUrlService {
                         found.getDirType(),
                         true,
                         found.getExpireAt(),
-                        found.getUsageLimit()
+                        found.getUsageLimit(),
+                        found.getNote(),
+                        tags
                 );
             }
         }
@@ -112,7 +157,13 @@ public class ShortUrlService {
 
         // Save to database
         ShortUrl shortUrl = new ShortUrl(code, originalUrl, normalizedDirType, fullShortUrl, expiresAt, request.resolvedUsageLimit());
+        shortUrl.setUserId(userId);
+        if (request.notes() != null && !request.notes().isBlank()) {
+            shortUrl.setNote(request.notes().trim());
+        }
         ShortUrl saved = repository.save(shortUrl);
+
+        List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
 
         return new CreateShortUrlResponse(
                 saved.getFullShortUrl(),
@@ -121,7 +172,59 @@ public class ShortUrlService {
                 saved.getDirType(),
                 false,
                 saved.getExpireAt(),
-                saved.getUsageLimit()
+                saved.getUsageLimit(),
+                saved.getNote(),
+                savedTags
+        );
+    }
+
+    private List<String> saveTags(Long urlId, Long userId, List<String> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return List.of();
+        }
+        List<String> distinctTags = tags.stream()
+                .filter(t -> t != null && !t.isBlank())
+                .map(String::trim)
+                .distinct()
+                .toList();
+
+        for (String tag : distinctTags) {
+            if (!tagRepository.existsByUrlIdAndTag(urlId, tag)) {
+                tagRepository.save(new ShortUrlTag(urlId, userId, tag));
+            }
+        }
+        return distinctTags;
+    }
+
+    @Transactional(readOnly = true)
+    public CreateShortUrlResponse getLinkInfo(String fullUrl, Long userId) {
+        if (userId == null) {
+            throw new AccessDeniedException("User ID is required to fetch link details");
+        }
+
+        if (fullUrl == null || fullUrl.isBlank()) {
+            throw new IllegalArgumentException("URL parameter 'fullUrl' cannot be empty");
+        }
+
+        String trimmedUrl = fullUrl.trim();
+
+        ShortUrl shortUrl = repository.findByFullShortUrlAndUserId(trimmedUrl, userId)
+                .orElseThrow(() -> new UrlNotFoundException("URL not found"));
+
+        List<String> tags = tagRepository.findByUrlId(shortUrl.getId()).stream()
+                .map(ShortUrlTag::getTag)
+                .toList();
+
+        return new CreateShortUrlResponse(
+                shortUrl.getFullShortUrl(),
+                shortUrl.getShortCode(),
+                shortUrl.getOriginalUrl(),
+                shortUrl.getDirType(),
+                true,
+                shortUrl.getExpireAt(),
+                shortUrl.getUsageLimit(),
+                shortUrl.getNote(),
+                tags
         );
     }
 

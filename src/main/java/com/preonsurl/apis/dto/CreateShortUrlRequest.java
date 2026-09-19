@@ -1,8 +1,10 @@
 package com.preonsurl.apis.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,15 +25,20 @@ public record CreateShortUrlRequest(
         ExpireRequest expire,
 
         @Schema(description = "Usage limit: 'once', 'unlimited', a positive integer, or null for unlimited", example = "5", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        Object usageLimit
+        Object usageLimit,
+
+        @Schema(description = "Optional note for this shortened URL", example = "Diwali campaign landing page", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"note", "notes"})
+        String notes,
+
+        @Schema(description = "Optional tags for organizing and filtering URLs", example = "[\"marketing\", \"diwali\", \"campaign\"]", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        List<String> tags
+
 ) {
-    private static final Pattern SLUG_PATTERN =
-            Pattern.compile(
-                    "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$"
-            );
+    private static final Pattern SLUG_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$");
 
     public CreateShortUrlRequest(String url, String dirType, ExpireRequest expire) {
-        this(url, dirType, null, expire, null);
+        this(url, dirType, null, expire, null, null, null);
     }
 
     public String resolvedSlug() {
@@ -93,12 +100,35 @@ public record CreateShortUrlRequest(
 
     ) {
     }
-
-
-
+    
     public record ExpireRequest(
+
+            @Schema(
+                    description = "Expiration time in UTC. Required when enabled is true and must be in the future.",
+                    example = "2026-12-31T23:59:59Z",
+                    requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
             boolean enabled,
             Instant expireAt
     ) {
+        public void validate() {
+
+            if (!enabled) {
+                if (expireAt != null) {
+                    throw new IllegalArgumentException(
+                            "expireAt must be null when expiration is disabled"
+                    );
+                }
+                return;
+            }
+
+            if (expireAt == null) {
+                throw new IllegalArgumentException("expireAt is required when expiration is enabled");
+            }
+
+            if (!expireAt.isAfter(Instant.now())) {
+                throw new IllegalArgumentException("expireAt must be greater than the current UTC time");
+            }
+        }
     }
 }

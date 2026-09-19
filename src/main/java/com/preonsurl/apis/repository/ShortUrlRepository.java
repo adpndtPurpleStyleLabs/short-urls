@@ -16,6 +16,18 @@ public interface ShortUrlRepository extends JpaRepository<ShortUrl, Long> {
 
     Optional<ShortUrl> findFirstByOriginalUrlAndDirTypeIsNull(String originalUrl);
 
+    Optional<ShortUrl> findFirstByOriginalUrl(String originalUrl);
+
+    Optional<ShortUrl> findFirstByOriginalUrlAndUserId(String originalUrl, Long userId);
+
+    Optional<ShortUrl> findFirstByOriginalUrlAndDirTypeAndUserId(String originalUrl, String dirType, Long userId);
+
+    Optional<ShortUrl> findFirstByOriginalUrlAndDirTypeIsNullAndUserId(String originalUrl, Long userId);
+
+    Optional<ShortUrl> findByFullShortUrl(String fullShortUrl);
+
+    Optional<ShortUrl> findByFullShortUrlAndUserId(String fullShortUrl, Long userId);
+
     Optional<ShortUrl> findByShortCode(String shortCode);
 
     Optional<ShortUrl> findByDirTypeAndShortCode(String dirType, String shortCode);

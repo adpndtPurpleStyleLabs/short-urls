@@ -3,6 +3,7 @@ package com.preonsurl.apis.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
+import java.util.List;
 
 @Schema(description = "Response payload after creating or resolving a short URL")
 public record CreateShortUrlResponse(
@@ -25,8 +26,26 @@ public record CreateShortUrlResponse(
         Instant expireAt,
 
         @Schema(description = "Configured usage limit or null if unlimited", example = "5")
-        Long usageLimit
+        Long usageLimit,
+
+        @Schema(description = "Optional note associated with the short URL", example = "Diwali campaign landing page")
+        String notes,
+
+        @Schema(description = "Tags associated with the short URL", example = "[\"marketing\", \"diwali\"]")
+        List<String> tags
 ) {
+    public CreateShortUrlResponse(
+            String shortUrl,
+            String shortCode,
+            String originalUrl,
+            String dirType,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit
+    ) {
+        this(shortUrl, shortCode, originalUrl, dirType, existing, expireAt, usageLimit, null, null);
+    }
+
     public CreateShortUrlResponse(
             String shortUrl,
             String shortCode,
@@ -35,7 +54,7 @@ public record CreateShortUrlResponse(
             boolean existing,
             Instant expireAt
     ) {
-        this(shortUrl, shortCode, originalUrl, dirType, existing, expireAt, null);
+        this(shortUrl, shortCode, originalUrl, dirType, existing, expireAt, null, null, null);
     }
 
     public Instant expiresAt() {

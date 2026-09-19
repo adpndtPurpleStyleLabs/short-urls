@@ -351,8 +351,8 @@ docker run -d \
 - [ ] Bulk URL creation
 - [ ] Bulk URL import
 - [ ] Bulk URL export
-- [ ] Tags
-- [ ] Notes
+- [x] Tags
+- [x] Notes
 - [ ] Link search
 - [ ] Link sorting and filtering
 

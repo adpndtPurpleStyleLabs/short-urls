@@ -41,9 +41,9 @@ public class SecurityConfig {
                         // =========================
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // =========================
-                        // API Key protected
+                        // API Key / Token protected link APIs
                         // =========================
-                        .requestMatchers("/link/create", "/link/create/**", "/create", "/create/**").authenticated()
+                        .requestMatchers("/link", "/link/**", "/create", "/create/**").authenticated()
                         // =========================
                         // JWT protected APIs
                         // =========================

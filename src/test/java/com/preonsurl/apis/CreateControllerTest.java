@@ -8,7 +8,10 @@ import com.preonsurl.apis.auth.entity.Tenant;
 import com.preonsurl.apis.auth.entity.User;
 import com.preonsurl.apis.auth.repository.TenantRepository;
 import com.preonsurl.apis.auth.repository.UserRepository;
+import com.preonsurl.apis.entity.ShortUrl;
+import com.preonsurl.apis.entity.ShortUrlTag;
 import com.preonsurl.apis.repository.ShortUrlRepository;
+import com.preonsurl.apis.repository.ShortUrlTagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +25,11 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
+import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -37,6 +42,9 @@ class CreateControllerTest {
 
     @Autowired
     private ShortUrlRepository shortUrlRepository;
+
+    @Autowired
+    private ShortUrlTagRepository tagRepository;
 
     @Autowired
     private ApiKeyRepository apiKeyRepository;
@@ -60,6 +68,7 @@ class CreateControllerTest {
     void setUp() {
         apiKeyCache.clear();
         userCache.clear();
+        tagRepository.deleteAll();
         shortUrlRepository.deleteAll();
         apiKeyRepository.deleteAll();
         userRepository.deleteAll();
@@ -542,5 +551,242 @@ class CreateControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message", containsString("cannot be empty")));
+    }
+
+    @Test
+    void createWithNotesAndTagsSucceedsAndPersistsToDatabase() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/tagged-link",
+                    "notes": "Important marketing campaign link",
+                    "tags": ["marketing", "q3-promo", "sale"]
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.notes").value("Important marketing campaign link"))
+                .andExpect(jsonPath("$.data.tags", containsInAnyOrder("marketing", "q3-promo", "sale")));
+
+        ShortUrl shortUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/tagged-link").orElseThrow();
+        assertEquals("Important marketing campaign link", shortUrl.getNote());
+
+        List<ShortUrlTag> savedTags = tagRepository.findByUrlId(shortUrl.getId());
+        assertEquals(3, savedTags.size());
+        assertTrue(savedTags.stream().anyMatch(t -> t.getTag().equals("marketing")));
+        assertTrue(savedTags.stream().anyMatch(t -> t.getTag().equals("q3-promo")));
+        assertTrue(savedTags.stream().anyMatch(t -> t.getTag().equals("sale")));
+        assertNotNull(savedTags.get(0).getUserId(), "User ID should be associated from authenticated user");
+    }
+
+    @Test
+    void createWithDuplicateTagsDeduplicatesTags() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/dedup-tag-test",
+                    "tags": ["tech", "tech", " AI ", "tech"]
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.tags", hasSize(2)))
+                .andExpect(jsonPath("$.data.tags", containsInAnyOrder("tech", "AI")));
+
+        ShortUrl shortUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/dedup-tag-test").orElseThrow();
+        List<ShortUrlTag> savedTags = tagRepository.findByUrlId(shortUrl.getId());
+        assertEquals(2, savedTags.size());
+    }
+
+    @Test
+    void createWithNoteAliasSucceeds() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/note-alias-test",
+                    "note": "Single note alias test"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.notes").value("Single note alias test"));
+
+        ShortUrl shortUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/note-alias-test").orElseThrow();
+        assertEquals("Single note alias test", shortUrl.getNote());
+    }
+
+    @Test
+    void getLinkInfo_success_returnsCreateShortUrlResponse() throws Exception {
+        String createPayload = """
+                {
+                    "url": "https://example.com/details-test",
+                    "dirType": "promo",
+                    "notes": "Details test note",
+                    "tags": ["details", "promo"]
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
+
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("fullUrl", shortUrl))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/details-test"))
+                .andExpect(jsonPath("$.data.dirType").value("promo"))
+                .andExpect(jsonPath("$.data.notes").value("Details test note"))
+                .andExpect(jsonPath("$.data.tags", containsInAnyOrder("details", "promo")))
+                .andExpect(jsonPath("$.data.shortUrl").value(shortUrl))
+                .andExpect(jsonPath("$.data.shortCode", notNullValue()));
+    }
+
+    @Test
+    void getLinkInfo_onInfoEndpoint_success() throws Exception {
+        String createPayload = """
+                {
+                    "url": "https://example.com/info-path-test",
+                    "notes": "Info path note"
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
+
+        mockMvc.perform(get("/link/info")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("fullUrl", shortUrl))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/info-path-test"))
+                .andExpect(jsonPath("$.data.notes").value("Info path note"));
+    }
+
+    @Test
+    void getLinkInfo_byFullShortUrl_success() throws Exception {
+        String createPayload = """
+                {
+                    "url": "https://example.com/short-code-lookup-test"
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // Extract shortCode and shortUrl
+        String shortCode = createRes.split("\"shortCode\":\"")[1].split("\"")[0];
+        String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
+
+        // Lookup by full shortUrl via fullUrl
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("fullUrl", shortUrl))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.shortCode").value(shortCode))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/short-code-lookup-test"));
+    }
+
+    @Test
+    void getLinkInfo_missingOrEmptyUrl_returns400BadRequest() throws Exception {
+        // Missing param
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("cannot be empty")));
+
+        // Empty param
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("fullUrl", "   "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("cannot be empty")));
+    }
+
+    @Test
+    void getLinkInfo_unauthenticated_returns401Unauthorized() throws Exception {
+        mockMvc.perform(get("/link")
+                        .param("fullUrl", "https://example.com/unauth-test"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getLinkInfo_nonExistentUrl_returns404NotFound() throws Exception {
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("fullUrl", "https://nonexistent-404-link.com"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("not found")));
+    }
+
+    @Test
+    void getLinkInfo_otherUsersLink_returns404NotFound() throws Exception {
+        // User 1 creates link
+        String createPayload = """
+                {
+                    "url": "https://example.com/secret-user1-page",
+                    "notes": "User 1 confidential note"
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
+
+        // Create User 2 with User 2's API key
+        Tenant tenant2 = tenantRepository.save(new Tenant("Second Tenant"));
+        User user2 = userRepository.save(new User(tenant2.getId(), "Second User", "seconduser", "pass123"));
+        String USER2_API_KEY = "user2-secret-key-99999";
+
+        ApiKey apiKey2 = new ApiKey();
+        apiKey2.setUserId(user2.getId());
+        apiKey2.setName("User2 Key");
+        apiKey2.setApiKeyHash(sha256(USER2_API_KEY));
+        apiKey2.setActive(true);
+        apiKeyRepository.save(apiKey2);
+
+        // User 2 attempts to fetch User 1's link -> not found for User 2
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", USER2_API_KEY)
+                        .param("fullUrl", shortUrl))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("not found")));
     }
 }
