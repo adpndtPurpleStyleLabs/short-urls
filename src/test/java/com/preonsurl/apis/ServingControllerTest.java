@@ -313,5 +313,9 @@ class ServingControllerTest {
         mockMvc.perform(get("/deals/spring-sale"))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "https://example.com/spring-destination"));
+
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            assertEquals(2, accessLogRepository.count(), "Both slug accesses should be logged");
+        });
     }
 }
