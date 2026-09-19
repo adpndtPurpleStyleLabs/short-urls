@@ -1,5 +1,13 @@
 package com.preonsurl.apis;
 
+import com.preonsurl.apis.apikey.APIKeyCache;
+import com.preonsurl.apis.apikey.ApiKey;
+import com.preonsurl.apis.apikey.ApiKeyRepository;
+import com.preonsurl.apis.auth.cache.UserCache;
+import com.preonsurl.apis.auth.entity.Tenant;
+import com.preonsurl.apis.auth.entity.User;
+import com.preonsurl.apis.auth.repository.TenantRepository;
+import com.preonsurl.apis.auth.repository.UserRepository;
 import com.preonsurl.apis.repository.ShortUrlRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,8 +17,11 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HexFormat;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,12 +38,52 @@ class CreateControllerTest {
     @Autowired
     private ShortUrlRepository shortUrlRepository;
 
+    @Autowired
+    private ApiKeyRepository apiKeyRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private TenantRepository tenantRepository;
+
+    @Autowired
+    private APIKeyCache apiKeyCache;
+
+    @Autowired
+    private UserCache userCache;
+
     private static final String VALID_API_KEY = "test-api-key-12345";
     private static final String INVALID_API_KEY = "wrong-api-key";
 
     @BeforeEach
     void setUp() {
+        apiKeyCache.clear();
+        userCache.clear();
         shortUrlRepository.deleteAll();
+        apiKeyRepository.deleteAll();
+        userRepository.deleteAll();
+        tenantRepository.deleteAll();
+
+        Tenant tenant = tenantRepository.save(new Tenant("Test Tenant"));
+        User user = userRepository.save(new User(tenant.getId(), "Test User", "testuser", "hashedpass"));
+
+        ApiKey apiKey = new ApiKey();
+        apiKey.setUserId(user.getId());
+        apiKey.setName("Default Test Key");
+        apiKey.setApiKeyHash(sha256(VALID_API_KEY));
+        apiKey.setActive(true);
+        apiKeyRepository.save(apiKey);
+    }
+
+    private String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
