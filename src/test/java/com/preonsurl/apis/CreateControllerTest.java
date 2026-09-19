@@ -1,5 +1,6 @@
 package com.preonsurl.apis;
 
+import com.preonsurl.apis.link.entity.NewUrl;
 import com.preonsurl.apis.apikey.APIKeyCache;
 import com.preonsurl.apis.apikey.ApiKey;
 import com.preonsurl.apis.apikey.ApiKeyRepository;
@@ -8,10 +9,9 @@ import com.preonsurl.apis.auth.entity.Tenant;
 import com.preonsurl.apis.auth.entity.User;
 import com.preonsurl.apis.auth.repository.TenantRepository;
 import com.preonsurl.apis.auth.repository.UserRepository;
-import com.preonsurl.apis.entity.ShortUrl;
-import com.preonsurl.apis.entity.ShortUrlTag;
-import com.preonsurl.apis.repository.ShortUrlRepository;
-import com.preonsurl.apis.repository.ShortUrlTagRepository;
+import com.preonsurl.apis.link.entity.NewUrlTag;
+import com.preonsurl.apis.link.repository.NewUrlRepository;
+import com.preonsurl.apis.link.repository.NewUrlTagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +41,10 @@ class CreateControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ShortUrlRepository shortUrlRepository;
+    private NewUrlRepository shortUrlRepository;
 
     @Autowired
-    private ShortUrlTagRepository tagRepository;
+    private NewUrlTagRepository tagRepository;
 
     @Autowired
     private ApiKeyRepository apiKeyRepository;
@@ -637,10 +637,10 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.data.notes").value("Important marketing campaign link"))
                 .andExpect(jsonPath("$.data.tags", containsInAnyOrder("marketing", "q3-promo", "sale")));
 
-        ShortUrl shortUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/tagged-link").orElseThrow();
-        assertEquals("Important marketing campaign link", shortUrl.getNote());
+        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/tagged-link").orElseThrow();
+        assertEquals("Important marketing campaign link", newUrl.getNote());
 
-        List<ShortUrlTag> savedTags = tagRepository.findByUrlId(shortUrl.getId());
+        List<NewUrlTag> savedTags = tagRepository.findByUrlId(newUrl.getId());
         assertEquals(3, savedTags.size());
         assertTrue(savedTags.stream().anyMatch(t -> t.getTag().equals("marketing")));
         assertTrue(savedTags.stream().anyMatch(t -> t.getTag().equals("q3-promo")));
@@ -666,8 +666,8 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.data.tags", hasSize(2)))
                 .andExpect(jsonPath("$.data.tags", containsInAnyOrder("tech", "AI")));
 
-        ShortUrl shortUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/dedup-tag-test").orElseThrow();
-        List<ShortUrlTag> savedTags = tagRepository.findByUrlId(shortUrl.getId());
+        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/dedup-tag-test").orElseThrow();
+        List<NewUrlTag> savedTags = tagRepository.findByUrlId(newUrl.getId());
         assertEquals(2, savedTags.size());
     }
 
@@ -688,8 +688,8 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.notes").value("Single note alias test"));
 
-        ShortUrl shortUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/note-alias-test").orElseThrow();
-        assertEquals("Single note alias test", shortUrl.getNote());
+        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/note-alias-test").orElseThrow();
+        assertEquals("Single note alias test", newUrl.getNote());
     }
 
     @Test
@@ -741,11 +741,11 @@ class CreateControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        // Extract shortCode and shortUrl
+        // Extract shortCode and newUrl
         String shortCode = createRes.split("\"shortCode\":\"")[1].split("\"")[0];
         String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
 
-        // Lookup by full shortUrl via fullUrl
+        // Lookup by full newUrl via fullUrl
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
                         .param("fullUrl", shortUrl))

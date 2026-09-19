@@ -1,9 +1,8 @@
-package com.preonsurl.apis.event;
+package com.preonsurl.apis.link.event;
 
 public record ShortUrlServedEvent(
         Long shortUrlId,
-        String shortCode,
-        String dirType,
+        String fullShortUrl,
         String ipAddress,
         String userAgent,
         String referer

@@ -1,4 +1,4 @@
-package com.preonsurl.apis.exception;
+package com.preonsurl.apis.link.exception;
 
 public class UrlUsageLimitExceededException extends RuntimeException {
     public UrlUsageLimitExceededException(String message) {

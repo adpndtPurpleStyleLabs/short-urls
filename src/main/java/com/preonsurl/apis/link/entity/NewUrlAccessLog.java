@@ -1,4 +1,4 @@
-package com.preonsurl.apis.entity;
+package com.preonsurl.apis.link.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
         @Index(name = "idx_access_log_short_code", columnList = "short_code"),
         @Index(name = "idx_access_log_accessed_at", columnList = "accessed_at")
 })
-public class ShortUrlAccessLog {
+public class NewUrlAccessLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,10 +33,10 @@ public class ShortUrlAccessLog {
     @Column(name = "accessed_at", nullable = false, updatable = false)
     private LocalDateTime accessedAt;
 
-    public ShortUrlAccessLog() {
+    public NewUrlAccessLog() {
     }
 
-    public ShortUrlAccessLog(Long shortUrlId, String shortCode, String ipAddress, String userAgent, String referer) {
+    public NewUrlAccessLog(Long shortUrlId, String shortCode, String ipAddress, String userAgent, String referer) {
         this.shortUrlId = shortUrlId;
         this.shortCode = shortCode;
         this.ipAddress = ipAddress;

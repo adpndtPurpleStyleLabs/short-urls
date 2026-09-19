@@ -1,4 +1,4 @@
-package com.preonsurl.apis.dto;
+package com.preonsurl.apis.link.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

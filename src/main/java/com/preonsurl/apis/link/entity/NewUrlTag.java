@@ -1,4 +1,4 @@
-package com.preonsurl.apis.entity;
+package com.preonsurl.apis.link.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -25,7 +25,7 @@ import java.time.Instant;
                 @Index(name = "idx_tags_tag", columnList = "tag")
         }
 )
-public class ShortUrlTag {
+public class NewUrlTag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,7 +43,7 @@ public class ShortUrlTag {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    public ShortUrlTag(Long urlId, Long userId, String tag) {
+    public NewUrlTag(Long urlId, Long userId, String tag) {
         this.urlId = urlId;
         this.userId = userId;
         this.tag = tag;

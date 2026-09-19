@@ -4,7 +4,7 @@ import com.preonsurl.apis.auth.dto.LoginRequest;
 import com.preonsurl.apis.auth.dto.LoginResponse;
 import com.preonsurl.apis.auth.dto.RegisterRequest;
 import com.preonsurl.apis.auth.dto.RegisterResponse;
-import com.preonsurl.apis.dto.ApiResponse;
+import com.preonsurl.apis.link.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

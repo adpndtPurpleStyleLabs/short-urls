@@ -1,4 +1,4 @@
-package com.preonsurl.apis.entity;
+package com.preonsurl.apis.link.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,7 +18,7 @@ import java.time.Instant;
         @Index(name = "idx_short_urls_dir_code", columnList = "dir_type, short_code"),
         @Index(name = "idx_short_urls_expire_at", columnList = "expire_at")
 })
-public class ShortUrl {
+public class NewUrl {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,7 +57,7 @@ public class ShortUrl {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    public ShortUrl(
+    public NewUrl(
             String shortCode,
             String originalUrl,
             String dirType,
@@ -67,7 +67,7 @@ public class ShortUrl {
         this(shortCode, originalUrl, dirType, fullShortUrl, expireAt, null);
     }
 
-    public ShortUrl(
+    public NewUrl(
             String shortCode,
             String originalUrl,
             String dirType,
@@ -76,7 +76,7 @@ public class ShortUrl {
         this(shortCode, originalUrl, dirType, fullShortUrl, Instant.now().plus(3650, java.time.temporal.ChronoUnit.DAYS), null);
     }
 
-    public ShortUrl(
+    public NewUrl(
             String shortCode,
             String originalUrl,
             String dirType,

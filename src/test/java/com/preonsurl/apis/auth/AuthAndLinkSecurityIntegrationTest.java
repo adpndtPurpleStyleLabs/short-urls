@@ -6,11 +6,10 @@ import com.preonsurl.apis.auth.entity.User;
 import com.preonsurl.apis.apikey.ApiKeyRepository;
 import com.preonsurl.apis.auth.repository.TenantRepository;
 import com.preonsurl.apis.auth.repository.UserRepository;
-import com.preonsurl.apis.repository.ShortUrlRepository;
+import com.preonsurl.apis.link.repository.NewUrlRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
@@ -45,7 +44,7 @@ public class AuthAndLinkSecurityIntegrationTest {
     private ApiKeyRepository apiKeyRepository;
 
     @Autowired
-    private ShortUrlRepository shortUrlRepository;
+    private NewUrlRepository shortUrlRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;

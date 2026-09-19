@@ -1,4 +1,4 @@
-package com.preonsurl.apis.dto;
+package com.preonsurl.apis.link.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -6,12 +6,12 @@ import java.time.Instant;
 import java.util.List;
 
 @Schema(description = "Response payload after creating or resolving a short URL")
-public record CreateShortUrlResponse(
+public record CreateNewUrlResponse(
         @Schema(description = "Full short URL for redirection", example = "http://localhost:8081/invoice/2lk5j7e5rlo")
-        String shortUrl,
+        String newUrl,
 
-        @Schema(description = "Generated or existing unique short code", example = "2lk5j7e5rlo")
-        String shortCode,
+//        @Schema(description = "Generated or existing unique short code", example = "2lk5j7e5rlo")
+//        String shortCode,
 
         @Schema(description = "Original destination URL", example = "https://example.com/products/item1")
         String originalUrl,
@@ -34,27 +34,25 @@ public record CreateShortUrlResponse(
         @Schema(description = "Tags associated with the short URL", example = "[\"marketing\", \"diwali\"]")
         List<String> tags
 ) {
-    public CreateShortUrlResponse(
+    public CreateNewUrlResponse(
             String shortUrl,
-            String shortCode,
             String originalUrl,
             String dirType,
             boolean existing,
             Instant expireAt,
             Long usageLimit
     ) {
-        this(shortUrl, shortCode, originalUrl, dirType, existing, expireAt, usageLimit, null, null);
+        this(shortUrl, originalUrl, dirType, existing, expireAt, usageLimit, null, null);
     }
 
-    public CreateShortUrlResponse(
+    public CreateNewUrlResponse(
             String shortUrl,
-            String shortCode,
             String originalUrl,
             String dirType,
             boolean existing,
             Instant expireAt
     ) {
-        this(shortUrl, shortCode, originalUrl, dirType, existing, expireAt, null, null, null);
+        this(shortUrl, originalUrl, dirType, existing, expireAt, null, null, null);
     }
 
     public Instant expiresAt() {

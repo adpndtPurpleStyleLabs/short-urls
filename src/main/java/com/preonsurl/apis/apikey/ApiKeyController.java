@@ -4,7 +4,7 @@ import com.preonsurl.apis.apikey.dto.ApiKeyResponse;
 import com.preonsurl.apis.apikey.dto.CreateApiKeyRequest;
 import com.preonsurl.apis.apikey.dto.CreateApiKeyResponse;
 import com.preonsurl.apis.auth.dto.AuthenticatedUser;
-import com.preonsurl.apis.dto.ApiResponse;
+import com.preonsurl.apis.link.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;

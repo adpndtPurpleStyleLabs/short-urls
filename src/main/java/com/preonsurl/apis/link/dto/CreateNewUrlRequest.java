@@ -1,4 +1,4 @@
-package com.preonsurl.apis.dto;
+package com.preonsurl.apis.link.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Request payload for creating a shortened URL")
-public record CreateShortUrlRequest(
+public record CreateNewUrlRequest(
         @NotBlank(message = "url cannot be empty")
         @Schema(description = "Original target URL to shorten (must start with http:// or https://)", example = "https://example.com/products/item1", requiredMode = Schema.RequiredMode.REQUIRED)
         String url,
@@ -37,7 +37,7 @@ public record CreateShortUrlRequest(
 ) {
     private static final Pattern SLUG_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$");
 
-    public CreateShortUrlRequest(String url, String dirType, ExpireRequest expire) {
+    public CreateNewUrlRequest(String url, String dirType, ExpireRequest expire) {
         this(url, dirType, null, expire, null, null, null);
     }
 

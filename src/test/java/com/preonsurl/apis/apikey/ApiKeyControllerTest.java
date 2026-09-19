@@ -8,7 +8,7 @@ import com.preonsurl.apis.auth.entity.Tenant;
 import com.preonsurl.apis.auth.entity.User;
 import com.preonsurl.apis.auth.repository.TenantRepository;
 import com.preonsurl.apis.auth.repository.UserRepository;
-import com.preonsurl.apis.repository.ShortUrlRepository;
+import com.preonsurl.apis.link.repository.NewUrlRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +49,7 @@ public class ApiKeyControllerTest {
     private TenantRepository tenantRepository;
 
     @Autowired
-    private ShortUrlRepository shortUrlRepository;
+    private NewUrlRepository shortUrlRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
