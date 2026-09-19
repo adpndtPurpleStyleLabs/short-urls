@@ -140,10 +140,9 @@ class CreateControllerTest {
                         .content(payload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Short URL created successfully"))
+                .andExpect(jsonPath("$.message").value("New URL created successfully"))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/products/item1"))
-                .andExpect(jsonPath("$.data.shortCode").isNotEmpty())
-                .andExpect(jsonPath("$.data.shortUrl", startsWith("http://localhost:8081/")))
+                .andExpect(jsonPath("$.data.newUrl", startsWith("http://localhost:8081/")))
                 .andExpect(jsonPath("$.data.existing").value(false))
                 .andExpect(jsonPath("$.data.expireAt").isNotEmpty());
 
@@ -167,8 +166,7 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/invoices/999"))
                 .andExpect(jsonPath("$.data.dirType").value("invoice"))
-                .andExpect(jsonPath("$.data.shortCode").isNotEmpty())
-                .andExpect(jsonPath("$.data.shortUrl", startsWith("http://localhost:8081/invoice/")))
+                .andExpect(jsonPath("$.data.newUrl", startsWith("http://localhost:8081/invoice/")))
                 .andExpect(jsonPath("$.data.existing").value(false))
                 .andExpect(jsonPath("$.data.expireAt").isNotEmpty());
 
@@ -451,8 +449,7 @@ class CreateControllerTest {
                         .content(payload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.shortCode").value("diwali-sale"))
-                .andExpect(jsonPath("$.data.shortUrl").value("http://localhost:8081/diwali-sale"))
+                .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/diwali-sale"))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/diwali-offer"))
                 .andExpect(jsonPath("$.data.existing").value(false));
 
@@ -477,8 +474,7 @@ class CreateControllerTest {
                         .content(payload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.shortCode").value("promo/summer_deals-2026"))
-                .andExpect(jsonPath("$.data.shortUrl").value("http://localhost:8081/promo/summer_deals-2026"));
+                .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/promo/summer_deals-2026"));
     }
 
     @Test
@@ -500,8 +496,7 @@ class CreateControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.dirType").value("deals"))
-                .andExpect(jsonPath("$.data.shortCode").value("flash-sale"))
-                .andExpect(jsonPath("$.data.shortUrl").value("http://localhost:8081/deals/flash-sale"));
+                .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/deals/flash-sale"));
     }
 
     @Test
@@ -527,8 +522,7 @@ class CreateControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.existing").value(true))
-                .andExpect(jsonPath("$.data.shortCode").value("unique-tag-1"));
+                .andExpect(jsonPath("$.data.existing").value(true));
     }
 
     @Test
@@ -710,19 +704,18 @@ class CreateControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
 
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("fullUrl", shortUrl))
+                        .param("fullUrl", newUrl))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/details-test"))
                 .andExpect(jsonPath("$.data.dirType").value("promo"))
                 .andExpect(jsonPath("$.data.notes").value("Details test note"))
                 .andExpect(jsonPath("$.data.tags", containsInAnyOrder("details", "promo")))
-                .andExpect(jsonPath("$.data.shortUrl").value(shortUrl))
-                .andExpect(jsonPath("$.data.shortCode", notNullValue()));
+                .andExpect(jsonPath("$.data.newUrl").value(newUrl));
     }
 
 
@@ -741,16 +734,14 @@ class CreateControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        // Extract shortCode and newUrl
-        String shortCode = createRes.split("\"shortCode\":\"")[1].split("\"")[0];
-        String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
 
         // Lookup by full newUrl via fullUrl
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("fullUrl", shortUrl))
+                        .param("fullUrl", newUrl))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.shortCode").value(shortCode))
+                .andExpect(jsonPath("$.data.newUrl").value(newUrl))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/short-code-lookup-test"));
     }
 
@@ -806,7 +797,7 @@ class CreateControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
 
         // Create User 2 with User 2's API key
         Tenant tenant2 = tenantRepository.save(new Tenant("Second Tenant"));
@@ -823,7 +814,7 @@ class CreateControllerTest {
         // User 2 attempts to fetch User 1's link -> not found for User 2
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", USER2_API_KEY)
-                        .param("fullUrl", shortUrl))
+                        .param("fullUrl", newUrl))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message", containsString("not found")));

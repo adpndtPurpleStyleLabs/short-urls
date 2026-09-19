@@ -47,9 +47,9 @@ class ServingControllerTest {
 
     @Test
     void rootEndpointReturnsApiStatus() throws Exception {
-        mockMvc.perform(get("/"))
+        mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.service").value("your-shortner"))
+                .andExpect(jsonPath("$.service").value("007"))
                 .andExpect(jsonPath("$.status").value("UP"));
     }
 
@@ -59,7 +59,7 @@ class ServingControllerTest {
                 "abcXYZ1",
                 "https://example.com/target-page",
                 null,
-                "http://localhost:8081/abcXYZ1"
+                "http://localhost/abcXYZ1"
         );
         NewUrl saved = shortUrlRepository.save(newUrl);
 
@@ -71,18 +71,18 @@ class ServingControllerTest {
                 .andExpect(header().string("Location", "https://example.com/target-page"));
 
         // Verify placed in LRU cache
-        assertTrue(servingCacheService.getLruCache().containsKey(null, "abcXYZ1"), "Should be placed in LRU cache");
+        assertNotNull(servingCacheService.getLruCache().get("http://localhost/abcXYZ1"), "Should be placed in LRU cache");
 
         // Verify background event increments click count and logs access
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             NewUrl updated = shortUrlRepository.findByShortCode("abcXYZ1").orElseThrow();
             assertEquals(1, updated.getClickCount(), "Click count should be incremented to 1");
 
-            List<NewUrlAccessLog> logs = accessLogRepository.findByShortCodeOrderByAccessedAtDesc("abcXYZ1");
+            List<NewUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
             assertEquals(1, logs.size(), "One access log record should be created");
             NewUrlAccessLog log = logs.get(0);
             assertEquals(saved.getId(), log.getShortUrlId());
-            assertEquals("abcXYZ1", log.getShortCode());
+            assertEquals("http://localhost/abcXYZ1", log.getShortCode());
             assertEquals("203.0.113.195", log.getIpAddress());
             assertEquals("PreonsBrowser/1.0", log.getUserAgent());
             assertEquals("https://google.com", log.getReferer());
@@ -95,7 +95,7 @@ class ServingControllerTest {
                 "inv1234",
                 "https://example.com/billing/invoice/456",
                 "invoice",
-                "http://localhost:8081/invoice/inv1234"
+                "http://localhost/invoice/inv1234"
         );
         NewUrl saved = shortUrlRepository.save(newUrl);
 
@@ -104,7 +104,7 @@ class ServingControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "https://example.com/billing/invoice/456"));
 
-        assertTrue(servingCacheService.getLruCache().containsKey("invoice", "inv1234"), "Should be placed in LRU cache");
+        assertNotNull(servingCacheService.getLruCache().get("http://localhost/invoice/inv1234"), "Should be placed in LRU cache");
 
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             NewUrl updated = shortUrlRepository.findByShortCode("inv1234").orElseThrow();
@@ -112,7 +112,7 @@ class ServingControllerTest {
 
             List<NewUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
             assertEquals(1, logs.size(), "Access log should be saved for directory short code");
-            assertEquals("inv1234", logs.get(0).getShortCode());
+            assertEquals("http://localhost/invoice/inv1234", logs.get(0).getShortCode());
             assertEquals("TestAgent", logs.get(0).getUserAgent());
         });
     }
@@ -122,10 +122,10 @@ class ServingControllerTest {
         mockMvc.perform(get("/nonexistent123"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Short URL not found"));
+                .andExpect(jsonPath("$.message").value("New URL not found"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for 404");
-        assertFalse(servingCacheService.getLruCache().containsKey(null, "nonexistent123"));
+        assertNull(servingCacheService.getLruCache().get("http://localhost/nonexistent123"));
     }
 
     @Test
@@ -133,10 +133,10 @@ class ServingControllerTest {
         mockMvc.perform(get("/invoice/unknown999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Short URL not found"));
+                .andExpect(jsonPath("$.message").value("New URL not found"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for 404");
-        assertFalse(servingCacheService.getLruCache().containsKey("invoice", "unknown999"));
+        assertNull(servingCacheService.getLruCache().get("http://localhost/invoice/unknown999"));
     }
 
     @Test
@@ -145,7 +145,7 @@ class ServingControllerTest {
                 "expRoot",
                 "https://example.com/expired-root",
                 null,
-                "http://localhost:8081/expRoot",
+                "http://localhost/expRoot",
                 Instant.now().minus(1, ChronoUnit.HOURS)
         );
         shortUrlRepository.save(newUrl);
@@ -153,10 +153,10 @@ class ServingControllerTest {
         mockMvc.perform(get("/expRoot"))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Short URL has expired"));
+                .andExpect(jsonPath("$.message").value("New URL has expired"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for expired URL");
-        assertFalse(servingCacheService.getLruCache().containsKey(null, "expRoot"), "Expired URL must not be in LRU");
+        assertNull(servingCacheService.getLruCache().get("http://localhost/expRoot"), "Expired URL must not be in LRU");
     }
 
     @Test
@@ -165,7 +165,7 @@ class ServingControllerTest {
                 "expDir",
                 "https://example.com/expired-dir",
                 "promo",
-                "http://localhost:8081/promo/expDir",
+                "http://localhost/promo/expDir",
                 Instant.now().minus(1, ChronoUnit.HOURS)
         );
         shortUrlRepository.save(newUrl);
@@ -173,10 +173,10 @@ class ServingControllerTest {
         mockMvc.perform(get("/promo/expDir"))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Short URL has expired"));
+                .andExpect(jsonPath("$.message").value("New URL has expired"));
 
         assertEquals(0, accessLogRepository.count(), "No access log should be recorded for expired URL");
-        assertFalse(servingCacheService.getLruCache().containsKey("promo", "expDir"), "Expired URL must not be in LRU");
+        assertNull(servingCacheService.getLruCache().get("http://localhost/promo/expDir"), "Expired URL must not be in LRU");
     }
 
     @Test
@@ -185,7 +185,7 @@ class ServingControllerTest {
                 "onceCode",
                 "https://example.com/one-time",
                 null,
-                "http://localhost:8081/onceCode",
+                "http://localhost/onceCode",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 1L
         );
@@ -197,7 +197,7 @@ class ServingControllerTest {
                 .andExpect(header().string("Location", "https://example.com/one-time"));
 
         // Usage limit reached on 1st serve -> must be evicted from LRU cache
-        assertFalse(servingCacheService.getLruCache().containsKey(null, "onceCode"), "Breached limit must be evicted from LRU");
+        assertNull(servingCacheService.getLruCache().get("http://localhost/onceCode"), "Breached limit must be evicted from LRU");
 
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             NewUrl afterFirst = shortUrlRepository.findByShortCode("onceCode").orElseThrow();
@@ -209,7 +209,7 @@ class ServingControllerTest {
         mockMvc.perform(get("/onceCode"))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Short URL usage limit reached"));
+                .andExpect(jsonPath("$.message").value("New URL usage limit reached"));
 
         NewUrl afterSecond = shortUrlRepository.findByShortCode("onceCode").orElseThrow();
         assertEquals(1, afterSecond.getClickCount(), "Usage should still be 1 (not incremented on exceeded)");
@@ -222,7 +222,7 @@ class ServingControllerTest {
                 "twoCode",
                 "https://example.com/twice",
                 "deals",
-                "http://localhost:8081/deals/twoCode",
+                "http://localhost/deals/twoCode",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 2L
         );
@@ -238,7 +238,7 @@ class ServingControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "https://example.com/twice"));
 
-        assertFalse(servingCacheService.getLruCache().containsKey("deals", "twoCode"), "Should be evicted after 2nd serve");
+        assertNull(servingCacheService.getLruCache().get("http://localhost/deals/twoCode"), "Should be evicted after 2nd serve");
 
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             NewUrl afterSecond = shortUrlRepository.findByDirTypeAndShortCode("deals", "twoCode").orElseThrow();
@@ -250,7 +250,7 @@ class ServingControllerTest {
         mockMvc.perform(get("/deals/twoCode"))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Short URL usage limit reached"));
+                .andExpect(jsonPath("$.message").value("New URL usage limit reached"));
 
         NewUrl afterThird = shortUrlRepository.findByDirTypeAndShortCode("deals", "twoCode").orElseThrow();
         assertEquals(2, afterThird.getClickCount(), "Usage should not be incremented after reaching limit");
@@ -263,7 +263,7 @@ class ServingControllerTest {
                 "unlimitedCode",
                 "https://example.com/unlimited",
                 null,
-                "http://localhost:8081/unlimitedCode",
+                "http://localhost/unlimitedCode",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 null
         );
@@ -275,7 +275,7 @@ class ServingControllerTest {
                     .andExpect(header().string("Location", "https://example.com/unlimited"));
         }
 
-        assertTrue(servingCacheService.getLruCache().containsKey(null, "unlimitedCode"), "Unlimited entry remains in LRU");
+        assertNotNull(servingCacheService.getLruCache().get("http://localhost/unlimitedCode"), "Unlimited entry remains in LRU");
 
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             NewUrl afterFive = shortUrlRepository.findByShortCode("unlimitedCode").orElseThrow();
@@ -290,7 +290,7 @@ class ServingControllerTest {
                 "diwali-sale",
                 "https://example.com/diwali-destination",
                 null,
-                "http://localhost:8081/diwali-sale",
+                "http://localhost/diwali-sale",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 null
         );
@@ -304,7 +304,7 @@ class ServingControllerTest {
                 "spring-sale",
                 "https://example.com/spring-destination",
                 "deals",
-                "http://localhost:8081/deals/spring-sale",
+                "http://localhost/deals/spring-sale",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 null
         );
