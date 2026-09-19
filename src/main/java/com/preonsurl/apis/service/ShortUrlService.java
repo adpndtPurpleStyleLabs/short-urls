@@ -56,30 +56,51 @@ public class ShortUrlService {
         }
 
         String normalizedDirType = normalizeDirType(request.dirType());
+        String customSlug = request.resolvedSlug();
 
-        // Check if a short URL already exists for the same URL and dirType
-        Optional<ShortUrl> existing;
-        if (normalizedDirType != null) {
-            existing = repository.findFirstByOriginalUrlAndDirType(originalUrl, normalizedDirType);
+        if (customSlug != null) {
+            Optional<ShortUrl> existingBySlug = repository.findByShortCode(customSlug);
+            if (existingBySlug.isPresent()) {
+                ShortUrl existing = existingBySlug.get();
+                if (existing.getOriginalUrl().equals(originalUrl) &&
+                        java.util.Objects.equals(existing.getDirType(), normalizedDirType)) {
+                    return new CreateShortUrlResponse(
+                            existing.getFullShortUrl(),
+                            existing.getShortCode(),
+                            existing.getOriginalUrl(),
+                            existing.getDirType(),
+                            true,
+                            existing.getExpireAt(),
+                            existing.getUsageLimit()
+                    );
+                }
+                throw new IllegalArgumentException("Slug '" + customSlug + "' is already in use");
+            }
         } else {
-            existing = repository.findFirstByOriginalUrlAndDirTypeIsNull(originalUrl);
+            // Check if a short URL already exists for the same URL and dirType
+            Optional<ShortUrl> existing;
+            if (normalizedDirType != null) {
+                existing = repository.findFirstByOriginalUrlAndDirType(originalUrl, normalizedDirType);
+            } else {
+                existing = repository.findFirstByOriginalUrlAndDirTypeIsNull(originalUrl);
+            }
+
+            if (existing.isPresent()) {
+                ShortUrl found = existing.get();
+                return new CreateShortUrlResponse(
+                        found.getFullShortUrl(),
+                        found.getShortCode(),
+                        found.getOriginalUrl(),
+                        found.getDirType(),
+                        true,
+                        found.getExpireAt(),
+                        found.getUsageLimit()
+                );
+            }
         }
 
-        if (existing.isPresent()) {
-            ShortUrl found = existing.get();
-            return new CreateShortUrlResponse(
-                    found.getFullShortUrl(),
-                    found.getShortCode(),
-                    found.getOriginalUrl(),
-                    found.getDirType(),
-                    true,
-                    found.getExpireAt(),
-                    found.getUsageLimit()
-            );
-        }
-
-        // Generate a new unique short code
-        String code = generateUniqueShortCode();
+        // If slug is present, use slug as short code without generating a new code
+        String code = (customSlug != null) ? customSlug : generateUniqueShortCode();
 
         // Build full short URL
         String fullShortUrl;

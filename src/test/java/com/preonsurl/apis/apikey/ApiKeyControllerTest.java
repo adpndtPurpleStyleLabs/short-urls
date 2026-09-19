@@ -78,15 +78,15 @@ public class ApiKeyControllerTest {
 
     @Test
     void unauthenticatedAccessReturns401() throws Exception {
-        mockMvc.perform(post("/api/apikeys")
+        mockMvc.perform(post("/api/apikey")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\": \"My Key\"}"))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(get("/api/apikeys"))
+        mockMvc.perform(get("/api/apikey"))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(delete("/api/apikeys"))
+        mockMvc.perform(delete("/api/apikey"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -109,32 +109,6 @@ public class ApiKeyControllerTest {
     }
 
     @Test
-    void apiKeyAliasRouteWorksIdentically() throws Exception {
-        // Test /api/key alias
-        MvcResult result = mockMvc.perform(post("/api/key")
-                        .header("Authorization", "Bearer " + jwtToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Key Alias\"}"))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.name").value("Key Alias"))
-                .andReturn();
-
-        mockMvc.perform(get("/api/key")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("Key Alias"));
-
-        mockMvc.perform(delete("/api/key")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/api/key")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
     void createApiKeyWithJwtGeneratesActiveKey() throws Exception {
         String requestJson = """
                 {
@@ -142,7 +116,7 @@ public class ApiKeyControllerTest {
                 }
                 """;
 
-        MvcResult result = mockMvc.perform(post("/api/apikeys")
+        MvcResult result = mockMvc.perform(post("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
@@ -175,7 +149,7 @@ public class ApiKeyControllerTest {
     @Test
     void singleActiveKeyInvariantEnforcedWhenCreatingNewKey() throws Exception {
         // 1. Create first API key
-        MvcResult firstResult = mockMvc.perform(post("/api/apikeys")
+        MvcResult firstResult = mockMvc.perform(post("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\": \"First Key\"}"))
@@ -193,7 +167,7 @@ public class ApiKeyControllerTest {
                 .andExpect(status().isOk());
 
         // 2. Create second API key (rotates/replaces active key)
-        MvcResult secondResult = mockMvc.perform(post("/api/apikeys")
+        MvcResult secondResult = mockMvc.perform(post("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\": \"Second Key\"}"))
@@ -232,19 +206,19 @@ public class ApiKeyControllerTest {
     @Test
     void getActiveApiKeyReturnsCurrentKeyMetadata() throws Exception {
         // Initially no active key
-        mockMvc.perform(get("/api/apikeys")
+        mockMvc.perform(get("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNotFound());
 
         // Create key
-        mockMvc.perform(post("/api/apikeys")
+        mockMvc.perform(post("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\": \"My Active Key\"}"))
                 .andExpect(status().isCreated());
 
         // Fetch active key
-        mockMvc.perform(get("/api/apikeys")
+        mockMvc.perform(get("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -255,7 +229,7 @@ public class ApiKeyControllerTest {
     @Test
     void deleteActiveApiKeyDeactivatesAndInvalidatesAccess() throws Exception {
         // Create key
-        MvcResult createResult = mockMvc.perform(post("/api/apikeys")
+        MvcResult createResult = mockMvc.perform(post("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\": \"To Delete\"}"))
@@ -273,7 +247,7 @@ public class ApiKeyControllerTest {
                 .andExpect(status().isOk());
 
         // Delete active key
-        mockMvc.perform(delete("/api/apikeys")
+        mockMvc.perform(delete("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Active API key deleted successfully"));
@@ -282,8 +256,8 @@ public class ApiKeyControllerTest {
         List<ApiKey> activeKeys = apiKeyRepository.findAllByUserIdAndActiveTrue(testUser.getId());
         assertTrue(activeKeys.isEmpty());
 
-        // GET /api/apikeys returns 404
-        mockMvc.perform(get("/api/apikeys")
+        // GET /api/apikey returns 404
+        mockMvc.perform(get("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNotFound());
 
@@ -297,7 +271,7 @@ public class ApiKeyControllerTest {
 
     @Test
     void deleteApiKeyByIdDeactivatesKey() throws Exception {
-        MvcResult createResult = mockMvc.perform(post("/api/apikeys")
+        MvcResult createResult = mockMvc.perform(post("/api/apikey")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\": \"Delete By Id\"}"))
@@ -309,7 +283,7 @@ public class ApiKeyControllerTest {
         String rawKey = data.get("apiKey").asText();
 
         // Delete by ID
-        mockMvc.perform(delete("/api/apikeys/" + keyId)
+        mockMvc.perform(delete("/api/apikey/" + keyId)
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk());
 
@@ -333,7 +307,7 @@ public class ApiKeyControllerTest {
         String anotherJwt = jwtService.generateToken(anotherUser);
 
         // Another user creates an API key
-        MvcResult createResult = mockMvc.perform(post("/api/apikeys")
+        MvcResult createResult = mockMvc.perform(post("/api/apikey")
                         .header("Authorization", "Bearer " + anotherJwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\": \"Alice's Key\"}"))
@@ -344,7 +318,7 @@ public class ApiKeyControllerTest {
                 .get("data").get("id").asLong();
 
         // First user tries to delete Alice's key by ID -> should return 404
-        mockMvc.perform(delete("/api/apikeys/" + aliceKeyId)
+        mockMvc.perform(delete("/api/apikey/" + aliceKeyId)
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNotFound());
 

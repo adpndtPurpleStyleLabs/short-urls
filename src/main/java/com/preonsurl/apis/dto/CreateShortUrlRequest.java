@@ -1,9 +1,9 @@
 package com.preonsurl.apis.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.Instant;
+import java.util.regex.Pattern;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -16,14 +16,37 @@ public record CreateShortUrlRequest(
         @Schema(description = "Optional directory prefix for grouping short URLs (e.g., 'deals', 'invoice')", example = "invoice", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         String dirType,
 
+        @Schema(description = "Optional custom slug configuration", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        SlugRequest slug,
+
         @Schema(description = "Optional expiration policy", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         ExpireRequest expire,
 
         @Schema(description = "Usage limit: 'once', 'unlimited', a positive integer, or null for unlimited", example = "5", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         Object usageLimit
 ) {
+    private static final Pattern SLUG_PATTERN =
+            Pattern.compile(
+                    "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$"
+            );
+
     public CreateShortUrlRequest(String url, String dirType, ExpireRequest expire) {
-        this(url, dirType, expire, null);
+        this(url, dirType, null, expire, null);
+    }
+
+    public String resolvedSlug() {
+        if (slug == null) {
+            return null;
+        }
+        String val = slug.value();
+        if (val == null || val.isBlank()) {
+            throw new IllegalArgumentException("Slug cannot be empty");
+        }
+        String trimmed = val.trim();
+        if (!SLUG_PATTERN.matcher(trimmed).matches()) {
+            throw new IllegalArgumentException("Invalid slug format: '" + val + "'. Must match pattern: " + SLUG_PATTERN.pattern());
+        }
+        return trimmed;
     }
 
     public Long resolvedUsageLimit() {
@@ -57,6 +80,21 @@ public record CreateShortUrlRequest(
         }
         throw new IllegalArgumentException("Invalid usageLimit format: " + usageLimit);
     }
+
+    public record SlugRequest(
+
+            @Schema(
+                    description = "Custom path/slug for the shortened URL. " +
+                            "Supports simple slugs or hierarchical paths.",
+                    example = "diwali-sale",
+                    requiredMode = Schema.RequiredMode.REQUIRED
+            )
+            String value
+
+    ) {
+    }
+
+
 
     public record ExpireRequest(
             boolean enabled,

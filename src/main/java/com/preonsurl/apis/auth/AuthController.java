@@ -14,6 +14,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Authentication", description = "Endpoints for user registration and JWT login")
+@RequestMapping("/api/auth")
 @RestController
 public class AuthController {
 
@@ -24,7 +25,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Register a new user", description = "Creates a new user and tenant account")
-    @PostMapping({"/register", "/api/auth/register"})
+    @PostMapping({ "/register"})
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
         try {
             RegisterResponse response = authService.register(request);
@@ -35,7 +36,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Login user", description = "Authenticates user and returns JWT access token")
-    @PostMapping({"/login", "/api/auth/login"})
+    @PostMapping({ "/login"})
     public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
         try {
             LoginResponse response = authService.login(request);

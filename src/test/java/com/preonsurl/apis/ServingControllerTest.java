@@ -283,4 +283,35 @@ class ServingControllerTest {
             assertEquals(5, accessLogRepository.count());
         });
     }
+
+    @Test
+    void servingCustomSlugRedirectsSuccessfully() throws Exception {
+        ShortUrl slugUrl = new ShortUrl(
+                "diwali-sale",
+                "https://example.com/diwali-destination",
+                null,
+                "http://localhost:8081/diwali-sale",
+                Instant.now().plus(1, ChronoUnit.DAYS),
+                null
+        );
+        shortUrlRepository.save(slugUrl);
+
+        mockMvc.perform(get("/diwali-sale"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/diwali-destination"));
+
+        ShortUrl dirSlugUrl = new ShortUrl(
+                "spring-sale",
+                "https://example.com/spring-destination",
+                "deals",
+                "http://localhost:8081/deals/spring-sale",
+                Instant.now().plus(1, ChronoUnit.DAYS),
+                null
+        );
+        shortUrlRepository.save(dirSlugUrl);
+
+        mockMvc.perform(get("/deals/spring-sale"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/spring-destination"));
+    }
 }

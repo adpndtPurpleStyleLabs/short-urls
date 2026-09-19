@@ -24,7 +24,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -358,5 +358,189 @@ class CreateControllerTest {
                         .content(payload))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void createWithCustomSlugUsesSlugAsShortCodeWithoutGeneratingNewCode() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/diwali-offer",
+                    "slug": {
+                        "value": "diwali-sale"
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.shortCode").value("diwali-sale"))
+                .andExpect(jsonPath("$.data.shortUrl").value("http://localhost:8081/diwali-sale"))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/diwali-offer"))
+                .andExpect(jsonPath("$.data.existing").value(false));
+
+        assertEquals(1, shortUrlRepository.count());
+        assertTrue(shortUrlRepository.findByShortCode("diwali-sale").isPresent());
+    }
+
+    @Test
+    void createWithHierarchicalSlugSucceeds() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/summer-collection",
+                    "slug": {
+                        "value": "promo/summer_deals-2026"
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.shortCode").value("promo/summer_deals-2026"))
+                .andExpect(jsonPath("$.data.shortUrl").value("http://localhost:8081/promo/summer_deals-2026"));
+    }
+
+    @Test
+    void createWithDirTypeAndCustomSlugSucceeds() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/special-deal",
+                    "dirType": "deals",
+                    "slug": {
+                        "value": "flash-sale"
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.dirType").value("deals"))
+                .andExpect(jsonPath("$.data.shortCode").value("flash-sale"))
+                .andExpect(jsonPath("$.data.shortUrl").value("http://localhost:8081/deals/flash-sale"));
+    }
+
+    @Test
+    void createWithDuplicateSlugForSameUrlReturnsExisting() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/reused-url",
+                    "slug": {
+                        "value": "unique-tag-1"
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(false));
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(true))
+                .andExpect(jsonPath("$.data.shortCode").value("unique-tag-1"));
+    }
+
+    @Test
+    void createWithDuplicateSlugForDifferentUrlReturns400BadRequest() throws Exception {
+        String payload1 = """
+                {
+                    "url": "https://example.com/first-owner",
+                    "slug": {
+                        "value": "claimed-slug"
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload1))
+                .andExpect(status().isOk());
+
+        String payload2 = """
+                {
+                    "url": "https://example.com/second-owner",
+                    "slug": {
+                        "value": "claimed-slug"
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload2))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("already in use")));
+    }
+
+    @Test
+    void createWithInvalidSlugPatternsReturns400BadRequest() throws Exception {
+        String[] invalidSlugs = {
+                "invalid@char",
+                "/leading-slash",
+                "trailing-slash/",
+                "double//slash",
+                "space in slug",
+                "question?mark",
+                "hash#tag"
+        };
+
+        for (String invalidSlug : invalidSlugs) {
+            String payload = """
+                    {
+                        "url": "https://example.com/invalid-test",
+                        "slug": {
+                            "value": "%s"
+                        }
+                    }
+                    """.formatted(invalidSlug);
+
+            mockMvc.perform(post("/link/create")
+                            .header("X-API-KEY", VALID_API_KEY)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(payload))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.message", containsString("Invalid slug format")));
+        }
+    }
+
+    @Test
+    void createWithEmptySlugReturns400BadRequest() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/empty-slug",
+                    "slug": {
+                        "value": "   "
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("cannot be empty")));
     }
 }

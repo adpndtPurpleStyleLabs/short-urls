@@ -82,6 +82,9 @@ public class ShortUrlServingCacheService {
         Optional<ShortUrl> dbOptional;
         if (normalizedDirType != null) {
             dbOptional = repository.findByDirTypeAndShortCode(normalizedDirType, shortCode);
+            if (dbOptional.isEmpty()) {
+                dbOptional = repository.findByShortCode(normalizedDirType + "/" + shortCode);
+            }
         } else {
             dbOptional = repository.findByShortCode(shortCode);
         }

@@ -49,7 +49,7 @@ public class ServingController {
             summary = "Redirect root short URL",
             description = "Resolves the given short code using LRU cache and redirects with HTTP 302 Found to destination URL. Returns 410 Gone if expired or usage limit exceeded."
     )
-    @GetMapping("/{shortCode:[a-zA-Z0-9]+}")
+    @GetMapping("/{shortCode:[a-zA-Z0-9_-]+}")
     public ResponseEntity<?> serveRootShortCode(@PathVariable String shortCode, HttpServletRequest request) {
         if (RESERVED_WORDS.contains(shortCode.toLowerCase())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Short URL not found"));
@@ -84,7 +84,7 @@ public class ServingController {
             summary = "Redirect directory short URL",
             description = "Resolves directory short code (dirType/shortCode) using LRU cache and redirects with HTTP 302 Found to destination URL. Returns 410 Gone if expired or usage limit exceeded."
     )
-    @GetMapping("/{dirType:[a-zA-Z0-9_-]+}/{shortCode:[a-zA-Z0-9]+}")
+    @GetMapping("/{dirType:[a-zA-Z0-9_-]+}/{shortCode:[a-zA-Z0-9_-]+}")
     public ResponseEntity<?> serveDirectoryShortCode(
             @PathVariable String dirType,
             @PathVariable String shortCode,
