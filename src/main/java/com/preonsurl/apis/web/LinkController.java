@@ -76,7 +76,7 @@ public class LinkController {
                     @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
             }
     )
-    @GetMapping(value = {""})
+    @GetMapping
     public ResponseEntity<ApiResponse<CreateShortUrlResponse>> getLinkInfo(
             @RequestParam(value = "fullUrl", required = false) String fullUrl,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {

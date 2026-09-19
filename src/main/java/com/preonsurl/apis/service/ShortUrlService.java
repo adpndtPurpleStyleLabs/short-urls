@@ -60,7 +60,7 @@ public class ShortUrlService {
     public CreateShortUrlResponse createOrGetShortUrl(CreateShortUrlRequest request, Long userId) {
         String originalUrl = request.url();
         validateUrl(originalUrl);
-        if(request.expire().enabled()){
+        if (request.expire() != null) {
             request.expire().validate();
         }
 

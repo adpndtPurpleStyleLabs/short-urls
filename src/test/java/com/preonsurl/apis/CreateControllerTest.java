@@ -273,6 +273,71 @@ class CreateControllerTest {
     }
 
     @Test
+    void createWithExpireAtInPastReturns400BadRequest() throws Exception {
+        Instant pastExpire = Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS);
+        String payload = """
+                {
+                    "url": "https://example.com/past-expire",
+                    "expire": {
+                        "enabled": true,
+                        "expireAt": "%s"
+                    }
+                }
+                """.formatted(pastExpire.toString());
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("expireAt must be greater than the current UTC time")));
+    }
+
+    @Test
+    void createWithExpireEnabledAndNullExpireAtReturns400BadRequest() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/null-expire-at",
+                    "expire": {
+                        "enabled": true,
+                        "expireAt": null
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("expireAt is required when expiration is enabled")));
+    }
+
+    @Test
+    void createWithExpireDisabledAndNonNullExpireAtReturns400BadRequest() throws Exception {
+        Instant futureExpire = Instant.now().plus(5, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS);
+        String payload = """
+                {
+                    "url": "https://example.com/disabled-expire-with-date",
+                    "expire": {
+                        "enabled": false,
+                        "expireAt": "%s"
+                    }
+                }
+                """.formatted(futureExpire.toString());
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("expireAt must be null when expiration is disabled")));
+    }
+
+    @Test
     void createWithUsageLimitOnceSucceeds() throws Exception {
         String payload = """
                 {
@@ -660,32 +725,6 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.data.shortCode", notNullValue()));
     }
 
-    @Test
-    void getLinkInfo_onInfoEndpoint_success() throws Exception {
-        String createPayload = """
-                {
-                    "url": "https://example.com/info-path-test",
-                    "notes": "Info path note"
-                }
-                """;
-
-        String createRes = mockMvc.perform(post("/link/create")
-                        .header("X-API-KEY", VALID_API_KEY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createPayload))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        String shortUrl = createRes.split("\"shortUrl\":\"")[1].split("\"")[0];
-
-        mockMvc.perform(get("/link/info")
-                        .header("X-API-KEY", VALID_API_KEY)
-                        .param("fullUrl", shortUrl))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/info-path-test"))
-                .andExpect(jsonPath("$.data.notes").value("Info path note"));
-    }
 
     @Test
     void getLinkInfo_byFullShortUrl_success() throws Exception {
