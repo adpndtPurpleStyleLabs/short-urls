@@ -341,7 +341,7 @@ docker run -d \
 
 - [x] Basic URL shortening
 - [x] Directory
-- [ ] Custom slug
+- [x] Custom slug
 - [ ] Edit destination URL without changing the short URL
 - [ ] Enable / disable link
 - [x] Expiration
