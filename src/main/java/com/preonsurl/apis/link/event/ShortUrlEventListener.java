@@ -43,28 +43,29 @@ public class ShortUrlEventListener {
             // 2. Save access log
             NewUrlAccessLog accessLog = new NewUrlAccessLog(
                     event.shortUrlId(),
-                    event.fullShortUrl(),
+                    event.newUrl(),
                     event.ipAddress(),
                     event.userAgent(),
                     event.referer()
             );
             accessLogRepository.save(accessLog);
 
-            // 3. Check DB state to verify expiration and usage limit
+            // 3. Check DB state to verify expiration, usage limit, and active status
             Optional<NewUrl> updated = repository.findById(event.shortUrlId());
             if (updated.isPresent()) {
                 NewUrl entity = updated.get();
                 boolean expired = entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt());
                 boolean limitReached = entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit();
+                boolean inactive = !entity.isActive();
 
-                if (expired || limitReached) {
-                    log.info("Removing breached/expired short code '{}' from LRU cache [expired={}, limitReached={}]",
-                            event.fullShortUrl(),  expired, limitReached);
-                    lruCache.remove(event.fullShortUrl());
+                if (expired || limitReached || inactive) {
+                    log.info("Removing breached/expired/inactive short code '{}' from LRU cache [expired={}, limitReached={}, inactive={}]",
+                            event.newUrl(), expired, limitReached, inactive);
+                    lruCache.remove(event.newUrl());
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to process ShortUrlServedEvent for full url: {}", event.fullShortUrl(), e);
+            log.error("Failed to process ShortUrlServedEvent for full url: {}", event.newUrl(), e);
         }
     }
 }

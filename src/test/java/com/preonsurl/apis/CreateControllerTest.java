@@ -1,6 +1,7 @@
 package com.preonsurl.apis;
 
 import com.preonsurl.apis.link.entity.NewUrl;
+import com.preonsurl.apis.link.enums.LinkMode;
 import com.preonsurl.apis.apikey.APIKeyCache;
 import com.preonsurl.apis.apikey.ApiKey;
 import com.preonsurl.apis.apikey.ApiKeyRepository;
@@ -154,7 +155,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/invoices/999",
-                    "dirType": "/invoice"
+                    "customPath": "invoice/999"
                 }
                 """;
 
@@ -165,8 +166,9 @@ class CreateControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/invoices/999"))
-                .andExpect(jsonPath("$.data.dirType").value("invoice"))
-                .andExpect(jsonPath("$.data.newUrl", startsWith("http://localhost:8081/invoice/")))
+                .andExpect(jsonPath("$.data.customPath").value("invoice/999"))
+                .andExpect(jsonPath("$.data.linkMode").value("REDIRECT"))
+                .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/invoice/999"))
                 .andExpect(jsonPath("$.data.existing").value(false))
                 .andExpect(jsonPath("$.data.expireAt").isNotEmpty());
 
@@ -178,7 +180,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/duplicate-check",
-                    "dirType": "/invoice"
+                    "customPath": "invoice/dup"
                 }
                 """;
 
@@ -191,7 +193,7 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.existing").value(false));
 
-        // Second creation for same URL and dirType
+        // Second creation for same URL and customPath
         mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -252,10 +254,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/custom-expire",
-                    "expire": {
-                        "enabled": true,
-                        "expireAt": "%s"
-                    }
+                    "expireAt": "%s"
                 }
                 """.formatted(customExpire.toString());
 
@@ -276,10 +275,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/past-expire",
-                    "expire": {
-                        "enabled": true,
-                        "expireAt": "%s"
-                    }
+                    "expireAt": "%s"
                 }
                 """.formatted(pastExpire.toString());
 
@@ -293,14 +289,11 @@ class CreateControllerTest {
     }
 
     @Test
-    void createWithExpireEnabledAndNullExpireAtReturns400BadRequest() throws Exception {
+    void createWithExpireAtNullSucceedsWithDefaultExpiration() throws Exception {
         String payload = """
                 {
                     "url": "https://example.com/null-expire-at",
-                    "expire": {
-                        "enabled": true,
-                        "expireAt": null
-                    }
+                    "expireAt": null
                 }
                 """;
 
@@ -308,31 +301,11 @@ class CreateControllerTest {
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message", containsString("expireAt is required when expiration is enabled")));
-    }
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.expireAt", notNullValue()));
 
-    @Test
-    void createWithExpireDisabledAndNonNullExpireAtReturns400BadRequest() throws Exception {
-        Instant futureExpire = Instant.now().plus(5, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS);
-        String payload = """
-                {
-                    "url": "https://example.com/disabled-expire-with-date",
-                    "expire": {
-                        "enabled": false,
-                        "expireAt": "%s"
-                    }
-                }
-                """.formatted(futureExpire.toString());
-
-        mockMvc.perform(post("/link/create")
-                        .header("X-API-KEY", VALID_API_KEY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message", containsString("expireAt must be null when expiration is disabled")));
+        assertEquals(1, shortUrlRepository.count());
     }
 
     @Test
@@ -437,9 +410,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/diwali-offer",
-                    "slug": {
-                        "value": "diwali-sale"
-                    }
+                    "slug": "diwali-sale"
                 }
                 """;
 
@@ -462,9 +433,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/summer-collection",
-                    "slug": {
-                        "value": "promo/summer_deals-2026"
-                    }
+                    "slug": "promo/summer_deals-2026"
                 }
                 """;
 
@@ -482,10 +451,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/special-deal",
-                    "dirType": "deals",
-                    "slug": {
-                        "value": "flash-sale"
-                    }
+                    "customPath": "deals/flash-sale"
                 }
                 """;
 
@@ -495,7 +461,8 @@ class CreateControllerTest {
                         .content(payload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.dirType").value("deals"))
+                .andExpect(jsonPath("$.data.linkMode").value("REDIRECT"))
+                .andExpect(jsonPath("$.data.customPath").value("deals/flash-sale"))
                 .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/deals/flash-sale"));
     }
 
@@ -504,9 +471,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/reused-url",
-                    "slug": {
-                        "value": "unique-tag-1"
-                    }
+                    "slug": "unique-tag-1"
                 }
                 """;
 
@@ -530,9 +495,7 @@ class CreateControllerTest {
         String payload1 = """
                 {
                     "url": "https://example.com/first-owner",
-                    "slug": {
-                        "value": "claimed-slug"
-                    }
+                    "slug": "claimed-slug"
                 }
                 """;
 
@@ -545,9 +508,7 @@ class CreateControllerTest {
         String payload2 = """
                 {
                     "url": "https://example.com/second-owner",
-                    "slug": {
-                        "value": "claimed-slug"
-                    }
+                    "slug": "claimed-slug"
                 }
                 """;
 
@@ -564,8 +525,6 @@ class CreateControllerTest {
     void createWithInvalidSlugPatternsReturns400BadRequest() throws Exception {
         String[] invalidSlugs = {
                 "invalid@char",
-                "/leading-slash",
-                "trailing-slash/",
                 "double//slash",
                 "space in slug",
                 "question?mark",
@@ -576,9 +535,7 @@ class CreateControllerTest {
             String payload = """
                     {
                         "url": "https://example.com/invalid-test",
-                        "slug": {
-                            "value": "%s"
-                        }
+                        "customPath": "%s"
                     }
                     """.formatted(invalidSlug);
 
@@ -588,7 +545,7 @@ class CreateControllerTest {
                             .content(payload))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.message", containsString("Invalid slug format")));
+                    .andExpect(jsonPath("$.message", containsString("Invalid customPath format")));
         }
     }
 
@@ -597,9 +554,7 @@ class CreateControllerTest {
         String payload = """
                 {
                     "url": "https://example.com/empty-slug",
-                    "slug": {
-                        "value": "   "
-                    }
+                    "customPath": "   "
                 }
                 """;
 
@@ -631,7 +586,7 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.data.notes").value("Important marketing campaign link"))
                 .andExpect(jsonPath("$.data.tags", containsInAnyOrder("marketing", "q3-promo", "sale")));
 
-        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/tagged-link").orElseThrow();
+        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrl("https://example.com/tagged-link").orElseThrow();
         assertEquals("Important marketing campaign link", newUrl.getNote());
 
         List<NewUrlTag> savedTags = tagRepository.findByUrlId(newUrl.getId());
@@ -660,7 +615,7 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.data.tags", hasSize(2)))
                 .andExpect(jsonPath("$.data.tags", containsInAnyOrder("tech", "AI")));
 
-        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/dedup-tag-test").orElseThrow();
+        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrl("https://example.com/dedup-tag-test").orElseThrow();
         List<NewUrlTag> savedTags = tagRepository.findByUrlId(newUrl.getId());
         assertEquals(2, savedTags.size());
     }
@@ -682,7 +637,7 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.notes").value("Single note alias test"));
 
-        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrlAndDirTypeIsNull("https://example.com/note-alias-test").orElseThrow();
+        NewUrl newUrl = shortUrlRepository.findFirstByOriginalUrl("https://example.com/note-alias-test").orElseThrow();
         assertEquals("Single note alias test", newUrl.getNote());
     }
 
@@ -691,7 +646,7 @@ class CreateControllerTest {
         String createPayload = """
                 {
                     "url": "https://example.com/details-test",
-                    "dirType": "promo",
+                    "customPath": "promo/details-test",
                     "notes": "Details test note",
                     "tags": ["details", "promo"]
                 }
@@ -712,10 +667,42 @@ class CreateControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/details-test"))
-                .andExpect(jsonPath("$.data.dirType").value("promo"))
+                .andExpect(jsonPath("$.data.linkMode").value("REDIRECT"))
+                .andExpect(jsonPath("$.data.customPath").value("promo/details-test"))
                 .andExpect(jsonPath("$.data.notes").value("Details test note"))
                 .andExpect(jsonPath("$.data.tags", containsInAnyOrder("details", "promo")))
                 .andExpect(jsonPath("$.data.newUrl").value(newUrl));
+    }
+
+    @Test
+    void createWithCustomLinkModeSavesAndReturnsLinkMode() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/iframe-test",
+                    "customPath": "iframe-page",
+                    "linkMode": "IFRAME"
+                }
+                """;
+
+        String res = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.linkMode").value("IFRAME"))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = res.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        NewUrl dbUrl = shortUrlRepository.findByShortCode("iframe-page").orElseThrow();
+        assertEquals(LinkMode.IFRAME, dbUrl.getLinkMode());
+
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("fullUrl", newUrl))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.linkMode").value("IFRAME"));
     }
 
 
@@ -818,5 +805,216 @@ class CreateControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message", containsString("not found")));
+    }
+
+    @Test
+    void createWithCustomPathAndAddShortCodeTrue_appendsShortCodeAndSavesCustomPath() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/invoice/order123",
+                    "customPath": "invoice",
+                    "addShortCode": true
+                }
+                """;
+
+        String res = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.customPath").value("invoice"))
+                .andExpect(jsonPath("$.data.newUrl", matchesPattern("^http://localhost:8081/invoice/[a-zA-Z0-9_-]+$")))
+                .andReturn().getResponse().getContentAsString();
+
+        String generatedNewUrl = res.split("\"newUrl\":\"")[1].split("\"")[0];
+        String generatedCode = generatedNewUrl.substring("http://localhost:8081/invoice/".length());
+
+        // Verify entity in DB
+        NewUrl dbEntity = shortUrlRepository.findByNewUrl(generatedNewUrl).orElseThrow();
+        assertEquals("invoice", dbEntity.getCustomPath());
+        assertEquals(generatedCode, dbEntity.getShortCode());
+        assertEquals("https://example.com/invoice/order123", dbEntity.getOriginalUrl());
+
+        // Verify lookup by newUrl parameter
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("newUrl", generatedNewUrl))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.newUrl").value(generatedNewUrl))
+                .andExpect(jsonPath("$.data.customPath").value("invoice"));
+    }
+
+    @Test
+    void createWithCustomPathAndAddShortCodeFalse_keepsTillCustomPath() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/winter-fest",
+                    "customPath": "winter-fest",
+                    "addShortCode": false
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.customPath").value("winter-fest"))
+                .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/winter-fest"));
+
+        // Verify entity in DB
+        NewUrl dbEntity = shortUrlRepository.findByNewUrl("http://localhost:8081/winter-fest").orElseThrow();
+        assertEquals("winter-fest", dbEntity.getCustomPath());
+        assertEquals("winter-fest", dbEntity.getShortCode());
+        assertEquals("http://localhost:8081/winter-fest", dbEntity.getNewUrl());
+
+        // Lookup by relative path
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("newUrl", "winter-fest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/winter-fest"));
+    }
+
+    @Test
+    void idempotent_whenActiveNonExpiredNonLimited_returnsExisting() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/idempotent-check"
+                }
+                """;
+
+        String res1 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl1 = res1.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        // Second call -> should be idempotent and return existing URL
+        String res2 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(true))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl2 = res2.split("\"newUrl\":\"")[1].split("\"")[0];
+        assertEquals(newUrl1, newUrl2, "Should return existing newUrl");
+    }
+
+    @Test
+    void idempotent_whenExpired_createsNewUrl() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/expired-idempotent-check"
+                }
+                """;
+
+        String res1 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl1 = res1.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        // Expire the URL in DB
+        NewUrl entity1 = shortUrlRepository.findByNewUrl(newUrl1).orElseThrow();
+        entity1.setExpireAt(java.time.Instant.now().minusSeconds(60));
+        shortUrlRepository.save(entity1);
+
+        // Next call -> condition exhausted, must make new URL
+        String res2 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl2 = res2.split("\"newUrl\":\"")[1].split("\"")[0];
+        assertNotEquals(newUrl1, newUrl2, "Should create a new URL because previous one expired");
+    }
+
+    @Test
+    void idempotent_whenClickLimitExceeded_createsNewUrl() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/limit-idempotent-check",
+                    "usageLimit": 1
+                }
+                """;
+
+        String res1 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl1 = res1.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        // Simulate click limit reached
+        NewUrl entity1 = shortUrlRepository.findByNewUrl(newUrl1).orElseThrow();
+        entity1.setClickCount(1);
+        shortUrlRepository.save(entity1);
+
+        // Next call -> click limit exhausted, must make new URL
+        String res2 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl2 = res2.split("\"newUrl\":\"")[1].split("\"")[0];
+        assertNotEquals(newUrl1, newUrl2, "Should create a new URL because previous one reached click limit");
+    }
+
+    @Test
+    void idempotent_whenInactive_createsNewUrl() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/inactive-idempotent-check"
+                }
+                """;
+
+        String res1 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl1 = res1.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        // Deactivate the URL in DB
+        NewUrl entity1 = shortUrlRepository.findByNewUrl(newUrl1).orElseThrow();
+        entity1.setActive(false);
+        shortUrlRepository.save(entity1);
+
+        // Next call -> inactive exhausted, must make new URL
+        String res2 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.existing").value(false))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl2 = res2.split("\"newUrl\":\"")[1].split("\"")[0];
+        assertNotEquals(newUrl1, newUrl2, "Should create a new URL because previous one was deactivated");
     }
 }

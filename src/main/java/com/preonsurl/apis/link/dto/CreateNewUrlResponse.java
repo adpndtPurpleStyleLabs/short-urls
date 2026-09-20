@@ -1,5 +1,6 @@
 package com.preonsurl.apis.link.dto;
 
+import com.preonsurl.apis.link.enums.LinkMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
@@ -7,17 +8,14 @@ import java.util.List;
 
 @Schema(description = "Response payload after creating or resolving a short URL")
 public record CreateNewUrlResponse(
-        @Schema(description = "Full short URL for redirection", example = "http://localhost:8081/invoice/2lk5j7e5rlo")
+        @Schema(description = "Full short URL for redirection", example = "http://localhost:8081/invoice/diwali-sale")
         String newUrl,
-
-//        @Schema(description = "Generated or existing unique short code", example = "2lk5j7e5rlo")
-//        String shortCode,
 
         @Schema(description = "Original destination URL", example = "https://example.com/products/item1")
         String originalUrl,
 
-        @Schema(description = "Directory prefix if specified", example = "invoice")
-        String dirType,
+        @Schema(description = "Custom path if specified", example = "invoice/diwali-sale")
+        String customPath,
 
         @Schema(description = "True if an identical short URL already existed and was returned without generating a new code", example = "false")
         boolean existing,
@@ -32,27 +30,41 @@ public record CreateNewUrlResponse(
         String notes,
 
         @Schema(description = "Tags associated with the short URL", example = "[\"marketing\", \"diwali\"]")
-        List<String> tags
+        List<String> tags,
+
+        @Schema(description = "How the short URL delivers the destination", example = "REDIRECT")
+        LinkMode linkMode
 ) {
     public CreateNewUrlResponse(
-            String shortUrl,
+            String newUrl,
             String originalUrl,
-            String dirType,
+            String customPath,
             boolean existing,
             Instant expireAt,
-            Long usageLimit
+            Long usageLimit,
+            String notes,
+            List<String> tags
     ) {
-        this(shortUrl, originalUrl, dirType, existing, expireAt, usageLimit, null, null);
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, LinkMode.REDIRECT);
     }
 
     public CreateNewUrlResponse(
             String shortUrl,
             String originalUrl,
-            String dirType,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit
+    ) {
+        this(shortUrl, originalUrl, null, existing, expireAt, usageLimit, null, null, LinkMode.REDIRECT);
+    }
+
+    public CreateNewUrlResponse(
+            String shortUrl,
+            String originalUrl,
             boolean existing,
             Instant expireAt
     ) {
-        this(shortUrl, originalUrl, dirType, existing, expireAt, null, null, null);
+        this(shortUrl, originalUrl, null, existing, expireAt, null, null, null, LinkMode.REDIRECT);
     }
 
     public Instant expiresAt() {

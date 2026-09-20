@@ -1,5 +1,6 @@
 package com.preonsurl.apis.link.entity;
 
+import com.preonsurl.apis.link.enums.LinkMode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,8 +15,10 @@ import java.time.Instant;
 @Table(name = "short_urls", indexes = {
         @Index(name = "idx_short_urls_user_id", columnList = "user_id"),
         @Index(name = "idx_short_urls_original_url", columnList = "original_url"),
-        @Index(name = "idx_short_urls_dir_type_original", columnList = "dir_type, original_url"),
-        @Index(name = "idx_short_urls_dir_code", columnList = "dir_type, short_code"),
+        @Index(name = "idx_short_urls_custom_path", columnList = "custom_path"),
+        @Index(name = "idx_short_urls_new_url", columnList = "new_url"),
+        @Index(name = "idx_short_urls_link_mode", columnList = "link_mode"),
+        @Index(name = "idx_short_urls_is_active", columnList = "is_active"),
         @Index(name = "idx_short_urls_expire_at", columnList = "expire_at")
 })
 public class NewUrl {
@@ -33,11 +36,11 @@ public class NewUrl {
     @Column(name = "original_url", nullable = false, length = 2048)
     private String originalUrl;
 
-    @Column(name = "dir_type", length = 128)
-    private String dirType;
+    @Column(name = "custom_path", length = 256)
+    private String customPath;
 
-    @Column(name = "full_short_url", nullable = false, length = 512)
-    private String fullShortUrl;
+    @Column(name = "new_url", nullable = false, length = 512)
+    private String newUrl;
 
     @Column(name = "click_count", nullable = false)
     private long clickCount = 0;
@@ -47,6 +50,13 @@ public class NewUrl {
 
     @Column(name = "usage_limit")
     private Long usageLimit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "link_mode", nullable = false, length = 20)
+    private LinkMode linkMode = LinkMode.REDIRECT;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
 
     @Column(name = "note", length = 1024)
     private String note;
@@ -60,36 +70,69 @@ public class NewUrl {
     public NewUrl(
             String shortCode,
             String originalUrl,
-            String dirType,
-            String fullShortUrl,
-            Instant expireAt
-    ) {
-        this(shortCode, originalUrl, dirType, fullShortUrl, expireAt, null);
-    }
-
-    public NewUrl(
-            String shortCode,
-            String originalUrl,
-            String dirType,
-            String fullShortUrl
-    ) {
-        this(shortCode, originalUrl, dirType, fullShortUrl, Instant.now().plus(3650, java.time.temporal.ChronoUnit.DAYS), null);
-    }
-
-    public NewUrl(
-            String shortCode,
-            String originalUrl,
-            String dirType,
-            String fullShortUrl,
+            String customPath,
+            String newUrl,
             Instant expireAt,
-            Long usageLimit
+            Long usageLimit,
+            LinkMode linkMode
     ) {
         this.shortCode = shortCode;
         this.originalUrl = originalUrl;
-        this.dirType = dirType;
-        this.fullShortUrl = fullShortUrl;
+        this.customPath = customPath;
+        this.newUrl = newUrl;
         this.expireAt = expireAt;
         this.usageLimit = usageLimit;
+        this.linkMode = linkMode != null ? linkMode : LinkMode.REDIRECT;
+    }
+
+    public NewUrl(
+            String shortCode,
+            String originalUrl,
+            String newUrl
+    ) {
+        this(shortCode, originalUrl, null, newUrl, Instant.now().plus(3650, java.time.temporal.ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+    }
+
+    public NewUrl(
+            String shortCode,
+            String originalUrl,
+            String newUrl,
+            Instant expireAt
+    ) {
+        this(shortCode, originalUrl, null, newUrl, expireAt, null, LinkMode.REDIRECT);
+    }
+
+    public NewUrl(
+            String shortCode,
+            String originalUrl,
+            String newUrl,
+            Instant expireAt,
+            Long usageLimit
+    ) {
+        this(shortCode, originalUrl, null, newUrl, expireAt, usageLimit, LinkMode.REDIRECT);
+    }
+
+    public NewUrl(
+            String shortCode,
+            String originalUrl,
+            String newUrl,
+            Instant expireAt,
+            Long usageLimit,
+            LinkMode linkMode
+    ) {
+        this(shortCode, originalUrl, null, newUrl, expireAt, usageLimit, linkMode);
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
+    }
+
+    public void setIsActive(boolean isActive) {
+        this.isActive = isActive;
     }
 
     @PrePersist

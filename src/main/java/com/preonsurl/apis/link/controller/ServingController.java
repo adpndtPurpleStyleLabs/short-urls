@@ -44,7 +44,7 @@ public class ServingController {
     )
 
     @GetMapping("/**")
-    public ResponseEntity<?> serve(  HttpServletRequest request) {
+    public ResponseEntity<?> serve(HttpServletRequest request) {
         String fullUrl = request.getRequestURL().toString();
         String path = "";
         if (request.getRequestURI().startsWith("/")) {

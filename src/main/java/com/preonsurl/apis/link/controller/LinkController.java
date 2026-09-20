@@ -55,8 +55,8 @@ public class LinkController {
             Long userId = user != null ? user.userId() : null;
 
             CreateNewUrlResponse response = newUrlService.createNewUrl(request, userId);
-            log.info("New-URL processed: code='{}', dirType='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}",
-                    response.newUrl(), response.dirType(), response.existing(), response.originalUrl(), response.usageLimit(), response.notes(), response.tags());
+            log.info("New-URL processed: code='{}', linkMode='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}",
+                    response.newUrl(), response.linkMode(), response.existing(), response.originalUrl(), response.usageLimit(), response.notes(), response.tags());
             return ResponseEntity.ok(ApiResponse.success(response, "New URL created successfully"));
         } catch (IllegalArgumentException e) {
             log.warn("Invalid URL create request: {}", e.getMessage());
@@ -76,8 +76,9 @@ public class LinkController {
                     @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
             }
     )
-    @GetMapping
+    @GetMapping(value = {""})
     public ResponseEntity<ApiResponse<CreateNewUrlResponse>> getLinkInfo(
+            @RequestParam(value = "newUrl", required = false) String newUrl,
             @RequestParam(value = "fullUrl", required = false) String fullUrl,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
         try {
@@ -87,25 +88,26 @@ public class LinkController {
                         .body(ApiResponse.error("Authentication required: user ID not found"));
             }
 
-            if (fullUrl == null || fullUrl.isBlank()) {
+            String queryUrl = (newUrl != null && !newUrl.isBlank()) ? newUrl : fullUrl;
+            if (queryUrl == null || queryUrl.isBlank()) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("URL parameter 'fullUrl' cannot be empty"));
+                        .body(ApiResponse.error("URL parameter 'newUrl' cannot be empty"));
             }
 
-            CreateNewUrlResponse response = newUrlService.getLinkInfo(fullUrl.trim(), user.userId());
+            CreateNewUrlResponse response = newUrlService.getLinkInfo(queryUrl.trim(), user.userId());
             log.info("New URL info retrieved: url='{}', original='{}', userId={}", response.newUrl(), response.originalUrl(), user.userId());
             return ResponseEntity.ok(ApiResponse.success(response, "Link details retrieved successfully"));
         } catch (UrlNotFoundException e) {
-            log.warn("New URL not found for fullUrl '{}': {}", fullUrl, e.getMessage());
+            log.warn("New URL not found for queryUrl: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));
         } catch (AccessDeniedException e) {
-            log.warn("Access denied for fullUrl '{}': {}", fullUrl, e.getMessage());
+            log.warn("Access denied for queryUrl: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
         } catch (IllegalArgumentException e) {
             log.warn("Invalid get link info request: {}", e.getMessage());
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
-            log.error("Failed to fetch link info for fullUrl: {}", fullUrl, e);
+            log.error("Failed to fetch link info: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Internal Server Error"));
         }
     }

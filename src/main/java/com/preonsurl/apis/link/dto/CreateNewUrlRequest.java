@@ -1,6 +1,7 @@
 package com.preonsurl.apis.link.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.preonsurl.apis.link.enums.LinkMode;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.Instant;
@@ -15,14 +16,13 @@ public record CreateNewUrlRequest(
         @Schema(description = "Original target URL to shorten (must start with http:// or https://)", example = "https://example.com/products/item1", requiredMode = Schema.RequiredMode.REQUIRED)
         String url,
 
-        @Schema(description = "Optional directory prefix for grouping short URLs (e.g., 'deals', 'invoice')", example = "invoice", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        String dirType,
+        @Schema(description = "Optional custom path for the shortened URL (e.g., 'diwali-sale', 'invoice/diwali-sale')", example = "invoice/diwali-sale", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"slug", "path"})
+        String customPath,
 
-        @Schema(description = "Optional custom slug configuration", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        SlugRequest slug,
-
-        @Schema(description = "Optional expiration policy", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        ExpireRequest expire,
+        @Schema(description = "Optional expiration timestamp in UTC ISO-8601 format. Must be in the future.", example = "2026-12-31T23:59:59Z", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"expire", "expiresAt", "expire_at"})
+        Instant expireAt,
 
         @Schema(description = "Usage limit: 'once', 'unlimited', a positive integer, or null for unlimited", example = "5", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         Object usageLimit,
@@ -32,28 +32,84 @@ public record CreateNewUrlRequest(
         String notes,
 
         @Schema(description = "Optional tags for organizing and filtering URLs", example = "[\"marketing\", \"diwali\", \"campaign\"]", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        List<String> tags
+        List<String> tags,
+
+        @Schema(
+                description = "How SecureURL delivers the destination. REDIRECT navigates the browser to the destination, IFRAME embeds it, PROXY serves it through SecureURL, and MIRROR serves a rewritten copy.",
+                example = "REDIRECT",
+                defaultValue = "REDIRECT",
+                requiredMode = Schema.RequiredMode.NOT_REQUIRED
+        )
+        LinkMode linkMode,
+
+        @Schema(
+                description = "Whether to add/generate a short code for this URL.",
+                example = "true",
+                defaultValue = "false",
+                requiredMode = Schema.RequiredMode.NOT_REQUIRED
+        )
+        @JsonAlias({"AddShortCode", "add_short_code"})
+        Boolean addShortCode
 
 ) {
-    private static final Pattern SLUG_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$");
+    private static final Pattern CUSTOM_PATH_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$");
 
-    public CreateNewUrlRequest(String url, String dirType, ExpireRequest expire) {
-        this(url, dirType, null, expire, null, null, null);
+    public CreateNewUrlRequest(String url, String customPath, Instant expireAt) {
+        this(url, customPath, expireAt, null, null, null, LinkMode.REDIRECT, false);
     }
 
-    public String resolvedSlug() {
-        if (slug == null) {
+    public boolean resolvedAddShortCode() {
+        return Boolean.TRUE.equals(addShortCode);
+    }
+
+    public LinkMode resolvedLinkMode() {
+        return linkMode == null ? LinkMode.REDIRECT : linkMode;
+    }
+
+
+    public Instant expire() {
+        return expireAt;
+    }
+
+    public Instant resolvedExpireAt() {
+        if (expireAt == null) {
             return null;
         }
-        String val = slug.value();
-        if (val == null || val.isBlank()) {
-            throw new IllegalArgumentException("Slug cannot be empty");
+        if (!expireAt.isAfter(Instant.now())) {
+            throw new IllegalArgumentException("expireAt must be greater than the current UTC time");
         }
-        String trimmed = val.trim();
-        if (!SLUG_PATTERN.matcher(trimmed).matches()) {
-            throw new IllegalArgumentException("Invalid slug format: '" + val + "'. Must match pattern: " + SLUG_PATTERN.pattern());
+        return expireAt;
+    }
+
+    public String resolvedCustomPath() {
+        if (customPath == null) {
+            return null;
+        }
+        if (customPath.isBlank()) {
+            throw new IllegalArgumentException("customPath cannot be empty");
+        }
+        String trimmed = customPath.trim();
+        while (trimmed.startsWith("/")) {
+            trimmed = trimmed.substring(1).trim();
+        }
+        while (trimmed.endsWith("/")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1).trim();
+        }
+        if (trimmed.isEmpty()) {
+            throw new IllegalArgumentException("customPath cannot be empty");
+        }
+        if (trimmed.length() > 64) {
+            throw new IllegalArgumentException("customPath cannot exceed 64 characters");
+        }
+        if (!CUSTOM_PATH_PATTERN.matcher(trimmed).matches()) {
+            throw new IllegalArgumentException("Invalid customPath format: '" + customPath + "'. Must match pattern: " + CUSTOM_PATH_PATTERN.pattern());
         }
         return trimmed;
+    }
+
+    @Deprecated
+    public String resolvedSlug() {
+        return resolvedCustomPath();
     }
 
     public Long resolvedUsageLimit() {
@@ -86,49 +142,5 @@ public record CreateNewUrlRequest(
             }
         }
         throw new IllegalArgumentException("Invalid usageLimit format: " + usageLimit);
-    }
-
-    public record SlugRequest(
-
-            @Schema(
-                    description = "Custom path/slug for the shortened URL. " +
-                            "Supports simple slugs or hierarchical paths.",
-                    example = "diwali-sale",
-                    requiredMode = Schema.RequiredMode.REQUIRED
-            )
-            String value
-
-    ) {
-    }
-    
-    public record ExpireRequest(
-
-            @Schema(
-                    description = "Expiration time in UTC. Required when enabled is true and must be in the future.",
-                    example = "2026-12-31T23:59:59Z",
-                    requiredMode = Schema.RequiredMode.NOT_REQUIRED
-            )
-            boolean enabled,
-            Instant expireAt
-    ) {
-        public void validate() {
-
-            if (!enabled) {
-                if (expireAt != null) {
-                    throw new IllegalArgumentException(
-                            "expireAt must be null when expiration is disabled"
-                    );
-                }
-                return;
-            }
-
-            if (expireAt == null) {
-                throw new IllegalArgumentException("expireAt is required when expiration is enabled");
-            }
-
-            if (!expireAt.isAfter(Instant.now())) {
-                throw new IllegalArgumentException("expireAt must be greater than the current UTC time");
-            }
-        }
     }
 }

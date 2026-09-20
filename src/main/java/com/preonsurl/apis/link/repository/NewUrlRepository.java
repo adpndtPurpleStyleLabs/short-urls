@@ -7,28 +7,29 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
 
-    Optional<NewUrl> findFirstByOriginalUrlAndDirType(String originalUrl, String dirType);
+    Optional<NewUrl> findFirstByOriginalUrl(String originalUrl);
 
-    Optional<NewUrl> findFirstByOriginalUrlAndDirTypeIsNull(String originalUrl);
+    Optional<NewUrl> findFirstByOriginalUrlAndCustomPathIsNull(String originalUrl);
+
+    List<NewUrl> findAllByOriginalUrlAndCustomPathIsNullOrderByIdDesc(String originalUrl);
+
+    List<NewUrl> findAllByOriginalUrlAndCustomPathOrderByIdDesc(String originalUrl, String customPath);
 
     Optional<NewUrl> findFirstByOriginalUrlAndUserId(String originalUrl, Long userId);
 
-    Optional<NewUrl> findFirstByOriginalUrlAndDirTypeAndUserId(String originalUrl, String dirType, Long userId);
+    Optional<NewUrl> findByNewUrl(String newUrl);
 
-    Optional<NewUrl> findFirstByOriginalUrlAndDirTypeIsNullAndUserId(String originalUrl, Long userId);
-
-    Optional<NewUrl> findByFullShortUrl(String fullShortUrl);
-
-    Optional<NewUrl> findByFullShortUrlAndUserId(String fullShortUrl, Long userId);
+    Optional<NewUrl> findByNewUrlAndUserId(String newUrl, Long userId);
 
     Optional<NewUrl> findByShortCode(String shortCode);
 
-    Optional<NewUrl> findByDirTypeAndShortCode(String dirType, String shortCode);
+    Optional<NewUrl> findByShortCodeAndUserId(String shortCode, Long userId);
 
     boolean existsByShortCode(String shortCode);
 

@@ -40,7 +40,7 @@ public class NewUrlServingCacheService {
             // Check if cached entry has expired or breached usage limit
             if (cached.isExpired()) {
                 log.info("LRU cache entry expired for code='{}', removing from cache", fullUrl);
-                lruCache.remove(cached.getFullShortUrl());
+                lruCache.remove(cached.getNewUrl());
                 verifyDbStateAndThrow(fullUrl);
                 throw new UrlExpiredException("Short URL has expired");
             }
@@ -52,6 +52,13 @@ public class NewUrlServingCacheService {
                 throw new UrlUsageLimitExceededException("Short URL usage limit reached");
             }
 
+            // Check if active in LRU cache
+            if (!cached.isActive()) {
+                log.info("LRU cache entry is inactive for code='{}', removing from LRU", fullUrl);
+                lruCache.remove(fullUrl);
+                return Optional.empty();
+            }
+
             // Valid cache hit
             long currentUsage = cached.incrementClickCount();
             if (cached.getUsageLimit() != null && currentUsage >= cached.getUsageLimit()) {
@@ -60,12 +67,12 @@ public class NewUrlServingCacheService {
             }
 
             // Trigger background event to update DB click count, access log, and re-verify
-            eventPublisher.publishEvent(new ShortUrlServedEvent(cached.getId(), cached.getFullShortUrl(), ipAddress, userAgent, referer));
+            eventPublisher.publishEvent(new ShortUrlServedEvent(cached.getId(), cached.getNewUrl(), ipAddress, userAgent, referer));
             return Optional.of(cached.getOriginalUrl());
         }
 
         // 2. Cache miss: Check in DB
-        Optional<NewUrl> dbOptional = repository.findByFullShortUrl(fullUrl);
+        Optional<NewUrl> dbOptional = repository.findByNewUrl(fullUrl);
 
         if (dbOptional.isEmpty()) {
             return Optional.empty();
@@ -73,20 +80,34 @@ public class NewUrlServingCacheService {
 
         NewUrl entity = dbOptional.get();
 
-        // Check if expired in DB
+        // 1. Check if expired in DB
         if (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt())) {
             log.warn("Short URL expired in DB: url='{}', expireAt='{}'", entity.getOriginalUrl(), entity.getExpireAt());
             throw new UrlExpiredException("Short URL has expired");
         }
 
-        // Check if usage limit breached in DB
+        // 2. Check if usage limit breached in DB
         if (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit()) {
             log.warn("Short URL usage limit breached in DB: url='{}', clickCount='{}', usageLimit='{}'", entity.getOriginalUrl(), entity.getClickCount(), entity.getUsageLimit());
             throw new UrlUsageLimitExceededException("Short URL usage limit reached");
         }
 
-        // Not expired and not breached: Put into LRU cache if usage remaining after this serve
-        CachedNewUrlDto newCacheEntry = new CachedNewUrlDto(entity.getId(), entity.getFullShortUrl(), entity.getOriginalUrl(), entity.getExpireAt(), entity.getUsageLimit(), entity.getClickCount());
+        // 3. At last check if URL is active or not
+        if (!entity.isActive()) {
+            log.warn("Short URL is inactive: url='{}'", entity.getOriginalUrl());
+            return Optional.empty();
+        }
+
+        // Not expired, not breached, and active: Put into LRU cache with active flag saved
+        CachedNewUrlDto newCacheEntry = new CachedNewUrlDto(
+                entity.getId(),
+                entity.getNewUrl(),
+                entity.getOriginalUrl(),
+                entity.getExpireAt(),
+                entity.getUsageLimit(),
+                entity.getClickCount(),
+                entity.isActive()
+        );
 
         long newUsage = newCacheEntry.incrementClickCount();
         if (newCacheEntry.getUsageLimit() == null || newUsage < newCacheEntry.getUsageLimit()) {
@@ -94,12 +115,12 @@ public class NewUrlServingCacheService {
         }
 
         // Trigger background event
-        eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getFullShortUrl(), ipAddress, userAgent, referer));
+        eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
         return Optional.of(entity.getOriginalUrl());
     }
 
-    private void verifyDbStateAndThrow(String fullShortUrl) {
-        Optional<NewUrl> dbOptional = repository.findByFullShortUrl(fullShortUrl);
+    private void verifyDbStateAndThrow(String newUrl) {
+        Optional<NewUrl> dbOptional = repository.findByNewUrl(newUrl);
 
         if (dbOptional.isPresent()) {
             NewUrl entity = dbOptional.get();
@@ -110,23 +131,6 @@ public class NewUrlServingCacheService {
                 throw new UrlUsageLimitExceededException("Short URL usage limit reached");
             }
         }
-    }
-
-    public String normalizeDirType(String dirType) {
-        if (dirType == null) {
-            return null;
-        }
-        String trimmed = dirType.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        while (trimmed.startsWith("/")) {
-            trimmed = trimmed.substring(1);
-        }
-        while (trimmed.endsWith("/")) {
-            trimmed = trimmed.substring(0, trimmed.length() - 1);
-        }
-        return trimmed.isEmpty() ? null : trimmed;
     }
 
     public NewUrlLruCache getLruCache() {

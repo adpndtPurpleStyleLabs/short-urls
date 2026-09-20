@@ -5,6 +5,7 @@ import com.preonsurl.apis.link.dto.CreateNewUrlResponse;
 import com.preonsurl.apis.link.entity.NewUrl;
 import com.preonsurl.apis.link.entity.NewUrlAccessLog;
 import com.preonsurl.apis.link.entity.NewUrlTag;
+import com.preonsurl.apis.link.enums.LinkMode;
 import com.preonsurl.apis.link.repository.NewUrlAccessLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.repository.NewUrlTagRepository;
@@ -51,64 +52,186 @@ public class NewUrlService {
 
     @Transactional
     public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId) {
-
         String originalUrl = request.url();
         validateUrl(originalUrl);
 
-        if (request.expire() != null) {
-            request.expire().validate();
+        Instant expiresAt = request.resolvedExpireAt();
+        if (expiresAt == null) {
+            expiresAt = ZonedDateTime.now(ZoneOffset.UTC).plusYears(DEFAULT_EXPIRE_YEARS).toInstant();
         }
 
-        Instant expiresAt = ZonedDateTime.now(ZoneOffset.UTC)
-                .plusYears(DEFAULT_EXPIRE_YEARS)
-                .toInstant();
+        LinkMode linkMode = request.resolvedLinkMode();
+        String customPath = request.resolvedCustomPath();
+        boolean addShortCode = request.resolvedAddShortCode();
 
-        if (request.expire() != null && request.expire().enabled()) {
-            expiresAt = request.expire().expireAt();
-        }
+        if (customPath != null) {
+            if (addShortCode) {
+                // Check if an existing URL exists for the same originalUrl and customPath that is still usable
+                Optional<NewUrl> existing = repository.findAllByOriginalUrlAndCustomPathOrderByIdDesc(originalUrl, customPath)
+                        .stream()
+                        .filter(this::isUsable)
+                        .findFirst();
 
-        String normalizedDirType = normalizeDirType(request.dirType());
-        String customSlug = request.resolvedSlug();
-
-        if (customSlug != null) {
-            Optional<NewUrl> existingBySlug = repository.findByShortCode(customSlug);
-            if (existingBySlug.isPresent()) {
-                NewUrl existing = existingBySlug.get();
-                if (existing.getOriginalUrl().equals(originalUrl) &&
-                        java.util.Objects.equals(existing.getDirType(), normalizedDirType)) {
-                    if (existing.getUserId() == null && userId != null) {
-                        existing.setUserId(userId);
-                        repository.save(existing);
+                if (existing.isPresent()) {
+                    NewUrl found = existing.get();
+                    if (found.getUserId() == null && userId != null) {
+                        found.setUserId(userId);
+                        repository.save(found);
                     }
-                    if (existing.getNote() == null && request.notes() != null && !request.notes().isBlank()) {
-                        existing.setNote(request.notes().trim());
-                        repository.save(existing);
+                    if (found.getNote() == null && request.notes() != null && !request.notes().isBlank()) {
+                        found.setNote(request.notes().trim());
+                        repository.save(found);
                     }
-                    List<String> tags = saveTags(existing.getId(), userId, request.tags());
+                    if (found.getLinkMode() != linkMode && request.linkMode() != null) {
+                        found.setLinkMode(linkMode);
+                        repository.save(found);
+                    }
+                    List<String> tags = saveTags(found.getId(), userId, request.tags());
                     if (tags.isEmpty()) {
-                        tags = tagRepository.findByUrlId(existing.getId()).stream().map(NewUrlTag::getTag).toList();
+                        tags = tagRepository.findByUrlId(found.getId()).stream().map(NewUrlTag::getTag).toList();
                     }
                     return new CreateNewUrlResponse(
-                            existing.getFullShortUrl(),
-                            existing.getOriginalUrl(),
-                            existing.getDirType(),
+                            found.getNewUrl(),
+                            found.getOriginalUrl(),
+                            customPath,
                             true,
-                            existing.getExpireAt(),
-                            existing.getUsageLimit(),
-                            existing.getNote(),
-                            tags
+                            found.getExpireAt(),
+                            found.getUsageLimit(),
+                            found.getNote(),
+                            tags,
+                            found.getLinkMode()
                     );
                 }
-                throw new IllegalArgumentException("Slug '" + customSlug + "' is already in use");
+
+                // If no usable existing URL found, generate a new short code and append to customPath
+                String shortCode = generateUniqueShortCode();
+                String fullPath = customPath + "/" + shortCode;
+                String newUrl = domain + "/" + fullPath;
+
+                NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
+                newUrlEntity.setUserId(userId);
+                if (request.notes() != null && !request.notes().isBlank()) {
+                    newUrlEntity.setNote(request.notes().trim());
+                }
+                NewUrl saved = repository.save(newUrlEntity);
+
+                List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
+
+                return new CreateNewUrlResponse(
+                        saved.getNewUrl(),
+                        saved.getOriginalUrl(),
+                        customPath,
+                        false,
+                        saved.getExpireAt(),
+                        saved.getUsageLimit(),
+                        saved.getNote(),
+                        savedTags,
+                        saved.getLinkMode()
+                );
+            } else {
+                String fullPath = customPath;
+                String shortCode = customPath;
+                String newUrl = domain + "/" + fullPath;
+
+                Optional<NewUrl> existingByPath = repository.findByNewUrl(newUrl);
+                if (existingByPath.isEmpty()) {
+                    existingByPath = repository.findByShortCode(shortCode);
+                }
+
+                if (existingByPath.isPresent()) {
+                    NewUrl existing = existingByPath.get();
+                    if (!existing.getOriginalUrl().equals(originalUrl)) {
+                        throw new IllegalArgumentException("Custom path '" + customPath + "' is already in use");
+                    }
+
+                    if (isUsable(existing)) {
+                        if (existing.getUserId() == null && userId != null) {
+                            existing.setUserId(userId);
+                            repository.save(existing);
+                        }
+                        if (existing.getNote() == null && request.notes() != null && !request.notes().isBlank()) {
+                            existing.setNote(request.notes().trim());
+                            repository.save(existing);
+                        }
+                        if (existing.getLinkMode() != linkMode && request.linkMode() != null) {
+                            existing.setLinkMode(linkMode);
+                            repository.save(existing);
+                        }
+                        List<String> tags = saveTags(existing.getId(), userId, request.tags());
+                        if (tags.isEmpty()) {
+                            tags = tagRepository.findByUrlId(existing.getId()).stream().map(NewUrlTag::getTag).toList();
+                        }
+                        return new CreateNewUrlResponse(
+                                existing.getNewUrl(),
+                                existing.getOriginalUrl(),
+                                customPath,
+                                true,
+                                existing.getExpireAt(),
+                                existing.getUsageLimit(),
+                                existing.getNote(),
+                                tags,
+                                existing.getLinkMode()
+                        );
+                    }
+
+                    // Condition exhausted: renew/reactivate the existing custom path entry
+                    existing.setActive(true);
+                    existing.setExpireAt(expiresAt);
+                    existing.setUsageLimit(request.resolvedUsageLimit());
+                    existing.setClickCount(0);
+                    if (userId != null) {
+                        existing.setUserId(userId);
+                    }
+                    if (request.notes() != null && !request.notes().isBlank()) {
+                        existing.setNote(request.notes().trim());
+                    }
+                    if (request.linkMode() != null) {
+                        existing.setLinkMode(linkMode);
+                    }
+                    NewUrl saved = repository.save(existing);
+                    List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
+
+                    return new CreateNewUrlResponse(
+                            saved.getNewUrl(),
+                            saved.getOriginalUrl(),
+                            customPath,
+                            false,
+                            saved.getExpireAt(),
+                            saved.getUsageLimit(),
+                            saved.getNote(),
+                            savedTags,
+                            saved.getLinkMode()
+                    );
+                }
+
+                // Save to database
+                NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
+                newUrlEntity.setUserId(userId);
+                if (request.notes() != null && !request.notes().isBlank()) {
+                    newUrlEntity.setNote(request.notes().trim());
+                }
+                NewUrl saved = repository.save(newUrlEntity);
+
+                List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
+
+                return new CreateNewUrlResponse(
+                        saved.getNewUrl(),
+                        saved.getOriginalUrl(),
+                        customPath,
+                        false,
+                        saved.getExpireAt(),
+                        saved.getUsageLimit(),
+                        saved.getNote(),
+                        savedTags,
+                        saved.getLinkMode()
+                );
             }
         } else {
-            // Check if a short URL already exists for the same URL and dirType
-            Optional<NewUrl> existing;
-            if (normalizedDirType != null) {
-                existing = repository.findFirstByOriginalUrlAndDirType(originalUrl, normalizedDirType);
-            } else {
-                existing = repository.findFirstByOriginalUrlAndDirTypeIsNull(originalUrl);
-            }
+            // Check if an auto-generated short URL already exists for the same URL that is active, non-expired, and non-limit-exceeded
+            Optional<NewUrl> existing = repository.findAllByOriginalUrlAndCustomPathIsNullOrderByIdDesc(originalUrl)
+                    .stream()
+                    .filter(this::isUsable)
+                    .findFirst();
 
             if (existing.isPresent()) {
                 NewUrl found = existing.get();
@@ -120,54 +243,68 @@ public class NewUrlService {
                     found.setNote(request.notes().trim());
                     repository.save(found);
                 }
+                if (found.getLinkMode() != linkMode && request.linkMode() != null) {
+                    found.setLinkMode(linkMode);
+                    repository.save(found);
+                }
                 List<String> tags = saveTags(found.getId(), userId, request.tags());
                 if (tags.isEmpty()) {
                     tags = tagRepository.findByUrlId(found.getId()).stream().map(NewUrlTag::getTag).toList();
                 }
                 return new CreateNewUrlResponse(
-                        found.getFullShortUrl(),
+                        found.getNewUrl(),
                         found.getOriginalUrl(),
-                        found.getDirType(),
+                        null,
                         true,
                         found.getExpireAt(),
                         found.getUsageLimit(),
                         found.getNote(),
-                        tags
+                        tags,
+                        found.getLinkMode()
                 );
             }
+
+            // If no usable URL exists, generate a new short code
+            String code = generateUniqueShortCode();
+            String newUrl = domain + "/" + code;
+
+            NewUrl newUrlEntity = new NewUrl(code, originalUrl, null, newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
+            newUrlEntity.setUserId(userId);
+            if (request.notes() != null && !request.notes().isBlank()) {
+                newUrlEntity.setNote(request.notes().trim());
+            }
+            NewUrl saved = repository.save(newUrlEntity);
+
+            List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
+
+            return new CreateNewUrlResponse(
+                    saved.getNewUrl(),
+                    saved.getOriginalUrl(),
+                    null,
+                    false,
+                    saved.getExpireAt(),
+                    saved.getUsageLimit(),
+                    saved.getNote(),
+                    savedTags,
+                    saved.getLinkMode()
+            );
         }
+    }
 
-        // If slug is present, use slug as short code without generating a new code
-        String code = (customSlug != null) ? customSlug : generateUniqueShortCode();
-
-        // Build full short URL
-        String fullShortUrl;
-        if (normalizedDirType != null) {
-            fullShortUrl = domain + "/" + normalizedDirType + "/" + code;
-        } else {
-            fullShortUrl = domain + "/" + code;
+    public boolean isUsable(NewUrl url) {
+        if (url == null) {
+            return false;
         }
-
-        // Save to database
-        NewUrl newUrl = new NewUrl(code, originalUrl, normalizedDirType, fullShortUrl, expiresAt, request.resolvedUsageLimit());
-        newUrl.setUserId(userId);
-        if (request.notes() != null && !request.notes().isBlank()) {
-            newUrl.setNote(request.notes().trim());
+        if (!url.isActive()) {
+            return false;
         }
-        NewUrl saved = repository.save(newUrl);
-
-        List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
-
-        return new CreateNewUrlResponse(
-                saved.getFullShortUrl(),
-                saved.getOriginalUrl(),
-                saved.getDirType(),
-                false,
-                saved.getExpireAt(),
-                saved.getUsageLimit(),
-                saved.getNote(),
-                savedTags
-        );
+        if (url.getExpireAt() != null && !Instant.now().isBefore(url.getExpireAt())) {
+            return false;
+        }
+        if (url.getUsageLimit() != null && url.getClickCount() >= url.getUsageLimit()) {
+            return false;
+        }
+        return true;
     }
 
     private List<String> saveTags(Long urlId, Long userId, List<String> tags) {
@@ -189,58 +326,62 @@ public class NewUrlService {
     }
 
     @Transactional(readOnly = true)
-    public CreateNewUrlResponse getLinkInfo(String fullUrl, Long userId) {
+    public CreateNewUrlResponse getLinkInfo(String urlParam, Long userId) {
         if (userId == null) {
             throw new AccessDeniedException("User ID is required to fetch link details");
         }
 
-        if (fullUrl == null || fullUrl.isBlank()) {
-            throw new IllegalArgumentException("URL parameter 'fullUrl' cannot be empty");
+        if (urlParam == null || urlParam.isBlank()) {
+            throw new IllegalArgumentException("URL parameter 'newUrl' cannot be empty");
         }
 
-        String trimmedUrl = fullUrl.trim();
+        String trimmedUrl = urlParam.trim();
 
-        NewUrl newUrl = repository.findByFullShortUrlAndUserId(trimmedUrl, userId)
-                .orElseThrow(() -> new UrlNotFoundException("URL not found"));
+        Optional<NewUrl> found = repository.findByNewUrlAndUserId(trimmedUrl, userId);
+
+        if (found.isEmpty() && !trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+            String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
+            found = repository.findByNewUrlAndUserId(prefixed, userId);
+        }
+
+        if (found.isEmpty()) {
+            found = repository.findByShortCodeAndUserId(trimmedUrl, userId);
+        }
+
+        NewUrl newUrl = found.orElseThrow(() -> new UrlNotFoundException("URL not found"));
 
         List<String> tags = tagRepository.findByUrlId(newUrl.getId()).stream()
                 .map(NewUrlTag::getTag)
                 .toList();
 
         return new CreateNewUrlResponse(
-                newUrl.getFullShortUrl(),
+                newUrl.getNewUrl(),
                 newUrl.getOriginalUrl(),
-                newUrl.getDirType(),
+                newUrl.getCustomPath(),
                 true,
                 newUrl.getExpireAt(),
                 newUrl.getUsageLimit(),
                 newUrl.getNote(),
-                tags
+                tags,
+                newUrl.getLinkMode()
         );
     }
 
     @Transactional
-    public Optional<String> resolveAndRecordClick(String dirType, String shortCode, String ipAddress, String userAgent, String referer) {
-        String normalizedDirType = normalizeDirType(dirType);
-        Optional<NewUrl> optionalShortUrl;
-
-        if (normalizedDirType != null) {
-            optionalShortUrl = repository.findByDirTypeAndShortCode(normalizedDirType, shortCode);
-        } else {
-            optionalShortUrl = repository.findByShortCode(shortCode);
-        }
+    public Optional<String> resolveAndRecordClick(String shortCode, String ipAddress, String userAgent, String referer) {
+        Optional<NewUrl> optionalShortUrl = repository.findByShortCode(shortCode);
 
         if (optionalShortUrl.isPresent()) {
             NewUrl entity = optionalShortUrl.get();
 
             if (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt())) {
-                log.warn("Short URL expired: code='{}', dirType='{}', expireAt='{}'", shortCode, normalizedDirType, entity.getExpireAt());
+                log.warn("Short URL expired: code='{}', expireAt='{}'", shortCode, entity.getExpireAt());
                 throw new UrlExpiredException("Short URL has expired");
             }
 
             if (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit()) {
-                log.warn("Short URL usage limit reached: code='{}', dirType='{}', clickCount='{}', usageLimit='{}'",
-                        shortCode, normalizedDirType, entity.getClickCount(), entity.getUsageLimit());
+                log.warn("Short URL usage limit reached: code='{}', clickCount='{}', usageLimit='{}'",
+                        shortCode, entity.getClickCount(), entity.getUsageLimit());
                 throw new UrlUsageLimitExceededException("Short URL usage limit reached");
             }
 
@@ -262,8 +403,8 @@ public class NewUrlService {
     }
 
     @Transactional
-    public Optional<String> resolveAndRecordClick(String dirType, String shortCode) {
-        return resolveAndRecordClick(dirType, shortCode, null, null, null);
+    public Optional<String> resolveAndRecordClick(String shortCode) {
+        return resolveAndRecordClick(shortCode, null, null, null);
     }
 
     private String generateUniqueShortCode() {
@@ -281,25 +422,6 @@ public class NewUrlService {
             }
         }
         throw new IllegalStateException("Unable to generate unique short code after 5 attempts");
-    }
-
-    public String normalizeDirType(String dirType) {
-        if (dirType == null) {
-            return null;
-        }
-        String trimmed = dirType.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        // Strip leading slashes
-        while (trimmed.startsWith("/")) {
-            trimmed = trimmed.substring(1);
-        }
-        // Strip trailing slashes
-        while (trimmed.endsWith("/")) {
-            trimmed = trimmed.substring(0, trimmed.length() - 1);
-        }
-        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void validateUrl(String url) {

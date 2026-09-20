@@ -58,7 +58,6 @@ class ServingControllerTest {
         NewUrl newUrl = new NewUrl(
                 "abcXYZ1",
                 "https://example.com/target-page",
-                null,
                 "http://localhost/abcXYZ1"
         );
         NewUrl saved = shortUrlRepository.save(newUrl);
@@ -94,7 +93,6 @@ class ServingControllerTest {
         NewUrl newUrl = new NewUrl(
                 "inv1234",
                 "https://example.com/billing/invoice/456",
-                "invoice",
                 "http://localhost/invoice/inv1234"
         );
         NewUrl saved = shortUrlRepository.save(newUrl);
@@ -144,7 +142,6 @@ class ServingControllerTest {
         NewUrl newUrl = new NewUrl(
                 "expRoot",
                 "https://example.com/expired-root",
-                null,
                 "http://localhost/expRoot",
                 Instant.now().minus(1, ChronoUnit.HOURS)
         );
@@ -164,7 +161,6 @@ class ServingControllerTest {
         NewUrl newUrl = new NewUrl(
                 "expDir",
                 "https://example.com/expired-dir",
-                "promo",
                 "http://localhost/promo/expDir",
                 Instant.now().minus(1, ChronoUnit.HOURS)
         );
@@ -184,7 +180,6 @@ class ServingControllerTest {
         NewUrl newUrl = new NewUrl(
                 "onceCode",
                 "https://example.com/one-time",
-                null,
                 "http://localhost/onceCode",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 1L
@@ -221,7 +216,6 @@ class ServingControllerTest {
         NewUrl newUrl = new NewUrl(
                 "twoCode",
                 "https://example.com/twice",
-                "deals",
                 "http://localhost/deals/twoCode",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 2L
@@ -241,7 +235,7 @@ class ServingControllerTest {
         assertNull(servingCacheService.getLruCache().get("http://localhost/deals/twoCode"), "Should be evicted after 2nd serve");
 
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
-            NewUrl afterSecond = shortUrlRepository.findByDirTypeAndShortCode("deals", "twoCode").orElseThrow();
+            NewUrl afterSecond = shortUrlRepository.findByShortCode("twoCode").orElseThrow();
             assertEquals(2, afterSecond.getClickCount(), "Usage should be incremented to 2");
             assertEquals(2, accessLogRepository.count());
         });
@@ -252,7 +246,7 @@ class ServingControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("New URL usage limit reached"));
 
-        NewUrl afterThird = shortUrlRepository.findByDirTypeAndShortCode("deals", "twoCode").orElseThrow();
+        NewUrl afterThird = shortUrlRepository.findByShortCode("twoCode").orElseThrow();
         assertEquals(2, afterThird.getClickCount(), "Usage should not be incremented after reaching limit");
         assertEquals(2, accessLogRepository.count());
     }
@@ -262,7 +256,6 @@ class ServingControllerTest {
         NewUrl newUrl = new NewUrl(
                 "unlimitedCode",
                 "https://example.com/unlimited",
-                null,
                 "http://localhost/unlimitedCode",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 null
@@ -289,7 +282,6 @@ class ServingControllerTest {
         NewUrl slugUrl = new NewUrl(
                 "diwali-sale",
                 "https://example.com/diwali-destination",
-                null,
                 "http://localhost/diwali-sale",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 null
@@ -303,7 +295,6 @@ class ServingControllerTest {
         NewUrl dirSlugUrl = new NewUrl(
                 "spring-sale",
                 "https://example.com/spring-destination",
-                "deals",
                 "http://localhost/deals/spring-sale",
                 Instant.now().plus(1, ChronoUnit.DAYS),
                 null
@@ -317,5 +308,59 @@ class ServingControllerTest {
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             assertEquals(2, accessLogRepository.count(), "Both slug accesses should be logged");
         });
+    }
+
+    @Test
+    void servingInactiveShortCodeReturns404NotFound() throws Exception {
+        NewUrl inactiveUrl = new NewUrl(
+                "inactive-code",
+                "https://example.com/inactive-target",
+                "http://localhost/inactive-code"
+        );
+        inactiveUrl.setActive(false);
+        shortUrlRepository.save(inactiveUrl);
+
+        mockMvc.perform(get("/inactive-code"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", org.hamcrest.Matchers.containsString("not found")));
+    }
+
+    @Test
+    void servingActiveUrlSavesActiveInLruAndCachedInactiveReturns404() throws Exception {
+        NewUrl activeUrl = new NewUrl(
+                "active-lru-code",
+                "https://example.com/active-destination",
+                "http://localhost/active-lru-code"
+        );
+        activeUrl.setActive(true);
+        shortUrlRepository.save(activeUrl);
+
+        // 1. Initial serve -> populates LRU cache
+        mockMvc.perform(get("/active-lru-code"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/active-destination"));
+
+        com.preonsurl.apis.link.cache.CachedNewUrlDto cached = servingCacheService.getLruCache().get("http://localhost/active-lru-code");
+        assertNotNull(cached, "Should be cached in LRU");
+        assertTrue(cached.isActive(), "isActive should be true in LRU cache");
+
+        // 2. Put an inactive entry directly in LRU cache -> serving should reject with 404 and remove from LRU
+        com.preonsurl.apis.link.cache.CachedNewUrlDto inactiveCached = new com.preonsurl.apis.link.cache.CachedNewUrlDto(
+                9999L,
+                "http://localhost/fake-inactive",
+                "https://example.com/fake",
+                null,
+                null,
+                0,
+                false
+        );
+        servingCacheService.getLruCache().put(inactiveCached);
+
+        mockMvc.perform(get("/fake-inactive"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+
+        assertNull(servingCacheService.getLruCache().get("http://localhost/fake-inactive"), "Inactive entry should be removed from LRU");
     }
 }

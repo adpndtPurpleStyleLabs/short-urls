@@ -41,12 +41,12 @@ public class NewUrlLruCache {
     }
 
     public void put(CachedNewUrlDto item) {
-        if (item == null || item.getFullShortUrl() == null) {
+        if (item == null || item.getNewUrl() == null) {
             return;
         }
         lock.writeLock().lock();
         try {
-            map.put(normalizePath(item.getFullShortUrl()), item);
+            map.put(normalizePath(item.getNewUrl()), item);
         } finally {
             lock.writeLock().unlock();
         }
