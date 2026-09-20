@@ -64,3 +64,20 @@ CREATE TABLE IF NOT EXISTS tags (
     INDEX idx_tags_user_id (user_id),
     INDEX idx_tags_tag (tag)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. Table for tracking creation and edits to new URLs (CREATED, EDITED, field-level diffs)
+CREATE TABLE IF NOT EXISTS new_url_changes_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    url_id BIGINT NOT NULL,
+    user_id BIGINT NULL,
+    action VARCHAR(32) NOT NULL,
+    field_name VARCHAR(64) NULL,
+    old_value VARCHAR(4096) NULL,
+    new_value VARCHAR(4096) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_changes_log_url FOREIGN KEY (url_id) REFERENCES short_urls (id) ON DELETE CASCADE,
+    INDEX idx_changes_log_url_id (url_id),
+    INDEX idx_changes_log_user_id (user_id),
+    INDEX idx_changes_log_action (action),
+    INDEX idx_changes_log_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

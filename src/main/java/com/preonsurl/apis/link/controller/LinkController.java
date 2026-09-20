@@ -5,6 +5,7 @@ import com.preonsurl.apis.auth.dto.AuthenticatedUser;
 import com.preonsurl.apis.config.OpenApiConfig;
 import com.preonsurl.apis.link.dto.ApiResponse;
 import com.preonsurl.apis.link.dto.CreateNewUrlRequest;
+import com.preonsurl.apis.link.dto.EditNewUrlRequest;
 import com.preonsurl.apis.link.exception.UrlNotFoundException;
 import com.preonsurl.apis.link.service.NewUrlService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -109,6 +110,45 @@ public class LinkController {
         } catch (Exception e) {
             log.error("Failed to fetch link info: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Internal Server Error"));
+        }
+    }
+
+    @Operation(
+            summary = "Edit an existing new URL",
+            description = "Updates parameters of an existing short URL (destination target URL, custom path, expiration timestamp, usage limit, notes, tags, link mode, active status). The short URL identifier itself is immutable. Requires authentication.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+
+    @PostMapping(value = "/edit", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<CreateNewUrlResponse>> editNewUrl(
+            @RequestBody @Valid EditNewUrlRequest request,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        try {
+            AuthenticatedUser user = resolveUser(currentUser);
+            if (user == null || user.userId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Authentication required: user ID not found"));
+            }
+
+            CreateNewUrlResponse response = newUrlService.editNewUrl(request, user.userId());
+            log.info("New URL edited: url='{}', original='{}', userId={}", response.newUrl(), response.originalUrl(), user.userId());
+            return ResponseEntity.ok(ApiResponse.success(response, "Link updated successfully"));
+        } catch (UrlNotFoundException e) {
+            log.warn("New URL not found for edit: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for edit: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid edit request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to edit link: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal Server Error"));
         }
     }
 

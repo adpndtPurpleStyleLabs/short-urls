@@ -341,12 +341,12 @@ docker run -d \
 - [x] Basic URL shortening
 - [x] Directory
 - [x] Custom slug
-- [ ] Edit destination URL without changing the short URL
-- [ ] Enable / disable link
+- [x] Edit destination URL without changing the short URL
+- [x] Enable / disable link
 - [x] Expiration
 - [x] Usage limit
 - [ ] One-time use
-- [ ] Link status: Active / Expired / Disabled / Limit Reached
+- [x] Link status: Active / Expired / Disabled / Limit Reached
 - [ ] Bulk URL creation
 - [ ] Bulk URL import
 - [ ] Bulk URL export

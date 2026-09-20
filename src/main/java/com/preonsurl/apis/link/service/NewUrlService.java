@@ -1,12 +1,16 @@
 package com.preonsurl.apis.link.service;
 
+import com.preonsurl.apis.link.cache.NewUrlLruCache;
 import com.preonsurl.apis.link.dto.CreateNewUrlRequest;
 import com.preonsurl.apis.link.dto.CreateNewUrlResponse;
+import com.preonsurl.apis.link.dto.EditNewUrlRequest;
 import com.preonsurl.apis.link.entity.NewUrl;
 import com.preonsurl.apis.link.entity.NewUrlAccessLog;
+import com.preonsurl.apis.link.entity.NewUrlChangeLog;
 import com.preonsurl.apis.link.entity.NewUrlTag;
 import com.preonsurl.apis.link.enums.LinkMode;
 import com.preonsurl.apis.link.repository.NewUrlAccessLogRepository;
+import com.preonsurl.apis.link.repository.NewUrlChangeLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.repository.NewUrlTagRepository;
 import com.preonsurl.apis.link.exception.UrlExpiredException;
@@ -24,6 +28,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -35,17 +40,23 @@ public class NewUrlService {
     private final NewUrlRepository repository;
     private final NewUrlAccessLogRepository accessLogRepository;
     private final NewUrlTagRepository tagRepository;
+    private final NewUrlChangeLogRepository changeLogRepository;
+    private final NewUrlLruCache lruCache;
     private final ShortCodePool codePool;
     private final String domain;
 
     public NewUrlService(NewUrlRepository repository,
                          NewUrlAccessLogRepository accessLogRepository,
                          NewUrlTagRepository tagRepository,
+                         NewUrlChangeLogRepository changeLogRepository,
+                         NewUrlLruCache lruCache,
                          ShortCodePool codePool,
                          @Value("${preonsurl.shortener.domain:http://localhost:8081}") String domain) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
         this.tagRepository = tagRepository;
+        this.changeLogRepository = changeLogRepository;
+        this.lruCache = lruCache;
         this.codePool = codePool;
         this.domain = domain.endsWith("/") ? domain.substring(0, domain.length() - 1) : domain;
     }
@@ -114,6 +125,7 @@ public class NewUrlService {
                     newUrlEntity.setNote(request.notes().trim());
                 }
                 NewUrl saved = repository.save(newUrlEntity);
+                changeLogRepository.save(new NewUrlChangeLog(saved.getId(), userId, "CREATED", "ALL", null, saved.getNewUrl()));
 
                 List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
 
@@ -189,6 +201,7 @@ public class NewUrlService {
                         existing.setLinkMode(linkMode);
                     }
                     NewUrl saved = repository.save(existing);
+                    changeLogRepository.save(new NewUrlChangeLog(saved.getId(), userId, "EDITED", "REACTIVATED", null, saved.getNewUrl()));
                     List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
 
                     return new CreateNewUrlResponse(
@@ -211,6 +224,7 @@ public class NewUrlService {
                     newUrlEntity.setNote(request.notes().trim());
                 }
                 NewUrl saved = repository.save(newUrlEntity);
+                changeLogRepository.save(new NewUrlChangeLog(saved.getId(), userId, "CREATED", "ALL", null, saved.getNewUrl()));
 
                 List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
 
@@ -274,6 +288,7 @@ public class NewUrlService {
                 newUrlEntity.setNote(request.notes().trim());
             }
             NewUrl saved = repository.save(newUrlEntity);
+            changeLogRepository.save(new NewUrlChangeLog(saved.getId(), userId, "CREATED", "ALL", null, saved.getNewUrl()));
 
             List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
 
@@ -363,7 +378,165 @@ public class NewUrlService {
                 newUrl.getUsageLimit(),
                 newUrl.getNote(),
                 tags,
-                newUrl.getLinkMode()
+                newUrl.getLinkMode(),
+                newUrl.isActive()
+        );
+    }
+
+    @Transactional
+    public CreateNewUrlResponse editNewUrl(EditNewUrlRequest request, Long userId) {
+        if (userId == null) {
+            throw new AccessDeniedException("User ID is required to edit link");
+        }
+        if (request == null || request.newUrl() == null || request.newUrl().isBlank()) {
+            throw new IllegalArgumentException("URL parameter 'newUrl' cannot be empty");
+        }
+
+        String trimmedUrl = request.newUrl().trim();
+
+        // 1. Locate entity by newUrl or shortCode for this user
+        Optional<NewUrl> found = repository.findByNewUrlAndUserId(trimmedUrl, userId);
+
+        if (found.isEmpty() && !trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+            String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
+            found = repository.findByNewUrlAndUserId(prefixed, userId);
+        }
+
+        if (found.isEmpty()) {
+            found = repository.findByShortCodeAndUserId(trimmedUrl, userId);
+        }
+
+        NewUrl entity = found.orElseThrow(() -> new UrlNotFoundException("Link not found or access denied"));
+
+        boolean modified = false;
+
+        // A. originalUrl
+        if (request.originalUrl() != null && !request.originalUrl().isBlank()) {
+            String newOriginalUrl = request.originalUrl().trim();
+            validateUrl(newOriginalUrl);
+            if (!Objects.equals(entity.getOriginalUrl(), newOriginalUrl)) {
+                String oldVal = entity.getOriginalUrl();
+                entity.setOriginalUrl(newOriginalUrl);
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "original_url", oldVal, newOriginalUrl));
+                modified = true;
+            }
+        }
+
+        // B. customPath
+        if (request.customPath() != null) {
+            String newCustomPath = request.customPath().trim();
+            if (newCustomPath.isBlank()) {
+                newCustomPath = null;
+            }
+            if (!Objects.equals(entity.getCustomPath(), newCustomPath)) {
+                String oldVal = entity.getCustomPath();
+                entity.setCustomPath(newCustomPath);
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "custom_path", oldVal, newCustomPath));
+                modified = true;
+            }
+        }
+
+        // C. expireAt
+        if (request.expireAt() != null) {
+            if (!Objects.equals(entity.getExpireAt(), request.expireAt())) {
+                String oldVal = entity.getExpireAt() != null ? entity.getExpireAt().toString() : null;
+                entity.setExpireAt(request.expireAt());
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "expire_at", oldVal, request.expireAt().toString()));
+                modified = true;
+            }
+        }
+
+        // D. usageLimit
+        if (request.hasUsageLimit()) {
+            Long newUsageLimit = request.resolvedUsageLimit();
+            if (!Objects.equals(entity.getUsageLimit(), newUsageLimit)) {
+                String oldVal = entity.getUsageLimit() != null ? entity.getUsageLimit().toString() : null;
+                String newVal = newUsageLimit != null ? newUsageLimit.toString() : null;
+                entity.setUsageLimit(newUsageLimit);
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "usage_limit", oldVal, newVal));
+                modified = true;
+            }
+        }
+
+        // E. notes
+        if (request.notes() != null) {
+            String newNote = request.notes().trim();
+            if (newNote.isBlank()) {
+                newNote = null;
+            }
+            if (!Objects.equals(entity.getNote(), newNote)) {
+                String oldVal = entity.getNote();
+                entity.setNote(newNote);
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "notes", oldVal, newNote));
+                modified = true;
+            }
+        }
+
+        // F. linkMode
+        if (request.linkMode() != null) {
+            if (!Objects.equals(entity.getLinkMode(), request.linkMode())) {
+                String oldVal = entity.getLinkMode() != null ? entity.getLinkMode().name() : null;
+                entity.setLinkMode(request.linkMode());
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "link_mode", oldVal, request.linkMode().name()));
+                modified = true;
+            }
+        }
+
+        // G. isActive
+        if (request.isActive() != null) {
+            if (entity.isActive() != request.isActive()) {
+                String oldVal = String.valueOf(entity.isActive());
+                String newVal = String.valueOf(request.isActive());
+                entity.setActive(request.isActive());
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "is_active", oldVal, newVal));
+                modified = true;
+            }
+        }
+
+        // H. tags
+        if (request.tags() != null) {
+            List<String> currentTags = tagRepository.findByUrlId(entity.getId()).stream()
+                    .map(NewUrlTag::getTag)
+                    .sorted()
+                    .toList();
+            List<String> updatedTags = request.tags().stream()
+                    .filter(t -> t != null && !t.isBlank())
+                    .map(String::trim)
+                    .distinct()
+                    .sorted()
+                    .toList();
+
+            if (!currentTags.equals(updatedTags)) {
+                String oldVal = currentTags.isEmpty() ? null : String.join(", ", currentTags);
+                String newVal = updatedTags.isEmpty() ? null : String.join(", ", updatedTags);
+                tagRepository.deleteByUrlId(entity.getId());
+                saveTags(entity.getId(), userId, updatedTags);
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "tags", oldVal, newVal));
+                modified = true;
+            }
+        }
+
+        if (modified) {
+            entity = repository.save(entity);
+            // Invalidate in LRU cache
+            lruCache.remove(entity.getNewUrl());
+        }
+
+        List<String> finalTags = tagRepository.findByUrlId(entity.getId()).stream()
+                .map(NewUrlTag::getTag)
+                .toList();
+
+        return new CreateNewUrlResponse(
+                entity.getNewUrl(),
+                entity.getOriginalUrl(),
+                entity.getCustomPath(),
+                false,
+                entity.getExpireAt(),
+                entity.getUsageLimit(),
+                entity.getNote(),
+                finalTags,
+                entity.getLinkMode(),
+                entity.isActive()
         );
     }
 

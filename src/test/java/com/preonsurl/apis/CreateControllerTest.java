@@ -10,7 +10,9 @@ import com.preonsurl.apis.auth.entity.Tenant;
 import com.preonsurl.apis.auth.entity.User;
 import com.preonsurl.apis.auth.repository.TenantRepository;
 import com.preonsurl.apis.auth.repository.UserRepository;
+import com.preonsurl.apis.link.entity.NewUrlChangeLog;
 import com.preonsurl.apis.link.entity.NewUrlTag;
+import com.preonsurl.apis.link.repository.NewUrlChangeLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.repository.NewUrlTagRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +34,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -46,6 +49,9 @@ class CreateControllerTest {
 
     @Autowired
     private NewUrlTagRepository tagRepository;
+
+    @Autowired
+    private NewUrlChangeLogRepository changeLogRepository;
 
     @Autowired
     private ApiKeyRepository apiKeyRepository;
@@ -69,6 +75,7 @@ class CreateControllerTest {
     void setUp() {
         apiKeyCache.clear();
         userCache.clear();
+        changeLogRepository.deleteAll();
         tagRepository.deleteAll();
         shortUrlRepository.deleteAll();
         apiKeyRepository.deleteAll();
@@ -1016,5 +1023,215 @@ class CreateControllerTest {
 
         String newUrl2 = res2.split("\"newUrl\":\"")[1].split("\"")[0];
         assertNotEquals(newUrl1, newUrl2, "Should create a new URL because previous one was deactivated");
+    }
+
+    @Test
+    void createNewUrl_logsCreatedActionInChangeLog() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/changelog-test"
+                }
+                """;
+
+        String res = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = res.split("\"newUrl\":\"")[1].split("\"")[0];
+        NewUrl entity = shortUrlRepository.findByNewUrl(newUrl).orElseThrow();
+
+        List<NewUrlChangeLog> logs = changeLogRepository.findByUrlIdOrderByCreatedAtDesc(entity.getId());
+        assertFalse(logs.isEmpty());
+        NewUrlChangeLog createdLog = logs.stream()
+                .filter(l -> "CREATED".equals(l.getAction()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("ALL", createdLog.getFieldName());
+        assertEquals(newUrl, createdLog.getNewValue());
+        assertNull(createdLog.getOldValue());
+    }
+
+    @Test
+    void editNewUrl_updatesParametersAndMaintainsFieldChangeLogs() throws Exception {
+        // 1. Create a link
+        String createPayload = """
+                {
+                    "url": "https://example.com/initial-page",
+                    "note": "Initial note",
+                    "tags": ["initial-tag"],
+                    "linkMode": "REDIRECT",
+                    "usageLimit": 10
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+        NewUrl initialEntity = shortUrlRepository.findByNewUrl(newUrl).orElseThrow();
+        Long urlId = initialEntity.getId();
+
+        // 2. Edit link with new parameters
+        String editPayload = """
+                {
+                    "newUrl": "%s",
+                    "originalUrl": "https://example.com/updated-page",
+                    "notes": "Updated note",
+                    "tags": ["updated-tag-1", "updated-tag-2"],
+                    "linkMode": "IFRAME",
+                    "isActive": false,
+                    "usageLimit": 25
+                }
+                """.formatted(newUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.newUrl").value(newUrl))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/updated-page"))
+                .andExpect(jsonPath("$.data.notes").value("Updated note"))
+                .andExpect(jsonPath("$.data.tags", containsInAnyOrder("updated-tag-1", "updated-tag-2")))
+                .andExpect(jsonPath("$.data.linkMode").value("IFRAME"))
+                .andExpect(jsonPath("$.data.isActive").value(false))
+                .andExpect(jsonPath("$.data.usageLimit").value(25));
+
+        // 3. Verify entity in database
+        NewUrl updatedEntity = shortUrlRepository.findById(urlId).orElseThrow();
+        assertEquals("https://example.com/updated-page", updatedEntity.getOriginalUrl());
+        assertEquals("Updated note", updatedEntity.getNote());
+        assertEquals(LinkMode.IFRAME, updatedEntity.getLinkMode());
+        assertFalse(updatedEntity.isActive());
+        assertEquals(25L, updatedEntity.getUsageLimit());
+
+        // 4. Verify change logs for EDITED
+        List<NewUrlChangeLog> editLogs = changeLogRepository.findByUrlIdAndActionOrderByCreatedAtDesc(urlId, "EDITED");
+        assertFalse(editLogs.isEmpty());
+
+        // Check original_url log
+        NewUrlChangeLog urlLog = editLogs.stream().filter(l -> "original_url".equals(l.getFieldName())).findFirst().orElseThrow();
+        assertEquals("https://example.com/initial-page", urlLog.getOldValue());
+        assertEquals("https://example.com/updated-page", urlLog.getNewValue());
+
+        // Check notes log
+        NewUrlChangeLog noteLog = editLogs.stream().filter(l -> "notes".equals(l.getFieldName())).findFirst().orElseThrow();
+        assertEquals("Initial note", noteLog.getOldValue());
+        assertEquals("Updated note", noteLog.getNewValue());
+
+        // Check link_mode log
+        NewUrlChangeLog modeLog = editLogs.stream().filter(l -> "link_mode".equals(l.getFieldName())).findFirst().orElseThrow();
+        assertEquals("REDIRECT", modeLog.getOldValue());
+        assertEquals("IFRAME", modeLog.getNewValue());
+
+        // Check is_active log
+        NewUrlChangeLog activeLog = editLogs.stream().filter(l -> "is_active".equals(l.getFieldName())).findFirst().orElseThrow();
+        assertEquals("true", activeLog.getOldValue());
+        assertEquals("false", activeLog.getNewValue());
+
+        // Check usage_limit log
+        NewUrlChangeLog limitLog = editLogs.stream().filter(l -> "usage_limit".equals(l.getFieldName())).findFirst().orElseThrow();
+        assertEquals("10", limitLog.getOldValue());
+        assertEquals("25", limitLog.getNewValue());
+
+        // Check tags log
+        NewUrlChangeLog tagLog = editLogs.stream().filter(l -> "tags".equals(l.getFieldName())).findFirst().orElseThrow();
+        assertEquals("initial-tag", tagLog.getOldValue());
+        assertTrue(tagLog.getNewValue().contains("updated-tag-1") && tagLog.getNewValue().contains("updated-tag-2"));
+    }
+
+    @Test
+    void editNewUrl_partialUpdatesViaPost() throws Exception {
+        String createPayload = """
+                {
+                    "url": "https://example.com/partial-post-test"
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        // 1. Partial update: only note via POST /link/edit
+        String notePayload = """
+                {
+                    "newUrl": "%s",
+                    "notes": "Post updated note only"
+                }
+                """.formatted(newUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(notePayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.notes").value("Post updated note only"))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/partial-post-test"));
+
+        // 2. Partial update: target URL via POST /link/edit
+        String targetPayload = """
+                {
+                    "newUrl": "%s",
+                    "originalUrl": "https://example.com/partial-post-test-updated"
+                }
+                """.formatted(newUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(targetPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/partial-post-test-updated"))
+                .andExpect(jsonPath("$.data.notes").value("Post updated note only"));
+    }
+
+    @Test
+    void editNewUrl_unauthorizedOrWrongUser_forbiddenOrUnauthorized() throws Exception {
+        String editPayload = """
+                {
+                    "newUrl": "http://localhost:8081/non-existent"
+                }
+                """;
+
+        // Without auth -> 401
+        mockMvc.perform(post("/link/edit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayload))
+                .andExpect(status().isUnauthorized());
+
+        // With valid key but non-existent link -> 404
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayload))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void editNewUrl_onlyPostAllowed_putReturnsMethodNotAllowed() throws Exception {
+        String editPayload = """
+                {
+                    "newUrl": "http://localhost:8081/test"
+                }
+                """;
+
+        mockMvc.perform(put("/link/edit")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayload))
+                .andExpect(status().isMethodNotAllowed());
     }
 }

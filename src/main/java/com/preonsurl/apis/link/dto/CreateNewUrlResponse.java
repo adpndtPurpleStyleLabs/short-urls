@@ -33,8 +33,25 @@ public record CreateNewUrlResponse(
         List<String> tags,
 
         @Schema(description = "How the short URL delivers the destination", example = "REDIRECT")
-        LinkMode linkMode
+        LinkMode linkMode,
+
+        @Schema(description = "Whether the URL is active", example = "true")
+        Boolean isActive
 ) {
+    public CreateNewUrlResponse(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode
+    ) {
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, true);
+    }
+
     public CreateNewUrlResponse(
             String newUrl,
             String originalUrl,
@@ -45,7 +62,7 @@ public record CreateNewUrlResponse(
             String notes,
             List<String> tags
     ) {
-        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, LinkMode.REDIRECT);
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, LinkMode.REDIRECT, true);
     }
 
     public CreateNewUrlResponse(
