@@ -275,5 +275,8 @@ public record CreateNewUrlRequest(
         resolvedCustomPath();
         resolvedUsagePolicies();
         resolvedAccessPolicies();
+        if (resolvedLinkMode() == LinkMode.PROXY) {
+            com.preonsurl.apis.link.service.ProxyResourceValidator.validateProxyUrl(url);
+        }
     }
 }

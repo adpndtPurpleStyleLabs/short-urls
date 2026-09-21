@@ -1,5 +1,6 @@
 package com.preonsurl.apis.link.cache;
 
+import com.preonsurl.apis.link.enums.LinkMode;
 import lombok.Data;
 
 import java.time.Instant;
@@ -15,8 +16,9 @@ public class CachedNewUrlDto {
     private final Long usageLimit;
     private final AtomicLong clickCount;
     private final boolean active;
+    private final LinkMode linkMode;
 
-    public CachedNewUrlDto(Long id, String newUrl, String originalUrl, Instant expireAt, Long usageLimit, long initialClickCount, boolean active) {
+    public CachedNewUrlDto(Long id, String newUrl, String originalUrl, Instant expireAt, Long usageLimit, long initialClickCount, boolean active, LinkMode linkMode) {
         this.id = id;
         this.newUrl = newUrl;
         this.originalUrl = originalUrl;
@@ -24,10 +26,15 @@ public class CachedNewUrlDto {
         this.usageLimit = usageLimit;
         this.clickCount = new AtomicLong(initialClickCount);
         this.active = active;
+        this.linkMode = linkMode != null ? linkMode : LinkMode.REDIRECT;
+    }
+
+    public CachedNewUrlDto(Long id, String newUrl, String originalUrl, Instant expireAt, Long usageLimit, long initialClickCount, boolean active) {
+        this(id, newUrl, originalUrl, expireAt, usageLimit, initialClickCount, active, LinkMode.REDIRECT);
     }
 
     public CachedNewUrlDto(Long id, String newUrl, String originalUrl, Instant expireAt, Long usageLimit, long initialClickCount) {
-        this(id, newUrl, originalUrl, expireAt, usageLimit, initialClickCount, true);
+        this(id, newUrl, originalUrl, expireAt, usageLimit, initialClickCount, true, LinkMode.REDIRECT);
     }
 
     public long getClickCount() {

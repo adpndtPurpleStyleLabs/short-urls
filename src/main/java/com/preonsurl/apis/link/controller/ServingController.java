@@ -10,7 +10,9 @@ import com.preonsurl.apis.link.exception.UrlUsageLimitExceededException;
 import com.preonsurl.apis.link.repository.AccessPolicyRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.repository.UsagePolicyRepository;
+import com.preonsurl.apis.link.enums.LinkMode;
 import com.preonsurl.apis.link.service.NewUrlServingCacheService;
+import com.preonsurl.apis.link.service.ProxyService;
 import com.preonsurl.apis.link.ui.LinkUiRenderer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,6 +51,7 @@ public class ServingController {
     private final LinkUiRenderer linkUiRenderer;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final ProxyService proxyService;
 
     public ServingController(NewUrlServingCacheService servingCacheService,
                              NewUrlRepository repository,
@@ -56,7 +59,8 @@ public class ServingController {
                              UsagePolicyRepository usagePolicyRepository,
                              LinkUiRenderer linkUiRenderer,
                              PasswordEncoder passwordEncoder,
-                             ApplicationEventPublisher eventPublisher) {
+                             ApplicationEventPublisher eventPublisher,
+                             ProxyService proxyService) {
         this.servingCacheService = servingCacheService;
         this.repository = repository;
         this.accessPolicyRepository = accessPolicyRepository;
@@ -64,6 +68,7 @@ public class ServingController {
         this.linkUiRenderer = linkUiRenderer;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.proxyService = proxyService;
     }
 
     @Operation(summary = "Service Health Check", description = "Returns service health status")
@@ -133,7 +138,13 @@ public class ServingController {
             try {
                 Optional<String> originalUrl = servingCacheService.resolveAndServe(fullUrl, ipAddress, userAgent, referer);
                 if (originalUrl.isPresent()) {
-                    return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(originalUrl.get())).build();
+                    String target = originalUrl.get();
+                    LinkMode mode = cached.getLinkMode() != null ? cached.getLinkMode() : LinkMode.REDIRECT;
+                    if (mode == LinkMode.PROXY) {
+                        log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
+                        return proxyService.proxyRequest(target, request);
+                    }
+                    return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
                 }
             } catch (UrlExpiredException e) {
                 if (isBrowserHtmlRequest(request)) {
@@ -223,13 +234,22 @@ public class ServingController {
         // 5. Public or Verified: Serve using cache service
         try {
             Optional<String> originalUrl = servingCacheService.resolveAndServe(entity.getNewUrl(), ipAddress, userAgent, referer);
+            LinkMode mode = entity.getLinkMode() != null ? entity.getLinkMode() : LinkMode.REDIRECT;
 
             if (originalUrl.isPresent()) {
                 String target = originalUrl.get();
+                if (mode == LinkMode.PROXY) {
+                    log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
+                    return proxyService.proxyRequest(target, request);
+                }
                 log.info("Redirecting root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
                 return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
             }
 
+            if (mode == LinkMode.PROXY) {
+                log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, entity.getOriginalUrl(), ipAddress);
+                return proxyService.proxyRequest(entity.getOriginalUrl(), request);
+            }
             return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(entity.getOriginalUrl())).build();
         } catch (UrlExpiredException e) {
             log.warn("New code expired: '{}' [IP={}]", path, ipAddress);
@@ -368,9 +388,13 @@ public class ServingController {
                 .httpOnly(true)
                 .build();
 
+        URI redirectTarget = entity.getLinkMode() == LinkMode.PROXY
+                ? URI.create(entity.getNewUrl())
+                : URI.create(entity.getOriginalUrl());
+
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .location(URI.create(entity.getOriginalUrl()))
+                .location(redirectTarget)
                 .build();
     }
 

@@ -1381,4 +1381,94 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.data.content[0].shortLink").value("http://localhost:8081/code-3"))
                 .andExpect(jsonPath("$.data.content[1].shortLink").value("http://localhost:8081/code-2"));
     }
+
+    @Test
+    void createProxyMode_webpageUrl_returns400WithAcceptableResources() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/products/index.html",
+                    "linkMode": "PROXY"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("URL cannot be a webpage when proxy mode is selected")))
+                .andExpect(jsonPath("$.message", containsString(".zip, .pdf, .jpg")));
+    }
+
+    @Test
+    void createProxyMode_resourceUrl_succeeds() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/files/dataset.zip",
+                    "linkMode": "PROXY"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.linkMode").value("PROXY"))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/files/dataset.zip"));
+    }
+
+    @Test
+    void editProxyMode_webpageUrl_returns400() throws Exception {
+        // Create REDIRECT URL
+        String createPayload = """
+                {
+                    "url": "https://example.com/landing",
+                    "linkMode": "REDIRECT",
+                    "customPath": "landing-page"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk());
+
+        // Edit to PROXY without changing to a resource URL -> 400
+        String editPayload = """
+                {
+                    "newUrl": "http://localhost:8081/landing-page",
+                    "linkMode": "PROXY"
+                }
+                """;
+
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("URL cannot be a webpage when proxy mode is selected")));
+
+        // Edit with resource URL and PROXY mode -> 200 OK
+        String validEditPayload = """
+                {
+                    "newUrl": "http://localhost:8081/landing-page",
+                    "originalUrl": "https://example.com/files/document.pdf",
+                    "linkMode": "PROXY"
+                }
+                """;
+
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validEditPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.linkMode").value("PROXY"))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/files/document.pdf"));
+    }
 }

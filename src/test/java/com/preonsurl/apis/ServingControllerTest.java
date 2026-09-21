@@ -12,6 +12,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.preonsurl.apis.link.enums.LinkMode;
+import com.sun.net.httpserver.HttpServer;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -362,5 +367,124 @@ class ServingControllerTest {
                 .andExpect(jsonPath("$.success").value(false));
 
         assertNull(servingCacheService.getLruCache().get("http://localhost/fake-inactive"), "Inactive entry should be removed from LRU");
+    }
+
+    @Test
+    void servingProxyMode_servesUpstreamResourceWithoutChangingBrowserUrl() throws Exception {
+        // Start embedded HTTP server to simulate upstream resource server
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        byte[] pdfBytes = "%PDF-1.4 Mock Binary Content for PreonsURL".getBytes(StandardCharsets.UTF_8);
+
+        server.createContext("/assets/document.pdf", exchange -> {
+            exchange.getResponseHeaders().set("Content-Type", "application/pdf");
+            exchange.getResponseHeaders().set("Content-Disposition", "inline; filename=\"document.pdf\"");
+            exchange.sendResponseHeaders(200, pdfBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(pdfBytes);
+            }
+        });
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            String upstreamUrl = "http://localhost:" + port + "/assets/document.pdf";
+            NewUrl proxyUrl = new NewUrl(
+                    "proxy-pdf-code",
+                    upstreamUrl,
+                    null,
+                    "http://localhost/proxy-pdf-code",
+                    Instant.now().plus(30, ChronoUnit.DAYS),
+                    null,
+                    LinkMode.PROXY
+            );
+            NewUrl saved = shortUrlRepository.save(proxyUrl);
+
+            // 1. Initial request (Cache Miss)
+            mockMvc.perform(get("/proxy-pdf-code")
+                            .header("User-Agent", "Mozilla/5.0")
+                            .header("Accept", "application/pdf"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().doesNotExist("Location"))
+                    .andExpect(header().string("Content-Type", "application/pdf"))
+                    .andExpect(header().string("Content-Disposition", "inline; filename=\"document.pdf\""))
+                    .andExpect(content().bytes(pdfBytes));
+
+            // Verify cached with PROXY mode
+            com.preonsurl.apis.link.cache.CachedNewUrlDto cached =
+                    servingCacheService.getLruCache().get("http://localhost/proxy-pdf-code");
+            assertNotNull(cached, "Should be cached in LRU");
+            assertEquals(LinkMode.PROXY, cached.getLinkMode());
+
+            // 2. Second request (Cache Hit)
+            mockMvc.perform(get("/proxy-pdf-code")
+                            .header("User-Agent", "Mozilla/5.0")
+                            .header("Accept", "application/pdf"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().doesNotExist("Location"))
+                    .andExpect(header().string("Content-Type", "application/pdf"))
+                    .andExpect(content().bytes(pdfBytes));
+
+            // Verify access log and click count
+            await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+                NewUrl updated = shortUrlRepository.findByShortCode("proxy-pdf-code").orElseThrow();
+                assertEquals(2, updated.getClickCount(), "Click count should be 2 for 2 proxied requests");
+            });
+
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void servingProxyMode_upstream403_bypassesWithBrowserHeadersAndRetries() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        byte[] data = "zip-binary-data".getBytes(StandardCharsets.UTF_8);
+
+        java.util.concurrent.atomic.AtomicInteger attemptCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        server.createContext("/files/package.zip", exchange -> {
+            int attempt = attemptCount.incrementAndGet();
+            String ua = exchange.getRequestHeaders().getFirst("User-Agent");
+            String referer = exchange.getRequestHeaders().getFirst("Referer");
+
+            // If it's a bot UA or missing referer, return 403 to simulate Cloudflare / CDN hotlink protection
+            if (ua != null && ua.contains("Postman")) {
+                exchange.sendResponseHeaders(403, 0);
+                exchange.close();
+                return;
+            }
+
+            exchange.getResponseHeaders().set("Content-Type", "application/zip");
+            exchange.sendResponseHeaders(200, data.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(data);
+            }
+        });
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            String upstreamUrl = "http://localhost:" + port + "/files/package.zip";
+            NewUrl proxyUrl = new NewUrl(
+                    "proxy-zip-code",
+                    upstreamUrl,
+                    null,
+                    "http://localhost/proxy-zip-code",
+                    Instant.now().plus(30, ChronoUnit.DAYS),
+                    null,
+                    LinkMode.PROXY
+            );
+            shortUrlRepository.save(proxyUrl);
+
+            // Client sends suspect User-Agent "PostmanRuntime/7.28.0"
+            // ProxyService detects suspect UA and sanitizes it to browser UA, avoiding 403
+            mockMvc.perform(get("/proxy-zip-code")
+                            .header("User-Agent", "PostmanRuntime/7.28.0"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Type", "application/zip"))
+                    .andExpect(content().bytes(data));
+
+        } finally {
+            server.stop(0);
+        }
     }
 }

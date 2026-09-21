@@ -448,6 +448,14 @@ public class NewUrlService {
 
         NewUrl entity = found.orElseThrow(() -> new UrlNotFoundException("Link not found or access denied"));
 
+        LinkMode finalMode = request.linkMode() != null ? request.linkMode() : entity.getLinkMode();
+        String finalUrl = (request.originalUrl() != null && !request.originalUrl().isBlank())
+                ? request.originalUrl().trim()
+                : entity.getOriginalUrl();
+        if (finalMode == LinkMode.PROXY) {
+            ProxyResourceValidator.validateProxyUrl(finalUrl);
+        }
+
         boolean modified = false;
 
         // A. originalUrl

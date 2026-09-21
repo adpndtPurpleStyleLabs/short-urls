@@ -106,7 +106,8 @@ public class NewUrlServingCacheService {
                 entity.getExpireAt(),
                 entity.getUsageLimit(),
                 entity.getClickCount(),
-                entity.isActive()
+                entity.isActive(),
+                entity.getLinkMode()
         );
 
         long newUsage = newCacheEntry.incrementClickCount();
