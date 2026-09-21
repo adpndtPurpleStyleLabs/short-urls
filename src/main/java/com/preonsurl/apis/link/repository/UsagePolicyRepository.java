@@ -14,6 +14,8 @@ public interface UsagePolicyRepository extends JpaRepository<UsagePolicy, Long> 
 
     Optional<UsagePolicy> findByShortUrlId(Long shortUrlId);
 
+    java.util.List<UsagePolicy> findAllByShortUrlIdIn(java.util.Collection<Long> shortUrlIds);
+
     void deleteByShortUrlId(Long shortUrlId);
 
     @Modifying

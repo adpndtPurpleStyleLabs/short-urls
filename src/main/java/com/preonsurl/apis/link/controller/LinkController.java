@@ -22,6 +22,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import com.preonsurl.apis.link.dto.UrlListItemResponse;
 
 @Tag(name = "New URL Creation", description = "Endpoints for creating and retrieving new URLs")
 @RestController
@@ -110,6 +115,42 @@ public class LinkController {
         } catch (Exception e) {
             log.error("Failed to fetch link info: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Internal Server Error"));
+        }
+    }
+
+    @Operation(
+            summary = "Get paginated list of URLs",
+            description = "Retrieves a paginated list of short URLs for the authenticated user, ordered by latest by default. Returns short link, original link, isEnabled status, and expiration reason (TIME, USAGE) if expired.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+    @GetMapping(value = {"/list", "/urls"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<Page<UrlListItemResponse>>> listUrls(
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        try {
+            AuthenticatedUser user = resolveUser(currentUser);
+            if (user == null || user.userId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Authentication required: user ID not found"));
+            }
+
+            Page<UrlListItemResponse> response = newUrlService.listUrls(user.userId(), pageable);
+            log.info("Listed URLs for userId={}: page={}, size={}, totalElements={}",
+                    user.userId(), response.getNumber(), response.getSize(), response.getTotalElements());
+            return ResponseEntity.ok(ApiResponse.success(response, "URLs retrieved successfully"));
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for list URLs: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid list URLs request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to list URLs: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal Server Error"));
         }
     }
 

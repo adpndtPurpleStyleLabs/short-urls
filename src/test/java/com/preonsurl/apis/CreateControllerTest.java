@@ -1234,4 +1234,151 @@ class CreateControllerTest {
                         .content(editPayload))
                 .andExpect(status().isMethodNotAllowed());
     }
+
+    @Test
+    void listUrls_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/link/list"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void listUrls_noUrls_returnsEmptyPage() throws Exception {
+        mockMvc.perform(get("/link/list")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isEmpty())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
+
+    @Test
+    void listUrls_returnsPaginatedListOrderedByLatestDefault() throws Exception {
+        Long userId = userRepository.findAll().get(0).getId();
+
+        NewUrl url1 = new NewUrl("code1", "https://example.com/first", null, "http://localhost:8081/code1",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url1.setUserId(userId);
+        url1.setActive(true);
+        url1.setCreatedAt(Instant.now().minus(10, ChronoUnit.MINUTES));
+        url1.setUpdatedAt(Instant.now().minus(10, ChronoUnit.MINUTES));
+        shortUrlRepository.save(url1);
+
+        NewUrl url2 = new NewUrl("code2", "https://example.com/second", null, "http://localhost:8081/code2",
+                Instant.now().plus(30, ChronoUnit.DAYS), 5L, LinkMode.REDIRECT);
+        url2.setUserId(userId);
+        url2.setActive(false);
+        url2.setCreatedAt(Instant.now());
+        url2.setUpdatedAt(Instant.now());
+        shortUrlRepository.save(url2);
+
+        mockMvc.perform(get("/link/list")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].shortLink").value("http://localhost:8081/code2"))
+                .andExpect(jsonPath("$.data.content[0].originalLink").value("https://example.com/second"))
+                .andExpect(jsonPath("$.data.content[0].isEnabled").value(false))
+                .andExpect(jsonPath("$.data.content[0].isExpired").value(false))
+                .andExpect(jsonPath("$.data.content[0].expiredReason").doesNotExist())
+                .andExpect(jsonPath("$.data.content[1].shortLink").value("http://localhost:8081/code1"))
+                .andExpect(jsonPath("$.data.content[1].originalLink").value("https://example.com/first"))
+                .andExpect(jsonPath("$.data.content[1].isEnabled").value(true))
+                .andExpect(jsonPath("$.data.content[1].isExpired").value(false));
+    }
+
+    @Test
+    void listUrls_expiredReasons_timeAndUsage() throws Exception {
+        Long userId = userRepository.findAll().get(0).getId();
+
+        // 1. Expired by TIME
+        NewUrl urlTime = new NewUrl("time-exp", "https://example.com/time", null, "http://localhost:8081/time-exp",
+                Instant.now().minus(1, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        urlTime.setUserId(userId);
+        urlTime.setActive(true);
+        urlTime.setCreatedAt(Instant.now().minus(3, ChronoUnit.MINUTES));
+        urlTime.setUpdatedAt(Instant.now().minus(3, ChronoUnit.MINUTES));
+        shortUrlRepository.save(urlTime);
+
+        // 2. Expired by USAGE
+        NewUrl urlUsage = new NewUrl("usage-exp", "https://example.com/usage", null, "http://localhost:8081/usage-exp",
+                Instant.now().plus(10, ChronoUnit.DAYS), 5L, LinkMode.REDIRECT);
+        urlUsage.setUserId(userId);
+        urlUsage.setClickCount(5);
+        urlUsage.setActive(true);
+        urlUsage.setCreatedAt(Instant.now().minus(2, ChronoUnit.MINUTES));
+        urlUsage.setUpdatedAt(Instant.now().minus(2, ChronoUnit.MINUTES));
+        shortUrlRepository.save(urlUsage);
+
+        // 3. Expired by BOTH
+        NewUrl urlBoth = new NewUrl("both-exp", "https://example.com/both", null, "http://localhost:8081/both-exp",
+                Instant.now().minus(1, ChronoUnit.DAYS), 2L, LinkMode.REDIRECT);
+        urlBoth.setUserId(userId);
+        urlBoth.setClickCount(2);
+        urlBoth.setActive(true);
+        urlBoth.setCreatedAt(Instant.now().minus(1, ChronoUnit.MINUTES));
+        urlBoth.setUpdatedAt(Instant.now().minus(1, ChronoUnit.MINUTES));
+        shortUrlRepository.save(urlBoth);
+
+        // Test with /link/urls alias as well
+        mockMvc.perform(get("/link/urls")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                // Latest first: both-exp
+                .andExpect(jsonPath("$.data.content[0].shortLink").value("http://localhost:8081/both-exp"))
+                .andExpect(jsonPath("$.data.content[0].isExpired").value(true))
+                .andExpect(jsonPath("$.data.content[0].expiredReason").value("TIME, USAGE"))
+                .andExpect(jsonPath("$.data.content[0].why").value("TIME, USAGE"))
+                // Next: usage-exp
+                .andExpect(jsonPath("$.data.content[1].shortLink").value("http://localhost:8081/usage-exp"))
+                .andExpect(jsonPath("$.data.content[1].isExpired").value(true))
+                .andExpect(jsonPath("$.data.content[1].expiredReason").value("USAGE"))
+                .andExpect(jsonPath("$.data.content[1].why").value("USAGE"))
+                // Next: time-exp
+                .andExpect(jsonPath("$.data.content[2].shortLink").value("http://localhost:8081/time-exp"))
+                .andExpect(jsonPath("$.data.content[2].isExpired").value(true))
+                .andExpect(jsonPath("$.data.content[2].expiredReason").value("TIME"))
+                .andExpect(jsonPath("$.data.content[2].why").value("TIME"));
+    }
+
+    @Test
+    void listUrls_paginationParamsSupported() throws Exception {
+        Long userId = userRepository.findAll().get(0).getId();
+
+        for (int i = 1; i <= 5; i++) {
+            NewUrl url = new NewUrl("code-" + i, "https://example.com/" + i, null, "http://localhost:8081/code-" + i,
+                    Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+            url.setUserId(userId);
+            url.setActive(true);
+            url.setCreatedAt(Instant.now().plusSeconds(i * 10));
+            url.setUpdatedAt(Instant.now().plusSeconds(i * 10));
+            shortUrlRepository.save(url);
+        }
+
+        // Page 0, Size 2
+        mockMvc.perform(get("/link/list")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("page", "0")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(5))
+                .andExpect(jsonPath("$.data.totalPages").value(3))
+                .andExpect(jsonPath("$.data.numberOfElements").value(2))
+                .andExpect(jsonPath("$.data.number").value(0))
+                .andExpect(jsonPath("$.data.content[0].shortLink").value("http://localhost:8081/code-5"))
+                .andExpect(jsonPath("$.data.content[1].shortLink").value("http://localhost:8081/code-4"));
+
+        // Page 1, Size 2
+        mockMvc.perform(get("/link/list")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.numberOfElements").value(2))
+                .andExpect(jsonPath("$.data.number").value(1))
+                .andExpect(jsonPath("$.data.content[0].shortLink").value("http://localhost:8081/code-3"))
+                .andExpect(jsonPath("$.data.content[1].shortLink").value("http://localhost:8081/code-2"));
+    }
 }

@@ -37,10 +37,17 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import com.preonsurl.apis.link.dto.UrlListItemResponse;
 
 @Service
 public class NewUrlService {
@@ -733,6 +740,57 @@ public class NewUrlService {
 
     public Optional<UsagePolicy> getUsagePolicy(Long shortUrlId) {
         return usagePolicyRepository.findByShortUrlId(shortUrlId);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UrlListItemResponse> listUrls(Long userId, Pageable pageable) {
+        if (userId == null) {
+            throw new AccessDeniedException("User ID is required to fetch URL list");
+        }
+
+        Pageable effectivePageable = (pageable == null || pageable.getSort().isUnsorted())
+                ? PageRequest.of(
+                        pageable != null ? pageable.getPageNumber() : 0,
+                        pageable != null ? pageable.getPageSize() : 10,
+                        Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))
+                  )
+                : pageable;
+
+        Page<NewUrl> page = repository.findAllByUserId(userId, effectivePageable);
+        if (page.isEmpty()) {
+            return page.map(entity -> null);
+        }
+
+        List<Long> ids = page.getContent().stream().map(NewUrl::getId).toList();
+        Map<Long, UsagePolicy> policyMap = usagePolicyRepository.findAllByShortUrlIdIn(ids).stream()
+                .collect(Collectors.toMap(UsagePolicy::getShortUrlId, p -> p, (p1, p2) -> p1));
+
+        Instant now = Instant.now();
+        return page.map(entity -> {
+            UsagePolicy policy = policyMap.get(entity.getId());
+            boolean expiredByTime = (entity.getExpireAt() != null && !now.isBefore(entity.getExpireAt()))
+                    || (policy != null && policy.isExpired());
+            boolean expiredByUsage = (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit())
+                    || (policy != null && policy.isUsageLimitReached());
+
+            boolean isExpired = expiredByTime || expiredByUsage;
+            String expiredReason = null;
+            if (expiredByTime && expiredByUsage) {
+                expiredReason = "TIME, USAGE";
+            } else if (expiredByTime) {
+                expiredReason = "TIME";
+            } else if (expiredByUsage) {
+                expiredReason = "USAGE";
+            }
+
+            return new UrlListItemResponse(
+                    entity.getNewUrl(),
+                    entity.getOriginalUrl(),
+                    entity.isActive(),
+                    isExpired,
+                    expiredReason
+            );
+        });
     }
 }
 

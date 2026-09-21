@@ -35,6 +35,8 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
 
     boolean existsByShortCode(String shortCode);
 
+    org.springframework.data.domain.Page<NewUrl> findAllByUserId(Long userId, org.springframework.data.domain.Pageable pageable);
+
     @Modifying
     @Query("UPDATE NewUrl s SET s.clickCount = s.clickCount + 1, s.updatedAt = CURRENT_INSTANT WHERE s.id = :id")
     void incrementClickCount(@Param("id") Long id);
