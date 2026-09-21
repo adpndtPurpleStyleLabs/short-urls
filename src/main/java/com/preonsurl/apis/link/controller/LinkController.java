@@ -4,7 +4,7 @@ import com.preonsurl.apis.link.dto.CreateNewUrlResponse;
 import com.preonsurl.apis.auth.dto.AuthenticatedUser;
 import com.preonsurl.apis.config.OpenApiConfig;
 import com.preonsurl.apis.link.dto.ApiResponse;
-import com.preonsurl.apis.link.dto.CreateNewUrlRequest;
+import com.preonsurl.apis.link.dto.CreateRequest.CreateNewUrlRequest;
 import com.preonsurl.apis.link.dto.EditNewUrlRequest;
 import com.preonsurl.apis.link.exception.UrlNotFoundException;
 import com.preonsurl.apis.link.service.NewUrlService;

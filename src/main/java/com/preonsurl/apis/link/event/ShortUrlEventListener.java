@@ -23,13 +23,16 @@ public class ShortUrlEventListener {
     private final NewUrlRepository repository;
     private final NewUrlAccessLogRepository accessLogRepository;
     private final NewUrlLruCache lruCache;
+    private final com.preonsurl.apis.link.repository.UsagePolicyRepository usagePolicyRepository;
 
     public ShortUrlEventListener(NewUrlRepository repository,
                                  NewUrlAccessLogRepository accessLogRepository,
-                                 NewUrlLruCache lruCache) {
+                                 NewUrlLruCache lruCache,
+                                 com.preonsurl.apis.link.repository.UsagePolicyRepository usagePolicyRepository) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
         this.lruCache = lruCache;
+        this.usagePolicyRepository = usagePolicyRepository;
     }
 
     @Async
@@ -40,7 +43,10 @@ public class ShortUrlEventListener {
             // 1. Increment click count in DB
             repository.incrementClickCount(event.shortUrlId());
 
-            // 2. Save access log
+            // 2. Increment usage in usage_policies table
+            usagePolicyRepository.incrementUsage(event.shortUrlId());
+
+            // 3. Save access log
             NewUrlAccessLog accessLog = new NewUrlAccessLog(
                     event.shortUrlId(),
                     event.newUrl(),
@@ -50,7 +56,7 @@ public class ShortUrlEventListener {
             );
             accessLogRepository.save(accessLog);
 
-            // 3. Check DB state to verify expiration, usage limit, and active status
+            // 4. Check DB state to verify expiration, usage limit, and active status
             Optional<NewUrl> updated = repository.findById(event.shortUrlId());
             if (updated.isPresent()) {
                 NewUrl entity = updated.get();
@@ -58,12 +64,17 @@ public class ShortUrlEventListener {
                 boolean limitReached = entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit();
                 boolean inactive = !entity.isActive();
 
-                if (expired || limitReached || inactive) {
-                    log.info("Removing breached/expired/inactive short code '{}' from LRU cache [expired={}, limitReached={}, inactive={}]",
-                            event.newUrl(), expired, limitReached, inactive);
+                // Also check UsagePolicy if limit reached or expired
+                Optional<com.preonsurl.apis.link.entity.UsagePolicy> upOpt = usagePolicyRepository.findByShortUrlId(event.shortUrlId());
+                boolean policyExhausted = upOpt.map(com.preonsurl.apis.link.entity.UsagePolicy::isExhausted).orElse(false);
+
+                if (expired || limitReached || inactive || policyExhausted) {
+                    log.info("Removing breached/expired/inactive short code '{}' from LRU cache [expired={}, limitReached={}, inactive={}, policyExhausted={}]",
+                            event.newUrl(), expired, limitReached, inactive, policyExhausted);
                     lruCache.remove(event.newUrl());
                 }
             }
+
         } catch (Exception e) {
             log.error("Failed to process ShortUrlServedEvent for full url: {}", event.newUrl(), e);
         }

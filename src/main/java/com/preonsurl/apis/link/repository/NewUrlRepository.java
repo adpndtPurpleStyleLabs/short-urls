@@ -31,6 +31,8 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
 
     Optional<NewUrl> findByShortCodeAndUserId(String shortCode, Long userId);
 
+    Optional<NewUrl> findByCustomPath(String customPath);
+
     boolean existsByShortCode(String shortCode);
 
     @Modifying

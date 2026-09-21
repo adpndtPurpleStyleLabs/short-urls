@@ -1,7 +1,7 @@
 package com.preonsurl.apis.link.service;
 
 import com.preonsurl.apis.link.cache.NewUrlLruCache;
-import com.preonsurl.apis.link.dto.CreateNewUrlRequest;
+import com.preonsurl.apis.link.dto.CreateRequest.CreateNewUrlRequest;
 import com.preonsurl.apis.link.dto.CreateNewUrlResponse;
 import com.preonsurl.apis.link.dto.EditNewUrlRequest;
 import com.preonsurl.apis.link.entity.NewUrl;
@@ -13,6 +13,14 @@ import com.preonsurl.apis.link.repository.NewUrlAccessLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlChangeLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.repository.NewUrlTagRepository;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.AccessPolicies;
+import com.preonsurl.apis.link.dto.CreateRequest.UsagePolicies.UsagePolicies;
+import com.preonsurl.apis.link.entity.AccessPolicy;
+import com.preonsurl.apis.link.entity.UsagePolicy;
+import com.preonsurl.apis.link.enums.AccessPolicyMode;
+import com.preonsurl.apis.link.enums.UsagePolicyType;
+import com.preonsurl.apis.link.repository.AccessPolicyRepository;
+import com.preonsurl.apis.link.repository.UsagePolicyRepository;
 import com.preonsurl.apis.link.exception.UrlExpiredException;
 import com.preonsurl.apis.link.exception.UrlNotFoundException;
 import com.preonsurl.apis.link.exception.UrlUsageLimitExceededException;
@@ -21,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +53,9 @@ public class NewUrlService {
     private final NewUrlLruCache lruCache;
     private final ShortCodePool codePool;
     private final String domain;
+    private final AccessPolicyRepository accessPolicyRepository;
+    private final UsagePolicyRepository usagePolicyRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public NewUrlService(NewUrlRepository repository,
                          NewUrlAccessLogRepository accessLogRepository,
@@ -51,7 +63,10 @@ public class NewUrlService {
                          NewUrlChangeLogRepository changeLogRepository,
                          NewUrlLruCache lruCache,
                          ShortCodePool codePool,
-                         @Value("${preonsurl.shortener.domain:http://localhost:8081}") String domain) {
+                         @Value("${preonsurl.shortener.domain:http://localhost:8081}") String domain,
+                         AccessPolicyRepository accessPolicyRepository,
+                         UsagePolicyRepository usagePolicyRepository,
+                         PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
         this.tagRepository = tagRepository;
@@ -59,10 +74,19 @@ public class NewUrlService {
         this.lruCache = lruCache;
         this.codePool = codePool;
         this.domain = domain.endsWith("/") ? domain.substring(0, domain.length() - 1) : domain;
+        this.accessPolicyRepository = accessPolicyRepository;
+        this.usagePolicyRepository = usagePolicyRepository;
+        this.passwordEncoder = passwordEncoder;
     }
+
 
     @Transactional
     public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+        request.validate();
+
         String originalUrl = request.url();
         validateUrl(originalUrl);
 
@@ -101,6 +125,7 @@ public class NewUrlService {
                     if (tags.isEmpty()) {
                         tags = tagRepository.findByUrlId(found.getId()).stream().map(NewUrlTag::getTag).toList();
                     }
+                    savePolicies(found.getId(), request, found.getExpireAt());
                     return new CreateNewUrlResponse(
                             found.getNewUrl(),
                             found.getOriginalUrl(),
@@ -113,6 +138,7 @@ public class NewUrlService {
                             found.getLinkMode()
                     );
                 }
+
 
                 // If no usable existing URL found, generate a new short code and append to customPath
                 String shortCode = generateUniqueShortCode();
@@ -128,6 +154,7 @@ public class NewUrlService {
                 changeLogRepository.save(new NewUrlChangeLog(saved.getId(), userId, "CREATED", "ALL", null, saved.getNewUrl()));
 
                 List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
+                savePolicies(saved.getId(), request, saved.getExpireAt());
 
                 return new CreateNewUrlResponse(
                         saved.getNewUrl(),
@@ -173,6 +200,7 @@ public class NewUrlService {
                         if (tags.isEmpty()) {
                             tags = tagRepository.findByUrlId(existing.getId()).stream().map(NewUrlTag::getTag).toList();
                         }
+                        savePolicies(existing.getId(), request, existing.getExpireAt());
                         return new CreateNewUrlResponse(
                                 existing.getNewUrl(),
                                 existing.getOriginalUrl(),
@@ -203,6 +231,7 @@ public class NewUrlService {
                     NewUrl saved = repository.save(existing);
                     changeLogRepository.save(new NewUrlChangeLog(saved.getId(), userId, "EDITED", "REACTIVATED", null, saved.getNewUrl()));
                     List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
+                    savePolicies(saved.getId(), request, saved.getExpireAt());
 
                     return new CreateNewUrlResponse(
                             saved.getNewUrl(),
@@ -227,6 +256,7 @@ public class NewUrlService {
                 changeLogRepository.save(new NewUrlChangeLog(saved.getId(), userId, "CREATED", "ALL", null, saved.getNewUrl()));
 
                 List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
+                savePolicies(saved.getId(), request, saved.getExpireAt());
 
                 return new CreateNewUrlResponse(
                         saved.getNewUrl(),
@@ -265,6 +295,7 @@ public class NewUrlService {
                 if (tags.isEmpty()) {
                     tags = tagRepository.findByUrlId(found.getId()).stream().map(NewUrlTag::getTag).toList();
                 }
+                savePolicies(found.getId(), request, found.getExpireAt());
                 return new CreateNewUrlResponse(
                         found.getNewUrl(),
                         found.getOriginalUrl(),
@@ -291,6 +322,7 @@ public class NewUrlService {
             changeLogRepository.save(new NewUrlChangeLog(saved.getId(), userId, "CREATED", "ALL", null, saved.getNewUrl()));
 
             List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
+            savePolicies(saved.getId(), request, saved.getExpireAt());
 
             return new CreateNewUrlResponse(
                     saved.getNewUrl(),
@@ -305,6 +337,7 @@ public class NewUrlService {
             );
         }
     }
+
 
     public boolean isUsable(NewUrl url) {
         if (url == null) {
@@ -458,6 +491,20 @@ public class NewUrlService {
             }
         }
 
+        if (request.expireAt() != null || request.hasUsageLimit()) {
+            usagePolicyRepository.findByShortUrlId(entity.getId()).ifPresent(up -> {
+                if (request.expireAt() != null) {
+                    up.setExpireAt(request.expireAt());
+                }
+                if (request.hasUsageLimit()) {
+                    up.setUsageLimit(request.resolvedUsageLimit());
+                    up.setPolicyType(request.resolvedUsageLimit() != null ? UsagePolicyType.USAGE_LIMIT : UsagePolicyType.UNLIMITED);
+                }
+                usagePolicyRepository.save(up);
+            });
+        }
+
+
         // E. notes
         if (request.notes() != null) {
             String newNote = request.notes().trim();
@@ -606,4 +653,86 @@ public class NewUrlService {
             throw new IllegalArgumentException("Only http:// and https:// URLs are supported");
         }
     }
+
+    private void savePolicies(Long shortUrlId, CreateNewUrlRequest request, Instant expiresAt) {
+        UsagePolicies usagePolicies = request.resolvedUsagePolicies();
+        AccessPolicies accessPolicies = request.resolvedAccessPolicies();
+
+        // 1. Usage Policy
+        UsagePolicy usagePolicy = usagePolicyRepository.findByShortUrlId(shortUrlId)
+                .orElseGet(() -> new UsagePolicy(
+                        shortUrlId,
+                        usagePolicies.resolvedType(),
+                        usagePolicies.resolvedUsageLimit(),
+                        expiresAt,
+                        usagePolicies.resolvedSchedule() != null ? usagePolicies.resolvedSchedule().startAt() : null,
+                        usagePolicies.resolvedSchedule() != null ? usagePolicies.resolvedSchedule().endAt() : null
+                ));
+        usagePolicy.setPolicyType(usagePolicies.resolvedType());
+        usagePolicy.setUsageLimit(usagePolicies.resolvedUsageLimit());
+        usagePolicy.setExpireAt(expiresAt);
+        if (usagePolicies.resolvedSchedule() != null) {
+            usagePolicy.setStartAt(usagePolicies.resolvedSchedule().startAt());
+            usagePolicy.setEndAt(usagePolicies.resolvedSchedule().endAt());
+        } else {
+            usagePolicy.setStartAt(null);
+            usagePolicy.setEndAt(null);
+        }
+        usagePolicyRepository.save(usagePolicy);
+
+        // 2. Access Policy
+        AccessPolicy accessPolicy = accessPolicyRepository.findByShortUrlId(shortUrlId)
+                .orElseGet(() -> new AccessPolicy(
+                        shortUrlId,
+                        accessPolicies.mode() != null ? accessPolicies.mode() : AccessPolicyMode.PUBLIC
+                ));
+        accessPolicy.setMode(accessPolicies.mode() != null ? accessPolicies.mode() : AccessPolicyMode.PUBLIC);
+
+        if (accessPolicies.pin() != null && accessPolicies.pin().pin() != null && !accessPolicies.pin().pin().isBlank()) {
+            accessPolicy.setPinHash(passwordEncoder.encode(accessPolicies.pin().pin().trim()));
+        } else if (accessPolicies.isPublic()) {
+            accessPolicy.setPinHash(null);
+        }
+
+        if (accessPolicies.password() != null && accessPolicies.password().password() != null && !accessPolicies.password().password().isBlank()) {
+            accessPolicy.setPasswordHash(passwordEncoder.encode(accessPolicies.password().password()));
+        } else if (accessPolicies.isPublic()) {
+            accessPolicy.setPasswordHash(null);
+        }
+
+        if (accessPolicies.ipAllowlist() != null && accessPolicies.ipAllowlist().addresses() != null) {
+            accessPolicy.setIpAllowlist(String.join(",", accessPolicies.ipAllowlist().addresses()));
+        } else if (accessPolicies.isPublic()) {
+            accessPolicy.setIpAllowlist(null);
+        }
+
+        if (accessPolicies.country() != null && accessPolicies.country().countries() != null) {
+            accessPolicy.setCountries(String.join(",", accessPolicies.country().countries()));
+        } else if (accessPolicies.isPublic()) {
+            accessPolicy.setCountries(null);
+        }
+
+        if (accessPolicies.device() != null && accessPolicies.device().devices() != null) {
+            accessPolicy.setDeviceTypes(String.join(",", accessPolicies.device().devices()));
+        } else if (accessPolicies.isPublic()) {
+            accessPolicy.setDeviceTypes(null);
+        }
+
+        if (accessPolicies.referrer() != null && accessPolicies.referrer().referrers() != null) {
+            accessPolicy.setReferrers(String.join(",", accessPolicies.referrer().referrers()));
+        } else if (accessPolicies.isPublic()) {
+            accessPolicy.setReferrers(null);
+        }
+
+        accessPolicyRepository.save(accessPolicy);
+    }
+
+    public Optional<AccessPolicy> getAccessPolicy(Long shortUrlId) {
+        return accessPolicyRepository.findByShortUrlId(shortUrlId);
+    }
+
+    public Optional<UsagePolicy> getUsagePolicy(Long shortUrlId) {
+        return usagePolicyRepository.findByShortUrlId(shortUrlId);
+    }
 }
+
