@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PreonsURL — Identity Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #ffffff;
+            --surface-card: #ffffff;
+            --border-subtle: #e4e4e7;
+            --border-medium: #d4d4d8;
+            --border-focus: #000000;
+            --text-pure: #000000;
+            --text-high: #09090b;
+            --text-muted: #52525b;
+            --text-subtle: #71717a;
+            --accent-glow: rgba(0, 0, 0, 0.08);
+            --accent-glow-strong: rgba(0, 0, 0, 0.18);
+            --error-bg: #fef2f2;
+            --error-border: #fca5a5;
+            --error-text: #991b1b;
+            --success-bg: #f4f4f5;
+            --success-border: #18181b;
+            --success-text: #09090b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-pure);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+            position: relative;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(ellipse 70% 40% at 50% -10%, rgba(0, 0, 0, 0.03) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 50% 110%, rgba(0, 0, 0, 0.02) 0%, transparent 60%);
+        }
+
+        .ambient-grid {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            z-index: 0;
+        }
+
+        .luxury-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-medium);
+            border-radius: 20px;
+            padding: 48px 40px;
+            position: relative;
+            z-index: 1;
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.03),
+                0 20px 48px -12px rgba(0, 0, 0, 0.08),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+            animation: cardAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(16px) scale(0.99);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .auth-title {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-pure);
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .email-badge {
+            display: inline-block;
+            font-weight: 600;
+            color: var(--text-pure);
+            background: #f4f4f5;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        .alert-banner {
+            display: none;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .alert-banner.error {
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: var(--error-text);
+        }
+
+        .alert-banner.success {
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success-text);
+            font-weight: 500;
+        }
+
+        .alert-banner.visible {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 6-Block Code Input Grid */
+        .code-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 28px 0 24px 0;
+        }
+
+        .code-block {
+            width: 100%;
+            height: 58px;
+            font-size: 24px;
+            font-weight: 700;
+            font-family: inherit;
+            text-align: center;
+            color: var(--text-pure);
+            background: #ffffff;
+            border: 1.5px solid var(--border-medium);
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.2s ease;
+            caret-color: #000000;
+        }
+
+        .code-block:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 1px #000000, 0 0 12px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        .code-block.filled {
+            border-color: #18181b;
+            background: #fafafa;
+        }
+
+        /* Action Buttons */
+        .submit-btn {
+            width: 100%;
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        }
+
+        .submit-btn:hover {
+            background: #18181b;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px var(--accent-glow-strong);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Secondary actions (Resend & Change Email) */
+        .aux-actions {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            text-align: center;
+        }
+
+        .resend-container {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .action-link {
+            background: none;
+            border: none;
+            color: var(--text-pure);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: color 0.2s;
+        }
+
+        .action-link:hover {
+            color: #52525b;
+        }
+
+        .action-link:disabled {
+            color: #a1a1aa;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        /* Collapsible Change Email Box */
+        .change-email-box {
+            display: none;
+            margin-top: 18px;
+            padding: 18px;
+            background: #fafafa;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            text-align: left;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .change-email-box.visible {
+            display: block;
+        }
+
+        .change-email-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-pure);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .change-email-input {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--text-pure);
+            outline: none;
+            margin-bottom: 12px;
+        }
+
+        .change-email-input:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 1px #000000;
+        }
+
+        .change-email-btn {
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #000000;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .change-email-btn:hover {
+            background: #18181b;
+        }
+
+        /* Card Footer */
+        .card-footer {
+            margin-top: 32px;
+            text-align: center;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 24px;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+
+        .footer-link {
+            color: var(--text-pure);
+            font-weight: 700;
+            text-decoration: none;
+            margin-left: 6px;
+            border-bottom: 1.5px solid #000000;
+            padding-bottom: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: #27272a;
+            border-bottom-color: #52525b;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-grid"></div>
+
+    <main class="luxury-card">
+        <header class="auth-header">
+            <h1 class="auth-title">Verify Identity</h1>
+            <p class="auth-subtitle">
+                Enter the 6-digit verification code dispatched to:<br>
+                <span class="email-badge" id="displayEmail" th:text="${email != null and !email.isEmpty() ? email : 'your registered email'}">your registered email</span>
+            </p>
+        </header>
+
+        <!-- Dynamic JS Alert Banner -->
+        <div id="alertBanner" class="alert-banner" role="alert">
+            <span id="alertIcon">&#9679;</span>
+            <span id="alertMessage"></span>
+        </div>
+
+        <!-- Server-side Messages -->
+        <div th:if="${error}" class="alert-banner error visible" role="alert">
+            <span>&#9679;</span>
+            <span th:text="${error}"></span>
+        </div>
+        <div th:if="${message}" class="alert-banner success visible" role="status">
+            <span>&#10003;</span>
+            <span th:text="${message}"></span>
+        </div>
+
+        <!-- Verification Form -->
+        <form id="verifyForm" method="POST" action="/verification" novalidate>
+            <input type="hidden" id="hiddenEmail" name="email" th:value="${email}">
+            <input type="hidden" id="fullCode" name="code" value="">
+
+            <div class="code-grid">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="code-block" id="block1" name="digit1" autocomplete="one-time-code" autofocus>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="code-block" id="block2" name="digit2">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="code-block" id="block3" name="digit3">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="code-block" id="block4" name="digit4">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="code-block" id="block5" name="digit5">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="code-block" id="block6" name="digit6">
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn">
+                <span class="spinner" id="btnSpinner"></span>
+                <span id="btnText">Verify & Activate</span>
+                <span id="btnArrow">&rarr;</span>
+            </button>
+        </form>
+
+        <!-- Aux Actions: Resend Code & Change Email -->
+        <div class="aux-actions">
+            <div class="resend-container">
+                Didn't receive code?
+                <button type="button" id="resendBtn" class="action-link">Resend Code</button>
+                <span id="countdownTimer" style="display: none; color: #71717a; font-size: 12px; margin-left: 4px;"></span>
+            </div>
+
+            <div>
+                <button type="button" id="toggleChangeEmailBtn" class="action-link" style="font-size: 12px; color: #52525b;">
+                    Change email address
+                </button>
+            </div>
+
+            <!-- Collapsible Change Email Box -->
+            <div id="changeEmailBox" class="change-email-box">
+                <form id="changeEmailForm" method="POST" action="/verification/change-email">
+                    <input type="hidden" name="currentEmail" th:value="${email}">
+                    <label for="newEmailInput" class="change-email-label">New Email Address</label>
+                    <input type="email" id="newEmailInput" name="newEmail" class="change-email-input" placeholder="new.email@example.com" required>
+                    <button type="submit" id="updateEmailBtn" class="change-email-btn">Update & Resend Code</button>
+                </form>
+            </div>
+        </div>
+
+        <footer class="card-footer">
+            <p class="footer-text">
+                Already verified?
+                <a href="/login" class="footer-link">Sign In &rarr;</a>
+            </p>
+        </footer>
+    </main>
+
+    <script>
+        const blocks = [
+            document.getElementById('block1'),
+            document.getElementById('block2'),
+            document.getElementById('block3'),
+            document.getElementById('block4'),
+            document.getElementById('block5'),
+            document.getElementById('block6')
+        ];
+
+        const verifyForm = document.getElementById('verifyForm');
+        const hiddenEmail = document.getElementById('hiddenEmail');
+        const displayEmail = document.getElementById('displayEmail');
+        const fullCodeInput = document.getElementById('fullCode');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const btnText = document.getElementById('btnText');
+        const btnArrow = document.getElementById('btnArrow');
+        const alertBanner = document.getElementById('alertBanner');
+        const alertMessage = document.getElementById('alertMessage');
+        const resendBtn = document.getElementById('resendBtn');
+        const countdownTimer = document.getElementById('countdownTimer');
+        const toggleChangeEmailBtn = document.getElementById('toggleChangeEmailBtn');
+        const changeEmailBox = document.getElementById('changeEmailBox');
+        const changeEmailForm = document.getElementById('changeEmailForm');
+        const newEmailInput = document.getElementById('newEmailInput');
+
+        // Extract email from query params if missing from template
+        const urlParams = new URLSearchParams(window.location.search);
+        if ((!hiddenEmail.value || hiddenEmail.value.trim() === '') && urlParams.get('email')) {
+            const emailParam = urlParams.get('email').trim();
+            hiddenEmail.value = emailParam;
+            displayEmail.textContent = emailParam;
+        }
+
+        function showAlert(message, type = 'error') {
+            alertBanner.className = `alert-banner ${type} visible`;
+            alertMessage.textContent = message;
+        }
+
+        function hideAlert() {
+            alertBanner.className = 'alert-banner';
+            alertMessage.textContent = '';
+        }
+
+        function setLoading(loading) {
+            submitBtn.disabled = loading;
+            btnSpinner.style.display = loading ? 'inline-block' : 'none';
+            btnArrow.style.display = loading ? 'none' : 'inline-block';
+            btnText.textContent = loading ? 'Verifying...' : 'Verify & Activate';
+        }
+
+        function getAssembledCode() {
+            return blocks.map(b => b.value.trim()).join('');
+        }
+
+        // Setup 6-block interactive behavior: auto-advance, backspace, paste, arrow keys
+        blocks.forEach((block, index) => {
+            block.addEventListener('input', (e) => {
+                const val = e.target.value;
+
+                // Handle single digit input
+                if (/^[0-9]$/.test(val)) {
+                    block.classList.add('filled');
+                    if (index < 5) {
+                        blocks[index + 1].focus();
+                        blocks[index + 1].select();
+                    }
+                } else if (val.length > 1) {
+                    // In case multiple digits typed quickly
+                    const digits = val.replace(/\D/g, '');
+                    if (digits.length > 0) {
+                        block.value = digits[0];
+                        block.classList.add('filled');
+                        if (index < 5) {
+                            blocks[index + 1].focus();
+                        }
+                    } else {
+                        block.value = '';
+                        block.classList.remove('filled');
+                    }
+                } else {
+                    block.value = '';
+                    block.classList.remove('filled');
+                }
+
+                // If all 6 blocks are filled, auto-submit for convenience!
+                if (getAssembledCode().length === 6) {
+                    submitVerification();
+                }
+            });
+
+            block.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    if (block.value === '' && index > 0) {
+                        blocks[index - 1].focus();
+                        blocks[index - 1].value = '';
+                        blocks[index - 1].classList.remove('filled');
+                    } else {
+                        block.value = '';
+                        block.classList.remove('filled');
+                    }
+                } else if (e.key === 'ArrowLeft' && index > 0) {
+                    e.preventDefault();
+                    blocks[index - 1].focus();
+                    blocks[index - 1].select();
+                } else if (e.key === 'ArrowRight' && index < 5) {
+                    e.preventDefault();
+                    blocks[index + 1].focus();
+                    blocks[index + 1].select();
+                }
+            });
+
+            // Handle Paste: allow pasting full 6 digits into any block
+            block.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+                const digits = pasteData.replace(/\D/g, '').slice(0, 6);
+
+                if (digits.length > 0) {
+                    for (let i = 0; i < 6; i++) {
+                        if (i < digits.length) {
+                            blocks[i].value = digits[i];
+                            blocks[i].classList.add('filled');
+                        } else {
+                            blocks[i].value = '';
+                            blocks[i].classList.remove('filled');
+                        }
+                    }
+                    const nextIndex = Math.min(digits.length, 5);
+                    blocks[nextIndex].focus();
+
+                    if (digits.length === 6) {
+                        submitVerification();
+                    }
+                }
+            });
+        });
+
+        // Verification submission via AJAX with fallback
+        async function submitVerification() {
+            hideAlert();
+            const code = getAssembledCode();
+            const email = hiddenEmail.value.trim();
+
+            if (!email) {
+                showAlert('Missing email identifier. Please refresh or re-register.');
+                return;
+            }
+
+            if (code.length !== 6 || !/^[0-9]{6}$/.test(code)) {
+                showAlert('Please enter all 6 digits of the verification code.');
+                const firstEmpty = blocks.find(b => b.value === '');
+                if (firstEmpty) firstEmpty.focus();
+                return;
+            }
+
+            fullCodeInput.value = code;
+            setLoading(true);
+
+            try {
+                const response = await fetch('/api/auth/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        code: code
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showAlert('Email verified successfully! Redirecting to sign in...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/login?verified=true';
+                    }, 800);
+                } else {
+                    showAlert(data.message || 'Invalid or expired verification code.');
+                    setLoading(false);
+                    // Clear blocks and re-focus first block
+                    blocks.forEach(b => {
+                        b.value = '';
+                        b.classList.remove('filled');
+                    });
+                    blocks[0].focus();
+                }
+            } catch (err) {
+                console.warn('AJAX verification failed, falling back to form submit:', err);
+                verifyForm.submit();
+            }
+        }
+
+        verifyForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            submitVerification();
+        });
+
+        // Resend Verification Code with 30s Cooldown
+        let cooldownSeconds = 0;
+        let cooldownInterval = null;
+
+        function startCooldown(seconds) {
+            cooldownSeconds = seconds;
+            resendBtn.disabled = true;
+            countdownTimer.style.display = 'inline';
+            countdownTimer.textContent = `(${cooldownSeconds}s)`;
+
+            if (cooldownInterval) clearInterval(cooldownInterval);
+            cooldownInterval = setInterval(() => {
+                cooldownSeconds--;
+                if (cooldownSeconds <= 0) {
+                    clearInterval(cooldownInterval);
+                    resendBtn.disabled = false;
+                    countdownTimer.style.display = 'none';
+                    countdownTimer.textContent = '';
+                } else {
+                    countdownTimer.textContent = `(${cooldownSeconds}s)`;
+                }
+            }, 1000);
+        }
+
+        resendBtn.addEventListener('click', async () => {
+            const email = hiddenEmail.value.trim();
+            if (!email) {
+                showAlert('No email found to resend code to.');
+                return;
+            }
+
+            hideAlert();
+            resendBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/auth/resend-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showAlert('A fresh verification code has been dispatched to your email.', 'success');
+                    startCooldown(30);
+                } else {
+                    showAlert(data.message || 'Failed to resend verification code.');
+                    resendBtn.disabled = false;
+                }
+            } catch (err) {
+                console.warn('AJAX resend failed:', err);
+                showAlert('Network issue. Please try again.');
+                resendBtn.disabled = false;
+            }
+        });
+
+        // Toggle Change Email Box
+        toggleChangeEmailBtn.addEventListener('click', () => {
+            const isVisible = changeEmailBox.classList.contains('visible');
+            changeEmailBox.classList.toggle('visible', !isVisible);
+            if (!isVisible) {
+                newEmailInput.focus();
+            }
+        });
+
+        // Submit Change Email
+        changeEmailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const currentEmail = hiddenEmail.value.trim();
+            const newEmail = newEmailInput.value.trim();
+
+            if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                showAlert('Please provide a valid new email address.');
+                newEmailInput.focus();
+                return;
+            }
+
+            hideAlert();
+
+            try {
+                const response = await fetch('/api/auth/change-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        currentIdentifier: currentEmail,
+                        newEmail: newEmail
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    hiddenEmail.value = newEmail;
+                    displayEmail.textContent = newEmail;
+                    changeEmailBox.classList.remove('visible');
+                    newEmailInput.value = '';
+                    showAlert('Email updated. Verification code sent to ' + newEmail, 'success');
+                    startCooldown(30);
+                    blocks.forEach(b => {
+                        b.value = '';
+                        b.classList.remove('filled');
+                    });
+                    blocks[0].focus();
+                } else {
+                    showAlert(data.message || 'Failed to change email address.');
+                }
+            } catch (err) {
+                console.warn('AJAX change email failed:', err);
+                changeEmailForm.submit();
+            }
+        });
+    </script>
+</body>
+</html>

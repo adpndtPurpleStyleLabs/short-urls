@@ -21,8 +21,7 @@ import java.security.MessageDigest;
 import java.util.HexFormat;
 
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -385,4 +384,201 @@ public class AuthAndLinkSecurityIntegrationTest {
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:5500"))
                 .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
     }
+
+    // =========================================================================
+    // Verification & Emailer Tests
+    // =========================================================================
+
+    @Test
+    void registerUserCreatesUnverifiedAccountWith6DigitCode() throws Exception {
+        String payload = """
+                {
+                    "fullName": "George Washington",
+                    "username": "george",
+                    "email": "george@mountvernon.org",
+                    "password": "PresidentPass2026!"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.username").value("george"))
+                .andExpect(jsonPath("$.data.email").value("george@mountvernon.org"))
+                .andExpect(jsonPath("$.data.verified").value(false))
+                .andExpect(jsonPath("$.data.requiresVerification").value(true));
+
+        User user = userRepository.findByUsername("george").orElseThrow();
+        assertFalse(user.isVerified());
+        assertNotNull(user.getVerificationCode());
+        assertEquals(6, user.getVerificationCode().length());
+        assertTrue(user.getVerificationCode().matches("^[0-9]{6}$"));
+    }
+
+    @Test
+    void verifyEmailWithValidCodeActivatesUser() throws Exception {
+        Tenant tenant = tenantRepository.save(new Tenant("Virginia Corp"));
+        User user = new User(
+                tenant.getId(),
+                "Thomas Jefferson",
+                "thomas",
+                passwordEncoder.encode("Pass1234!"),
+                "thomas@monticello.org",
+                false,
+                "123456",
+                java.time.Instant.now().plus(15, java.time.temporal.ChronoUnit.MINUTES)
+        );
+        userRepository.save(user);
+
+        String verifyPayload = """
+                {
+                    "email": "thomas@monticello.org",
+                    "code": "123456"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(verifyPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").value(true));
+
+        User updated = userRepository.findByUsername("thomas").orElseThrow();
+        assertTrue(updated.isVerified());
+        assertNull(updated.getVerificationCode());
+    }
+
+    @Test
+    void verifyEmailWithInvalidCodeReturnsBadRequest() throws Exception {
+        Tenant tenant = tenantRepository.save(new Tenant("Virginia Corp"));
+        User user = new User(
+                tenant.getId(),
+                "James Madison",
+                "james",
+                passwordEncoder.encode("Pass1234!"),
+                "james@constitution.org",
+                false,
+                "123456",
+                java.time.Instant.now().plus(15, java.time.temporal.ChronoUnit.MINUTES)
+        );
+        userRepository.save(user);
+
+        String verifyPayload = """
+                {
+                    "email": "james@constitution.org",
+                    "code": "999999"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(verifyPayload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        User unchanged = userRepository.findByUsername("james").orElseThrow();
+        assertFalse(unchanged.isVerified());
+    }
+
+    @Test
+    void resendVerificationCodeGeneratesNewCode() throws Exception {
+        Tenant tenant = tenantRepository.save(new Tenant("Virginia Corp"));
+        User user = new User(
+                tenant.getId(),
+                "James Monroe",
+                "monroe",
+                passwordEncoder.encode("Pass1234!"),
+                "monroe@whitehouse.gov",
+                false,
+                "111111",
+                java.time.Instant.now().plus(15, java.time.temporal.ChronoUnit.MINUTES)
+        );
+        userRepository.save(user);
+
+        String resendPayload = """
+                {
+                    "email": "monroe@whitehouse.gov"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/resend-code")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(resendPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        User updated = userRepository.findByUsername("monroe").orElseThrow();
+        assertNotNull(updated.getVerificationCode());
+        assertEquals(6, updated.getVerificationCode().length());
+    }
+
+    @Test
+    void changeEmailUpdatesEmailAndGeneratesFreshCode() throws Exception {
+        Tenant tenant = tenantRepository.save(new Tenant("Treasury Corp"));
+        User user = new User(
+                tenant.getId(),
+                "Alexander Hamilton",
+                "hamilton",
+                passwordEncoder.encode("Pass1234!"),
+                "old.hamilton@treasury.gov",
+                false,
+                "222222",
+                java.time.Instant.now().plus(15, java.time.temporal.ChronoUnit.MINUTES)
+        );
+        userRepository.save(user);
+
+        String changePayload = """
+                {
+                    "currentIdentifier": "old.hamilton@treasury.gov",
+                    "newEmail": "new.hamilton@treasury.gov"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/change-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(changePayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        User updated = userRepository.findByUsername("hamilton").orElseThrow();
+        assertEquals("new.hamilton@treasury.gov", updated.getEmail());
+        assertFalse(updated.isVerified());
+        assertNotNull(updated.getVerificationCode());
+    }
+
+    @Test
+    void loginUnverifiedUserReturnsUnverifiedResponse() throws Exception {
+        Tenant tenant = tenantRepository.save(new Tenant("Unverified Corp"));
+        User user = new User(
+                tenant.getId(),
+                "Pending User",
+                "pending",
+                passwordEncoder.encode("SecretPass123!"),
+                "pending@example.com",
+                false,
+                "555555",
+                java.time.Instant.now().plus(15, java.time.temporal.ChronoUnit.MINUTES)
+        );
+        userRepository.save(user);
+
+        String loginPayload = """
+                {
+                    "username": "pending",
+                    "password": "SecretPass123!"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.verified").value(false))
+                .andExpect(jsonPath("$.data.email").value("pending@example.com"))
+                .andExpect(jsonPath("$.data.accessToken").doesNotExist());
+    }
 }
+

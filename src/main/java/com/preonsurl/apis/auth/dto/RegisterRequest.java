@@ -12,8 +12,13 @@ public record RegisterRequest(
         @Size(min = 3, max = 20, message = "username must be between 3 and 20 characters")
         String username,
 
+        String email,
+
         @NotBlank(message = "Password cannot be empty")
         @Size(min = 8, max = 20, message = "password must be between 8 and 20 characters")
         String password
 ) {
+    public RegisterRequest(String fullName, String username, String password) {
+        this(fullName, username, null, password);
+    }
 }

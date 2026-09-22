@@ -44,6 +44,18 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @Column(name = "email", length = 255)
+    private String email;
+
+    @Column(name = "is_verified", nullable = false)
+    private boolean isVerified = true;
+
+    @Column(name = "verification_code", length = 6)
+    private String verificationCode;
+
+    @Column(name = "verification_code_expires_at")
+    private Instant verificationCodeExpiresAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -60,6 +72,34 @@ public class User {
         this.fullName = fullName;
         this.username = username;
         this.passwordHash = passwordHash;
+        this.isVerified = true;
+    }
+
+    public User(
+            Long tenantId,
+            String fullName,
+            String username,
+            String passwordHash,
+            String email,
+            boolean isVerified,
+            String verificationCode,
+            Instant verificationCodeExpiresAt
+    ) {
+        this.tenantId = tenantId;
+        this.fullName = fullName;
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.email = email;
+        this.isVerified = isVerified;
+        this.verificationCode = verificationCode;
+        this.verificationCodeExpiresAt = verificationCodeExpiresAt;
+    }
+
+    public boolean isVerificationCodeValid(String code) {
+        if (code == null || verificationCode == null || verificationCodeExpiresAt == null) {
+            return false;
+        }
+        return verificationCode.equals(code.trim()) && verificationCodeExpiresAt.isAfter(Instant.now());
     }
 
     @PrePersist

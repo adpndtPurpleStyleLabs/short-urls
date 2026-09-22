@@ -6,7 +6,7 @@
     <title>PreonsURL — Create Membership</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-canvas: #ffffff;
@@ -35,7 +35,7 @@
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             background-color: var(--bg-canvas);
             color: var(--text-pure);
             min-height: 100vh;
@@ -97,11 +97,10 @@
         }
 
         .auth-title {
-            font-family: 'Cinzel', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             font-size: 26px;
             font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
+            letter-spacing: -0.02em;
             color: var(--text-pure);
         }
 
@@ -355,6 +354,22 @@
             </div>
 
             <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-wrapper">
+                    <input type="email"
+                           id="email"
+                           name="email"
+                           class="form-input"
+                           placeholder="alexander@example.com"
+                           th:value="${email}"
+                           required
+                           maxlength="255"
+                           autocomplete="email">
+                </div>
+                <small class="field-hint">Verification code will be sent to this email</small>
+            </div>
+
+            <div class="form-group">
                 <label for="username" class="form-label">Username</label>
                 <div class="input-wrapper">
                     <input type="text"
@@ -418,6 +433,7 @@
     <script>
         const form = document.getElementById('registerForm');
         const fullNameInput = document.getElementById('fullName');
+        const emailInput = document.getElementById('email');
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
         const submitBtn = document.getElementById('submitBtn');
@@ -469,6 +485,7 @@
             hideAlert();
 
             const fullName = fullNameInput.value.trim();
+            const email = emailInput ? emailInput.value.trim() : '';
             const username = usernameInput.value.trim();
             const password = passwordInput.value;
 
@@ -481,6 +498,16 @@
             if (fullName.length > 100) {
                 showAlert('Full name cannot exceed 100 characters.');
                 fullNameInput.focus();
+                return;
+            }
+            if (!email) {
+                showAlert('Email address cannot be empty.');
+                emailInput.focus();
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showAlert('Please enter a valid email address.');
+                emailInput.focus();
                 return;
             }
             if (!username) {
@@ -517,6 +544,7 @@
                     body: JSON.stringify({
                         fullName: fullName,
                         username: username,
+                        email: email,
                         password: password
                     })
                 });
@@ -524,10 +552,10 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showAlert('Account created successfully. Redirecting to sign in...', 'success');
-                    // Smooth redirect to /login
+                    showAlert('Account created. Redirecting to email verification...', 'success');
+                    const targetEmail = (data.data && data.data.email) ? data.data.email : email;
                     setTimeout(() => {
-                        window.location.href = '/login?registered=true';
+                        window.location.href = '/verification?email=' + encodeURIComponent(targetEmail);
                     }, 800);
                 } else {
                     showAlert(data.message || (data.data && data.data.error) || 'Registration failed.');

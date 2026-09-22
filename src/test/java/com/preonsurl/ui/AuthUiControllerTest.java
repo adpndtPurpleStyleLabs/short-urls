@@ -13,7 +13,11 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -50,6 +54,7 @@ public class AuthUiControllerTest {
                 .andExpect(content().string(containsString("Register Now")))
                 .andExpect(content().string(containsString("Establish Account")))
                 .andExpect(content().string(containsString("Full Name")))
+                .andExpect(content().string(containsString("Email Address")))
                 .andExpect(content().string(containsString("Master Key / Password")));
     }
 
@@ -73,17 +78,29 @@ public class AuthUiControllerTest {
     }
 
     @Test
-    void postRegister_validData_delegatesToAuthControllerAndRedirectsToLogin() throws Exception {
+    void getLoginPage_withVerifiedTrue_displaysVerifiedSuccessBanner() throws Exception {
+        mockMvc.perform(get("/login").param("verified", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("Email verified successfully")));
+    }
+
+    @Test
+    void postRegister_validData_delegatesToAuthControllerAndRedirectsToVerification() throws Exception {
         mockMvc.perform(post("/register")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("fullName", "Alexander Hamilton")
                         .param("username", "ahamilton")
+                        .param("email", "alexander@example.com")
                         .param("password", "Treasury2026!"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login?registered=true"));
+                .andExpect(redirectedUrl("/verification?email=alexander%40example.com"));
 
-        // Verify user was registered in DB
+        // Verify user was registered in DB with isVerified = false
         assertTrue(userRepository.findByUsername("ahamilton").isPresent(), "User should be registered in database");
+        User user = userRepository.findByUsername("ahamilton").get();
+        assertFalse(user.isVerified(), "User should initially be unverified");
+        assertTrue(user.getVerificationCode() != null && user.getVerificationCode().matches("^[0-9]{6}$"), "Verification code must be 6 digits");
     }
 
     @Test
@@ -99,7 +116,100 @@ public class AuthUiControllerTest {
     }
 
     @Test
-    void postLogin_validCredentials_setsJwtCookieAndSucceeds() throws Exception {
+    void getVerificationPage_returns200With6DigitBlocksAndOptions() throws Exception {
+        mockMvc.perform(get("/verification").param("email", "test@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("Verify Identity")))
+                .andExpect(content().string(containsString("block1")))
+                .andExpect(content().string(containsString("block6")))
+                .andExpect(content().string(containsString("Resend Code")))
+                .andExpect(content().string(containsString("Change email address")));
+    }
+
+    @Test
+    void postVerification_valid6DigitBlocks_redirectsToLoginWithVerifiedTrue() throws Exception {
+        Tenant tenant = tenantRepository.save(new Tenant("Test Tenant"));
+        User user = new User(
+                tenant.getId(),
+                "Jane Doe",
+                "janedoe",
+                passwordEncoder.encode("Pass1234!"),
+                "jane@example.com",
+                false,
+                "654321",
+                Instant.now().plus(15, ChronoUnit.MINUTES)
+        );
+        userRepository.save(user);
+
+        mockMvc.perform(post("/verification")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("email", "jane@example.com")
+                        .param("digit1", "6")
+                        .param("digit2", "5")
+                        .param("digit3", "4")
+                        .param("digit4", "3")
+                        .param("digit5", "2")
+                        .param("digit6", "1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?verified=true"));
+
+        User updatedUser = userRepository.findByUsername("janedoe").get();
+        assertTrue(updatedUser.isVerified(), "User must be verified after valid 6-digit code submission");
+    }
+
+    @Test
+    void postVerification_invalidCode_returnsVerificationPageWithError() throws Exception {
+        Tenant tenant = tenantRepository.save(new Tenant("Test Tenant"));
+        User user = new User(
+                tenant.getId(),
+                "Jane Doe",
+                "janedoe",
+                passwordEncoder.encode("Pass1234!"),
+                "jane@example.com",
+                false,
+                "654321",
+                Instant.now().plus(15, ChronoUnit.MINUTES)
+        );
+        userRepository.save(user);
+
+        mockMvc.perform(post("/verification")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("email", "jane@example.com")
+                        .param("code", "000000"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("verification"))
+                .andExpect(model().attributeExists("error"));
+
+        User refreshed = userRepository.findByUsername("janedoe").get();
+        assertFalse(refreshed.isVerified(), "User should remain unverified on bad code");
+    }
+
+    @Test
+    void postLogin_unverifiedUser_redirectsToVerification() throws Exception {
+        Tenant tenant = tenantRepository.save(new Tenant("Preons Corp"));
+        User user = new User(
+                tenant.getId(),
+                "Unverified User",
+                "unverified",
+                passwordEncoder.encode("SecretPass123!"),
+                "unverified@example.com",
+                false,
+                "123456",
+                Instant.now().plus(15, ChronoUnit.MINUTES)
+        );
+        userRepository.save(user);
+
+        mockMvc.perform(post("/login")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("username", "unverified")
+                        .param("password", "SecretPass123!"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/verification?email=unverified%40example.com"));
+    }
+
+    @Test
+    void postLogin_validCredentialsAndVerified_setsJwtCookieAndSucceeds() throws Exception {
         Tenant tenant = tenantRepository.save(new Tenant("Preons Corp"));
         userRepository.save(new User(tenant.getId(), "John Doe", "johndoe", passwordEncoder.encode("SecretPass123!")));
 

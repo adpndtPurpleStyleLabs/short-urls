@@ -59,9 +59,9 @@ public class SecurityConfig {
                         // =========================
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // =========================
-                        // Authentication
+                        // Authentication & Verification
                         // =========================
-                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**").permitAll()
                         // =========================
                         // Swagger / OpenAPI
                         // =========================

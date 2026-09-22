@@ -36,4 +36,12 @@ public record ApiResponse<T>(
                 null
         );
     }
+
+    public static <T> ApiResponse<T> error(String message, T data) {
+        return new ApiResponse<>(
+                false,
+                message,
+                data
+        );
+    }
 }
