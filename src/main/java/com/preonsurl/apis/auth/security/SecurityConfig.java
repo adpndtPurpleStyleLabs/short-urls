@@ -61,7 +61,7 @@ public class SecurityConfig {
                         // =========================
                         // Authentication
                         // =========================
-                        .requestMatchers("/api/auth/**", "/register", "/login").permitAll()
+                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**").permitAll()
                         // =========================
                         // Swagger / OpenAPI
                         // =========================
