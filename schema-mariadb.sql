@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS short_urls (
     short_code VARCHAR(64) NOT NULL,
     original_url VARCHAR(2048) NOT NULL,
     custom_path VARCHAR(256) NULL,
+    domain VARCHAR(255) NULL,
     new_url VARCHAR(512) NOT NULL,
     click_count BIGINT NOT NULL DEFAULT 0,
     expire_at TIMESTAMP NOT NULL,
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS short_urls (
     INDEX idx_short_urls_user_id (user_id),
     INDEX idx_short_urls_original_url (original_url(255)),
     INDEX idx_short_urls_custom_path (custom_path),
+    INDEX idx_short_urls_domain (domain),
     INDEX idx_short_urls_new_url (new_url),
     INDEX idx_short_urls_link_mode (link_mode),
     INDEX idx_short_urls_is_active (is_active),
@@ -143,4 +145,20 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_users_tenant_id (tenant_id),
     INDEX idx_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10. Table for custom domains and CNAME verification
+CREATE TABLE IF NOT EXISTS custom_domains (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    domain VARCHAR(255) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'VERIFICATION_REQUIRED',
+    cname_target VARCHAR(255) NOT NULL,
+    verification_error VARCHAR(1024) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    verified_at TIMESTAMP NULL,
+    CONSTRAINT uq_custom_domains_domain UNIQUE (domain),
+    INDEX idx_custom_domains_user_id (user_id),
+    INDEX idx_custom_domains_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 

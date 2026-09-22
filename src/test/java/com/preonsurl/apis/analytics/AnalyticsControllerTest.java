@@ -154,6 +154,9 @@ public class AnalyticsControllerTest {
                 .andExpect(jsonPath("$.data.startDate").value(today.minusDays(29).toString()))
                 .andExpect(jsonPath("$.data.endDate").value(today.toString()))
                 .andExpect(jsonPath("$.data.dailyClicks", hasSize(30)))
+                .andExpect(jsonPath("$.data.totalUrls").value(2))
+                .andExpect(jsonPath("$.data.totalActiveUrls").value(2))
+                .andExpect(jsonPath("$.data.dailyCreatedUrls", hasSize(30)))
                 .andReturn();
 
         JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());

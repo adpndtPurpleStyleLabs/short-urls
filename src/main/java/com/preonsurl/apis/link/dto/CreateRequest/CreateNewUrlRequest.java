@@ -99,7 +99,15 @@ public record CreateNewUrlRequest(
                 requiredMode = Schema.RequiredMode.NOT_REQUIRED
         )
         @JsonAlias({"limit", "usage_limit"})
-        Object usageLimit
+        Object usageLimit,
+
+        @Schema(
+                description = "Optional custom domain for the shortened URL",
+                example = "links.mybrand.com",
+                requiredMode = Schema.RequiredMode.NOT_REQUIRED
+        )
+        @JsonAlias({"customDomain", "custom_domain"})
+        String domain
 
 ) {
 
@@ -114,9 +122,24 @@ public record CreateNewUrlRequest(
             String notes,
             List<String> tags,
             LinkMode linkMode,
+            Boolean addShortCode,
+            Instant expireAt,
+            Object usageLimit
+    ) {
+        this(url, customPath, usagePolicies, accessPolicies, notes, tags, linkMode, addShortCode, expireAt, usageLimit, null);
+    }
+
+    public CreateNewUrlRequest(
+            String url,
+            String customPath,
+            UsagePolicies usagePolicies,
+            AccessPolicies accessPolicies,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
             Boolean addShortCode
     ) {
-        this(url, customPath, usagePolicies, accessPolicies, notes, tags, linkMode, addShortCode, null, null);
+        this(url, customPath, usagePolicies, accessPolicies, notes, tags, linkMode, addShortCode, null, null, null);
     }
 
     public CreateNewUrlRequest(
@@ -141,8 +164,24 @@ public record CreateNewUrlRequest(
                 LinkMode.REDIRECT,
                 false,
                 expireAt,
+                null,
                 null
         );
+    }
+
+    public String resolvedDomain() {
+        if (domain == null || domain.isBlank()) {
+            return null;
+        }
+        String d = domain.trim().toLowerCase();
+        if (d.startsWith("https://")) d = d.substring(8);
+        else if (d.startsWith("http://")) d = d.substring(7);
+        int slashIdx = d.indexOf('/');
+        if (slashIdx != -1) d = d.substring(0, slashIdx);
+        int colonIdx = d.indexOf(':');
+        if (colonIdx != -1) d = d.substring(0, colonIdx);
+        if (d.endsWith(".")) d = d.substring(0, d.length() - 1);
+        return d.isBlank() ? null : d;
     }
 
     public boolean resolvedAddShortCode() {

@@ -3,6 +3,8 @@ package com.preonsurl.apis.link.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.Instant;
+
 @Schema(description = "Paginated URL list item response")
 public record UrlListItemResponse(
         @Schema(description = "Full short link URL", example = "http://localhost:8081/promo")
@@ -23,7 +25,22 @@ public record UrlListItemResponse(
         String expiredReason,
 
         @Schema(description = "Reason for expiration alias if expired (TIME, USAGE, or TIME, USAGE)", example = "TIME")
-        String why
+        String why,
+
+        @Schema(description = "Total number of times the URL has been clicked", example = "1200")
+        long timesClicked,
+
+        @Schema(description = "Timestamp when the link was created")
+        Instant createdAt,
+
+        @Schema(description = "Human-readable time ago when the link was created", example = "2 days ago")
+        String createdAgo,
+
+        @Schema(description = "Timestamp when the link was last accessed/used")
+        Instant lastUsedAt,
+
+        @Schema(description = "Human-readable time ago when the link was last accessed/used", example = "2 hours ago")
+        String lastUsedAgo
 ) {
     public UrlListItemResponse(
             String shortLink,
@@ -32,6 +49,17 @@ public record UrlListItemResponse(
             boolean isExpired,
             String expiredReason
     ) {
-        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, expiredReason);
+        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, expiredReason, 0L, null, null, null, null);
+    }
+
+    public UrlListItemResponse(
+            String shortLink,
+            String originalLink,
+            boolean isEnabled,
+            boolean isExpired,
+            String expiredReason,
+            String why
+    ) {
+        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, why, 0L, null, null, null, null);
     }
 }

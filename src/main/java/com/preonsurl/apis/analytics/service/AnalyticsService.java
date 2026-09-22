@@ -2,6 +2,7 @@ package com.preonsurl.apis.analytics.service;
 
 import com.preonsurl.apis.analytics.dto.AnalyticsResponse;
 import com.preonsurl.apis.analytics.dto.DailyClickDto;
+import com.preonsurl.apis.analytics.dto.DailyCreatedUrlDto;
 import com.preonsurl.apis.analytics.dto.UrlAnalyticsResponse;
 import com.preonsurl.apis.analytics.repository.AnalyticsRepository;
 import com.preonsurl.apis.link.entity.NewUrl;
@@ -12,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -56,7 +58,25 @@ public class AnalyticsService {
         List<DailyClickDto> dailyClicks = buildDailyClicksList(effectiveStart, effectiveEnd, results);
         long totalClicks = dailyClicks.stream().mapToLong(DailyClickDto::clicks).sum();
 
-        return new AnalyticsResponse(totalClicks, effectiveStart, effectiveEnd, dailyClicks);
+        Instant startInstant = effectiveStart.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = effectiveEnd.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant now = Instant.now();
+
+        long totalUrls = newUrlRepository.countByUserId(userId);
+        long totalActiveUrls = newUrlRepository.countActiveByUserId(userId, now);
+
+        List<Object[]> createdResults = newUrlRepository.getDailyCreatedUrlsByUser(userId, startInstant, endInstant);
+        List<DailyCreatedUrlDto> dailyCreatedUrls = buildDailyCreatedUrlsList(effectiveStart, effectiveEnd, createdResults);
+
+        return new AnalyticsResponse(
+                totalClicks,
+                effectiveStart,
+                effectiveEnd,
+                dailyClicks,
+                totalUrls,
+                totalActiveUrls,
+                dailyCreatedUrls
+        );
     }
 
     public UrlAnalyticsResponse getUrlClicks(Long userId, String urlOrShortCode, LocalDate startDate, LocalDate endDate) {
@@ -148,6 +168,29 @@ public class AnalyticsService {
 
         return clickMap.entrySet().stream()
                 .map(entry -> new DailyClickDto(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
+    private List<DailyCreatedUrlDto> buildDailyCreatedUrlsList(LocalDate startDate, LocalDate endDate, List<Object[]> queryResults) {
+        Map<LocalDate, Long> countMap = new LinkedHashMap<>();
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            countMap.put(date, 0L);
+        }
+
+        if (queryResults != null) {
+            for (Object[] row : queryResults) {
+                if (row != null && row.length >= 2 && row[0] != null) {
+                    LocalDate date = parseLocalDate(row[0]);
+                    long count = ((Number) row[1]).longValue();
+                    if (countMap.containsKey(date)) {
+                        countMap.put(date, count);
+                    }
+                }
+            }
+        }
+
+        return countMap.entrySet().stream()
+                .map(entry -> new DailyCreatedUrlDto(entry.getKey(), entry.getValue()))
                 .toList();
     }
 

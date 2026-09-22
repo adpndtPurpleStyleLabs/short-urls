@@ -17,6 +17,9 @@ import com.preonsurl.apis.link.repository.NewUrlChangeLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.repository.NewUrlTagRepository;
 import com.preonsurl.apis.link.repository.NewUrlAccessLogRepository;
+import com.preonsurl.apis.domain.entity.CustomDomain;
+import com.preonsurl.apis.domain.entity.DomainStatus;
+import com.preonsurl.apis.domain.repository.CustomDomainRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +77,9 @@ class CreateControllerTest {
     @Autowired
     private UserCache userCache;
 
+    @Autowired
+    private CustomDomainRepository customDomainRepository;
+
     private static final String VALID_API_KEY = "test-api-key-12345";
     private static final String INVALID_API_KEY = "wrong-api-key";
 
@@ -85,6 +91,7 @@ class CreateControllerTest {
         tagRepository.deleteAll();
         accessLogRepository.deleteAll();
         shortUrlRepository.deleteAll();
+        customDomainRepository.deleteAll();
         apiKeyRepository.deleteAll();
         userRepository.deleteAll();
         tenantRepository.deleteAll();
@@ -1662,6 +1669,82 @@ class CreateControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("URL not found"));
+    }
+
+    @Test
+    void createNewUrl_withVerifiedCustomDomain_savesCustomDomainAndNewUrl() throws Exception {
+        User user = userRepository.findAll().get(0);
+        CustomDomain domain = new CustomDomain(user.getId(), "links.mybrand.com", "go.domain.com");
+        domain.setStatus(DomainStatus.ACTIVE);
+        customDomainRepository.save(domain);
+
+        String json = """
+                {
+                    "url": "https://example.com/custom-branded",
+                    "domain": "links.mybrand.com"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.newUrl", startsWith("https://links.mybrand.com/")));
+
+        NewUrl saved = shortUrlRepository.findAll().stream()
+                .filter(u -> "https://example.com/custom-branded".equals(u.getOriginalUrl()))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals("links.mybrand.com", saved.getDomain());
+        assertTrue(saved.getNewUrl().startsWith("https://links.mybrand.com/"));
+    }
+
+    @Test
+    void createNewUrl_withUnverifiedCustomDomain_returnsBadRequest() throws Exception {
+        User user = userRepository.findAll().get(0);
+        CustomDomain domain = new CustomDomain(user.getId(), "unverified.mybrand.com", "go.domain.com");
+        domain.setStatus(DomainStatus.VERIFICATION_REQUIRED);
+        customDomainRepository.save(domain);
+
+        String json = """
+                {
+                    "url": "https://example.com/pending",
+                    "domain": "unverified.mybrand.com"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("not verified")));
+    }
+
+    @Test
+    void createNewUrl_withOtherUserDomain_returnsBadRequest() throws Exception {
+        CustomDomain domain = new CustomDomain(99999L, "other.mybrand.com", "go.domain.com");
+        domain.setStatus(DomainStatus.ACTIVE);
+        customDomainRepository.save(domain);
+
+        String json = """
+                {
+                    "url": "https://example.com/stolen",
+                    "domain": "other.mybrand.com"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("does not belong")));
     }
 }
 

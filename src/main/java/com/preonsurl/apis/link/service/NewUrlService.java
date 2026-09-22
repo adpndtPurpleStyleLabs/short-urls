@@ -1,5 +1,8 @@
 package com.preonsurl.apis.link.service;
 
+import com.preonsurl.apis.domain.entity.CustomDomain;
+import com.preonsurl.apis.domain.entity.DomainStatus;
+import com.preonsurl.apis.domain.repository.CustomDomainRepository;
 import com.preonsurl.apis.link.cache.NewUrlLruCache;
 import com.preonsurl.apis.link.dto.CreateRequest.CreateNewUrlRequest;
 import com.preonsurl.apis.link.dto.CreateNewUrlResponse;
@@ -33,9 +36,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,6 +71,7 @@ public class NewUrlService {
     private final AccessPolicyRepository accessPolicyRepository;
     private final UsagePolicyRepository usagePolicyRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CustomDomainRepository customDomainRepository;
 
     public NewUrlService(NewUrlRepository repository,
                          NewUrlAccessLogRepository accessLogRepository,
@@ -74,7 +82,8 @@ public class NewUrlService {
                          @Value("${preonsurl.shortener.domain:http://localhost:8081}") String domain,
                          AccessPolicyRepository accessPolicyRepository,
                          UsagePolicyRepository usagePolicyRepository,
-                         PasswordEncoder passwordEncoder) {
+                         PasswordEncoder passwordEncoder,
+                         CustomDomainRepository customDomainRepository) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
         this.tagRepository = tagRepository;
@@ -85,8 +94,67 @@ public class NewUrlService {
         this.accessPolicyRepository = accessPolicyRepository;
         this.usagePolicyRepository = usagePolicyRepository;
         this.passwordEncoder = passwordEncoder;
+        this.customDomainRepository = customDomainRepository;
     }
 
+    private record EffectiveDomain(String domainName, String baseUrl) {}
+
+    private String normalizeDomain(String rawDomain) {
+        if (rawDomain == null) return "";
+        String s = rawDomain.trim().toLowerCase();
+        if (s.startsWith("http://")) {
+            s = s.substring(7);
+        } else if (s.startsWith("https://")) {
+            s = s.substring(8);
+        }
+        if (s.endsWith("/")) {
+            s = s.substring(0, s.length() - 1);
+        }
+        return s;
+    }
+
+    private EffectiveDomain resolveEffectiveDomain(String requestedDomain, Long userId) {
+        if (requestedDomain == null || requestedDomain.isBlank()) {
+            return new EffectiveDomain(null, this.domain);
+        }
+
+        final String normalized = normalizeDomain(requestedDomain);
+        if (normalized.isBlank()) {
+            return new EffectiveDomain(null, this.domain);
+        }
+
+        String defaultHost = extractHost(this.domain);
+        if (normalized.equalsIgnoreCase(defaultHost) || normalized.equalsIgnoreCase(this.domain)) {
+            return new EffectiveDomain(null, this.domain);
+        }
+
+        CustomDomain customDomain = customDomainRepository.findByDomain(normalized)
+                .orElseThrow(() -> new IllegalArgumentException("Domain '" + normalized + "' is not registered."));
+
+        if (userId == null) {
+            throw new IllegalArgumentException("Authentication required to use custom domains.");
+        }
+
+        if (!Objects.equals(customDomain.getUserId(), userId)) {
+            throw new IllegalArgumentException("Domain '" + normalized + "' does not belong to your account.");
+        }
+
+        if (customDomain.getStatus() != DomainStatus.ACTIVE) {
+            throw new IllegalArgumentException("Domain '" + normalized + "' is not verified yet. Please verify domain CNAME before creating branded links.");
+        }
+
+        return new EffectiveDomain(customDomain.getDomain(), "https://" + customDomain.getDomain());
+    }
+
+    private String extractHost(String domainUrl) {
+        if (domainUrl == null) return "";
+        String s = domainUrl.trim().toLowerCase();
+        if (s.startsWith("http://")) s = s.substring(7);
+        else if (s.startsWith("https://")) s = s.substring(8);
+        int slash = s.indexOf('/');
+        if (slash >= 0) s = s.substring(0, slash);
+        return s;
+    }
 
     @Transactional
     public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId) {
@@ -106,13 +174,16 @@ public class NewUrlService {
         LinkMode linkMode = request.resolvedLinkMode();
         String customPath = request.resolvedCustomPath();
         boolean addShortCode = request.resolvedAddShortCode();
+        EffectiveDomain effectiveDomain = resolveEffectiveDomain(request.resolvedDomain(), userId);
+        String baseDomainUrl = effectiveDomain.baseUrl();
 
         if (customPath != null) {
             if (addShortCode) {
-                // Check if an existing URL exists for the same originalUrl and customPath that is still usable
+                // Check if an existing URL exists for the same originalUrl, customPath, and domain that is still usable
                 Optional<NewUrl> existing = repository.findAllByOriginalUrlAndCustomPathOrderByIdDesc(originalUrl, customPath)
                         .stream()
                         .filter(this::isUsable)
+                        .filter(e -> Objects.equals(e.getDomain(), effectiveDomain.domainName()))
                         .findFirst();
 
                 if (existing.isPresent()) {
@@ -151,9 +222,9 @@ public class NewUrlService {
                 // If no usable existing URL found, generate a new short code and append to customPath
                 String shortCode = generateUniqueShortCode();
                 String fullPath = customPath + "/" + shortCode;
-                String newUrl = domain + "/" + fullPath;
+                String newUrl = baseDomainUrl + "/" + fullPath;
 
-                NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
+                NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
                 newUrlEntity.setUserId(userId);
                 if (request.notes() != null && !request.notes().isBlank()) {
                     newUrlEntity.setNote(request.notes().trim());
@@ -178,11 +249,12 @@ public class NewUrlService {
             } else {
                 String fullPath = customPath;
                 String shortCode = customPath;
-                String newUrl = domain + "/" + fullPath;
+                String newUrl = baseDomainUrl + "/" + fullPath;
 
                 Optional<NewUrl> existingByPath = repository.findByNewUrl(newUrl);
                 if (existingByPath.isEmpty()) {
-                    existingByPath = repository.findByShortCode(shortCode);
+                    existingByPath = repository.findByShortCode(shortCode)
+                            .filter(e -> Objects.equals(e.getDomain(), effectiveDomain.domainName()));
                 }
 
                 if (existingByPath.isPresent()) {
@@ -227,6 +299,8 @@ public class NewUrlService {
                     existing.setExpireAt(expiresAt);
                     existing.setUsageLimit(request.resolvedUsageLimit());
                     existing.setClickCount(0);
+                    existing.setDomain(effectiveDomain.domainName());
+                    existing.setNewUrl(newUrl);
                     if (userId != null) {
                         existing.setUserId(userId);
                     }
@@ -255,7 +329,7 @@ public class NewUrlService {
                 }
 
                 // Save to database
-                NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
+                NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
                 newUrlEntity.setUserId(userId);
                 if (request.notes() != null && !request.notes().isBlank()) {
                     newUrlEntity.setNote(request.notes().trim());
@@ -279,10 +353,11 @@ public class NewUrlService {
                 );
             }
         } else {
-            // Check if an auto-generated short URL already exists for the same URL that is active, non-expired, and non-limit-exceeded
+            // Check if an auto-generated short URL already exists for the same URL and domain that is active, non-expired, and non-limit-exceeded
             Optional<NewUrl> existing = repository.findAllByOriginalUrlAndCustomPathIsNullOrderByIdDesc(originalUrl)
                     .stream()
                     .filter(this::isUsable)
+                    .filter(e -> Objects.equals(e.getDomain(), effectiveDomain.domainName()))
                     .findFirst();
 
             if (existing.isPresent()) {
@@ -319,9 +394,9 @@ public class NewUrlService {
 
             // If no usable URL exists, generate a new short code
             String code = generateUniqueShortCode();
-            String newUrl = domain + "/" + code;
+            String newUrl = baseDomainUrl + "/" + code;
 
-            NewUrl newUrlEntity = new NewUrl(code, originalUrl, null, newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
+            NewUrl newUrlEntity = new NewUrl(code, originalUrl, null, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
             newUrlEntity.setUserId(userId);
             if (request.notes() != null && !request.notes().isBlank()) {
                 newUrlEntity.setNote(request.notes().trim());
@@ -345,7 +420,6 @@ public class NewUrlService {
             );
         }
     }
-
 
     public boolean isUsable(NewUrl url) {
         if (url == null) {
@@ -778,6 +852,20 @@ public class NewUrlService {
         Map<Long, UsagePolicy> policyMap = usagePolicyRepository.findAllByShortUrlIdIn(ids).stream()
                 .collect(Collectors.toMap(UsagePolicy::getShortUrlId, p -> p, (p1, p2) -> p1));
 
+        Map<Long, LocalDateTime> latestAccessMap = new HashMap<>();
+        if (!ids.isEmpty()) {
+            try {
+                List<Object[]> rows = accessLogRepository.findLatestAccessTimesByShortUrlIdIn(ids);
+                for (Object[] row : rows) {
+                    if (row != null && row.length >= 2 && row[0] instanceof Long sid && row[1] instanceof LocalDateTime dt) {
+                        latestAccessMap.put(sid, dt);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to retrieve latest access timestamps for shortUrlIds: {}", e.getMessage());
+            }
+        }
+
         Instant now = Instant.now();
         return page.map(entity -> {
             UsagePolicy policy = policyMap.get(entity.getId());
@@ -796,14 +884,48 @@ public class NewUrlService {
                 expiredReason = "USAGE";
             }
 
+            long timesClicked = entity.getClickCount();
+            Instant createdAt = entity.getCreatedAt();
+            String createdAgo = toTimeAgo(createdAt);
+
+            LocalDateTime latestAccess = latestAccessMap.get(entity.getId());
+            Instant lastUsedAt = (latestAccess != null) ? latestAccess.atZone(ZoneId.systemDefault()).toInstant() : null;
+            String lastUsedAgo = (lastUsedAt != null) ? toTimeAgo(lastUsedAt) : null;
+
             return new UrlListItemResponse(
                     entity.getNewUrl(),
                     entity.getOriginalUrl(),
                     entity.isActive(),
                     isExpired,
-                    expiredReason
+                    expiredReason,
+                    expiredReason,
+                    timesClicked,
+                    createdAt,
+                    createdAgo,
+                    lastUsedAt,
+                    lastUsedAgo
             );
         });
+    }
+
+    public static String toTimeAgo(Instant instant) {
+        if (instant == null) return null;
+        Duration duration = Duration.between(instant, Instant.now());
+        long seconds = duration.getSeconds();
+        if (seconds < 0) return "just now";
+        if (seconds < 60) return "just now";
+        long minutes = seconds / 60;
+        if (minutes < 60) return minutes + (minutes == 1 ? " minute ago" : " minutes ago");
+        long hours = minutes / 60;
+        if (hours < 24) return hours + (hours == 1 ? " hour ago" : " hours ago");
+        long days = hours / 24;
+        if (days < 7) return days + (days == 1 ? " day ago" : " days ago");
+        long weeks = days / 7;
+        if (weeks < 4) return weeks + (weeks == 1 ? " week ago" : " weeks ago");
+        long months = days / 30;
+        if (months < 12) return months + (months == 1 ? " month ago" : " months ago");
+        long years = days / 365;
+        return years + (years == 1 ? " year ago" : " years ago");
     }
 
     @Transactional(readOnly = true)

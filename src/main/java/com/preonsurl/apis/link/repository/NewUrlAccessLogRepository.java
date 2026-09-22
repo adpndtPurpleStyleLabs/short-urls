@@ -28,5 +28,8 @@ public interface NewUrlAccessLogRepository extends JpaRepository<NewUrlAccessLog
             countQuery = "SELECT COUNT(l) FROM NewUrlAccessLog l, NewUrl u WHERE l.shortUrlId = u.id AND u.userId = :userId"
     )
     Page<NewUrlAccessLog> findAllByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("SELECT l.shortUrlId, MAX(l.accessedAt) FROM NewUrlAccessLog l WHERE l.shortUrlId IN :shortUrlIds GROUP BY l.shortUrlId")
+    List<Object[]> findLatestAccessTimesByShortUrlIdIn(@Param("shortUrlIds") List<Long> shortUrlIds);
 }
 

@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,6 +42,8 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
+
+@Profile("serve")
 @Controller
 @Tag(name = "Serving", description = "Public endpoints for link resolution, redirection, and streaming proxy/mirror serving")
 public class ServingController {

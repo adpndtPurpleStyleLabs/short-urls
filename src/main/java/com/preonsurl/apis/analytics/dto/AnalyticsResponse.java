@@ -7,6 +7,12 @@ public record AnalyticsResponse(
         long totalClicks,
         LocalDate startDate,
         LocalDate endDate,
-        List<DailyClickDto> dailyClicks
+        List<DailyClickDto> dailyClicks,
+        long totalUrls,
+        long totalActiveUrls,
+        List<DailyCreatedUrlDto> dailyCreatedUrls
 ) {
+    public AnalyticsResponse(long totalClicks, LocalDate startDate, LocalDate endDate, List<DailyClickDto> dailyClicks) {
+        this(totalClicks, startDate, endDate, dailyClicks, 0L, 0L, List.of());
+    }
 }

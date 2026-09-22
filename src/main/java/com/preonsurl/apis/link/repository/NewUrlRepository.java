@@ -37,7 +37,28 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
 
     org.springframework.data.domain.Page<NewUrl> findAllByUserId(Long userId, org.springframework.data.domain.Pageable pageable);
 
+    long countByUserId(Long userId);
+
+    @Query("SELECT COUNT(u) FROM NewUrl u WHERE u.userId = :userId AND u.isActive = true AND (u.expireAt IS NULL OR u.expireAt > :now) AND (u.usageLimit IS NULL OR u.clickCount < u.usageLimit)")
+    long countActiveByUserId(@Param("userId") Long userId, @Param("now") java.time.Instant now);
+
+    @Query("""
+            SELECT CAST(u.createdAt AS LocalDate), COUNT(u)
+            FROM NewUrl u
+            WHERE u.userId = :userId
+              AND u.createdAt >= :startInstant
+              AND u.createdAt < :endInstant
+            GROUP BY CAST(u.createdAt AS LocalDate)
+            ORDER BY CAST(u.createdAt AS LocalDate) ASC
+            """)
+    List<Object[]> getDailyCreatedUrlsByUser(
+            @Param("userId") Long userId,
+            @Param("startInstant") java.time.Instant startInstant,
+            @Param("endInstant") java.time.Instant endInstant
+    );
+
     @Modifying
     @Query("UPDATE NewUrl s SET s.clickCount = s.clickCount + 1, s.updatedAt = CURRENT_INSTANT WHERE s.id = :id")
     void incrementClickCount(@Param("id") Long id);
 }
+

@@ -23,8 +23,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.test.context.ActiveProfiles;
+
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("app")
 public class AuthUiControllerTest {
 
     @Autowired
@@ -244,7 +247,7 @@ public class AuthUiControllerTest {
                 .andExpect(view().name("console"))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("PreonsURL")))
-                .andExpect(content().string(containsString("Click overview")))
+                .andExpect(content().string(containsString("Serving overview")))
                 .andExpect(content().string(containsString("API Keys")));
     }
 
@@ -284,5 +287,30 @@ public class AuthUiControllerTest {
                 .andExpect(content().string(containsString("scheduleExpiryTimer")))
                 .andExpect(content().string(containsString("checkTokenStatus")))
                 .andExpect(content().string(containsString("window.location.replace('/login')")));
+    }
+
+    @Test
+    void consolePage_containsGlobalSearchAndKeyboardShortcuts() throws Exception {
+        mockMvc.perform(get("/console"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("globalSearchInput")))
+                .andExpect(content().string(containsString("⌘K")))
+                .andExpect(content().string(containsString("⌘N")))
+                .andExpect(content().string(containsString("setupGlobalSearch")));
+    }
+
+    @Test
+    void consoleDomainsPage_returns200AndDomainsHtml() throws Exception {
+        mockMvc.perform(get("/console/domains"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("console"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("navDomains")))
+                .andExpect(content().string(containsString("pageDomains")))
+                .andExpect(content().string(containsString("addDomainModal")))
+                .andExpect(content().string(containsString("Cloudflare")))
+                .andExpect(content().string(containsString("GoDaddy")))
+                .andExpect(content().string(containsString("btn-verify-domain")));
     }
 }

@@ -16,6 +16,7 @@ import java.time.Instant;
         @Index(name = "idx_short_urls_user_id", columnList = "user_id"),
         @Index(name = "idx_short_urls_original_url", columnList = "original_url"),
         @Index(name = "idx_short_urls_custom_path", columnList = "custom_path"),
+        @Index(name = "idx_short_urls_domain", columnList = "domain"),
         @Index(name = "idx_short_urls_new_url", columnList = "new_url"),
         @Index(name = "idx_short_urls_link_mode", columnList = "link_mode"),
         @Index(name = "idx_short_urls_is_active", columnList = "is_active"),
@@ -38,6 +39,9 @@ public class NewUrl {
 
     @Column(name = "custom_path", length = 256)
     private String customPath;
+
+    @Column(name = "domain", length = 255)
+    private String domain;
 
     @Column(name = "new_url", nullable = false, length = 512)
     private String newUrl;
@@ -79,6 +83,26 @@ public class NewUrl {
         this.shortCode = shortCode;
         this.originalUrl = originalUrl;
         this.customPath = customPath;
+        this.newUrl = newUrl;
+        this.expireAt = expireAt;
+        this.usageLimit = usageLimit;
+        this.linkMode = linkMode != null ? linkMode : LinkMode.REDIRECT;
+    }
+
+    public NewUrl(
+            String shortCode,
+            String originalUrl,
+            String customPath,
+            String domain,
+            String newUrl,
+            Instant expireAt,
+            Long usageLimit,
+            LinkMode linkMode
+    ) {
+        this.shortCode = shortCode;
+        this.originalUrl = originalUrl;
+        this.customPath = customPath;
+        this.domain = domain;
         this.newUrl = newUrl;
         this.expireAt = expireAt;
         this.usageLimit = usageLimit;
