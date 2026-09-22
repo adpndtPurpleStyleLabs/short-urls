@@ -1383,7 +1383,7 @@ class CreateControllerTest {
     }
 
     @Test
-    void createProxyMode_webpageUrl_returns400WithAcceptableResources() throws Exception {
+    void createProxyMode_webpageUrl_succeeds() throws Exception {
         String payload = """
                 {
                     "url": "https://example.com/products/index.html",
@@ -1395,10 +1395,10 @@ class CreateControllerTest {
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message", containsString("URL cannot be a webpage when proxy mode is selected")))
-                .andExpect(jsonPath("$.message", containsString(".zip, .pdf, .jpg")));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.linkMode").value("PROXY"))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/products/index.html"));
     }
 
     @Test
@@ -1421,7 +1421,33 @@ class CreateControllerTest {
     }
 
     @Test
-    void editProxyMode_webpageUrl_returns400() throws Exception {
+    void createProxyMode_ssrfOrInvalidScheme_returns400() throws Exception {
+        String[] invalidUrls = {
+                "http://127.0.0.1/admin",
+                "ftp://example.com/file.zip",
+                "file:///etc/passwd",
+                "https://169.254.169.254/latest/meta-data/"
+        };
+
+        for (String invalidUrl : invalidUrls) {
+            String payload = """
+                    {
+                        "url": "%s",
+                        "linkMode": "PROXY"
+                    }
+                    """.formatted(invalidUrl);
+
+            mockMvc.perform(post("/link/create")
+                            .header("X-API-KEY", VALID_API_KEY)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(payload))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false));
+        }
+    }
+
+    @Test
+    void editProxyMode_webpageUrl_succeeds() throws Exception {
         // Create REDIRECT URL
         String createPayload = """
                 {
@@ -1437,7 +1463,7 @@ class CreateControllerTest {
                         .content(createPayload))
                 .andExpect(status().isOk());
 
-        // Edit to PROXY without changing to a resource URL -> 400
+        // Edit to PROXY with a webpage URL -> succeeds in generic reverse proxy
         String editPayload = """
                 {
                     "newUrl": "http://localhost:8081/landing-page",
@@ -1449,15 +1475,15 @@ class CreateControllerTest {
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editPayload))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message", containsString("URL cannot be a webpage when proxy mode is selected")));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.linkMode").value("PROXY"));
 
-        // Edit with resource URL and PROXY mode -> 200 OK
-        String validEditPayload = """
+        // Edit with invalid SSRF URL and PROXY mode -> 400 Bad Request
+        String invalidEditPayload = """
                 {
                     "newUrl": "http://localhost:8081/landing-page",
-                    "originalUrl": "https://example.com/files/document.pdf",
+                    "originalUrl": "http://127.0.0.1:8080/internal",
                     "linkMode": "PROXY"
                 }
                 """;
@@ -1465,10 +1491,8 @@ class CreateControllerTest {
         mockMvc.perform(post("/link/edit")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validEditPayload))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.linkMode").value("PROXY"))
-                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/files/document.pdf"));
+                        .content(invalidEditPayload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

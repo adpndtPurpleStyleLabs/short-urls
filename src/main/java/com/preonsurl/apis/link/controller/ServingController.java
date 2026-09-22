@@ -142,7 +142,7 @@ public class ServingController {
                     LinkMode mode = cached.getLinkMode() != null ? cached.getLinkMode() : LinkMode.REDIRECT;
                     if (mode == LinkMode.PROXY) {
                         log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
-                        return proxyService.proxyRequest(target, request);
+                        return attachProxyContextCookie(proxyService.proxyRequest(target, request), path);
                     }
                     return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
                 }
@@ -171,6 +171,17 @@ public class ServingController {
         }
 
         if (entityOpt.isEmpty()) {
+            // Check if this is an upstream proxy sub-resource or sub-path request
+            Optional<ProxySubResourceTarget> proxyTargetOpt = resolveProxySubResource(request, path);
+            if (proxyTargetOpt.isPresent()) {
+                ProxySubResourceTarget proxyTarget = proxyTargetOpt.get();
+                log.info("Proxying sub-resource path='{}' -> '{}' [IP={}]", path, proxyTarget.targetUrl(), ipAddress);
+                return attachProxyContextCookie(
+                        proxyService.proxyRequest(proxyTarget.targetUrl(), request, proxyTarget.upstreamReferer()),
+                        proxyTarget.cookieIdentifier()
+                );
+            }
+
             log.warn("Full url not found: '{}' [IP={}]", path, ipAddress);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
         }
@@ -235,12 +246,13 @@ public class ServingController {
         try {
             Optional<String> originalUrl = servingCacheService.resolveAndServe(entity.getNewUrl(), ipAddress, userAgent, referer);
             LinkMode mode = entity.getLinkMode() != null ? entity.getLinkMode() : LinkMode.REDIRECT;
+            String cookieId = entity.getShortCode() != null ? entity.getShortCode() : path;
 
             if (originalUrl.isPresent()) {
                 String target = originalUrl.get();
                 if (mode == LinkMode.PROXY) {
                     log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
-                    return proxyService.proxyRequest(target, request);
+                    return attachProxyContextCookie(proxyService.proxyRequest(target, request), cookieId);
                 }
                 log.info("Redirecting root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
                 return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
@@ -248,7 +260,7 @@ public class ServingController {
 
             if (mode == LinkMode.PROXY) {
                 log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, entity.getOriginalUrl(), ipAddress);
-                return proxyService.proxyRequest(entity.getOriginalUrl(), request);
+                return attachProxyContextCookie(proxyService.proxyRequest(entity.getOriginalUrl(), request), cookieId);
             }
             return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(entity.getOriginalUrl())).build();
         } catch (UrlExpiredException e) {
@@ -315,6 +327,15 @@ public class ServingController {
         }
 
         if (entityOpt.isEmpty()) {
+            Optional<ProxySubResourceTarget> proxyTargetOpt = resolveProxySubResource(request, path);
+            if (proxyTargetOpt.isPresent()) {
+                ProxySubResourceTarget proxyTarget = proxyTargetOpt.get();
+                log.info("Proxying sub-resource POST path='{}' -> '{}' [IP={}]", path, proxyTarget.targetUrl(), ipAddress);
+                return attachProxyContextCookie(
+                        proxyService.proxyRequest(proxyTarget.targetUrl(), request, proxyTarget.upstreamReferer()),
+                        proxyTarget.cookieIdentifier()
+                );
+            }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
         }
 
@@ -422,5 +443,119 @@ public class ServingController {
             return xForwardedFor.split(",")[0].trim();
         }
         return request.getRemoteAddr();
+    }
+
+    record ProxySubResourceTarget(String targetUrl, String upstreamReferer, String cookieIdentifier) {}
+
+    private Optional<ProxySubResourceTarget> resolveProxySubResource(HttpServletRequest request, String path) {
+        // 1. Check if the path starts with a known PROXY short code or customPath (e.g. "code/sub/path")
+        int firstSlash = path.indexOf('/');
+        if (firstSlash > 0) {
+            String prefix = path.substring(0, firstSlash);
+            Optional<NewUrl> candidate = findProxyEntity(prefix);
+            if (candidate.isPresent()) {
+                String subPath = path.substring(firstSlash);
+                return buildProxySubResourceTarget(candidate.get(), subPath, request, prefix);
+            }
+        }
+
+        // 2. Check Referer header
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isBlank()) {
+            try {
+                URI refererUri = URI.create(referer);
+                String refPath = refererUri.getPath();
+                if (refPath != null) {
+                    while (refPath.startsWith("/")) {
+                        refPath = refPath.substring(1);
+                    }
+                    while (refPath.endsWith("/")) {
+                        refPath = refPath.substring(0, refPath.length() - 1);
+                    }
+                    if (!refPath.isBlank()) {
+                        Optional<NewUrl> candidate = findProxyEntity(refPath);
+                        String identifier = refPath;
+                        if (candidate.isEmpty() && refPath.contains("/")) {
+                            identifier = refPath.substring(0, refPath.indexOf('/'));
+                            candidate = findProxyEntity(identifier);
+                        }
+                        if (candidate.isPresent()) {
+                            String subPath = request.getRequestURI();
+                            return buildProxySubResourceTarget(candidate.get(), subPath, request, identifier);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        // 3. Check PREONS_PROXY_CTX Cookie
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("PREONS_PROXY_CTX".equals(cookie.getName())) {
+                    String cookieVal = cookie.getValue();
+                    if (cookieVal != null && !cookieVal.isBlank()) {
+                        Optional<NewUrl> candidate = findProxyEntity(cookieVal);
+                        if (candidate.isPresent()) {
+                            String subPath = request.getRequestURI();
+                            return buildProxySubResourceTarget(candidate.get(), subPath, request, cookieVal);
+                        }
+                    }
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<NewUrl> findProxyEntity(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return Optional.empty();
+        }
+        Optional<NewUrl> entityOpt = repository.findByShortCode(identifier);
+        if (entityOpt.isEmpty()) {
+            entityOpt = repository.findByCustomPath(identifier);
+        }
+        if (entityOpt.isPresent()) {
+            NewUrl entity = entityOpt.get();
+            if (entity.isActive() && entity.getLinkMode() == LinkMode.PROXY) {
+                if (entity.getExpireAt() == null || Instant.now().isBefore(entity.getExpireAt())) {
+                    return Optional.of(entity);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ProxySubResourceTarget> buildProxySubResourceTarget(NewUrl entity, String subPath, HttpServletRequest request, String identifier) {
+        try {
+            URI baseUri = URI.create(entity.getOriginalUrl());
+            String query = request.getQueryString();
+            String pathAndQuery = subPath + (query != null && !query.isBlank() ? "?" + query : "");
+            URI resolved = baseUri.resolve(pathAndQuery);
+            return Optional.of(new ProxySubResourceTarget(resolved.toString(), entity.getOriginalUrl(), identifier));
+        } catch (Exception e) {
+            log.warn("Failed to resolve proxy sub-resource URI for base '{}' and subPath '{}': {}",
+                    entity.getOriginalUrl(), subPath, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private ResponseEntity<?> attachProxyContextCookie(ResponseEntity<?> response, String identifier) {
+        if (identifier == null || identifier.isBlank() || response == null) {
+            return response;
+        }
+        ResponseCookie cookie = ResponseCookie.from("PREONS_PROXY_CTX", identifier)
+                .path("/")
+                .sameSite("Lax")
+                .httpOnly(true)
+                .build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.addAll(response.getHeaders());
+        headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(headers)
+                .body(response.getBody());
     }
 }

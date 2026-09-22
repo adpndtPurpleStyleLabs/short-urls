@@ -13,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.preonsurl.apis.link.enums.LinkMode;
+import com.preonsurl.apis.link.service.ProxyResourceValidator;
 import com.sun.net.httpserver.HttpServer;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -371,6 +372,7 @@ class ServingControllerTest {
 
     @Test
     void servingProxyMode_servesUpstreamResourceWithoutChangingBrowserUrl() throws Exception {
+        ProxyResourceValidator.allowLoopbackForTesting = true;
         // Start embedded HTTP server to simulate upstream resource server
         HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
         byte[] pdfBytes = "%PDF-1.4 Mock Binary Content for PreonsURL".getBytes(StandardCharsets.UTF_8);
@@ -387,7 +389,7 @@ class ServingControllerTest {
         int port = server.getAddress().getPort();
 
         try {
-            String upstreamUrl = "http://localhost:" + port + "/assets/document.pdf";
+            String upstreamUrl = "http://127.0.0.1:" + port + "/assets/document.pdf";
             NewUrl proxyUrl = new NewUrl(
                     "proxy-pdf-code",
                     upstreamUrl,
@@ -431,28 +433,20 @@ class ServingControllerTest {
             });
 
         } finally {
+            ProxyResourceValidator.allowLoopbackForTesting = false;
             server.stop(0);
         }
     }
 
     @Test
-    void servingProxyMode_upstream403_bypassesWithBrowserHeadersAndRetries() throws Exception {
+    void servingProxyMode_forwardsClientHeadersAndStreamsResponse() throws Exception {
+        ProxyResourceValidator.allowLoopbackForTesting = true;
         HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
         byte[] data = "zip-binary-data".getBytes(StandardCharsets.UTF_8);
 
-        java.util.concurrent.atomic.AtomicInteger attemptCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        java.util.concurrent.atomic.AtomicReference<String> capturedUa = new java.util.concurrent.atomic.AtomicReference<>();
         server.createContext("/files/package.zip", exchange -> {
-            int attempt = attemptCount.incrementAndGet();
-            String ua = exchange.getRequestHeaders().getFirst("User-Agent");
-            String referer = exchange.getRequestHeaders().getFirst("Referer");
-
-            // If it's a bot UA or missing referer, return 403 to simulate Cloudflare / CDN hotlink protection
-            if (ua != null && ua.contains("Postman")) {
-                exchange.sendResponseHeaders(403, 0);
-                exchange.close();
-                return;
-            }
-
+            capturedUa.set(exchange.getRequestHeaders().getFirst("User-Agent"));
             exchange.getResponseHeaders().set("Content-Type", "application/zip");
             exchange.sendResponseHeaders(200, data.length);
             try (OutputStream os = exchange.getResponseBody()) {
@@ -463,7 +457,7 @@ class ServingControllerTest {
         int port = server.getAddress().getPort();
 
         try {
-            String upstreamUrl = "http://localhost:" + port + "/files/package.zip";
+            String upstreamUrl = "http://127.0.0.1:" + port + "/files/package.zip";
             NewUrl proxyUrl = new NewUrl(
                     "proxy-zip-code",
                     upstreamUrl,
@@ -475,15 +469,130 @@ class ServingControllerTest {
             );
             shortUrlRepository.save(proxyUrl);
 
-            // Client sends suspect User-Agent "PostmanRuntime/7.28.0"
-            // ProxyService detects suspect UA and sanitizes it to browser UA, avoiding 403
+            // Client sends User-Agent
             mockMvc.perform(get("/proxy-zip-code")
-                            .header("User-Agent", "PostmanRuntime/7.28.0"))
+                            .header("User-Agent", "CustomClient/2.0"))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", "application/zip"))
                     .andExpect(content().bytes(data));
 
+            assertEquals("CustomClient/2.0", capturedUa.get());
+
         } finally {
+            ProxyResourceValidator.allowLoopbackForTesting = false;
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void servingProxyMode_subResourcesWithReferer_proxiedSuccessfully() throws Exception {
+        ProxyResourceValidator.allowLoopbackForTesting = true;
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+
+        byte[] htmlBytes = "<html><body><img src=\"/pub/media/logo.svg\"></body></html>".getBytes(StandardCharsets.UTF_8);
+        byte[] svgBytes = "<svg>mock svg</svg>".getBytes(StandardCharsets.UTF_8);
+
+        java.util.concurrent.atomic.AtomicReference<String> capturedReferer = new java.util.concurrent.atomic.AtomicReference<>();
+
+        server.createContext("/sale", exchange -> {
+            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+            exchange.sendResponseHeaders(200, htmlBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(htmlBytes);
+            }
+        });
+
+        server.createContext("/pub/media/logo.svg", exchange -> {
+            capturedReferer.set(exchange.getRequestHeaders().getFirst("Referer"));
+            exchange.getResponseHeaders().set("Content-Type", "image/svg+xml");
+            exchange.sendResponseHeaders(200, svgBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(svgBytes);
+            }
+        });
+
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            String upstreamBase = "http://127.0.0.1:" + port + "/sale";
+            NewUrl proxyUrl = new NewUrl(
+                    "ogaan-sale",
+                    upstreamBase,
+                    null,
+                    "http://localhost/ogaan-sale",
+                    Instant.now().plus(30, ChronoUnit.DAYS),
+                    null,
+                    LinkMode.PROXY
+            );
+            shortUrlRepository.save(proxyUrl);
+
+            // 1. Initial page load sets PREONS_PROXY_CTX cookie
+            mockMvc.perform(get("/ogaan-sale")
+                            .header("User-Agent", "Mozilla/5.0"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("PREONS_PROXY_CTX=ogaan-sale")))
+                    .andExpect(content().bytes(htmlBytes));
+
+            // 2. Browser requests sub-resource with Referer: http://localhost/ogaan-sale
+            mockMvc.perform(get("/pub/media/logo.svg")
+                            .header("User-Agent", "Mozilla/5.0")
+                            .header("Referer", "http://localhost/ogaan-sale"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Type", "image/svg+xml"))
+                    .andExpect(content().bytes(svgBytes));
+
+            // Verify upstream received the upstream page as Referer (protecting against hotlink blocks)
+            assertEquals(upstreamBase, capturedReferer.get());
+
+        } finally {
+            ProxyResourceValidator.allowLoopbackForTesting = false;
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void servingProxyMode_subResourcesWithCookieFallback_proxiedSuccessfully() throws Exception {
+        ProxyResourceValidator.allowLoopbackForTesting = true;
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+
+        byte[] jsBytes = "console.log('worker loaded');".getBytes(StandardCharsets.UTF_8);
+
+        server.createContext("/service-worker.js", exchange -> {
+            exchange.getResponseHeaders().set("Content-Type", "application/javascript");
+            exchange.sendResponseHeaders(200, jsBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(jsBytes);
+            }
+        });
+
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            String upstreamBase = "http://127.0.0.1:" + port + "/";
+            NewUrl proxyUrl = new NewUrl(
+                    "pernias-home",
+                    upstreamBase,
+                    null,
+                    "http://localhost/pernias-home",
+                    Instant.now().plus(30, ChronoUnit.DAYS),
+                    null,
+                    LinkMode.PROXY
+            );
+            shortUrlRepository.save(proxyUrl);
+
+            // Sub-resource requested without Referer but with PREONS_PROXY_CTX cookie
+            jakarta.servlet.http.Cookie proxyCookie = new jakarta.servlet.http.Cookie("PREONS_PROXY_CTX", "pernias-home");
+            mockMvc.perform(get("/service-worker.js")
+                            .cookie(proxyCookie)
+                            .header("User-Agent", "Mozilla/5.0"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Type", "application/javascript"))
+                    .andExpect(content().bytes(jsBytes));
+
+        } finally {
+            ProxyResourceValidator.allowLoopbackForTesting = false;
             server.stop(0);
         }
     }
