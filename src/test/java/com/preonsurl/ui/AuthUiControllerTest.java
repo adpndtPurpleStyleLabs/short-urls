@@ -245,10 +245,12 @@ public class AuthUiControllerTest {
         mockMvc.perform(get("/console"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("console"))
+                .andExpect(model().attributeExists("defaultServeDomain"))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("PreonsURL")))
                 .andExpect(content().string(containsString("Serving overview")))
-                .andExpect(content().string(containsString("API Keys")));
+                .andExpect(content().string(containsString("API Keys")))
+                .andExpect(content().string(containsString("default-serve-domain")));
     }
 
     @Test

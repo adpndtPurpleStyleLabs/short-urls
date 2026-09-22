@@ -9,6 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <meta name="default-serve-domain" th:content="${defaultServeDomain}">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.PREONS_DEFAULT_SERVE_DOMAIN = /*[[${defaultServeDomain}]]*/ "go.domain.com";
+        /*]]>*/
+    </script>
     <script>
         (function checkConsoleAuthEarly() {
             function parseJwtPayload(token) {
@@ -8138,22 +8144,35 @@
         }
 
         async function fetchDefaultDomainInfo() {
-            if (appState.defaultDomainInfo) return appState.defaultDomainInfo;
+            if (appState.defaultDomainInfo && appState.defaultDomainInfo.domain) return appState.defaultDomainInfo;
+            const configuredDomain = window.PREONS_DEFAULT_SERVE_DOMAIN || "go.domain.com";
             try {
                 const res = await authenticatedFetch("/api/domains/default");
                 if (res.ok) {
                     const json = await res.json();
                     appState.defaultDomainInfo = (json && json.data !== undefined) ? json.data : json;
-                    updateDnsInstructionsTarget(appState.defaultDomainInfo.cnameTarget || appState.defaultDomainInfo.domain);
                 }
             } catch (err) {
                 console.warn("Could not fetch default domain info:", err);
             }
+            if (!appState.defaultDomainInfo || !appState.defaultDomainInfo.domain) {
+                appState.defaultDomainInfo = {
+                    id: 0,
+                    domain: configuredDomain,
+                    status: "ACTIVE",
+                    cnameTarget: configuredDomain,
+                    isDefault: true,
+                    description: "Our default domain",
+                    createdAt: "2026-01-01T00:00:00Z",
+                    verifiedAt: "2026-01-01T00:00:00Z"
+                };
+            }
+            updateDnsInstructionsTarget(appState.defaultDomainInfo.cnameTarget || appState.defaultDomainInfo.domain);
             return appState.defaultDomainInfo;
         }
 
         function updateDnsInstructionsTarget(target) {
-            const display = target || "go.domain.com";
+            const display = target || window.PREONS_DEFAULT_SERVE_DOMAIN || "go.domain.com";
             const cf = document.getElementById("cfTargetCname");
             const gd = document.getElementById("gdTargetCname");
             const hint = document.getElementById("hintTargetCname");
@@ -8177,7 +8196,7 @@
             `;
 
             try {
-                // Ensure default domain info is cached
+                // Ensure default domain info from preonsurl.serve.domain is cached
                 const defaultDomain = await fetchDefaultDomainInfo();
 
                 const response = await authenticatedFetch(`/api/domains?page=${page}&size=${appState.domainsPageSize}`);
@@ -8214,13 +8233,15 @@
             const totalPages = Math.max(1, Number(pageData?.totalPages ?? (pageData?.page ? pageData.page.totalPages : 1)));
 
             const defDom = (defaultDomain && defaultDomain.data !== undefined) ? defaultDomain.data : defaultDomain;
+            const defaultDomainName = (defDom && defDom.domain) || window.PREONS_DEFAULT_SERVE_DOMAIN || "go.domain.com";
 
             let html = "";
 
-            // If on page 0 and default domain is present, render the system default domain first (matches screenshot)
-            if (currentPage === 0 && defDom && defDom.domain) {
+            // Render the system default domain (preonsurl.serve.domain configuration) at the top of page 0
+            if (currentPage === 0 && defaultDomainName) {
+                const defaultDateStr = (defDom && defDom.createdAt) ? formatDate(defDom.createdAt) : "Jan 1, 2026";
                 html += `
-                    <div class="domain-row">
+                    <div class="domain-row" data-domain-id="default">
                         <div class="col-domain">
                             <div class="domain-info-box">
                                 <div class="domain-globe-icon">
@@ -8232,10 +8253,10 @@
                                 </div>
                                 <div class="domain-texts">
                                     <div class="domain-name-line">
-                                        <span class="domain-name-text">${escapeHtml(defDom.domain)}</span>
+                                        <span class="domain-name-text">${escapeHtml(defaultDomainName)}</span>
                                         <span class="badge-default">Default</span>
                                     </div>
-                                    <span class="domain-subtitle">${escapeHtml(defDom.description || "Our default domain")}</span>
+                                    <span class="domain-subtitle">${escapeHtml((defDom && defDom.description) || "Our default domain")}</span>
                                 </div>
                             </div>
                         </div>
@@ -8247,36 +8268,28 @@
                             </div>
                         </div>
                         <div class="col-added">
-                            <span style="font-size: 13px; color: #475569;">System</span>
+                            <span style="font-size: 13px; color: #475569;">${escapeHtml(defaultDateStr)}</span>
                         </div>
                         <div class="col-actions">
-                            <button class="btn-more-actions" type="button" title="Copy domain" onclick="copyDomainToClipboard('${escapeJsString(defDom.domain)}')">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                </svg>
+                            <button class="btn-more-actions domain-action-trigger" data-domain-id="default" type="button" aria-label="Default domain actions">
+                                &bull;&bull;&bull;
                             </button>
+                            <div class="domain-action-dropdown" id="domainMenu-default">
+                                <button class="domain-action-item" type="button" onclick="copyDomainToClipboard('${escapeJsString(defaultDomainName)}')">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    Copy Domain
+                                </button>
+                                <button class="domain-action-item action-guide" type="button">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                    DNS Guide
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
             }
 
-            if (items.length === 0 && currentPage === 0 && (!defDom || !defDom.domain)) {
-                container.innerHTML = `
-                    <div class="domains-empty-state">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                        </svg>
-                        <span>No custom domains registered yet.</span>
-                        <button class="btn btn-primary" style="margin-top:6px;" onclick="openAddDomainModal()">+ Add Your First Domain</button>
-                    </div>
-                `;
-                updateDomainsPaginationControls(pageData);
-                return;
-            }
-
+            // Render each custom domain
             items.forEach(domain => {
                 const statusStr = String(domain.status || "").trim().toUpperCase();
                 const isVerified = statusStr === "ACTIVE";
@@ -8295,7 +8308,7 @@
 
                 let subtitle = "";
                 if (isVerified) {
-                    subtitle = `Points to ${escapeHtml(domain.cnameTarget || "go.domain.com")}`;
+                    subtitle = `Points to ${escapeHtml(domain.cnameTarget || defaultDomainName)}`;
                 } else if (domain.verificationError) {
                     subtitle = escapeHtml(domain.verificationError);
                 } else {
@@ -8368,23 +8381,42 @@
                 `;
             });
 
+            // If no custom domains, display helpful callout below default domain
+            if (items.length === 0 && currentPage === 0) {
+                html += `
+                    <div class="domains-empty-hint" style="padding: 24px 20px; text-align: center; border-top: 1px solid #f1f5f9; background: #fafafa; color: #64748b; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                        <span>Want to use your own brand for links?</span>
+                        <button class="btn btn-primary" type="button" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: #0f172a; color: #ffffff;" onclick="openAddDomainModal()">+ Add Custom Domain</button>
+                    </div>
+                `;
+            }
+
             container.innerHTML = html;
-            updateDomainsPaginationControls(pageData);
+            updateDomainsPaginationControls(pageData, Boolean(defaultDomainName));
             attachDomainRowListeners(container);
         }
 
-        function updateDomainsPaginationControls(data) {
-            const total = Number(data.totalElements ?? (data.page ? data.page.totalElements : 0));
+        function updateDomainsPaginationControls(data, hasDefaultDomain = true) {
+            const customTotal = Number(data.totalElements ?? (data.page ? data.page.totalElements : 0));
             const page = Number(data.number ?? (data.page ? data.page.number : appState.domainsPage));
             const size = Number(data.size ?? (data.page ? data.page.size : appState.domainsPageSize));
             const totalPages = Math.max(1, Number(data.totalPages ?? (data.page ? data.page.totalPages : 1)));
 
-            const start = total === 0 ? 0 : page * size + 1;
-            const end = total === 0 ? 0 : Math.min((page + 1) * size, total);
+            const extraDefault = (hasDefaultDomain && page === 0) ? 1 : 0;
+            const totalAll = customTotal + (hasDefaultDomain ? 1 : 0);
+
+            const start = totalAll === 0 ? 0 : 1;
+            const end = totalAll === 0 ? 0 : Math.min((page + 1) * size + extraDefault, totalAll);
 
             const infoEl = document.getElementById("domainsPaginationInfo");
             if (infoEl) {
-                infoEl.textContent = total === 0 ? "0 domains" : `${start}–${end} of ${total}`;
+                if (totalAll === 0) {
+                    infoEl.textContent = "0 domains";
+                } else if (totalAll === 1) {
+                    infoEl.textContent = "1 of 1";
+                } else {
+                    infoEl.textContent = `${start}–${end} of ${totalAll}`;
+                }
             }
 
             const pageLabel = document.getElementById("domainsPageLabel");
