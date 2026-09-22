@@ -1,0 +1,4031 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PreonsURL — Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function checkConsoleAuthEarly() {
+            function parseJwtPayload(token) {
+                if (!token || typeof token !== 'string') return null;
+                const parts = token.trim().split('.');
+                if (parts.length !== 3) return null;
+                try {
+                    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                    while (base64.length % 4 !== 0) base64 += '=';
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    return JSON.parse(new TextDecoder().decode(bytes));
+                } catch (e) {
+                    return null;
+                }
+            }
+            function isJwtValid(token) {
+                const payload = parseJwtPayload(token);
+                if (!payload || typeof payload !== 'object') return false;
+                if (payload.exp && typeof payload.exp === 'number') {
+                    if (payload.exp <= Math.floor(Date.now() / 1000)) return false;
+                }
+                return true;
+            }
+
+            try {
+                const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
+                if (!token || !isJwtValid(token)) {
+                    localStorage.removeItem('preonsurl_token');
+                    localStorage.removeItem('preonsurl_username');
+                    localStorage.removeItem('preons_token');
+                    document.cookie = 'preons_jwt=; path=/; max-age=0; SameSite=Strict';
+                    sessionStorage.setItem('preons_logout_message', 'Your session has expired. Please sign in again.');
+                    window.location.replace('/login');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --border-subtle: #edf2f7;
+            --border-focus: #0f172a;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --muted: #64748b;
+            --primary: #0f172a;
+            --primary-hover: #1e293b;
+            --accent: #2563eb;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --warning: #d97706;
+            --warning-bg: #fffbeb;
+            --warning-border: #fef3c7;
+            --radius-sm: 6px;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 18px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+            --shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 12px 32px 0 rgba(0, 0, 0, 0.08);
+            --sidebar-width: 240px;
+            --header-height: 60px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button, input, textarea, select {
+            font-family: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* =========================
+           SHELL LAYOUT
+        ========================= */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+        .sidebar {
+            width: var(--sidebar-width);
+            flex: 0 0 var(--sidebar-width);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 40;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar-brand {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .brand-logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: var(--primary);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-title {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text);
+        }
+
+        .sidebar-nav {
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: var(--radius-sm);
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text);
+            background: var(--surface-soft);
+        }
+
+        .nav-item.active {
+            color: var(--text);
+            background: var(--surface-hover);
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            stroke-width: 2;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-subtle);
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* =========================
+           MAIN WRAPPER & HEADER
+        ========================= */
+        .main-wrapper {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .app-header {
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            max-width: 540px;
+        }
+
+        .mobile-nav-toggle {
+            display: none;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            width: 34px;
+            height: 34px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Global Command Search */
+        .global-search-box {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--muted);
+            pointer-events: none;
+        }
+
+        .global-search-input {
+            width: 100%;
+            height: 38px;
+            padding: 0 40px 0 36px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+        .global-search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
+            background: #ffffff;
+        }
+
+        .search-kbd {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--muted);
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 5px;
+            pointer-events: none;
+        }
+
+        /* User Menu */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-dropdown-container {
+            position: relative;
+        }
+
+        .user-profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 8px 5px 5px;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text);
+            transition: all 0.15s ease;
+        }
+
+        .user-profile-btn:hover {
+            background: var(--surface-soft);
+            border-color: var(--border);
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .user-name-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dropdown-caret {
+            width: 12px;
+            height: 12px;
+            color: var(--muted);
+            transition: transform 0.15s ease;
+        }
+
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            width: 210px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 6px;
+            display: none;
+            flex-direction: column;
+            z-index: 50;
+            animation: menuFadeIn 0.15s ease-out;
+        }
+
+        .user-dropdown-menu.show {
+            display: flex;
+        }
+
+        @keyframes menuFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-header {
+            padding: 8px 10px;
+            font-size: 12px;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 4px;
+        }
+
+        .dropdown-header strong {
+            display: block;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            transition: background 0.12s ease;
+        }
+
+        .dropdown-item:hover {
+            background: var(--surface-soft);
+        }
+
+        .dropdown-item.danger {
+            color: var(--danger);
+        }
+
+        .dropdown-item.danger:hover {
+            background: var(--danger-bg);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-subtle);
+            margin: 4px 0;
+        }
+
+        /* =========================
+           PAGE CONTENT
+        ========================= */
+        .console-content {
+            flex: 1;
+            max-width: 1140px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 28px 64px;
+        }
+
+        .page-view {
+            display: none;
+            animation: fadeInPage 0.2s ease-out;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        @keyframes fadeInPage {
+            from { opacity: 0; transform: translateY(3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--text);
+            line-height: 1.25;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            height: 38px;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--surface-soft);
+            border-color: #cbd5e1;
+        }
+
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: #ffffff;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #ffffff;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #b91c1c;
+            border-color: #b91c1c;
+        }
+
+        /* =========================
+           HOME PAGE
+        ========================= */
+        .analytics-card {
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .analytics-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .analytics-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .analytics-range-select {
+            height: 34px;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+        }
+
+        .analytics-card-body {
+            padding: 24px;
+        }
+
+        .analytics-stat-group {
+            margin-bottom: 20px;
+        }
+
+        .analytics-stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .analytics-stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 200px;
+            position: relative;
+        }
+
+        .chart-empty {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 12px;
+            background: var(--surface-soft);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .chart-grid-line {
+            stroke: var(--border-subtle);
+            stroke-width: 1;
+        }
+
+        .chart-axis-label {
+            fill: var(--muted);
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .chart-bar {
+            fill: var(--primary);
+            transition: fill 0.15s ease;
+        }
+
+        .chart-bar:hover {
+            fill: #334155;
+        }
+
+        /* =========================
+           LINKS TABLE
+        ========================= */
+        .table-card {
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .data-table th {
+            padding: 12px 18px;
+            background: var(--surface-soft);
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-subtle);
+            vertical-align: middle;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.12s ease;
+            cursor: pointer;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .link-short-text {
+            font-weight: 600;
+            color: var(--text);
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+        }
+
+        .link-original-text {
+            color: var(--muted);
+            max-width: 260px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+        }
+
+        .arrow-cell {
+            color: var(--muted);
+            text-align: center;
+            width: 32px;
+            font-size: 14px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-pill.active {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid var(--success-border);
+        }
+
+        .status-pill.inactive {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid var(--danger-border);
+        }
+
+        .status-pill::before {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .why-text {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .why-text.expired {
+            color: var(--danger);
+            font-weight: 500;
+        }
+
+        .table-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .pagination-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            height: 32px;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--surface-soft);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .table-empty-state {
+            padding: 48px 20px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .spin-icon {
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-state-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 32px 16px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .loading-state-box span {
+            color: var(--muted);
+        }
+
+        .modal-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(2px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 50;
+            border-radius: var(--radius-xl);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+
+        /* =========================
+           API KEYS PAGE
+        ========================= */
+        .apikey-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .apikey-card {
+            padding: 24px;
+        }
+
+        .apikey-empty-state {
+            text-align: center;
+            padding: 56px 24px;
+        }
+
+        .apikey-empty-icon {
+            width: 44px;
+            height: 44px;
+            margin: 0 auto 16px;
+            color: var(--muted);
+            background: var(--surface-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .apikey-empty-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .apikey-empty-desc {
+            font-size: 13px;
+            color: var(--muted);
+            max-width: 360px;
+            margin: 0 auto 20px;
+        }
+
+        .apikey-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .apikey-info-item label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+
+        .apikey-info-item span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .apikey-key-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .raw-key-banner {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .raw-key-banner-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .raw-key-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+            background: #ffffff;
+            border: 1px solid #fde68a;
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: #78350f;
+            word-break: break-all;
+        }
+
+        .raw-key-warning {
+            font-size: 12px;
+            color: #b45309;
+        }
+
+        /* =========================
+           MODALS (Create, Edit, Analytics, Confirm)
+        ========================= */
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            z-index: 100;
+        }
+
+        .modal.open {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: min(880px, calc(100vw - 32px));
+            max-height: calc(100vh - 48px);
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            z-index: 10;
+            animation: modalPop 0.18s ease-out;
+        }
+
+        .link-modal-dialog {
+            height: min(600px, calc(100vh - 48px));
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .modal-kicker {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text);
+        }
+
+        .modal-header p {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .modal-close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--muted);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--text);
+            background: var(--surface-soft);
+        }
+
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* URL Preview Bar */
+        .url-preview-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 24px;
+            background: var(--surface-soft);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .url-preview-bar span {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .url-preview-bar strong {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        /* Form Layout inside Modal */
+        .modal-body-layout {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .modal-nav-sidebar {
+            background: #fafafa;
+            border-right: 1px solid var(--border);
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .modal-nav-btn {
+            padding: 9px 12px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            text-align: left;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.12s;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .modal-nav-btn small {
+            font-size: 10px;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        .modal-nav-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+
+        .modal-nav-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .modal-form-scroll {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .modal-section-pane {
+            display: none;
+            max-width: 580px;
+        }
+
+        .modal-section-pane.active {
+            display: block;
+        }
+
+        .modal-section-pane h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .modal-section-pane p.desc {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .field-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .field-group .optional {
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 9px 12px;
+            font-size: 13px;
+            color: var(--text);
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .field-help {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .custom-path-group {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .custom-path-group span {
+            padding: 0 10px;
+            font-size: 13px;
+            color: var(--muted);
+            background: var(--surface-soft);
+            height: 38px;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid var(--border);
+        }
+
+        .custom-path-group input {
+            border: none;
+            outline: none;
+            flex: 1;
+            padding: 0 12px;
+            font-size: 13px;
+            height: 38px;
+        }
+
+        /* Setting Toggle Rows */
+        .setting-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 14px;
+            background: #ffffff;
+        }
+
+        .setting-toggle-info strong {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .setting-toggle-info span {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .switch-toggle {
+            position: relative;
+            width: 38px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .switch-toggle input {
+            display: none;
+        }
+
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            background: #cbd5e1;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .switch-slider:before {
+            content: "";
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            left: 3px;
+            top: 3px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .switch-toggle input:checked + .switch-slider {
+            background: var(--primary);
+        }
+
+        .switch-toggle input:checked + .switch-slider:before {
+            transform: translateX(18px);
+        }
+
+        /* Link Mode Radio Cards */
+        .mode-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .mode-card-option {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: #ffffff;
+        }
+
+        .mode-card-option:hover {
+            border-color: #94a3b8;
+        }
+
+        .mode-card-option.selected {
+            border-color: var(--primary);
+            background: #f8fafc;
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+
+        .mode-card-option input {
+            display: none;
+        }
+
+        .mode-card-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
+
+        .mode-card-desc {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.35;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        /* Success Panel inside Create Modal */
+        .create-success-panel {
+            display: none;
+            padding: 48px 24px;
+            text-align: center;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-icon-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .create-success-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .create-success-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .create-url-box {
+            display: flex;
+            max-width: 480px;
+            margin: 0 auto 24px;
+            gap: 8px;
+        }
+
+        /* =========================
+           URL ANALYTICS MODAL
+        ========================= */
+        .analytics-modal-dialog {
+            width: min(940px, calc(100vw - 32px));
+        }
+
+        .analytics-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .analytics-summary-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .analytics-summary-details strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            word-break: break-all;
+        }
+
+        .analytics-summary-details span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+            word-break: break-all;
+        }
+
+        /* Confirmation Dialog */
+        .confirm-dialog {
+            width: min(420px, calc(100vw - 32px));
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .confirm-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .confirm-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 22px;
+            line-height: 1.45;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* =========================
+           TOAST NOTIFICATION SYSTEM
+        ========================= */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            pointer-events: none;
+            max-width: 380px;
+            width: calc(100vw - 40px);
+        }
+
+        .toast-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            pointer-events: auto;
+            animation: toastSlideIn 0.25s ease-out;
+            transition: all 0.2s ease;
+        }
+
+        .toast-item.removing {
+            opacity: 0;
+            transform: translateX(10px);
+        }
+
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast-icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .toast-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toast-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .toast-message {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .toast-close {
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1;
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        .toast-close:hover {
+            color: var(--text);
+        }
+
+        .toast-item.success {
+            border-left: 4px solid var(--success);
+        }
+        .toast-item.success .toast-icon {
+            color: var(--success);
+        }
+
+        .toast-item.error {
+            border-left: 4px solid var(--danger);
+        }
+        .toast-item.error .toast-icon {
+            color: var(--danger);
+        }
+
+        .toast-item.warning {
+            border-left: 4px solid var(--warning);
+        }
+        .toast-item.warning .toast-icon {
+            color: var(--warning);
+        }
+
+        .toast-item.info {
+            border-left: 4px solid var(--accent);
+        }
+        .toast-item.info .toast-icon {
+            color: var(--accent);
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+        @media (max-width: 820px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar-backdrop {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.4);
+                z-index: 35;
+            }
+
+            .sidebar-backdrop.show {
+                display: block;
+            }
+
+            .mobile-nav-toggle {
+                display: flex;
+            }
+
+            .console-content {
+                padding: 20px 16px 48px;
+            }
+
+            .app-header {
+                padding: 0 16px;
+            }
+
+            .user-name-text {
+                display: none;
+            }
+
+            .modal-body-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-nav-sidebar {
+                flex-direction: row;
+                overflow-x: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .modal-nav-btn {
+                min-width: 120px;
+            }
+
+            .mode-cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app-layout">
+    <!-- =========================
+         SIDEBAR
+    ========================= -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-logo">P</div>
+            <span class="brand-title">PreonsURL</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="nav-item active" id="navHome" data-page="home" type="button">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Home</span>
+            </button>
+
+            <button class="nav-item" id="navLinks" data-page="links" type="button">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                <span>Links</span>
+            </button>
+
+            <button class="nav-item" id="navApiKeys" data-page="api-keys" type="button">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="7.5" cy="15.5" r="5.5"/>
+                    <path d="m21 2-9.6 9.6"/>
+                    <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                </svg>
+                <span>API Keys</span>
+            </button>
+
+            <button class="nav-item" id="navApiDocs" type="button">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+                <span>API Docs</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <span>PreonsURL Platform &bull; v1.0</span>
+        </div>
+    </aside>
+
+    <!-- =========================
+         MAIN APPLICATION SHELL
+    ========================= -->
+    <div class="main-wrapper">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Toggle menu">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+
+                <div class="global-search-box">
+                    <svg class="search-icon" id="searchStaticIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <svg class="search-icon spin-icon" id="searchLoadingIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none;color:var(--brand-primary, #6366f1);">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    </svg>
+                    <input
+                        type="text"
+                        id="globalSearchInput"
+                        class="global-search-input"
+                        placeholder="Search links, URLs, or original destinations..."
+                        autocomplete="off"
+                    >
+                    <span class="search-kbd" id="searchKbd">↵ Enter</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="btn btn-primary" id="headerCreateLinkBtn" type="button" style="height:34px;padding:0 12px;font-size:12px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>Create Link</span>
+                </button>
+
+                <div class="user-dropdown-container">
+                    <button class="user-profile-btn" id="userProfileBtn" type="button">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span class="user-name-text" id="headerUsername">User</span>
+                        <svg class="dropdown-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <div class="dropdown-header">
+                            <strong id="dropdownUsername">User</strong>
+                            <span>Authenticated Account</span>
+                        </div>
+                        <button class="dropdown-item" id="menuItemApiKeys" type="button">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="7.5" cy="15.5" r="5.5"/>
+                                <path d="m21 2-9.6 9.6"/>
+                            </svg>
+                            <span>API Keys</span>
+                        </button>
+                        <button class="dropdown-item" id="menuItemApiDocs" type="button">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                            </svg>
+                            <span>API Docs</span>
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item danger" id="menuItemLogout" type="button">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN VIEWPORT -->
+        <main class="console-content">
+            <!-- =========================
+                 PAGE: HOME
+            ========================= -->
+            <section class="page-view active" id="pageHome">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title" id="homeGreeting">Good morning, user</h1>
+                        <p class="page-subtitle">Here's an overview of your links.</p>
+                    </div>
+                </div>
+
+                <!-- Click Overview Card -->
+                <div class="card analytics-card" style="margin-bottom:0;">
+                    <div class="analytics-card-header">
+                        <h2 class="analytics-card-title">Click overview</h2>
+                        <select class="analytics-range-select" id="homeAnalyticsRange" aria-label="Range selector">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+                    <div class="analytics-card-body">
+                        <div class="analytics-stat-group">
+                            <div class="analytics-stat-number" id="homeTotalClicks">—</div>
+                            <div class="analytics-stat-label">total clicks</div>
+                        </div>
+                        <div class="chart-container" id="homeChartContainer">
+                            <div class="chart-empty" id="homeChartEmpty">Loading click overview...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================
+                 PAGE: LINKS
+            ========================= -->
+            <section class="page-view" id="pageLinks">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Links</h1>
+                        <p class="page-subtitle">Create and manage your short URLs.</p>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>New URL</th>
+                                    <th class="arrow-cell"></th>
+                                    <th>Original URL</th>
+                                    <th>Status</th>
+                                    <th>Why</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="linksTableBody">
+                                <tr>
+                                    <td colspan="6" class="table-empty-state" style="padding:56px 16px;">
+                                        <div class="loading-state-box" style="padding:0;">
+                                            <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--brand-primary, #6366f1);">
+                                                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                            </svg>
+                                            <span>Loading links...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-pagination">
+                        <span id="linksPaginationInfo">Loading...</span>
+                        <div class="pagination-actions">
+                            <button class="pagination-btn" id="linksPrevPageBtn" type="button">← Previous</button>
+                            <button class="pagination-btn" id="linksNextPageBtn" type="button">Next →</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================
+                 PAGE: API KEYS
+            ========================= -->
+            <section class="page-view" id="pageApiKeys">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">API Keys</h1>
+                        <p class="page-subtitle">Use API keys to access PreonsURL programmatically.</p>
+                    </div>
+                </div>
+
+                <div class="apikey-container">
+                    <!-- Raw Key Newly Created Notification Banner -->
+                    <div class="raw-key-banner" id="rawKeyBanner" style="display:none;">
+                        <div class="raw-key-banner-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            <span>Your new API key</span>
+                        </div>
+                        <div class="raw-key-box">
+                            <span id="rawKeyValue" style="flex:1;">pk_...</span>
+                            <button class="btn" id="copyRawKeyBtn" type="button" style="height:30px;padding:0 10px;font-size:11px;">Copy</button>
+                        </div>
+                        <p class="raw-key-warning">
+                            &bull; Copy this key now. You will not be able to see it again.
+                        </p>
+                        <div style="margin-top:12px;text-align:right;">
+                            <button class="btn btn-primary" id="dismissRawKeyBtn" type="button" style="height:32px;padding:0 14px;font-size:12px;">Done</button>
+                        </div>
+                    </div>
+
+                    <!-- State A: No API Key -->
+                    <div class="card apikey-card" id="apiKeyEmptyState" style="display:none;">
+                        <div class="apikey-empty-state">
+                            <div class="apikey-empty-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="7.5" cy="15.5" r="5.5"/>
+                                    <path d="m21 2-9.6 9.6"/>
+                                </svg>
+                            </div>
+                            <h2 class="apikey-empty-title">No API key yet</h2>
+                            <p class="apikey-empty-desc">Create an API key to start using the PreonsURL API in your applications and automation.</p>
+                            <button class="btn btn-primary" id="createApiKeyBtn" type="button">
+                                + Create API Key
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- State Loading: API Key -->
+                    <div class="card apikey-card" id="apiKeyLoadingState" style="display:none;padding:56px 20px;text-align:center;">
+                        <div class="loading-state-box" style="padding:0;">
+                            <svg class="spin-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--brand-primary, #6366f1);">
+                                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                            </svg>
+                            <span>Loading API key...</span>
+                        </div>
+                    </div>
+
+                    <!-- State B: Active API Key -->
+                    <div class="card apikey-card" id="apiKeyActiveState" style="display:none;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+                            <div>
+                                <span class="status-pill active" style="margin-bottom:8px;">Active API Key</span>
+                                <h3 style="font-size:16px;font-weight:700;" id="apiKeyName">Production API Key</h3>
+                            </div>
+                            <div style="display:flex;gap:8px;">
+                                <button class="btn" id="rotateApiKeyBtn" type="button">Rotate Key</button>
+                                <button class="btn" id="deleteApiKeyBtn" type="button" style="color:var(--danger);border-color:var(--danger-border);">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="apikey-key-row">
+                            <span id="maskedApiKey">pk_&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>
+                        </div>
+
+                        <div class="apikey-info-grid">
+                            <div class="apikey-info-item">
+                                <label>Status</label>
+                                <span id="apiKeyStatus">Active</span>
+                            </div>
+                            <div class="apikey-info-item">
+                                <label>Created</label>
+                                <span id="apiKeyCreatedAt">—</span>
+                            </div>
+                            <div class="apikey-info-item">
+                                <label>Last Used</label>
+                                <span id="apiKeyLastUsedAt">Never</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<!-- ============================================================
+     CREATE / EDIT LINK MODAL
+============================================================ -->
+<div class="modal" id="linkModal" aria-hidden="true">
+    <div class="modal-backdrop" id="linkModalBackdrop"></div>
+    <div class="modal-dialog link-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="linkModalTitle">
+        <!-- Loading Overlay for Edit Link Data Fetch -->
+        <div class="modal-loading-overlay" id="linkModalLoading" style="display:none;">
+            <svg class="spin-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--brand-primary, #6366f1);">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            <span>Loading link details...</span>
+        </div>
+
+        <div class="modal-header">
+            <div>
+                <div class="modal-kicker" id="linkModalKicker">NEW LINK</div>
+                <h2 id="linkModalTitle">Create a new link</h2>
+                <p id="linkModalSubtitle">Configure your link before creating it.</p>
+            </div>
+            <button class="modal-close-btn" id="linkModalCloseBtn" type="button" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div class="modal-content" id="linkModalContent">
+            <!-- URL Preview Header -->
+            <div class="url-preview-bar">
+                <div>
+                    <span>Your link will look like</span>
+                    <strong id="linkModalPreviewUrl">http://localhost:8081/a8K2mP</strong>
+                </div>
+                <span id="linkModalBadge" class="status-pill active">Preview</span>
+            </div>
+
+            <div class="modal-body-layout">
+                <!-- Navigation Tabs -->
+                <nav class="modal-nav-sidebar">
+                    <button class="modal-nav-btn active" data-tab="general" type="button">
+                        <span>General</span>
+                        <small>Destination & path</small>
+                    </button>
+                    <button class="modal-nav-btn" data-tab="usage" type="button">
+                        <span>Usage</span>
+                        <small>Limits & schedule</small>
+                    </button>
+                    <button class="modal-nav-btn" data-tab="access" type="button">
+                        <span>Access</span>
+                        <small>Security & permissions</small>
+                    </button>
+                    <button class="modal-nav-btn" data-tab="mode" type="button">
+                        <span>Link Mode</span>
+                        <small>How it delivers</small>
+                    </button>
+                    <button class="modal-nav-btn" data-tab="meta" type="button">
+                        <span>Tags & Notes</span>
+                        <small>Organize link</small>
+                    </button>
+                </nav>
+
+                <!-- Form Scroll Area -->
+                <div class="modal-form-scroll">
+                    <!-- Tab: General -->
+                    <div class="modal-section-pane active" id="paneGeneral">
+                        <h3>General Settings</h3>
+                        <p class="desc">Define the target destination and choose custom or generated URL code.</p>
+
+                        <div class="field-group" id="editShortUrlGroup" style="display:none;">
+                            <label>Short URL</label>
+                            <input type="text" class="form-input" id="modalShortUrlInput" readonly style="background:var(--surface-soft);cursor:not-allowed;">
+                            <span class="field-help">The short URL identifier cannot be modified.</span>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="modalDestUrl">Destination URL</label>
+                            <input type="url" class="form-input" id="modalDestUrl" placeholder="https://example.com/product" required>
+                            <span class="field-help">Must begin with http:// or https://</span>
+                        </div>
+
+                        <div class="setting-toggle-row" id="addShortCodeRow">
+                            <div class="setting-toggle-info">
+                                <strong>Add Short Code</strong>
+                                <span>Generate an automated short code such as <code>a8K2mP</code>.</span>
+                            </div>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="modalAddShortCode" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="modalCustomPath">Custom Path <span class="optional">(optional)</span></label>
+                            <div class="custom-path-group">
+                                <span>/</span>
+                                <input type="text" id="modalCustomPath" placeholder="campaign-2026">
+                            </div>
+                            <span class="field-help">Readable slug that replaces or supplements the random code.</span>
+                        </div>
+
+                        <div class="setting-toggle-row" id="editActiveToggleRow" style="display:none;">
+                            <div class="setting-toggle-info">
+                                <strong>Link Active</strong>
+                                <span>Enable or disable visitors from accessing this link.</span>
+                            </div>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="modalLinkActive" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Usage -->
+                    <div class="modal-section-pane" id="paneUsage">
+                        <h3>Usage Policies</h3>
+                        <p class="desc">Configure click limits, schedules, and link expiration.</p>
+
+                        <div class="field-group">
+                            <label for="modalUsageType">Usage Policy</label>
+                            <select class="form-select" id="modalUsageType">
+                                <option value="UNLIMITED">Unlimited</option>
+                                <option value="ONE_TIME">One time only</option>
+                                <option value="USAGE_LIMIT">Usage limit</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group" id="modalUsageLimitContainer" style="display:none;">
+                            <label for="modalUsageLimit">Maximum Uses</label>
+                            <input type="number" class="form-input" id="modalUsageLimit" min="1" placeholder="100">
+                        </div>
+
+                        <div class="field-group">
+                            <label for="modalExpireAt">Expire At <span class="optional">(optional)</span></label>
+                            <input type="datetime-local" class="form-input" id="modalExpireAt">
+                            <span class="field-help">Permanent expiry timestamp after which link is disabled.</span>
+                        </div>
+
+                        <div class="setting-toggle-row" id="scheduleToggleRow">
+                            <div class="setting-toggle-info">
+                                <strong>Schedule Access</strong>
+                                <span>Restrict access between scheduled start and end dates.</span>
+                            </div>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="modalScheduleEnabled">
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div id="modalScheduleInputs" style="display:none;margin-bottom:16px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                <div class="field-group">
+                                    <label for="modalScheduleStart">Start At</label>
+                                    <input type="datetime-local" class="form-input" id="modalScheduleStart">
+                                </div>
+                                <div class="field-group">
+                                    <label for="modalScheduleEnd">End At</label>
+                                    <input type="datetime-local" class="form-input" id="modalScheduleEnd">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Access -->
+                    <div class="modal-section-pane" id="paneAccess">
+                        <h3>Access Control</h3>
+                        <p class="desc">Configure authentication and access restrictions for visitors.</p>
+
+                        <div class="field-group" id="accessControlGroup">
+                            <label for="modalAccessMode">Access Mode</label>
+                            <select class="form-select" id="modalAccessMode">
+                                <option value="PUBLIC">Public</option>
+                                <option value="SECURED">Secured</option>
+                            </select>
+                        </div>
+
+                        <!-- Security Policies -->
+                        <div id="modalSecuritySettings" style="display:none;margin-top:14px;border-top:1px solid var(--border-subtle);padding-top:16px;">
+                            <div class="field-group">
+                                <label for="modalPin">PIN Protection <span class="optional">(4–12 digits)</span></label>
+                                <input type="password" class="form-input" id="modalPin" inputmode="numeric" maxlength="12" placeholder="e.g. 1234">
+                            </div>
+
+                            <div class="field-group">
+                                <label for="modalPassword">Password Protection <span class="optional">(6–128 characters)</span></label>
+                                <input type="password" class="form-input" id="modalPassword" minlength="6" maxlength="128" placeholder="Enter secure link password">
+                            </div>
+
+                            <div class="field-group">
+                                <label for="modalIpAllowlist">IP Allowlist <span class="optional">(one per line)</span></label>
+                                <textarea class="form-textarea" id="modalIpAllowlist" placeholder="192.168.1.1&#10;10.0.0.0/24"></textarea>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="modalCountries">Country Codes <span class="optional">(comma separated ISO-2)</span></label>
+                                <input type="text" class="form-input" id="modalCountries" placeholder="US, IN, GB">
+                            </div>
+
+                            <div class="field-group">
+                                <label for="modalDevices">Allowed Devices <span class="optional">(e.g. MOBILE, DESKTOP)</span></label>
+                                <input type="text" class="form-input" id="modalDevices" placeholder="MOBILE, DESKTOP">
+                            </div>
+
+                            <div class="field-group">
+                                <label for="modalReferrers">Allowed Referrers <span class="optional">(one per line)</span></label>
+                                <textarea class="form-textarea" id="modalReferrers" placeholder="twitter.com&#10;*.linkedin.com"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Mode -->
+                    <div class="modal-section-pane" id="paneMode">
+                        <h3>Link Delivery Mode</h3>
+                        <p class="desc">Specify how PreonsURL delivers the destination content to the visitor.</p>
+
+                        <div class="mode-cards-grid">
+                            <label class="mode-card-option selected">
+                                <input type="radio" name="modalLinkMode" value="REDIRECT" checked>
+                                <div class="mode-card-name">Redirect</div>
+                                <div class="mode-card-desc">HTTP 302/301 browser redirection to the original URL.</div>
+                            </label>
+
+                            <label class="mode-card-option">
+                                <input type="radio" name="modalLinkMode" value="IFRAME">
+                                <div class="mode-card-name">Iframe</div>
+                                <div class="mode-card-desc">Embeds destination in a secure frame inside PreonsURL.</div>
+                            </label>
+
+                            <label class="mode-card-option">
+                                <input type="radio" name="modalLinkMode" value="PROXY">
+                                <div class="mode-card-name">Proxy</div>
+                                <div class="mode-card-desc">Fetches destination server-side and streams directly.</div>
+                            </label>
+
+                            <label class="mode-card-option">
+                                <input type="radio" name="modalLinkMode" value="MIRROR">
+                                <div class="mode-card-name">Mirror</div>
+                                <div class="mode-card-desc">Rewrites assets and mirrors content under PreonsURL.</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Tags & Notes -->
+                    <div class="modal-section-pane" id="paneMeta">
+                        <h3>Tags & Notes</h3>
+                        <p class="desc">Tag and document your link for internal organization and reporting.</p>
+
+                        <div class="field-group">
+                            <label for="modalTags">Tags <span class="optional">(comma separated)</span></label>
+                            <input type="text" class="form-input" id="modalTags" placeholder="marketing, launch, diwali">
+                        </div>
+
+                        <div class="field-group">
+                            <label for="modalNotes">Internal Note</label>
+                            <textarea class="form-textarea" id="modalNotes" placeholder="Q4 Marketing campaign launch link"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button class="btn" id="modalPrevBtn" type="button" style="display:none;margin-right:auto;">&larr; Back</button>
+                <button class="btn" id="modalCancelBtn" type="button">Cancel</button>
+                <button class="btn btn-primary" id="modalSubmitBtn" type="button">Next &rarr;</button>
+            </div>
+        </div>
+
+        <!-- Success View inside Create Modal -->
+        <div class="create-success-panel" id="modalSuccessPanel">
+            <div class="success-icon-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h2 class="create-success-title">Link created successfully</h2>
+            <p class="create-success-desc">Your short URL is live and ready to be shared.</p>
+
+            <div class="create-url-box">
+                <input type="text" class="form-input" id="createdShortUrlField" readonly style="font-weight:600;">
+                <button class="btn btn-primary" id="copyCreatedUrlBtn" type="button">Copy</button>
+            </div>
+
+            <button class="btn" id="modalDoneBtn" type="button">Done</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     URL DETAILS / ANALYTICS MODAL
+============================================================ -->
+<div class="modal" id="urlAnalyticsModal" aria-hidden="true">
+    <div class="modal-backdrop" id="urlAnalyticsBackdrop"></div>
+    <div class="modal-dialog analytics-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="analyticsTitle">
+        <div class="modal-header">
+            <div>
+                <div class="modal-kicker">URL ANALYTICS</div>
+                <h2 id="analyticsTitle">URL Analytics</h2>
+                <p id="analyticsSubtitle">Detailed click metrics and access log.</p>
+            </div>
+            <button class="modal-close-btn" id="urlAnalyticsCloseBtn" type="button" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div class="analytics-modal-body">
+            <!-- Link Info Summary -->
+            <div class="analytics-summary-box">
+                <div class="analytics-summary-details">
+                    <strong id="analyticsShortUrlDisplay">—</strong>
+                    <span id="analyticsOriginalUrlDisplay">—</span>
+                </div>
+                <button class="btn btn-primary" id="analyticsEditLinkBtn" type="button">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                    </svg>
+                    <span>Edit Link</span>
+                </button>
+            </div>
+
+            <!-- Clicks Chart Card -->
+            <div class="card">
+                <div class="analytics-card-header">
+                    <div>
+                        <h3 class="analytics-card-title">Clicks</h3>
+                        <p class="page-subtitle" id="analyticsDateRangeText">Daily clicks for the selected period.</p>
+                    </div>
+                    <select class="analytics-range-select" id="analyticsModalRange" aria-label="Range selector">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                </div>
+                <div class="analytics-card-body">
+                    <div class="analytics-stat-group">
+                        <div class="analytics-stat-number" id="analyticsModalTotalClicks">—</div>
+                        <div class="analytics-stat-label">total clicks</div>
+                    </div>
+                    <div class="chart-container" id="analyticsModalChartContainer">
+                        <div class="chart-empty" id="analyticsModalChartEmpty">Loading click data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Access Log Card -->
+            <div class="card">
+                <div class="analytics-card-header">
+                    <div>
+                        <h3 class="analytics-card-title">Access Log</h3>
+                        <p class="page-subtitle">Recent visitor requests recorded for this URL.</p>
+                    </div>
+                    <button class="btn" id="refreshAccessLogsBtn" type="button" style="height:32px;font-size:12px;">Refresh</button>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Accessed At</th>
+                                <th>IP Address</th>
+                                <th>User Agent</th>
+                                <th>Referrer</th>
+                                <th>Short Code</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accessLogsTableBody">
+                            <tr>
+                                <td colspan="5" class="table-empty-state" style="padding:40px 16px;">
+                                    <div class="loading-state-box" style="padding:0;">
+                                        <svg class="spin-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--brand-primary, #6366f1);">
+                                            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                        </svg>
+                                        <span>Loading access logs...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-pagination">
+                    <span id="accessLogsPaginationInfo">Loading...</span>
+                    <div class="pagination-actions">
+                        <button class="pagination-btn" id="accessLogsPrevBtn" type="button">← Previous</button>
+                        <button class="pagination-btn" id="accessLogsNextBtn" type="button">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     CONFIRMATION MODAL
+============================================================ -->
+<div class="modal" id="confirmModal" aria-hidden="true">
+    <div class="modal-backdrop" id="confirmModalBackdrop"></div>
+    <div class="modal-dialog confirm-dialog" role="dialog" aria-modal="true">
+        <h3 class="confirm-title" id="confirmTitle">Confirm Action</h3>
+        <p class="confirm-desc" id="confirmMessage">Are you sure you want to proceed?</p>
+        <div class="confirm-actions">
+            <button class="btn" id="confirmCancelBtn" type="button">Cancel</button>
+            <button class="btn btn-danger" id="confirmOkBtn" type="button">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     TOAST CONTAINER
+============================================================ -->
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+<!-- ============================================================
+     CONSOLE APPLICATION LOGIC
+============================================================ -->
+<script>
+    /*
+     * 1. JWT MANAGEMENT & IMMEDIATE AUTHENTICATION CHECK
+     * Validates presence and signature/expiration structure. Auto-redirects if invalid.
+     */
+    function parseJwtPayload(token) {
+        if (!token || typeof token !== "string") return null;
+        const parts = token.trim().split(".");
+        if (parts.length !== 3) return null;
+        try {
+            let base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+            while (base64.length % 4 !== 0) base64 += "=";
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return JSON.parse(new TextDecoder().decode(bytes));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function isJwtValid(token) {
+        const payload = parseJwtPayload(token);
+        if (!payload || typeof payload !== "object") return false;
+        if (payload.exp && typeof payload.exp === "number") {
+            const nowSeconds = Math.floor(Date.now() / 1000);
+            if (payload.exp <= nowSeconds) return false;
+        }
+        return true;
+    }
+
+    let sessionExpiryTimer = null;
+
+    function scheduleExpiryTimer(tok) {
+        if (sessionExpiryTimer) clearTimeout(sessionExpiryTimer);
+        const payload = parseJwtPayload(tok);
+        if (payload && payload.exp && typeof payload.exp === "number") {
+            const remainingMs = (payload.exp * 1000) - Date.now();
+            if (remainingMs <= 0) {
+                logout("Your session has expired. Please sign in again.");
+                return;
+            }
+            sessionExpiryTimer = setTimeout(() => {
+                logout("Your session has expired. Please sign in again.");
+            }, remainingMs);
+        }
+    }
+
+    function checkTokenStatus() {
+        const curToken = localStorage.getItem("preonsurl_token") || localStorage.getItem("preons_token");
+        if (!curToken || !isJwtValid(curToken)) {
+            logout("Your session has expired. Please sign in again.");
+        }
+    }
+
+    const token = localStorage.getItem("preonsurl_token") || localStorage.getItem("preons_token");
+    if (!token || !isJwtValid(token)) {
+        logout("Your session has expired or is invalid. Please sign in again.");
+    } else {
+        scheduleExpiryTimer(token);
+    }
+
+    // Periodic heartbeat to detect token expiry or invalidation (every 5 seconds)
+    setInterval(checkTokenStatus, 5000);
+
+    // Tab visibility change monitor (e.g. waking from sleep or tab re-focused)
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            checkTokenStatus();
+        }
+    });
+
+    // Multi-tab sync: if another tab logs out or clears token, logout here as well
+    window.addEventListener("storage", (e) => {
+        if (e.key === "preonsurl_token" || e.key === "preons_token") {
+            if (!e.newValue || !isJwtValid(e.newValue)) {
+                logout("You have logged out from another session or your token expired.");
+            } else {
+                scheduleExpiryTimer(e.newValue);
+            }
+        }
+    });
+
+    /*
+     * 2. STATE MANAGEMENT
+     */
+    const API_BASE_URL = window.location.origin || "";
+
+    const appState = {
+        token: token,
+        username: localStorage.getItem("preonsurl_username") || "User",
+        currentPage: "home",
+        linksPage: 0,
+        linksPageSize: 10,
+        homeAnalyticsRange: 30,
+        urlAnalyticsRange: 30,
+        selectedUrl: null,
+        selectedOriginalUrl: null,
+        accessLogPage: 0,
+        accessLogPageSize: 10,
+        modalMode: "create", // "create" | "edit"
+        editingOriginalNewUrl: null,
+        activeApiKey: null,
+        confirmCallback: null
+    };
+
+    /*
+     * 3. INITIALIZATION
+     */
+    document.addEventListener("DOMContentLoaded", () => {
+        setupUserInterface();
+        setupNavigation();
+        setupGlobalSearch();
+        setupModalHandlers();
+        setupApiKeyHandlers();
+
+        // Check path to route to appropriate page
+        handleRoute(window.location.pathname);
+        window.addEventListener("popstate", () => handleRoute(window.location.pathname));
+    });
+
+    function setupUserInterface() {
+        // Set username in header and dropdown
+        const displayName = appState.username || "User";
+        document.getElementById("headerUsername").textContent = displayName;
+        document.getElementById("dropdownUsername").textContent = displayName;
+        document.getElementById("userAvatar").textContent = displayName.charAt(0).toUpperCase();
+
+        // Greeting
+        const hour = new Date().getHours();
+        let greeting = "Good morning";
+        if (hour >= 12 && hour < 17) greeting = "Good afternoon";
+        else if (hour >= 17) greeting = "Good evening";
+        document.getElementById("homeGreeting").textContent = `${greeting}, ${displayName}`;
+
+        // User dropdown menu toggle
+        const profileBtn = document.getElementById("userProfileBtn");
+        const dropdownMenu = document.getElementById("userDropdownMenu");
+        profileBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle("show");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!profileBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove("show");
+            }
+        });
+
+        // Dropdown actions
+        document.getElementById("menuItemApiKeys").addEventListener("click", () => {
+            dropdownMenu.classList.remove("show");
+            navigateTo("api-keys");
+        });
+
+        document.getElementById("menuItemApiDocs").addEventListener("click", () => {
+            dropdownMenu.classList.remove("show");
+            openApiDocs();
+        });
+
+        document.getElementById("menuItemLogout").addEventListener("click", logout);
+
+        // Mobile drawer toggle
+        const mobileToggle = document.getElementById("mobileNavToggle");
+        const sidebar = document.getElementById("sidebar");
+        const backdrop = document.getElementById("sidebarBackdrop");
+
+        mobileToggle.addEventListener("click", () => {
+            sidebar.classList.add("mobile-open");
+            backdrop.classList.add("show");
+        });
+
+        backdrop.addEventListener("click", () => {
+            sidebar.classList.remove("mobile-open");
+            backdrop.classList.remove("show");
+        });
+    }
+
+    function setupNavigation() {
+        document.getElementById("navHome").addEventListener("click", () => navigateTo("home"));
+        document.getElementById("navLinks").addEventListener("click", () => navigateTo("links"));
+        document.getElementById("navApiKeys").addEventListener("click", () => navigateTo("api-keys"));
+        document.getElementById("navApiDocs").addEventListener("click", openApiDocs);
+
+        const headerCreateBtn = document.getElementById("headerCreateLinkBtn");
+        if (headerCreateBtn) headerCreateBtn.addEventListener("click", openCreateModal);
+
+        // Home range selector
+        document.getElementById("homeAnalyticsRange").addEventListener("change", (e) => {
+            appState.homeAnalyticsRange = Number(e.target.value) || 30;
+            loadOverallAnalytics();
+        });
+
+        // Pagination buttons
+        document.getElementById("linksPrevPageBtn").addEventListener("click", () => {
+            if (appState.linksPage > 0) loadLinks(appState.linksPage - 1);
+        });
+
+        document.getElementById("linksNextPageBtn").addEventListener("click", () => {
+            loadLinks(appState.linksPage + 1);
+        });
+    }
+
+    function handleRoute(path) {
+        if (path.startsWith("/console/links")) {
+            navigateTo("links", false);
+        } else if (path.startsWith("/console/api-keys")) {
+            navigateTo("api-keys", false);
+        } else {
+            navigateTo("home", false);
+        }
+    }
+
+    function navigateTo(page, pushHistory = true) {
+        appState.currentPage = page;
+
+        // Close mobile drawer if open
+        document.getElementById("sidebar").classList.remove("mobile-open");
+        document.getElementById("sidebarBackdrop").classList.remove("show");
+
+        // Update Nav items
+        document.querySelectorAll(".sidebar-nav .nav-item").forEach(item => {
+            item.classList.toggle("active", item.dataset.page === page);
+        });
+
+        // Update Pages
+        document.getElementById("pageHome").classList.toggle("active", page === "home");
+        document.getElementById("pageLinks").classList.toggle("active", page === "links");
+        document.getElementById("pageApiKeys").classList.toggle("active", page === "api-keys");
+
+        const targetUrl = page === "home" ? "/console" : `/console/${page}`;
+        if (pushHistory && window.location.pathname !== targetUrl) {
+            history.pushState(null, "", targetUrl);
+        }
+
+        // Trigger page loads
+        if (page === "home") {
+            loadOverallAnalytics();
+        } else if (page === "links") {
+            loadLinks(0);
+        } else if (page === "api-keys") {
+            loadApiKey();
+        }
+    }
+
+    function openApiDocs() {
+        window.location.href = "/swagger-ui/index.html";
+    }
+
+    function logout(reason) {
+        if (sessionExpiryTimer) clearTimeout(sessionExpiryTimer);
+        localStorage.removeItem("preonsurl_token");
+        localStorage.removeItem("preonsurl_username");
+        localStorage.removeItem("preons_token");
+        document.cookie = "preons_jwt=; path=/; max-age=0; SameSite=Strict";
+        if (reason && typeof reason === "string") {
+            try {
+                sessionStorage.setItem("preons_logout_message", reason);
+            } catch (e) {}
+        }
+        window.location.replace("/login");
+    }
+
+    /*
+     * 4. AUTHENTICATED FETCH HELPER
+     */
+    async function authenticatedFetch(endpoint, options = {}) {
+        // Pre-validate token before issuing network request
+        const curToken = localStorage.getItem("preonsurl_token") || localStorage.getItem("preons_token");
+        if (!curToken || !isJwtValid(curToken)) {
+            logout("Your session has expired. Please sign in again.");
+            throw new Error("Session expired");
+        }
+
+        const headers = new Headers(options.headers || {});
+        headers.set("Authorization", `Bearer ${curToken}`);
+
+        try {
+            const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint}`;
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                logout("Your session has expired or is invalid. Please sign in again.");
+                return response;
+            }
+
+            return response;
+        } catch (err) {
+            if (err.message !== "Session expired") {
+                showToast("error", "Network Error", "Unable to connect to the server.");
+            }
+            throw err;
+        }
+    }
+
+    async function parseResponse(response) {
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+            return response.json();
+        }
+        const text = await response.text();
+        return {
+            success: response.ok,
+            message: text
+        };
+    }
+
+    /*
+     * 5. TOAST NOTIFICATION SYSTEM
+     */
+    function showToast(type, title, message = "") {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = `toast-item ${type}`;
+
+        let iconSvg = '';
+        if (type === "success") {
+            iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+        } else if (type === "error") {
+            iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        } else if (type === "warning") {
+            iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        } else {
+            iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+        }
+
+        toast.innerHTML = `
+            ${iconSvg}
+            <div class="toast-content">
+                <div class="toast-title">${escapeHtml(title)}</div>
+                ${message ? `<div class="toast-message">${escapeHtml(message)}</div>` : ''}
+            </div>
+            <button class="toast-close" type="button" aria-label="Close notification">&times;</button>
+        `;
+
+        const removeToast = () => {
+            toast.classList.add("removing");
+            setTimeout(() => toast.remove(), 200);
+        };
+
+        toast.querySelector(".toast-close").addEventListener("click", removeToast);
+        setTimeout(removeToast, 4000);
+
+        container.appendChild(toast);
+    }
+
+    /*
+     * 6. CONFIRMATION DIALOG HELPER
+     */
+    function showConfirmDialog(title, message, onConfirm) {
+        const modal = document.getElementById("confirmModal");
+        document.getElementById("confirmTitle").textContent = title;
+        document.getElementById("confirmMessage").textContent = message;
+        appState.confirmCallback = onConfirm;
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeConfirmDialog() {
+        const modal = document.getElementById("confirmModal");
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        appState.confirmCallback = null;
+    }
+
+    document.getElementById("confirmCancelBtn").addEventListener("click", closeConfirmDialog);
+    document.getElementById("confirmModalBackdrop").addEventListener("click", closeConfirmDialog);
+    document.getElementById("confirmOkBtn").addEventListener("click", () => {
+        if (typeof appState.confirmCallback === "function") {
+            appState.confirmCallback();
+        }
+        closeConfirmDialog();
+    });
+
+    /*
+     * 7. GLOBAL SEARCH
+     */
+    function setupGlobalSearch() {
+        const searchInput = document.getElementById("globalSearchInput");
+        searchInput.addEventListener("keydown", async (e) => {
+            if (e.key === "Enter") {
+                const term = searchInput.value.trim();
+                if (!term) return;
+                await performGlobalSearch(term);
+            }
+        });
+    }
+
+    async function performGlobalSearch(term) {
+        const staticIcon = document.getElementById("searchStaticIcon");
+        const loadingIcon = document.getElementById("searchLoadingIcon");
+        const searchKbd = document.getElementById("searchKbd");
+        const searchInput = document.getElementById("globalSearchInput");
+
+        if (staticIcon) staticIcon.style.display = "none";
+        if (loadingIcon) loadingIcon.style.display = "block";
+        if (searchKbd) searchKbd.style.visibility = "hidden";
+        if (searchInput) searchInput.disabled = true;
+
+        try {
+            const query = new URLSearchParams({ newUrl: term });
+            const response = await authenticatedFetch(`/link?${query.toString()}`);
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const link = result.data;
+                openUrlAnalyticsModal(link.newUrl, link.originalUrl);
+            } else {
+                showToast("warning", "No link found", "We couldn't find a PreonsURL link matching your search.");
+            }
+        } catch (err) {
+            showToast("error", "Search error", err.message || "Failed to search link.");
+        } finally {
+            if (staticIcon) staticIcon.style.display = "block";
+            if (loadingIcon) loadingIcon.style.display = "none";
+            if (searchKbd) searchKbd.style.visibility = "visible";
+            if (searchInput) {
+                searchInput.disabled = false;
+                searchInput.focus();
+            }
+        }
+    }
+
+    /*
+     * 8. OVERALL ANALYTICS (Home Page)
+     */
+    async function loadOverallAnalytics() {
+        const container = document.getElementById("homeChartContainer");
+        const totalClicksEl = document.getElementById("homeTotalClicks");
+        totalClicksEl.innerHTML = getInlineSpinnerHtml(14);
+        container.innerHTML = getSpinnerHtml(22, "Loading analytics overview...");
+
+        try {
+            const { startDate, endDate } = getDateRange(appState.homeAnalyticsRange);
+            const query = new URLSearchParams({ startDate, endDate });
+            const response = await authenticatedFetch(`/api/analytics/overall?${query.toString()}`);
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const data = result.data;
+                totalClicksEl.textContent = formatNumber(data.totalClicks || 0);
+                renderSvgBarChart(container, data.dailyClicks || []);
+            } else {
+                totalClicksEl.textContent = "0";
+                renderSvgBarChart(container, []);
+            }
+        } catch (err) {
+            totalClicksEl.textContent = "—";
+            container.innerHTML = `<div class="chart-empty">Unable to load click overview.</div>`;
+        }
+    }
+
+    /*
+     * 9. LINKS PAGE TABLE & PAGINATION
+     */
+    async function loadLinks(page = 0) {
+        const tbody = document.getElementById("linksTableBody");
+        tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state" style="padding:48px 16px;">${getSpinnerHtml(22, "Loading links...")}</td></tr>`;
+
+        const prevBtn = document.getElementById("linksPrevPageBtn");
+        const nextBtn = document.getElementById("linksNextPageBtn");
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+
+        try {
+            const response = await authenticatedFetch(
+                `/link/list?page=${page}&size=${appState.linksPageSize}&sort=createdAt,desc`
+            );
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const pageData = result.data;
+                appState.linksPage = Number(pageData.number || 0);
+                renderLinksTable(pageData.content || []);
+                updatePaginationControls(pageData);
+            } else {
+                tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state">${escapeHtml(result.message || "Unable to load links.")}</td></tr>`;
+            }
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state">Unable to load links.</td></tr>`;
+        }
+    }
+
+    function renderLinksTable(links) {
+        const tbody = document.getElementById("linksTableBody");
+        if (!links.length) {
+            tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state">No short URLs found. Click &ldquo;+ Create Link&rdquo; to get started.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = links.map(link => {
+            const shortUrl = link.shortLink || "";
+            const originalUrl = link.originalLink || "";
+            const isActive = link.isEnabled === true && link.isExpired !== true;
+            const whyText = link.isExpired
+                ? (link.why || link.expiredReason || "Expired")
+                : (link.isEnabled === false ? "Disabled" : "Active");
+
+            return `
+                <tr data-short-url="${escapeAttribute(shortUrl)}" data-orig-url="${escapeAttribute(originalUrl)}">
+                    <td>
+                        <span class="link-short-text" title="${escapeAttribute(shortUrl)}">${escapeHtml(shortUrl)}</span>
+                    </td>
+                    <td class="arrow-cell">&rarr;</td>
+                    <td>
+                        <span class="link-original-text" title="${escapeAttribute(originalUrl)}">${escapeHtml(originalUrl)}</span>
+                    </td>
+                    <td>
+                        <span class="status-pill ${isActive ? 'active' : 'inactive'}">
+                            ${isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="why-text ${link.isExpired ? 'expired' : ''}">
+                            ${escapeHtml(whyText)}
+                        </span>
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="btn view-link-btn" type="button" style="height:30px;padding:0 10px;font-size:11px;"
+                            data-short-url="${escapeAttribute(shortUrl)}" data-orig-url="${escapeAttribute(originalUrl)}">
+                            View
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+        // Row and view button click triggers analytics modal
+        tbody.querySelectorAll("tr").forEach(tr => {
+            tr.addEventListener("click", (e) => {
+                const shortUrl = tr.getAttribute("data-short-url");
+                const origUrl = tr.getAttribute("data-orig-url");
+                if (shortUrl) openUrlAnalyticsModal(shortUrl, origUrl);
+            });
+        });
+
+        tbody.querySelectorAll(".view-link-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const shortUrl = btn.getAttribute("data-short-url");
+                const origUrl = btn.getAttribute("data-orig-url");
+                if (shortUrl) {
+                    setLoading(btn, true, "");
+                    setTimeout(() => setLoading(btn, false, "View"), 400);
+                    openUrlAnalyticsModal(shortUrl, origUrl);
+                }
+            });
+        });
+    }
+
+    function updatePaginationControls(data) {
+        const total = Number(data.totalElements || 0);
+        const page = Number(data.number || 0);
+        const size = Number(data.size || appState.linksPageSize);
+
+        const start = total === 0 ? 0 : page * size + 1;
+        const end = total === 0 ? 0 : Math.min((page + 1) * size, total);
+
+        document.getElementById("linksPaginationInfo").textContent =
+            total === 0 ? "0 links" : `${start}–${end} of ${total}`;
+
+        document.getElementById("linksPrevPageBtn").disabled = data.first === true || page <= 0;
+        document.getElementById("linksNextPageBtn").disabled = data.last === true || end >= total;
+    }
+
+    /*
+     * 10. URL ANALYTICS MODAL
+     */
+    function openUrlAnalyticsModal(shortUrl, originalUrl) {
+        appState.selectedUrl = shortUrl;
+        appState.selectedOriginalUrl = originalUrl;
+        appState.accessLogPage = 0;
+
+        document.getElementById("analyticsShortUrlDisplay").textContent = shortUrl;
+        document.getElementById("analyticsOriginalUrlDisplay").textContent = originalUrl || "—";
+        document.getElementById("analyticsModalRange").value = String(appState.urlAnalyticsRange);
+
+        const modal = document.getElementById("urlAnalyticsModal");
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+
+        loadUrlAnalyticsData();
+        loadAccessLogsData();
+    }
+
+    function closeUrlAnalyticsModal() {
+        const modal = document.getElementById("urlAnalyticsModal");
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+    }
+
+    document.getElementById("urlAnalyticsCloseBtn").addEventListener("click", closeUrlAnalyticsModal);
+    document.getElementById("urlAnalyticsBackdrop").addEventListener("click", closeUrlAnalyticsModal);
+
+    document.getElementById("analyticsModalRange").addEventListener("change", (e) => {
+        appState.urlAnalyticsRange = Number(e.target.value) || 30;
+        loadUrlAnalyticsData();
+    });
+
+    document.getElementById("refreshAccessLogsBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("refreshAccessLogsBtn");
+        setLoading(btn, true, "Refreshing...");
+        try {
+            await loadAccessLogsData();
+        } finally {
+            setLoading(btn, false, "Refresh");
+        }
+    });
+
+    document.getElementById("accessLogsPrevBtn").addEventListener("click", () => {
+        if (appState.accessLogPage > 0) {
+            appState.accessLogPage--;
+            loadAccessLogsData();
+        }
+    });
+
+    document.getElementById("accessLogsNextBtn").addEventListener("click", () => {
+        appState.accessLogPage++;
+        loadAccessLogsData();
+    });
+
+    // "Edit Link" from URL Analytics modal
+    document.getElementById("analyticsEditLinkBtn").addEventListener("click", async () => {
+        if (!appState.selectedUrl) return;
+        const targetUrl = appState.selectedUrl;
+        const btn = document.getElementById("analyticsEditLinkBtn");
+        setLoading(btn, true, "Loading...");
+        try {
+            closeUrlAnalyticsModal();
+            await openEditModal(targetUrl);
+        } finally {
+            setLoading(btn, false, "Edit Link");
+        }
+    });
+
+    async function loadUrlAnalyticsData() {
+        if (!appState.selectedUrl) return;
+
+        const container = document.getElementById("analyticsModalChartContainer");
+        const totalClicksEl = document.getElementById("analyticsModalTotalClicks");
+        totalClicksEl.innerHTML = getInlineSpinnerHtml(14);
+        container.innerHTML = getSpinnerHtml(20, "Loading click data...");
+
+        try {
+            const { startDate, endDate } = getDateRange(appState.urlAnalyticsRange);
+            document.getElementById("analyticsDateRangeText").textContent =
+                `${formatDate(startDate)} – ${formatDate(endDate)}`;
+
+            const query = new URLSearchParams({
+                newUrl: appState.selectedUrl,
+                startDate,
+                endDate
+            });
+
+            const response = await authenticatedFetch(`/api/analytics/url?${query.toString()}`);
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const data = result.data;
+                totalClicksEl.textContent = formatNumber(data.totalClicks || 0);
+                renderSvgBarChart(container, data.dailyClicks || []);
+            } else {
+                totalClicksEl.textContent = "0";
+                renderSvgBarChart(container, []);
+            }
+        } catch (err) {
+            totalClicksEl.textContent = "—";
+            container.innerHTML = `<div class="chart-empty">Unable to load link analytics.</div>`;
+        }
+    }
+
+    async function loadAccessLogsData() {
+        if (!appState.selectedUrl) return;
+
+        const tbody = document.getElementById("accessLogsTableBody");
+        tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state" style="padding:40px 16px;">${getSpinnerHtml(20, "Loading access logs...")}</td></tr>`;
+
+        const prevBtn = document.getElementById("accessLogsPrevBtn");
+        const nextBtn = document.getElementById("accessLogsNextBtn");
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+
+        try {
+            const query = new URLSearchParams({
+                newUrl: appState.selectedUrl,
+                page: String(appState.accessLogPage),
+                size: String(appState.accessLogPageSize),
+                sort: "accessedAt,desc"
+            });
+
+            const response = await authenticatedFetch(`/link/logs?${query.toString()}`);
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const data = result.data;
+                renderAccessLogsTable(data.content || []);
+
+                const total = Number(data.totalElements || 0);
+                const page = Number(data.number || 0);
+                const size = Number(data.size || appState.accessLogPageSize);
+                const start = total === 0 ? 0 : page * size + 1;
+                const end = total === 0 ? 0 : Math.min((page + 1) * size, total);
+
+                document.getElementById("accessLogsPaginationInfo").textContent =
+                    total === 0 ? "0 logs" : `${start}–${end} of ${total}`;
+
+                document.getElementById("accessLogsPrevBtn").disabled = data.first === true || page <= 0;
+                document.getElementById("accessLogsNextBtn").disabled = data.last === true || end >= total;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No access logs found.</td></tr>`;
+            }
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">Unable to load access logs.</td></tr>`;
+        }
+    }
+
+    function renderAccessLogsTable(logs) {
+        const tbody = document.getElementById("accessLogsTableBody");
+        if (!logs.length) {
+            tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No access logs recorded for this link yet.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = logs.map(log => `
+            <tr>
+                <td>${formatTimestamp(log.accessedAt)}</td>
+                <td><code>${escapeHtml(log.ipAddress || "—")}</code></td>
+                <td title="${escapeAttribute(log.userAgent || "")}">
+                    <div style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        ${escapeHtml(log.userAgent || "—")}
+                    </div>
+                </td>
+                <td title="${escapeAttribute(log.referer || "")}">
+                    <div style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        ${escapeHtml(log.referer || "Direct")}
+                    </div>
+                </td>
+                <td>${escapeHtml(log.shortCode || "—")}</td>
+            </tr>
+        `).join("");
+    }
+
+    /*
+     * 11. CREATE & EDIT LINK MODAL HANDLING
+     */
+    function setupModalHandlers() {
+        const modal = document.getElementById("linkModal");
+        document.getElementById("linkModalCloseBtn").addEventListener("click", closeLinkModal);
+        document.getElementById("linkModalBackdrop").addEventListener("click", closeLinkModal);
+        document.getElementById("modalCancelBtn").addEventListener("click", closeLinkModal);
+        document.getElementById("modalDoneBtn").addEventListener("click", () => {
+            closeLinkModal();
+            if (appState.currentPage === "links") loadLinks(0);
+            if (appState.currentPage === "home") loadOverallAnalytics();
+        });
+
+        // Tab switching
+        document.querySelectorAll(".modal-nav-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const tab = btn.dataset.tab;
+                document.querySelectorAll(".modal-nav-btn").forEach(b => b.classList.toggle("active", b === btn));
+                document.querySelectorAll(".modal-section-pane").forEach(pane => {
+                    pane.classList.toggle("active", pane.id === `pane${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+                });
+            });
+        });
+
+        // Dynamic preview update
+        document.getElementById("modalCustomPath").addEventListener("input", updateModalPreview);
+        document.getElementById("modalAddShortCode").addEventListener("change", updateModalPreview);
+
+        // Usage & Schedule toggles
+        document.getElementById("modalUsageType").addEventListener("change", (e) => {
+            document.getElementById("modalUsageLimitContainer").style.display =
+                e.target.value === "USAGE_LIMIT" ? "flex" : "none";
+        });
+
+        document.getElementById("modalScheduleEnabled").addEventListener("change", (e) => {
+            document.getElementById("modalScheduleInputs").style.display =
+                e.target.checked ? "block" : "none";
+        });
+
+        document.getElementById("modalAccessMode").addEventListener("change", (e) => {
+            document.getElementById("modalSecuritySettings").style.display =
+                e.target.value === "SECURED" ? "block" : "none";
+        });
+
+        // Link mode radio cards
+        document.querySelectorAll('input[name="modalLinkMode"]').forEach(radio => {
+            radio.addEventListener("change", () => {
+                document.querySelectorAll(".mode-card-option").forEach(card => {
+                    const r = card.querySelector('input[name="modalLinkMode"]');
+                    card.classList.toggle("selected", r && r.checked);
+                });
+            });
+        });
+
+        // Copy created link button
+        document.getElementById("copyCreatedUrlBtn").addEventListener("click", () => {
+            const field = document.getElementById("createdShortUrlField");
+            if (field.value) {
+                navigator.clipboard.writeText(field.value);
+                const btn = document.getElementById("copyCreatedUrlBtn");
+                const originalText = btn.textContent;
+                btn.textContent = "Copied!";
+                setTimeout(() => btn.textContent = originalText, 1500);
+            }
+        });
+
+        // Modal Back button
+        const prevBtn = document.getElementById("modalPrevBtn");
+        if (prevBtn) {
+            prevBtn.addEventListener("click", () => {
+                const currentIndex = MODAL_TABS.indexOf(currentModalTab);
+                if (currentIndex > 0) {
+                    switchModalTab(MODAL_TABS[currentIndex - 1]);
+                }
+            });
+        }
+
+        // Modal submit button (Next vs Create / Save changes)
+        document.getElementById("modalSubmitBtn").addEventListener("click", handleModalSubmit);
+    }
+
+    const MODAL_TABS = ["general", "usage", "access", "mode", "meta"];
+    let currentModalTab = "general";
+
+    function updateModalFooterButtons() {
+        const isLastTab = (currentModalTab === "meta");
+        const submitBtn = document.getElementById("modalSubmitBtn");
+        const prevBtn = document.getElementById("modalPrevBtn");
+
+        if (isLastTab) {
+            submitBtn.textContent = (appState.modalMode === "create") ? "Create link" : "Save changes";
+        } else {
+            submitBtn.textContent = "Next \u2192";
+        }
+
+        const currentIndex = MODAL_TABS.indexOf(currentModalTab);
+        if (prevBtn) {
+            prevBtn.style.display = (currentIndex > 0) ? "inline-flex" : "none";
+        }
+    }
+
+    function switchModalTab(tab) {
+        if (!MODAL_TABS.includes(tab)) tab = "general";
+        currentModalTab = tab;
+
+        document.querySelectorAll(".modal-nav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+        document.querySelectorAll(".modal-section-pane").forEach(pane => {
+            pane.classList.toggle("active", pane.id === `pane${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+        });
+
+        const scrollContainer = document.querySelector(".modal-form-scroll");
+        if (scrollContainer) scrollContainer.scrollTop = 0;
+
+        updateModalFooterButtons();
+    }
+
+    function openCreateModal() {
+        appState.modalMode = "create";
+        appState.editingOriginalNewUrl = null;
+
+        document.getElementById("linkModalKicker").textContent = "NEW LINK";
+        document.getElementById("linkModalTitle").textContent = "Create a new link";
+        document.getElementById("linkModalSubtitle").textContent = "Configure your link before creating it.";
+
+        document.getElementById("linkModalContent").style.display = "flex";
+        document.getElementById("modalSuccessPanel").style.display = "none";
+
+        // Reset inputs
+        document.getElementById("editShortUrlGroup").style.display = "none";
+        document.getElementById("addShortCodeRow").style.display = "flex";
+        document.getElementById("editActiveToggleRow").style.display = "none";
+        document.getElementById("modalDestUrl").value = "";
+        document.getElementById("modalCustomPath").value = "";
+        document.getElementById("modalAddShortCode").checked = true;
+        document.getElementById("modalUsageType").value = "UNLIMITED";
+        document.getElementById("modalUsageLimit").value = "";
+        document.getElementById("modalUsageLimitContainer").style.display = "none";
+        document.getElementById("modalExpireAt").value = "";
+        document.getElementById("modalScheduleEnabled").checked = false;
+        document.getElementById("modalScheduleInputs").style.display = "none";
+        document.getElementById("modalScheduleStart").value = "";
+        document.getElementById("modalScheduleEnd").value = "";
+        document.getElementById("modalAccessMode").value = "PUBLIC";
+        document.getElementById("modalSecuritySettings").style.display = "none";
+        document.getElementById("modalPin").value = "";
+        document.getElementById("modalPassword").value = "";
+        document.getElementById("modalIpAllowlist").value = "";
+        document.getElementById("modalCountries").value = "";
+        document.getElementById("modalDevices").value = "";
+        document.getElementById("modalReferrers").value = "";
+        document.getElementById("modalTags").value = "";
+        document.getElementById("modalNotes").value = "";
+
+        // Reset Mode to REDIRECT
+        const redirectRadio = document.querySelector('input[name="modalLinkMode"][value="REDIRECT"]');
+        if (redirectRadio) redirectRadio.checked = true;
+        document.querySelectorAll(".mode-card-option").forEach(c => {
+            const r = c.querySelector('input[name="modalLinkMode"]');
+            c.classList.toggle("selected", r && r.value === "REDIRECT");
+        });
+
+        // Activate first tab
+        switchModalTab("general");
+        updateModalPreview();
+
+        const modal = document.getElementById("linkModal");
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        setTimeout(() => document.getElementById("modalDestUrl").focus(), 100);
+    }
+
+    async function openEditModal(newUrlToEdit) {
+        appState.modalMode = "edit";
+        appState.editingOriginalNewUrl = newUrlToEdit;
+
+        document.getElementById("linkModalKicker").textContent = "EDIT LINK";
+        document.getElementById("linkModalTitle").textContent = "Edit link";
+        document.getElementById("linkModalSubtitle").textContent = "Modify destination, path, or access settings.";
+
+        document.getElementById("linkModalContent").style.display = "flex";
+        document.getElementById("modalSuccessPanel").style.display = "none";
+
+        document.getElementById("editShortUrlGroup").style.display = "flex";
+        document.getElementById("addShortCodeRow").style.display = "none";
+        document.getElementById("editActiveToggleRow").style.display = "flex";
+
+        switchModalTab("general");
+
+        const modal = document.getElementById("linkModal");
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+
+        const loadingOverlay = document.getElementById("linkModalLoading");
+        if (loadingOverlay) loadingOverlay.style.display = "flex";
+
+        // Fetch current values
+        try {
+            const query = new URLSearchParams({ newUrl: newUrlToEdit });
+            const response = await authenticatedFetch(`/link?${query.toString()}`);
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const data = result.data;
+                document.getElementById("modalShortUrlInput").value = data.newUrl || newUrlToEdit;
+                document.getElementById("modalDestUrl").value = data.originalUrl || "";
+                document.getElementById("modalCustomPath").value = data.customPath || "";
+                document.getElementById("linkModalPreviewUrl").textContent = data.newUrl || newUrlToEdit;
+                document.getElementById("modalNotes").value = data.notes || "";
+                document.getElementById("modalTags").value = Array.isArray(data.tags) ? data.tags.join(", ") : "";
+                document.getElementById("modalUsageLimit").value = data.usageLimit ?? "";
+                document.getElementById("modalLinkActive").checked = data.isActive !== false;
+
+                if (data.expireAt) {
+                    const d = new Date(data.expireAt);
+                    if (!isNaN(d.getTime())) {
+                        document.getElementById("modalExpireAt").value = toDateTimeLocal(d);
+                    }
+                } else {
+                    document.getElementById("modalExpireAt").value = "";
+                }
+
+                const mode = data.linkMode || "REDIRECT";
+                const modeRadio = document.querySelector(`input[name="modalLinkMode"][value="${mode}"]`);
+                if (modeRadio) modeRadio.checked = true;
+                document.querySelectorAll(".mode-card-option").forEach(c => {
+                    const r = c.querySelector('input[name="modalLinkMode"]');
+                    c.classList.toggle("selected", r && r.value === mode);
+                });
+            }
+        } catch (err) {
+            showToast("error", "Failed to load link details", err.message);
+        } finally {
+            if (loadingOverlay) loadingOverlay.style.display = "none";
+        }
+    }
+
+    function closeLinkModal() {
+        const modal = document.getElementById("linkModal");
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+    }
+
+    function updateModalPreview() {
+        const customPath = document.getElementById("modalCustomPath").value.trim().replace(/^\/+/, "");
+        const hasCode = document.getElementById("modalAddShortCode").checked;
+        const host = window.location.host || "localhost:8081";
+        document.getElementById("linkModalPreviewUrl").textContent =
+            `http://${host}/${customPath || (hasCode ? "a8K2mP" : "your-link")}`;
+    }
+
+    async function handleModalSubmit() {
+        const currentIndex = MODAL_TABS.indexOf(currentModalTab);
+        const isLastTab = (currentModalTab === "meta");
+
+        if (!isLastTab) {
+            // Validate step before advancing
+            if (currentModalTab === "general") {
+                const url = document.getElementById("modalDestUrl").value.trim();
+                if (!url) {
+                    showToast("error", "Destination URL is required", "Please enter a valid target URL.");
+                    document.getElementById("modalDestUrl").focus();
+                    return;
+                }
+                if (!/^https?:\/\//i.test(url)) {
+                    showToast("error", "Invalid destination URL", "URL must start with http:// or https://");
+                    document.getElementById("modalDestUrl").focus();
+                    return;
+                }
+            } else if (currentModalTab === "usage") {
+                const usageType = document.getElementById("modalUsageType").value;
+                const usageLimitValue = document.getElementById("modalUsageLimit").value.trim();
+                if (usageType === "USAGE_LIMIT" && (!usageLimitValue || Number(usageLimitValue) <= 0)) {
+                    showToast("error", "Usage limit required", "Usage limit must be greater than 0.");
+                    document.getElementById("modalUsageLimit").focus();
+                    return;
+                }
+                const scheduleEnabled = document.getElementById("modalScheduleEnabled").checked;
+                const scheduleStart = document.getElementById("modalScheduleStart").value;
+                const scheduleEnd = document.getElementById("modalScheduleEnd").value;
+                if (scheduleEnabled && (!scheduleStart || !scheduleEnd)) {
+                    showToast("error", "Incomplete schedule", "Both start and end dates are required when schedule is enabled.");
+                    return;
+                }
+                if (scheduleEnabled && new Date(scheduleEnd).getTime() <= new Date(scheduleStart).getTime()) {
+                    showToast("error", "Invalid schedule", "End date must be after start date.");
+                    return;
+                }
+            } else if (currentModalTab === "access") {
+                const accessMode = document.getElementById("modalAccessMode").value;
+                const pin = document.getElementById("modalPin").value.trim();
+                const password = document.getElementById("modalPassword").value;
+                const ipAddresses = document.getElementById("modalIpAllowlist").value.split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+                const countries = parseTags(document.getElementById("modalCountries").value).map(v => v.toUpperCase());
+                const devices = parseTags(document.getElementById("modalDevices").value).map(v => v.toUpperCase());
+                const referrers = document.getElementById("modalReferrers").value.split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+
+                if (accessMode === "SECURED" &&
+                    !pin && !password && !ipAddresses.length && !countries.length && !devices.length && !referrers.length) {
+                    showToast("error", "Secured policy required", "Secured access requires at least one restriction configured.");
+                    return;
+                }
+                if (pin && !/^\d{4,12}$/.test(pin)) {
+                    showToast("error", "Invalid PIN", "PIN must contain 4–12 digits.");
+                    return;
+                }
+                if (password && (password.length < 6 || password.length > 128)) {
+                    showToast("error", "Invalid Password", "Password must contain 6–128 characters.");
+                    return;
+                }
+            }
+
+            // Advance to next step
+            if (currentIndex < MODAL_TABS.length - 1) {
+                switchModalTab(MODAL_TABS[currentIndex + 1]);
+            }
+            return;
+        }
+
+        // On last tab: submit create or edit
+        if (appState.modalMode === "create") {
+            await submitCreateLink();
+        } else {
+            await submitEditLink();
+        }
+    }
+
+    async function submitCreateLink() {
+        const url = document.getElementById("modalDestUrl").value.trim();
+        const customPath = document.getElementById("modalCustomPath").value.trim();
+        const notes = document.getElementById("modalNotes").value.trim();
+        const tags = parseTags(document.getElementById("modalTags").value);
+        const linkMode = document.querySelector('input[name="modalLinkMode"]:checked')?.value || "REDIRECT";
+        const addShortCode = document.getElementById("modalAddShortCode").checked;
+
+        if (!url) {
+            switchModalTab("general");
+            showToast("error", "Destination URL is required", "Please enter a valid target URL.");
+            document.getElementById("modalDestUrl").focus();
+            return;
+        }
+
+        if (!/^https?:\/\//i.test(url)) {
+            switchModalTab("general");
+            showToast("error", "Invalid destination URL", "URL must start with http:// or https://");
+            document.getElementById("modalDestUrl").focus();
+            return;
+        }
+
+        const usageType = document.getElementById("modalUsageType").value;
+        const usageLimitValue = document.getElementById("modalUsageLimit").value.trim();
+        const expireAtValue = document.getElementById("modalExpireAt").value;
+
+        if (usageType === "USAGE_LIMIT" && (!usageLimitValue || Number(usageLimitValue) <= 0)) {
+            switchModalTab("usage");
+            showToast("error", "Usage limit required", "Usage limit must be greater than 0.");
+            document.getElementById("modalUsageLimit").focus();
+            return;
+        }
+
+        const scheduleEnabled = document.getElementById("modalScheduleEnabled").checked;
+        const scheduleStart = document.getElementById("modalScheduleStart").value;
+        const scheduleEnd = document.getElementById("modalScheduleEnd").value;
+
+        if (scheduleEnabled && (!scheduleStart || !scheduleEnd)) {
+            switchModalTab("usage");
+            showToast("error", "Incomplete schedule", "Both start and end dates are required when schedule is enabled.");
+            return;
+        }
+
+        if (scheduleEnabled && new Date(scheduleEnd).getTime() <= new Date(scheduleStart).getTime()) {
+            switchModalTab("usage");
+            showToast("error", "Invalid schedule", "End date must be after start date.");
+            return;
+        }
+
+        const accessMode = document.getElementById("modalAccessMode").value;
+        const pin = document.getElementById("modalPin").value.trim();
+        const password = document.getElementById("modalPassword").value;
+        const ipAddresses = document.getElementById("modalIpAllowlist").value
+            .split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+        const countries = parseTags(document.getElementById("modalCountries").value).map(v => v.toUpperCase());
+        const devices = parseTags(document.getElementById("modalDevices").value).map(v => v.toUpperCase());
+        const referrers = document.getElementById("modalReferrers").value
+            .split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+
+        if (accessMode === "SECURED" &&
+            !pin && !password && !ipAddresses.length && !countries.length && !devices.length && !referrers.length) {
+            switchModalTab("access");
+            showToast("error", "Secured policy required", "Secured access requires at least one restriction configured.");
+            return;
+        }
+
+        if (pin && !/^\d{4,12}$/.test(pin)) {
+            switchModalTab("access");
+            showToast("error", "Invalid PIN", "PIN must contain 4–12 digits.");
+            return;
+        }
+
+        if (password && (password.length < 6 || password.length > 128)) {
+            switchModalTab("access");
+            showToast("error", "Invalid Password", "Password must contain 6–128 characters.");
+            return;
+        }
+
+        const payload = {
+            url,
+            usagePolicies: {
+                type: usageType,
+                usageLimit: usageType === "USAGE_LIMIT" ? Number(usageLimitValue) : null,
+                expireAt: expireAtValue ? new Date(expireAtValue).toISOString() : null,
+                schedule: scheduleEnabled ? {
+                    startAt: new Date(scheduleStart).toISOString(),
+                    endAt: new Date(scheduleEnd).toISOString()
+                } : null
+            },
+            accessPolicies: {
+                mode: accessMode,
+                pin: pin ? { pin } : null,
+                password: password ? { password } : null,
+                ipAllowlist: ipAddresses.length ? { addresses: ipAddresses } : null,
+                country: countries.length ? { countries } : null,
+                device: devices.length ? { devices } : null,
+                referrer: referrers.length ? { referrers } : null
+            },
+            linkMode,
+            addShortCode
+        };
+
+        if (customPath) payload.customPath = customPath;
+        if (notes) payload.notes = notes;
+        if (tags.length) payload.tags = tags;
+
+        const btn = document.getElementById("modalSubmitBtn");
+        setLoading(btn, true, "Creating...");
+
+        try {
+            const response = await authenticatedFetch("/link/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await parseResponse(response);
+
+            if (!response.ok || !result.success) {
+                // DO NOT CLOSE MODAL ON ERROR
+                showToast("error", "Unable to create link", result.message || "Failed to create short URL.");
+                return;
+            }
+
+            // SUCCESS: Show success panel inside modal
+            const generatedUrl = result.data?.newUrl || "";
+            document.getElementById("createdShortUrlField").value = generatedUrl;
+            document.getElementById("linkModalContent").style.display = "none";
+            document.getElementById("modalSuccessPanel").style.display = "flex";
+
+            showToast("success", "Link created successfully", generatedUrl);
+
+            // Refresh background tables
+            if (appState.currentPage === "links") loadLinks(0);
+            if (appState.currentPage === "home") loadOverallAnalytics();
+
+        } catch (err) {
+            showToast("error", "Unable to create link", err.message || "An unexpected error occurred.");
+        } finally {
+            setLoading(btn, false, "Create link");
+        }
+    }
+
+    async function submitEditLink() {
+        const newUrl = appState.editingOriginalNewUrl;
+        if (!newUrl) return;
+
+        const originalUrl = document.getElementById("modalDestUrl").value.trim();
+        const customPath = document.getElementById("modalCustomPath").value.trim();
+        const notes = document.getElementById("modalNotes").value.trim();
+        const tags = parseTags(document.getElementById("modalTags").value);
+        const linkMode = document.querySelector('input[name="modalLinkMode"]:checked')?.value || "REDIRECT";
+        const isActive = document.getElementById("modalLinkActive").checked;
+        const expireAtVal = document.getElementById("modalExpireAt").value;
+        const usageLimitVal = document.getElementById("modalUsageLimit").value.trim();
+
+        const payload = {
+            newUrl,
+            originalUrl,
+            customPath,
+            notes,
+            tags,
+            linkMode,
+            isActive,
+            expireAt: expireAtVal ? new Date(expireAtVal).toISOString() : null,
+            usageLimit: usageLimitVal ? Number(usageLimitVal) : null
+        };
+
+        const btn = document.getElementById("modalSubmitBtn");
+        setLoading(btn, true, "Saving...");
+
+        try {
+            const response = await authenticatedFetch("/link/edit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await parseResponse(response);
+
+            if (!response.ok || !result.success) {
+                showToast("error", "Unable to update link", result.message || "Failed to save link changes.");
+                return;
+            }
+
+            // SUCCESS: Close modal and refresh
+            closeLinkModal();
+            showToast("success", "Link updated successfully", "Changes have been saved.");
+
+            if (appState.currentPage === "links") loadLinks(appState.linksPage);
+            if (appState.currentPage === "home") loadOverallAnalytics();
+
+        } catch (err) {
+            showToast("error", "Unable to update link", err.message || "An unexpected error occurred.");
+        } finally {
+            setLoading(btn, false, "Save changes");
+        }
+    }
+
+    /*
+     * 12. API KEYS MANAGEMENT
+     */
+    function setupApiKeyHandlers() {
+        document.getElementById("createApiKeyBtn").addEventListener("click", handleCreateApiKey);
+        document.getElementById("rotateApiKeyBtn").addEventListener("click", () => {
+            showConfirmDialog(
+                "Rotate API key?",
+                "Rotating will immediately invalidate the current key and generate a new key. Any active client must be updated with the new key.",
+                handleRotateApiKey
+            );
+        });
+
+        document.getElementById("deleteApiKeyBtn").addEventListener("click", () => {
+            showConfirmDialog(
+                "Delete API key?",
+                "Any application using this key will stop working immediately.",
+                handleDeleteApiKey
+            );
+        });
+
+        document.getElementById("copyRawKeyBtn").addEventListener("click", () => {
+            const rawVal = document.getElementById("rawKeyValue").textContent;
+            navigator.clipboard.writeText(rawVal);
+            const btn = document.getElementById("copyRawKeyBtn");
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy", 1500);
+        });
+
+        document.getElementById("dismissRawKeyBtn").addEventListener("click", () => {
+            document.getElementById("rawKeyBanner").style.display = "none";
+        });
+    }
+
+    async function loadApiKey() {
+        const loadingEl = document.getElementById("apiKeyLoadingState");
+        const emptyEl = document.getElementById("apiKeyEmptyState");
+        const activeEl = document.getElementById("apiKeyActiveState");
+
+        if (loadingEl) loadingEl.style.display = "block";
+        if (emptyEl) emptyEl.style.display = "none";
+        if (activeEl) activeEl.style.display = "none";
+
+        try {
+            const response = await authenticatedFetch("/api/apikey");
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const key = result.data;
+                appState.activeApiKey = key;
+                if (loadingEl) loadingEl.style.display = "none";
+                if (emptyEl) emptyEl.style.display = "none";
+                if (activeEl) activeEl.style.display = "block";
+
+                document.getElementById("apiKeyName").textContent = key.name || "Production API Key";
+                document.getElementById("apiKeyStatus").textContent = key.active ? "Active" : "Inactive";
+                document.getElementById("apiKeyCreatedAt").textContent = formatDate(key.createdAt);
+                document.getElementById("apiKeyLastUsedAt").textContent = key.lastUsedAt ? formatDate(key.lastUsedAt) : "Never";
+            } else {
+                appState.activeApiKey = null;
+                if (loadingEl) loadingEl.style.display = "none";
+                if (emptyEl) emptyEl.style.display = "block";
+                if (activeEl) activeEl.style.display = "none";
+            }
+        } catch (err) {
+            appState.activeApiKey = null;
+            if (loadingEl) loadingEl.style.display = "none";
+            if (emptyEl) emptyEl.style.display = "block";
+            if (activeEl) activeEl.style.display = "none";
+        }
+    }
+
+    async function handleCreateApiKey() {
+        const btn = document.getElementById("createApiKeyBtn");
+        setLoading(btn, true, "Generating...");
+
+        try {
+            const response = await authenticatedFetch("/api/apikey", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: "Production API Key" })
+            });
+
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const rawKey = result.data.apiKey;
+                showRawKeyBanner(rawKey);
+                showToast("success", "API key created", "Your new key is ready to use.");
+                await loadApiKey();
+            } else {
+                showToast("error", "Failed to create API key", result.message || "An error occurred.");
+            }
+        } catch (err) {
+            showToast("error", "Error creating API key", err.message);
+        } finally {
+            setLoading(btn, false, "+ Create API Key");
+        }
+    }
+
+    async function handleRotateApiKey() {
+        const btn = document.getElementById("rotateApiKeyBtn");
+        setLoading(btn, true, "Rotating...");
+
+        try {
+            const response = await authenticatedFetch("/api/apikey", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: appState.activeApiKey?.name || "Production API Key" })
+            });
+
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success && result.data) {
+                const rawKey = result.data.apiKey;
+                showRawKeyBanner(rawKey);
+                showToast("success", "API key rotated", "Previous key invalidated and new key generated.");
+                await loadApiKey();
+            } else {
+                showToast("error", "Failed to rotate API key", result.message);
+            }
+        } catch (err) {
+            showToast("error", "Rotation error", err.message);
+        } finally {
+            setLoading(btn, false, "Rotate Key");
+        }
+    }
+
+    async function handleDeleteApiKey() {
+        const btn = document.getElementById("deleteApiKeyBtn");
+        setLoading(btn, true, "Deleting...");
+
+        try {
+            const response = await authenticatedFetch("/api/apikey", {
+                method: "DELETE"
+            });
+
+            const result = await parseResponse(response);
+
+            if (response.ok && result.success) {
+                showToast("success", "API key deleted", "Your key has been revoked.");
+                document.getElementById("rawKeyBanner").style.display = "none";
+                await loadApiKey();
+            } else {
+                showToast("error", "Failed to delete API key", result.message);
+            }
+        } catch (err) {
+            showToast("error", "Deletion error", err.message);
+        } finally {
+            setLoading(btn, false, "Delete");
+        }
+    }
+
+    function showRawKeyBanner(rawKey) {
+        document.getElementById("rawKeyValue").textContent = rawKey;
+        document.getElementById("rawKeyBanner").style.display = "block";
+    }
+
+    /*
+     * 13. CHART & UI UTILITIES
+     */
+    function renderSvgBarChart(container, dailyClicks) {
+        const rows = Array.isArray(dailyClicks) ? dailyClicks : [];
+        const normalized = rows
+            .map(row => ({
+                date: row.date,
+                clicks: Math.max(0, Number(row.clicks) || 0)
+            }))
+            .filter(row => row.date);
+
+        if (!normalized.length) {
+            container.innerHTML = `<div class="chart-empty">No click activity recorded for this period.</div>`;
+            return;
+        }
+
+        const width = 800;
+        const height = 180;
+        const padding = { top: 16, right: 12, bottom: 28, left: 36 };
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
+        const maxValue = Math.max(1, ...normalized.map(row => row.clicks));
+        const barGap = normalized.length > 45 ? 2 : 4;
+        const barWidth = Math.max(2, (chartWidth - barGap * (normalized.length - 1)) / normalized.length);
+
+        const gridLines = 3;
+        let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img">`;
+
+        // Horizontal Grid Lines
+        for (let i = 0; i <= gridLines; i++) {
+            const y = padding.top + (chartHeight / gridLines) * i;
+            const value = Math.round(maxValue - (maxValue / gridLines) * i);
+            svg += `
+                <line class="chart-grid-line" x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}"></line>
+                <text class="chart-axis-label" x="${padding.left - 6}" y="${y + 3}" text-anchor="end">${escapeHtml(formatNumber(value))}</text>
+            `;
+        }
+
+        // Bars
+        normalized.forEach((row, index) => {
+            const x = padding.left + index * (barWidth + barGap);
+            const barHeight = maxValue === 0 ? 0 : (row.clicks / maxValue) * chartHeight;
+            const y = padding.top + chartHeight - barHeight;
+            const dateObj = new Date(`${row.date}T00:00:00`);
+            const dateLabel = isNaN(dateObj.getTime())
+                ? row.date
+                : dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+            const showLabel = normalized.length <= 14 ||
+                index === 0 ||
+                index === normalized.length - 1 ||
+                index % Math.ceil(normalized.length / 6) === 0;
+
+            svg += `
+                <rect
+                    class="chart-bar"
+                    x="${x.toFixed(2)}"
+                    y="${y.toFixed(2)}"
+                    width="${barWidth.toFixed(2)}"
+                    height="${Math.max(1, barHeight).toFixed(2)}"
+                    rx="1.5"
+                >
+                    <title>${escapeHtml(dateLabel)}: ${escapeHtml(formatNumber(row.clicks))} clicks</title>
+                </rect>
+            `;
+
+            if (showLabel) {
+                svg += `
+                    <text class="chart-axis-label"
+                          x="${(x + barWidth / 2).toFixed(2)}"
+                          y="${height - 8}"
+                          text-anchor="middle">${escapeHtml(dateLabel)}</text>
+                `;
+            }
+        });
+
+        svg += `</svg>`;
+        container.innerHTML = svg;
+    }
+
+    function getDateRange(days) {
+        const end = new Date();
+        const start = new Date(end);
+        start.setHours(0, 0, 0, 0);
+        start.setDate(start.getDate() - (days - 1));
+
+        return {
+            startDate: toLocalDateString(start),
+            endDate: toLocalDateString(end)
+        };
+    }
+
+    function toLocalDateString(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    function toDateTimeLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function formatDate(value) {
+        if (!value) return "—";
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return String(value);
+        return d.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        });
+    }
+
+    function formatTimestamp(value) {
+        if (!value) return "—";
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return String(value);
+        return d.toLocaleString(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    function formatNumber(value) {
+        return new Intl.NumberFormat().format(Number(value) || 0);
+    }
+
+    function parseTags(value) {
+        if (!value) return [];
+        return value.split(",").map(t => t.trim()).filter(Boolean);
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function escapeAttribute(value) {
+        return escapeHtml(value);
+    }
+
+    function getSpinnerHtml(size = 20, text = "") {
+        return `
+            <div class="loading-state-box" style="padding:16px 0;">
+                <svg class="spin-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--brand-primary, #6366f1);">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                ${text ? `<span>${escapeHtml(text)}</span>` : ""}
+            </div>
+        `;
+    }
+
+    function getInlineSpinnerHtml(size = 14) {
+        return `
+            <svg class="spin-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--muted);display:inline-block;vertical-align:middle;">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+        `;
+    }
+
+    function setLoading(btn, loading, text) {
+        if (!btn) return;
+        btn.disabled = loading;
+        if (loading) {
+            btn.dataset.prevText = btn.innerHTML;
+            btn.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin-icon">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                ${text ? `<span>${escapeHtml(text)}</span>` : ""}
+            `;
+        } else {
+            if (btn.dataset.prevText) {
+                btn.innerHTML = btn.dataset.prevText;
+            }
+        }
+    }
+</script>
+<style>
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+</body>
+</html>

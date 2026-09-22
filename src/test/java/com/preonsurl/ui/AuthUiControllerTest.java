@@ -236,4 +236,53 @@ public class AuthUiControllerTest {
                 .andExpect(view().name("login"))
                 .andExpect(model().attributeExists("error"));
     }
+
+    @Test
+    void getConsolePage_returns200AndConsoleHtml() throws Exception {
+        mockMvc.perform(get("/console"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("console"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("PreonsURL")))
+                .andExpect(content().string(containsString("Click overview")))
+                .andExpect(content().string(containsString("API Keys")));
+    }
+
+    @Test
+    void getConsoleSubPath_returns200AndConsoleHtml() throws Exception {
+        mockMvc.perform(get("/console/links"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("console"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML));
+    }
+
+    @Test
+    void loginPage_containsJwtValidationAndConsoleRedirectScript() throws Exception {
+        mockMvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("isJwtValid")))
+                .andExpect(content().string(containsString("window.location.replace('/console')")))
+                .andExpect(content().string(containsString("preons_logout_message")));
+    }
+
+    @Test
+    void registerPage_containsJwtValidationAndConsoleRedirectScript() throws Exception {
+        mockMvc.perform(get("/register"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("isJwtValid")))
+                .andExpect(content().string(containsString("window.location.replace('/console')")));
+    }
+
+    @Test
+    void consolePage_containsJwtValidationAndAutoLogoutScript() throws Exception {
+        mockMvc.perform(get("/console"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("isJwtValid")))
+                .andExpect(content().string(containsString("scheduleExpiryTimer")))
+                .andExpect(content().string(containsString("checkTokenStatus")))
+                .andExpect(content().string(containsString("window.location.replace('/login')")));
+    }
 }

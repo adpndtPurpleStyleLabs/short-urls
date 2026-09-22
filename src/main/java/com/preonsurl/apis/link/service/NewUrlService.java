@@ -404,6 +404,10 @@ public class NewUrlService {
             found = repository.findByShortCodeAndUserId(trimmedUrl, userId);
         }
 
+        if (found.isEmpty()) {
+            found = repository.findFirstByOriginalUrlAndUserId(trimmedUrl, userId);
+        }
+
         NewUrl newUrl = found.orElseThrow(() -> new UrlNotFoundException("URL not found"));
 
         List<String> tags = tagRepository.findByUrlId(newUrl.getId()).stream()

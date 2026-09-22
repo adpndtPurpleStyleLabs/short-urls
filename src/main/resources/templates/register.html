@@ -7,6 +7,47 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function checkExistingAuth() {
+            function parseJwtPayload(token) {
+                if (!token || typeof token !== 'string') return null;
+                const parts = token.trim().split('.');
+                if (parts.length !== 3) return null;
+                try {
+                    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                    while (base64.length % 4 !== 0) base64 += '=';
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    return JSON.parse(new TextDecoder().decode(bytes));
+                } catch (e) {
+                    return null;
+                }
+            }
+            function isJwtValid(token) {
+                const payload = parseJwtPayload(token);
+                if (!payload || typeof payload !== 'object') return false;
+                if (payload.exp && typeof payload.exp === 'number') {
+                    if (payload.exp <= Math.floor(Date.now() / 1000)) return false;
+                }
+                return true;
+            }
+
+            try {
+                const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
+                if (token) {
+                    if (isJwtValid(token)) {
+                        window.location.replace('/console');
+                    } else {
+                        localStorage.removeItem('preonsurl_token');
+                        localStorage.removeItem('preonsurl_username');
+                        localStorage.removeItem('preons_token');
+                        document.cookie = 'preons_jwt=; path=/; max-age=0; SameSite=Strict';
+                    }
+                }
+            } catch (e) {}
+        })();
+    </script>
     <style>
         :root {
             --bg-canvas: #ffffff;

@@ -7,6 +7,47 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function checkExistingAuth() {
+            function parseJwtPayload(token) {
+                if (!token || typeof token !== 'string') return null;
+                const parts = token.trim().split('.');
+                if (parts.length !== 3) return null;
+                try {
+                    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                    while (base64.length % 4 !== 0) base64 += '=';
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    return JSON.parse(new TextDecoder().decode(bytes));
+                } catch (e) {
+                    return null;
+                }
+            }
+            function isJwtValid(token) {
+                const payload = parseJwtPayload(token);
+                if (!payload || typeof payload !== 'object') return false;
+                if (payload.exp && typeof payload.exp === 'number') {
+                    if (payload.exp <= Math.floor(Date.now() / 1000)) return false;
+                }
+                return true;
+            }
+
+            try {
+                const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
+                if (token) {
+                    if (isJwtValid(token)) {
+                        window.location.replace('/console');
+                    } else {
+                        localStorage.removeItem('preonsurl_token');
+                        localStorage.removeItem('preonsurl_username');
+                        localStorage.removeItem('preons_token');
+                        document.cookie = 'preons_jwt=; path=/; max-age=0; SameSite=Strict';
+                    }
+                }
+            } catch (e) {}
+        })();
+    </script>
     <style>
         :root {
             --bg-canvas: #ffffff;
@@ -411,6 +452,26 @@
             showAlert('Email verified successfully. Please sign in to authenticate.', 'success');
         }
 
+        // Check for session expiry / auto logout message
+        try {
+            const logoutReason = sessionStorage.getItem("preons_logout_message");
+            if (logoutReason) {
+                showAlert(logoutReason, 'error');
+                sessionStorage.removeItem("preons_logout_message");
+            }
+        } catch (e) {}
+
+        /*[# th:if="${loginSuccess}"]*/
+        const serverToken = "[[${token}]]";
+        const serverUsername = "[[${username}]]";
+        if (serverToken && serverToken !== 'null') {
+            localStorage.setItem("preonsurl_token", serverToken);
+            localStorage.setItem("preons_token", serverToken);
+            if (serverUsername && serverUsername !== 'null') localStorage.setItem("preonsurl_username", serverUsername);
+            window.location.href = "/console";
+        }
+        /*[/]*/
+
         // Toggle password view
         togglePasswordBtn.addEventListener('click', () => {
             const isPassword = passwordInput.getAttribute('type') === 'password';
@@ -482,13 +543,15 @@
                     }
 
                     const token = data.data.accessToken;
-                    localStorage.setItem('preons_token', token);
+                    localStorage.setItem("preonsurl_token", token);
+                    localStorage.setItem("preonsurl_username", username);
+                    localStorage.setItem("preons_token", token);
                     document.cookie = `preons_jwt=${token}; path=/; max-age=86400; SameSite=Strict`;
 
-                    showAlert('Authentication successful. Redirecting to workspace...', 'success');
+                    showAlert('Authentication successful. Redirecting to console...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/swagger-ui/index.html';
-                    }, 800);
+                        window.location.href = '/console';
+                    }, 400);
                 } else {
                     showAlert(data.message || 'Invalid username or password.');
                     setLoading(false);

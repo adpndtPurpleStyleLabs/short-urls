@@ -59,9 +59,9 @@ public class SecurityConfig {
                         // =========================
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // =========================
-                        // Authentication & Verification
+                        // Authentication & Verification & Console UI
                         // =========================
-                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**", "/console", "/console/**").permitAll()
                         // =========================
                         // Swagger / OpenAPI
                         // =========================

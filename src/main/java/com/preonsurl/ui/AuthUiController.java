@@ -51,6 +51,11 @@ public class AuthUiController {
         return "login";
     }
 
+    @GetMapping({"/console", "/console/**"})
+    public String showConsolePage() {
+        return "console";
+    }
+
     @PostMapping("/register")
     public String handleRegister(
             @RequestParam("fullName") String fullName,
