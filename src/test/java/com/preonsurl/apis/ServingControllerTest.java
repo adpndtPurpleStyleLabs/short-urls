@@ -26,6 +26,7 @@ import java.util.List;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -595,5 +596,106 @@ class ServingControllerTest {
             ProxyResourceValidator.allowLoopbackForTesting = false;
             server.stop(0);
         }
+    }
+
+    @Test
+    void servingMirrorMode_rootAndSubrequests_mirroredAndRewrittenSuccessfully() throws Exception {
+        ProxyResourceValidator.allowLoopbackForTesting = true;
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+
+        String html = "<!DOCTYPE html><html><head><link rel=\"stylesheet\" href=\"/pub/static/style.css\"></head>" +
+                "<body><a href=\"/products/456\">Product</a><img src=\"/pub/media/banner.jpg\"></body></html>";
+        byte[] htmlBytes = html.getBytes(StandardCharsets.UTF_8);
+        byte[] cssBytes = "body { background: url('/pub/media/icon.svg'); }".getBytes(StandardCharsets.UTF_8);
+        byte[] imgBytes = new byte[]{1, 2, 3, 4, 5};
+
+        server.createContext("/sale", exchange -> {
+            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+            exchange.sendResponseHeaders(200, htmlBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(htmlBytes);
+            }
+        });
+
+        server.createContext("/pub/static/style.css", exchange -> {
+            exchange.getResponseHeaders().set("Content-Type", "text/css; charset=UTF-8");
+            exchange.sendResponseHeaders(200, cssBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(cssBytes);
+            }
+        });
+
+        server.createContext("/pub/media/banner.jpg", exchange -> {
+            exchange.getResponseHeaders().set("Content-Type", "image/jpeg");
+            exchange.sendResponseHeaders(200, imgBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(imgBytes);
+            }
+        });
+
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            String upstreamBase = "http://127.0.0.1:" + port + "/sale";
+            NewUrl mirrorUrl = new NewUrl(
+                    "mirror-demo",
+                    upstreamBase,
+                    null,
+                    "http://localhost/mirror-demo",
+                    Instant.now().plus(30, ChronoUnit.DAYS),
+                    null,
+                    LinkMode.MIRROR
+            );
+            NewUrl saved = shortUrlRepository.save(mirrorUrl);
+
+            // 1. Request root MIRROR page
+            mockMvc.perform(get("/mirror-demo")
+                            .header("User-Agent", "Mozilla/5.0"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/mirror-demo/pub/static/style.css\"")))
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/mirror-demo/products/456\"")))
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString("src=\"/mirror-demo/pub/media/banner.jpg\"")));
+
+            // Await click event recording
+            await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+                NewUrl updated = shortUrlRepository.findById(saved.getId()).orElseThrow();
+                assertEquals(1, updated.getClickCount());
+            });
+
+            // 2. Request CSS subresource
+            mockMvc.perform(get("/mirror-demo/pub/static/style.css")
+                            .header("User-Agent", "Mozilla/5.0"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString("url('/mirror-demo/pub/media/icon.svg')")));
+
+            // 3. Request Image subresource (binary streaming)
+            mockMvc.perform(get("/mirror-demo/pub/media/banner.jpg")
+                            .header("User-Agent", "Mozilla/5.0"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().bytes(imgBytes));
+
+            // Subrequests must NOT increment click count
+            Thread.sleep(300);
+            NewUrl finalEntity = shortUrlRepository.findById(saved.getId()).orElseThrow();
+            assertEquals(1, finalEntity.getClickCount(), "Subrequests should not increment user click count");
+
+        } finally {
+            ProxyResourceValidator.allowLoopbackForTesting = false;
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void handlePreflight_returnsNoContentWithCorsHeaders() throws Exception {
+        mockMvc.perform(options("/mirror-demo/napi/popularSearch?currencyCode=INR")
+                        .header("Origin", "http://localhost:8081")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "X-Requested-With, Content-Type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:8081"))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("GET")))
+                .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsString("X-Requested-With")));
     }
 }

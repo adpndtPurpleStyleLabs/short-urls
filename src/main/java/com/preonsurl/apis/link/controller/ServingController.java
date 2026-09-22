@@ -11,6 +11,7 @@ import com.preonsurl.apis.link.repository.AccessPolicyRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.repository.UsagePolicyRepository;
 import com.preonsurl.apis.link.enums.LinkMode;
+import com.preonsurl.apis.link.service.MirrorService;
 import com.preonsurl.apis.link.service.NewUrlServingCacheService;
 import com.preonsurl.apis.link.service.ProxyService;
 import com.preonsurl.apis.link.ui.LinkUiRenderer;
@@ -30,6 +31,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -38,8 +41,8 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
-@Tag(name = "New URL Redirection", description = "Endpoints for redirecting New URLs to destination target URLs")
 @Controller
+@Tag(name = "Serving", description = "Public endpoints for link resolution, redirection, and streaming proxy/mirror serving")
 public class ServingController {
 
     private static final Logger log = LoggerFactory.getLogger(ServingController.class);
@@ -52,6 +55,7 @@ public class ServingController {
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
     private final ProxyService proxyService;
+    private final MirrorService mirrorService;
 
     public ServingController(NewUrlServingCacheService servingCacheService,
                              NewUrlRepository repository,
@@ -60,7 +64,8 @@ public class ServingController {
                              LinkUiRenderer linkUiRenderer,
                              PasswordEncoder passwordEncoder,
                              ApplicationEventPublisher eventPublisher,
-                             ProxyService proxyService) {
+                             ProxyService proxyService,
+                             MirrorService mirrorService) {
         this.servingCacheService = servingCacheService;
         this.repository = repository;
         this.accessPolicyRepository = accessPolicyRepository;
@@ -69,6 +74,27 @@ public class ServingController {
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
         this.proxyService = proxyService;
+        this.mirrorService = mirrorService;
+    }
+
+    @Operation(summary = "Handle CORS Preflight", description = "Responds to preflight OPTIONS requests for short links and proxied/mirrored routes")
+    @RequestMapping(value = "/**", method = RequestMethod.OPTIONS)
+    public ResponseEntity<?> handlePreflight(HttpServletRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        String origin = request.getHeader("Origin");
+        if (origin != null && !origin.isBlank()) {
+            headers.set("Access-Control-Allow-Origin", origin);
+            headers.set("Access-Control-Allow-Credentials", "true");
+        } else {
+            headers.set("Access-Control-Allow-Origin", "*");
+        }
+        headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS");
+        headers.set("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers") != null
+                ? request.getHeader("Access-Control-Request-Headers")
+                : "*");
+        headers.set("Access-Control-Allow-Credentials", "true");
+        headers.set("Access-Control-Max-Age", "86400");
+        return ResponseEntity.noContent().headers(headers).build();
     }
 
     @Operation(summary = "Service Health Check", description = "Returns service health status")
@@ -144,6 +170,15 @@ public class ServingController {
                         log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
                         return attachProxyContextCookie(proxyService.proxyRequest(target, request), path);
                     }
+                    if (mode == LinkMode.MIRROR) {
+                        log.info("Mirroring root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
+                        Optional<NewUrl> entityOpt = repository.findByNewUrl(fullUrl);
+                        if (entityOpt.isEmpty()) entityOpt = repository.findByShortCode(path);
+                        if (entityOpt.isEmpty()) entityOpt = repository.findByCustomPath(path);
+                        if (entityOpt.isPresent()) {
+                            return mirrorService.mirrorRequest(entityOpt.get().getShortCode() != null ? entityOpt.get().getShortCode() : path, "/", entityOpt.get(), request);
+                        }
+                    }
                     return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
                 }
             } catch (UrlExpiredException e) {
@@ -171,6 +206,39 @@ public class ServingController {
         }
 
         if (entityOpt.isEmpty()) {
+            // Check if this is a MIRROR subrequest: /{shortCode}/**
+            Optional<MirrorRouteMatch> mirrorMatch = matchMirrorRoute(path);
+            if (mirrorMatch.isPresent()) {
+                MirrorRouteMatch match = mirrorMatch.get();
+                NewUrl mirrorEntity = match.entity();
+                if ("/".equals(match.subPath())) {
+                    // Root URL with trailing slash: treat as root link visit
+                    try {
+                        Optional<String> orig = servingCacheService.resolveAndServe(mirrorEntity.getNewUrl(), ipAddress, userAgent, referer);
+                        return mirrorService.mirrorRequest(match.prefix(), "/", mirrorEntity, request);
+                    } catch (UrlExpiredException e) {
+                        if (isBrowserHtmlRequest(request)) {
+                            return ResponseEntity.status(HttpStatus.GONE).contentType(MediaType.TEXT_HTML)
+                                    .body(linkUiRenderer.renderExhaustedPage("Link Has Expired", "This short link has expired and is no longer accessible.", "Expired"));
+                        }
+                        return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL has expired"));
+                    } catch (UrlUsageLimitExceededException e) {
+                        if (isBrowserHtmlRequest(request)) {
+                            return ResponseEntity.status(HttpStatus.GONE).contentType(MediaType.TEXT_HTML)
+                                    .body(linkUiRenderer.renderExhaustedPage("Usage Limit Reached", "This short link has reached its maximum allowed number of accesses.", "Limit Reached"));
+                        }
+                        return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL usage limit reached"));
+                    }
+                } else {
+                    // Subrequest: validate policies without incrementing user click count
+                    ResponseEntity<?> policyViolation = validateMirrorSubrequestPolicies(mirrorEntity, request, match.prefix());
+                    if (policyViolation != null) {
+                        return policyViolation;
+                    }
+                    return mirrorService.mirrorRequest(match.prefix(), match.subPath(), mirrorEntity, request);
+                }
+            }
+
             // Check if this is an upstream proxy sub-resource or sub-path request
             Optional<ProxySubResourceTarget> proxyTargetOpt = resolveProxySubResource(request, path);
             if (proxyTargetOpt.isPresent()) {
@@ -254,6 +322,10 @@ public class ServingController {
                     log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
                     return attachProxyContextCookie(proxyService.proxyRequest(target, request), cookieId);
                 }
+                if (mode == LinkMode.MIRROR) {
+                    log.info("Mirroring root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
+                    return mirrorService.mirrorRequest(cookieId, "/", entity, request);
+                }
                 log.info("Redirecting root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
                 return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
             }
@@ -261,6 +333,10 @@ public class ServingController {
             if (mode == LinkMode.PROXY) {
                 log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, entity.getOriginalUrl(), ipAddress);
                 return attachProxyContextCookie(proxyService.proxyRequest(entity.getOriginalUrl(), request), cookieId);
+            }
+            if (mode == LinkMode.MIRROR) {
+                log.info("Mirroring root fullUrl='{}' -> '{}' [IP={}]", fullUrl, entity.getOriginalUrl(), ipAddress);
+                return mirrorService.mirrorRequest(cookieId, "/", entity, request);
             }
             return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(entity.getOriginalUrl())).build();
         } catch (UrlExpiredException e) {
@@ -327,6 +403,16 @@ public class ServingController {
         }
 
         if (entityOpt.isEmpty()) {
+            Optional<MirrorRouteMatch> mirrorMatch = matchMirrorRoute(path);
+            if (mirrorMatch.isPresent()) {
+                MirrorRouteMatch match = mirrorMatch.get();
+                ResponseEntity<?> policyViolation = validateMirrorSubrequestPolicies(match.entity(), request, match.prefix());
+                if (policyViolation != null) {
+                    return policyViolation;
+                }
+                return mirrorService.mirrorRequest(match.prefix(), match.subPath(), match.entity(), request);
+            }
+
             Optional<ProxySubResourceTarget> proxyTargetOpt = resolveProxySubResource(request, path);
             if (proxyTargetOpt.isPresent()) {
                 ProxySubResourceTarget proxyTarget = proxyTargetOpt.get();
@@ -409,7 +495,7 @@ public class ServingController {
                 .httpOnly(true)
                 .build();
 
-        URI redirectTarget = entity.getLinkMode() == LinkMode.PROXY
+        URI redirectTarget = (entity.getLinkMode() == LinkMode.PROXY || entity.getLinkMode() == LinkMode.MIRROR)
                 ? URI.create(entity.getNewUrl())
                 : URI.create(entity.getOriginalUrl());
 
@@ -519,7 +605,7 @@ public class ServingController {
         }
         if (entityOpt.isPresent()) {
             NewUrl entity = entityOpt.get();
-            if (entity.isActive() && entity.getLinkMode() == LinkMode.PROXY) {
+            if (entity.isActive()) {
                 if (entity.getExpireAt() == null || Instant.now().isBefore(entity.getExpireAt())) {
                     return Optional.of(entity);
                 }
@@ -557,5 +643,94 @@ public class ServingController {
         return ResponseEntity.status(response.getStatusCode())
                 .headers(headers)
                 .body(response.getBody());
+    }
+
+    record MirrorRouteMatch(NewUrl entity, String prefix, String subPath) {}
+
+    private Optional<MirrorRouteMatch> matchMirrorRoute(String path) {
+        if (path == null || path.isBlank()) {
+            return Optional.empty();
+        }
+        int firstSlash = path.indexOf('/');
+        if (firstSlash > 0) {
+            String prefix = path.substring(0, firstSlash);
+            Optional<NewUrl> candidate = findMirrorEntity(prefix);
+            if (candidate.isPresent()) {
+                String subPath = path.substring(firstSlash);
+                return Optional.of(new MirrorRouteMatch(candidate.get(), prefix, subPath));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<NewUrl> findMirrorEntity(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return Optional.empty();
+        }
+        Optional<NewUrl> entityOpt = repository.findByShortCode(identifier);
+        if (entityOpt.isEmpty()) {
+            entityOpt = repository.findByCustomPath(identifier);
+        }
+        if (entityOpt.isPresent()) {
+            NewUrl entity = entityOpt.get();
+            if (entity.isActive() && entity.getLinkMode() == LinkMode.MIRROR) {
+                return Optional.of(entity);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private ResponseEntity<?> validateMirrorSubrequestPolicies(NewUrl entity, HttpServletRequest request, String path) {
+        if (!entity.isActive()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
+        }
+
+        Optional<UsagePolicy> usagePolicyOpt = usagePolicyRepository.findByShortUrlId(entity.getId());
+        boolean isExpired = (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt()))
+                || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isExpired());
+        boolean isLimitReached = (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit())
+                || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isUsageLimitReached());
+        boolean isOutsideSchedule = usagePolicyOpt.isPresent() && usagePolicyOpt.get().isOutsideSchedule();
+
+        if (isExpired || isLimitReached || isOutsideSchedule) {
+            if (isBrowserHtmlRequest(request)) {
+                String title = isExpired ? "Link Has Expired" : isLimitReached ? "Usage Limit Reached" : "Link Outside Schedule";
+                String desc = isExpired
+                        ? "This short link expired on " + entity.getExpireAt() + " and is no longer accessible."
+                        : isLimitReached
+                        ? "This short link has reached its maximum allowed number of accesses and is no longer accessible."
+                        : "This short link is not currently accessible according to its access schedule.";
+                String badge = isExpired ? "Expired" : isLimitReached ? "Limit Reached" : "Schedule Inactive";
+
+                HttpStatus status = isOutsideSchedule ? HttpStatus.FORBIDDEN : HttpStatus.GONE;
+                return ResponseEntity.status(status)
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(linkUiRenderer.renderExhaustedPage(title, desc, badge));
+            } else {
+                if (isExpired) {
+                    return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL has expired"));
+                } else if (isLimitReached) {
+                    return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL usage limit reached"));
+                } else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Link is outside scheduled access window"));
+                }
+            }
+        }
+
+        Optional<AccessPolicy> accessPolicyOpt = accessPolicyRepository.findByShortUrlId(entity.getId());
+        if (accessPolicyOpt.isPresent() && accessPolicyOpt.get().isPinOrPasswordProtected()) {
+            if (!isVerifiedByCookie(request, entity.getId())) {
+                AccessPolicy policy = accessPolicyOpt.get();
+                if (isBrowserHtmlRequest(request)) {
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.TEXT_HTML)
+                            .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("PIN or password verification required"));
+                }
+            }
+        }
+
+        return null;
     }
 }

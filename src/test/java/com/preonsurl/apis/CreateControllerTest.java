@@ -712,6 +712,47 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.data.linkMode").value("IFRAME"));
     }
 
+    @Test
+    void createWithMirrorLinkModeSavesAndReturnsMirrorMode() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/mirror-test",
+                    "customPath": "mirror-page",
+                    "linkMode": "MIRROR"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.linkMode").value("MIRROR"));
+
+        NewUrl dbUrl = shortUrlRepository.findByShortCode("mirror-page").orElseThrow();
+        assertEquals(LinkMode.MIRROR, dbUrl.getLinkMode());
+    }
+
+    @Test
+    void createWithMirrorLinkModeRejectsSSRF() throws Exception {
+        String payload = """
+                {
+                    "url": "http://127.0.0.1:8080/admin",
+                    "customPath": "ssrf-mirror",
+                    "linkMode": "MIRROR"
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
 
     @Test
     void getLinkInfo_byFullShortUrl_success() throws Exception {

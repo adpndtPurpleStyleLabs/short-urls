@@ -452,7 +452,7 @@ public class NewUrlService {
         String finalUrl = (request.originalUrl() != null && !request.originalUrl().isBlank())
                 ? request.originalUrl().trim()
                 : entity.getOriginalUrl();
-        if (finalMode == LinkMode.PROXY) {
+        if (finalMode == LinkMode.PROXY || finalMode == LinkMode.MIRROR) {
             ProxyResourceValidator.validateProxyUrl(finalUrl);
         }
 

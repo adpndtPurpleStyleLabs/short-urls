@@ -195,7 +195,7 @@ public class ProxyService {
             }
 
             // Normal or terminal response: copy headers and stream body
-            HttpHeaders responseHeaders = copyResponseHeaders(upstreamResponse);
+            HttpHeaders responseHeaders = copyResponseHeaders(upstreamResponse, clientRequest);
             Resource resource = new InputStreamResource(upstreamResponse.body());
 
             long durationMs = Duration.between(startTime, Instant.now()).toMillis();
@@ -265,11 +265,16 @@ public class ProxyService {
         }
     }
 
-    private HttpHeaders copyResponseHeaders(HttpResponse<?> upstreamResponse) {
+    private HttpHeaders copyResponseHeaders(HttpResponse<?> upstreamResponse, HttpServletRequest clientRequest) {
         HttpHeaders headers = new HttpHeaders();
+        applyCorsHeaders(headers, clientRequest);
+
         upstreamResponse.headers().map().forEach((key, values) -> {
             if (key != null) {
                 String lower = key.toLowerCase(Locale.ROOT);
+                if ("content-security-policy".equals(lower) || "x-frame-options".equals(lower)) {
+                    return;
+                }
                 if (!isHopByHopHeader(lower) && FORWARDED_RESPONSE_HEADERS.contains(lower)) {
                     for (String val : values) {
                         headers.add(key, val);
@@ -278,6 +283,19 @@ public class ProxyService {
             }
         });
         return headers;
+    }
+
+    private void applyCorsHeaders(HttpHeaders headers, HttpServletRequest clientRequest) {
+        String origin = clientRequest != null ? clientRequest.getHeader("Origin") : null;
+        if (origin != null && !origin.isBlank()) {
+            headers.set("Access-Control-Allow-Origin", origin);
+            headers.set("Access-Control-Allow-Credentials", "true");
+        } else {
+            headers.set("Access-Control-Allow-Origin", "*");
+        }
+        headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS");
+        headers.set("Access-Control-Allow-Headers", "*");
+        headers.set("Access-Control-Max-Age", "86400");
     }
 
     private boolean isHopByHopHeader(String headerName) {

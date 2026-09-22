@@ -275,7 +275,7 @@ public record CreateNewUrlRequest(
         resolvedCustomPath();
         resolvedUsagePolicies();
         resolvedAccessPolicies();
-        if (resolvedLinkMode() == LinkMode.PROXY) {
+        if (resolvedLinkMode() == LinkMode.PROXY || resolvedLinkMode() == LinkMode.MIRROR) {
             com.preonsurl.apis.link.service.ProxyResourceValidator.validateProxyUrl(url);
         }
     }
