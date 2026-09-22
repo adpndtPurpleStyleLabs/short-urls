@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 — Page Not Found | PreonsURL</title>
+    <meta name="description" content="The page you are looking for does not exist.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #f8fafc;
+            --surface-card: #ffffff;
+            --border-card: #e2e8f0;
+            --text-heading: #0f172a;
+            --text-body: #64748b;
+            --btn-dark: #0f172a;
+            --btn-dark-hover: #1e293b;
+            --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: "JetBrains Mono", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-canvas);
+            color: var(--text-heading);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        /* Production Minimalist Card */
+        .error-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--surface-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-card);
+            padding: 36px 30px 28px;
+            box-shadow:
+                0 1px 3px rgba(0, 0, 0, 0.04),
+                0 12px 32px -8px rgba(0, 0, 0, 0.07);
+            text-align: center;
+            animation: cardAppear 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Minimal Status Badge */
+        .error-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: #475569;
+            margin-bottom: 16px;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #f59e0b;
+        }
+
+        /* Heading & Description */
+        h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--text-heading);
+            margin-bottom: 8px;
+        }
+
+        p.description {
+            font-size: 13.5px;
+            color: var(--text-body);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        /* Monospace Path Tag */
+        .path-badge {
+            display: inline-block;
+            max-width: 100%;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 5px 11px;
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+            color: #475569;
+            margin-bottom: 22px;
+            word-break: break-all;
+        }
+
+        /* Action Buttons */
+        .actions-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            height: 40px;
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        .btn-secondary svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .btn-primary {
+            flex: 1.25;
+            height: 40px;
+            background: var(--btn-dark);
+            color: #ffffff;
+            border: 1px solid var(--btn-dark);
+            border-radius: 9px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-primary:hover {
+            background: var(--btn-dark-hover);
+            border-color: var(--btn-dark-hover);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+        }
+
+        .btn-primary svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.15s ease;
+        }
+
+        .btn-primary:hover svg {
+            transform: translateX(2px);
+        }
+
+        @media (max-width: 360px) {
+            .actions-row {
+                flex-direction: column-reverse;
+            }
+            .btn-secondary, .btn-primary {
+                width: 100%;
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="error-card" id="errorCard">
+        <!-- Status Badge -->
+        <div class="error-badge" id="statusBadge">
+            <span class="badge-dot" aria-hidden="true"></span>
+            <span>HTTP 404</span>
+        </div>
+
+        <!-- Heading & Description -->
+        <h1 id="errorTitle">Page Not Found</h1>
+        <p class="description" id="errorDescription">
+            The page you are looking for does not exist or has been moved.
+        </p>
+
+        <!-- Optional Path Badge -->
+        <div class="path-badge" id="pathBanner" th:if="${path != null and !path.isEmpty()}">
+            <span id="pathText" th:text="${path}">/unknown-route</span>
+        </div>
+
+        <!-- Actions: Back and Login / Go to Console -->
+        <div class="actions-row">
+            <button type="button" class="btn-secondary" id="btnBack" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Back</span>
+            </button>
+
+            <a id="primaryActionBtn" th:href="${isLoggedIn ? '/console' : '/login'}" class="btn-primary">
+                <span id="primaryActionText" th:text="${isLoggedIn ? 'Go to Console' : 'Login'}">Login</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        (function checkAuth() {
+            function parseJwt(token) {
+                if (!token) return null;
+                try {
+                    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+                    return JSON.parse(atob(base64));
+                } catch (e) { return null; }
+            }
+            try {
+                const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
+                let loggedIn = false;
+                if (token) {
+                    const payload = parseJwt(token);
+                    if (payload && payload.exp && payload.exp > Math.floor(Date.now() / 1000)) {
+                        loggedIn = true;
+                    }
+                }
+                if (document.cookie && document.cookie.includes('preons_jwt=')) {
+                    loggedIn = true;
+                }
+                const primaryBtn = document.getElementById('primaryActionBtn');
+                const primaryText = document.getElementById('primaryActionText');
+                if (primaryBtn && primaryText) {
+                    if (loggedIn) {
+                        primaryBtn.href = '/console';
+                        primaryText.textContent = 'Go to Console';
+                    } else {
+                        primaryBtn.href = '/login';
+                        primaryText.textContent = 'Login';
+                    }
+                }
+            } catch (e) {}
+
+            window.addEventListener('keydown', function (e) {
+                if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+                if (e.key === 'Escape') {
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.location.href = '/login';
+                    }
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

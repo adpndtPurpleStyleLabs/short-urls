@@ -58,6 +58,24 @@ public class AuthUiController {
         return "console";
     }
 
+    @GetMapping("/404")
+    public String showNotFoundPage(jakarta.servlet.http.HttpServletRequest request, Model model) {
+        model.addAttribute("status", 404);
+        model.addAttribute("path", "/404");
+        model.addAttribute("message", "The page or route you are looking for does not exist on this server.");
+        boolean loggedIn = false;
+        if (request != null && request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie c : request.getCookies()) {
+                if ("preons_jwt".equals(c.getName()) && c.getValue() != null && !c.getValue().isBlank()) {
+                    loggedIn = true;
+                    break;
+                }
+            }
+        }
+        model.addAttribute("isLoggedIn", loggedIn);
+        return "404";
+    }
+
     @PostMapping("/register")
     public String handleRegister(
             @RequestParam("fullName") String fullName,

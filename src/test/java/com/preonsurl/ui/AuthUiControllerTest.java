@@ -313,4 +313,75 @@ public class AuthUiControllerTest {
                 .andExpect(content().string(containsString("GoDaddy")))
                 .andExpect(content().string(containsString("btn-verify-domain")));
     }
+
+    @Test
+    void unavailableRoute_returns404AndNotFoundPage_unauthenticatedShowsLoginAndBack() throws Exception {
+        mockMvc.perform(get("/this-route-does-not-exist")
+                        .header("Accept", "text/html,application/xhtml+xml"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("404"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("Page Not Found")))
+                .andExpect(content().string(containsString("HTTP 404")))
+                .andExpect(content().string(containsString("/this-route-does-not-exist")))
+                .andExpect(content().string(containsString("Login")))
+                .andExpect(content().string(containsString("Back")));
+    }
+
+    @Test
+    void unavailableRoute_whenLoggedIn_showsGoToConsoleAndBack() throws Exception {
+        mockMvc.perform(get("/this-route-does-not-exist")
+                        .header("Accept", "text/html,application/xhtml+xml")
+                        .cookie(new jakarta.servlet.http.Cookie("preons_jwt", "valid-jwt-token")))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("404"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("Page Not Found")))
+                .andExpect(content().string(containsString("Go to Console")))
+                .andExpect(content().string(containsString("Back")));
+    }
+
+    @Test
+    void unavailableDeepRoute_returns404AndNotFoundPage() throws Exception {
+        mockMvc.perform(get("/some/unmapped/nested/path")
+                        .header("Accept", "text/html,application/xhtml+xml"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("404"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("Page Not Found")))
+                .andExpect(content().string(containsString("/some/unmapped/nested/path")))
+                .andExpect(content().string(containsString("Back")));
+    }
+
+    @Test
+    void direct404Page_returns200AndNotFoundHtml() throws Exception {
+        mockMvc.perform(get("/404"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("404"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("Page Not Found")))
+                .andExpect(content().string(containsString("Login")))
+                .andExpect(content().string(containsString("Back")));
+    }
+
+    @Test
+    void errorEndpoint_returns404AndNotFoundHtml() throws Exception {
+        mockMvc.perform(get("/error")
+                        .header("Accept", "text/html"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("404"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("Page Not Found")))
+                .andExpect(content().string(containsString("Back")));
+    }
+
+    @Test
+    void unavailableApiRoute_returns404Json() throws Exception {
+        mockMvc.perform(get("/api/auth/unmapped-endpoint")
+                        .header("Accept", "application/json"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.success").value(false));
+    }
 }

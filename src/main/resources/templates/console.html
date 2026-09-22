@@ -1053,7 +1053,8 @@
         .th-col.th-link {
             flex: 1;
             min-width: 0;
-            padding-left: 40px; /* aligns with text after 28px icon + 12px gap */
+            padding-left: 40px;
+            /* aligns with text after 28px icon + 12px gap */
         }
 
         .th-col.th-status {
@@ -2438,45 +2439,163 @@
 
         /* Link Mode Radio Cards */
         .mode-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            display: flex;
+            flex-direction: column;
             gap: 10px;
         }
 
         .mode-card-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
             border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 12px;
+            border-radius: 10px;
+            padding: 14px 16px;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             background: #ffffff;
+            position: relative;
         }
 
         .mode-card-option:hover {
             border-color: #94a3b8;
+            background: #fafbfc;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
         }
 
         .mode-card-option.selected {
-            border-color: var(--primary);
+            border-color: #0f172a;
             background: #f8fafc;
-            box-shadow: 0 0 0 1px var(--primary);
+            box-shadow: 0 0 0 1.5px #0f172a, 0 2px 8px rgba(15, 23, 42, 0.05);
         }
 
         .mode-card-option input {
             display: none;
         }
 
-        .mode-card-name {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text);
+        .mode-card-radio-indicator {
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .mode-card-radio-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1.5px solid #cbd5e1;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .mode-card-option.selected .mode-card-radio-circle {
+            border-color: #0f172a;
+            background: #0f172a;
+        }
+
+        .mode-card-option.selected .mode-card-radio-circle::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ffffff;
+        }
+
+        .mode-card-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+
+        .mode-card-option.selected .mode-card-icon-box {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .mode-card-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mode-card-header-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 3px;
         }
 
+        .mode-card-name {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: -0.01em;
+        }
+
+        .mode-card-badge {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #475569;
+            background: #f1f5f9;
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .mode-card-option.selected .mode-card-badge {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
         .mode-card-desc {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--muted);
-            line-height: 1.35;
+            line-height: 1.45;
+        }
+
+        /* Passcode Auth (PIN vs Password with OR divider) */
+        .passcode-auth-grid {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .passcode-auth-col {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .passcode-or-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 26px;
+            flex-shrink: 0;
+        }
+
+        .passcode-or-badge {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 3px 8px;
+            text-transform: uppercase;
+            user-select: none;
         }
 
         .modal-footer {
@@ -2490,49 +2609,139 @@
             flex-shrink: 0;
         }
 
-        /* Success Panel inside Create Modal */
+        /* Success State: Thin & Wide Dialog */
+        .link-modal-dialog.is-success {
+            width: min(720px, calc(100vw - 32px));
+            height: auto;
+            min-height: unset;
+            max-height: 90vh;
+            border-radius: 14px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+            overflow: visible;
+        }
+
+        /* Success Panel inside Create Modal (Thin & Wide) */
         .create-success-panel {
             display: none;
-            padding: 48px 24px;
-            text-align: center;
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
+            padding: 24px 28px;
             flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            background: #ffffff;
+            border-radius: 14px;
+        }
+
+        .create-success-header {
+            display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .create-success-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
 
         .success-icon-badge {
-            width: 48px;
-            height: 48px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            background: var(--success-bg);
-            border: 1px solid var(--success-border);
-            color: var(--success);
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #059669;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 16px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.08);
         }
 
         .create-success-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
-            margin-bottom: 4px;
+            color: #0f172a;
+            margin: 0 0 2px 0;
+            letter-spacing: -0.01em;
         }
 
         .create-success-desc {
-            font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 20px;
+            font-size: 12.5px;
+            color: #64748b;
+            margin: 0;
         }
 
         .create-url-box {
             display: flex;
-            max-width: 480px;
-            margin: 0 auto 24px;
-            gap: 8px;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .create-url-input-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .create-url-lock-icon {
+            position: absolute;
+            left: 14px;
+            color: #10b981;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .create-url-input-wrapper .form-input {
+            width: 100%;
+            padding-left: 38px;
+            padding-right: 14px;
+            height: 42px;
+            font-size: 13.5px;
+            font-weight: 600;
+            font-family: var(--font-mono, monospace);
+            color: #0f172a;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .create-url-input-wrapper .form-input:focus {
+            background: #ffffff;
+            border-color: #0f172a;
+            box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+        }
+
+        .btn-copy-created {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            height: 42px;
+            padding: 0 18px;
+            font-weight: 600;
+            font-size: 13px;
+            flex-shrink: 0;
+            border-radius: 8px;
+        }
+
+        #modalDoneBtn {
+            height: 42px;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            flex-shrink: 0;
+            border-radius: 8px;
         }
 
         /* =========================
@@ -2787,6 +2996,34 @@
 
             .mode-cards-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .passcode-auth-grid {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .passcode-or-divider {
+                padding-top: 0;
+                width: 100%;
+                position: relative;
+                margin: 4px 0;
+            }
+
+            .passcode-or-divider::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: 50%;
+                height: 1px;
+                background: #e2e8f0;
+            }
+
+            .passcode-or-badge {
+                position: relative;
+                background: #ffffff;
+                z-index: 1;
             }
         }
 
@@ -3888,7 +4125,9 @@
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="2" y1="12" x2="22" y2="12"></line>
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                        </path>
                     </svg>
                     <span>Domains</span>
                 </button>
@@ -3947,8 +4186,7 @@
                             <line x1="21" y1="21" x2="16.65" y2="16.65" />
                         </svg>
                         <svg class="search-icon spin-icon" id="searchLoadingIcon" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2.5"
-                            style="display:none;color:#000000;">
+                            stroke="currentColor" stroke-width="2.5" style="display:none;color:#000000;">
                             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                         </svg>
                         <input type="text" id="globalSearchInput" class="global-search-input"
@@ -4020,7 +4258,8 @@
                  PAGE: HOME
             ========================= -->
                 <section class="page-view active" id="pageHome">
-                    <div class="page-header" style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div class="page-header"
+                        style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
                         <div>
                             <h1 class="page-title" id="homeGreeting">Good morning, user</h1>
                             <p class="page-subtitle">Here's an overview of your links and traffic.</p>
@@ -4040,7 +4279,8 @@
                             <div class="home-stat-top">
                                 <span class="home-stat-label">Total URLs</span>
                                 <div class="home-stat-icon blue">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                                     </svg>
@@ -4065,7 +4305,8 @@
                             <div class="home-stat-top">
                                 <span class="home-stat-label">Total Served</span>
                                 <div class="home-stat-icon gray">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round">
                                         <line x1="18" y1="20" x2="18" y2="10" />
                                         <line x1="12" y1="20" x2="12" y2="4" />
                                         <line x1="6" y1="20" x2="6" y2="14" />
@@ -4082,7 +4323,8 @@
                         <div class="analytics-card-header">
                             <div>
                                 <h2 class="analytics-card-title">Serving overview</h2>
-                                <span id="homeServingDateRangeText" style="font-size: 12px; color: var(--muted); margin-top: 3px; display: block;"></span>
+                                <span id="homeServingDateRangeText"
+                                    style="font-size: 12px; color: var(--muted); margin-top: 3px; display: block;"></span>
                             </div>
                         </div>
                         <div class="analytics-card-body">
@@ -4101,7 +4343,8 @@
                         <div class="analytics-card-header">
                             <div>
                                 <h2 class="analytics-card-title">URLs created</h2>
-                                <span id="homeCreatedDateRangeText" style="font-size: 12px; color: var(--muted); margin-top: 3px; display: block;"></span>
+                                <span id="homeCreatedDateRangeText"
+                                    style="font-size: 12px; color: var(--muted); margin-top: 3px; display: block;"></span>
                             </div>
                         </div>
                         <div class="analytics-card-body">
@@ -4110,7 +4353,8 @@
                                 <div class="analytics-stat-label">URLs created in range</div>
                             </div>
                             <div class="chart-container" id="homeCreatedChartContainer">
-                                <div class="chart-empty" id="homeCreatedChartEmpty">Loading URLs created overview...</div>
+                                <div class="chart-empty" id="homeCreatedChartEmpty">Loading URLs created overview...
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4137,16 +4381,19 @@
                             </div>
                             <div class="table-bar-right">
                                 <div class="links-header-filter-tabs">
-                                    <button type="button" class="tbl-filter-pill active" id="filterPillAll" data-filter="all">
+                                    <button type="button" class="tbl-filter-pill active" id="filterPillAll"
+                                        data-filter="all">
                                         <span>All</span>
                                         <span class="filter-pill-count" id="countAll">0</span>
                                     </button>
-                                    <button type="button" class="tbl-filter-pill" id="filterPillActive" data-filter="active">
+                                    <button type="button" class="tbl-filter-pill" id="filterPillActive"
+                                        data-filter="active">
                                         <span class="filter-pill-dot active-dot"></span>
                                         <span>Active</span>
                                         <span class="filter-pill-count" id="countActive">0</span>
                                     </button>
-                                    <button type="button" class="tbl-filter-pill" id="filterPillInactive" data-filter="inactive">
+                                    <button type="button" class="tbl-filter-pill" id="filterPillInactive"
+                                        data-filter="inactive">
                                         <span class="filter-pill-dot inactive-dot"></span>
                                         <span>Inactive</span>
                                         <span class="filter-pill-count" id="countInactive">0</span>
@@ -4162,10 +4409,12 @@
                             </div>
                             <div class="th-col th-status">
                                 <div class="th-filter-dropdown" id="thStatusFilterDropdown">
-                                    <button type="button" class="th-filter-btn" id="thStatusFilterBtn" aria-expanded="false" title="Filter by status">
+                                    <button type="button" class="th-filter-btn" id="thStatusFilterBtn"
+                                        aria-expanded="false" title="Filter by status">
                                         <span>Status</span>
                                         <span class="th-status-badge" id="thStatusBadge">All</span>
-                                        <svg class="th-dropdown-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <svg class="th-dropdown-arrow" width="10" height="10" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2.5">
                                             <polyline points="6 9 12 15 18 9"></polyline>
                                         </svg>
                                     </button>
@@ -4191,18 +4440,22 @@
                                 </div>
                             </div>
                             <div class="th-col th-clicks">
-                                <button type="button" class="th-sort-btn" id="thSortServedBtn" title="Sort by served count">
+                                <button type="button" class="th-sort-btn" id="thSortServedBtn"
+                                    title="Sort by served count">
                                     <span>Served</span>
-                                    <svg class="th-sort-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path d="M7 15l5 5 5-5M7 9l5-5 5 5"/>
+                                    <svg class="th-sort-icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5">
+                                        <path d="M7 15l5 5 5-5M7 9l5-5 5 5" />
                                     </svg>
                                 </button>
                             </div>
                             <div class="th-col th-time">
-                                <button type="button" class="th-sort-btn" id="thSortDateBtn" title="Sort by created date">
+                                <button type="button" class="th-sort-btn" id="thSortDateBtn"
+                                    title="Sort by created date">
                                     <span>Activity</span>
-                                    <svg class="th-sort-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path d="M7 15l5 5 5-5M7 9l5-5 5 5"/>
+                                    <svg class="th-sort-icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5">
+                                        <path d="M7 15l5 5 5-5M7 9l5-5 5 5" />
                                     </svg>
                                 </button>
                             </div>
@@ -4212,9 +4465,8 @@
                         <div class="links-list" id="linksListContainer">
                             <div class="table-empty-state" style="padding:56px 16px;">
                                 <div class="loading-state-box" style="padding:0;">
-                                    <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2.5"
-                                        style="color:#000000;">
+                                    <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5" style="color:#000000;">
                                         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                                     </svg>
                                     <span>Loading links...</span>
@@ -4224,7 +4476,8 @@
                         <div class="links-card-footer">
                             <span class="pagination-count-text" id="linksPaginationInfo">Loading...</span>
                             <div class="pagination-controls-right">
-                                <button class="btn-page-nav" id="linksPrevPageBtn" type="button" aria-label="Previous page">
+                                <button class="btn-page-nav" id="linksPrevPageBtn" type="button"
+                                    aria-label="Previous page">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2.5">
                                         <polyline points="15 18 9 12 15 6" />
@@ -4246,13 +4499,19 @@
                  PAGE: DOMAINS
             ========================= -->
                 <section class="page-view" id="pageDomains">
-                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <div class="page-header"
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                         <div>
-                            <h1 class="page-title" style="font-size: 26px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Domains</h1>
-                            <p class="page-subtitle" style="color: #64748b; font-size: 14px;">Use your own domain for branded short links.</p>
+                            <h1 class="page-title"
+                                style="font-size: 26px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Domains
+                            </h1>
+                            <p class="page-subtitle" style="color: #64748b; font-size: 14px;">Use your own domain for
+                                branded short links.</p>
                         </div>
-                        <button class="btn btn-primary" id="btnAddDomain" type="button" style="background: #0f172a; color: #ffffff; border-radius: 6px; padding: 8px 16px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <button class="btn btn-primary" id="btnAddDomain" type="button"
+                            style="background: #0f172a; color: #ffffff; border-radius: 6px; padding: 8px 16px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
@@ -4264,15 +4523,20 @@
                     <div class="domains-info-banner" id="domainsInfoBanner">
                         <div class="domains-banner-content">
                             <div class="domains-banner-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb"
+                                    stroke-width="2">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <line x1="2" y1="12" x2="22" y2="12"></line>
-                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                    <path
+                                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                                    </path>
                                 </svg>
                             </div>
-                            <span class="domains-banner-text">Add a custom domain to use your own branding for short links.</span>
+                            <span class="domains-banner-text">Add a custom domain to use your own branding for short
+                                links.</span>
                         </div>
-                        <button class="domains-banner-link" id="domainsBannerLearnMoreBtn" type="button">Learn more &rarr;</button>
+                        <button class="domains-banner-link" id="domainsBannerLearnMoreBtn" type="button">Learn more
+                            &rarr;</button>
                     </div>
 
                     <!-- Domains Table Card -->
@@ -4286,7 +4550,8 @@
 
                         <div class="domains-list" id="domainsListContainer">
                             <div class="domains-loading-state" id="domainsLoadingState">
-                                <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #000000;">
+                                <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" style="color: #000000;">
                                     <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
                                 </svg>
                                 <span>Loading domains...</span>
@@ -4297,14 +4562,18 @@
                         <div class="domains-table-footer" id="domainsTableFooter">
                             <span class="domains-pagination-info" id="domainsPaginationInfo">Showing 0 domains</span>
                             <div class="domains-pagination-controls">
-                                <button class="btn-page-nav" id="domainsPrevPageBtn" type="button" aria-label="Previous page">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <button class="btn-page-nav" id="domainsPrevPageBtn" type="button"
+                                    aria-label="Previous page">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
                                         <polyline points="15 18 9 12 15 6"></polyline>
                                     </svg>
                                 </button>
                                 <span class="pagination-page-label" id="domainsPageLabel">1</span>
-                                <button class="btn-page-nav" id="domainsNextPageBtn" type="button" aria-label="Next page">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <button class="btn-page-nav" id="domainsNextPageBtn" type="button"
+                                    aria-label="Next page">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
                                         <polyline points="9 18 15 12 9 6"></polyline>
                                     </svg>
                                 </button>
@@ -4375,8 +4644,7 @@
                             style="display:none;padding:56px 20px;text-align:center;">
                             <div class="loading-state-box" style="padding:0;">
                                 <svg class="spin-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2.5"
-                                    style="color:#000000;">
+                                    stroke="currentColor" stroke-width="2.5" style="color:#000000;">
                                     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                                 </svg>
                                 <span>Loading API key...</span>
@@ -4451,8 +4719,10 @@
                 <div class="url-preview-bar">
                     <div class="url-preview-top-row">
                         <span class="url-preview-label" id="linkModalBadge">Preview</span>
-                        <button type="button" class="preview-copy-btn" id="previewCopyBtn" title="Copy preview link" onclick="copyModalPreviewUrl()">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <button type="button" class="preview-copy-btn" id="previewCopyBtn" title="Copy preview link"
+                            onclick="copyModalPreviewUrl()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                             </svg>
@@ -4462,13 +4732,16 @@
 
                     <div class="url-preview-box">
                         <div class="url-preview-ssl" title="HTTPS Secure link">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                             </svg>
                         </div>
-                        <div class="url-preview-text-wrap" id="linkModalPreviewUrl" data-full-url="http://localhost:8081/randomShortCode">
-                            <span class="url-proto">http://</span><span class="url-host">localhost:8081</span><span class="url-slash">/</span><span class="url-code-pill">randomShortCode</span>
+                        <div class="url-preview-text-wrap" id="linkModalPreviewUrl"
+                            data-full-url="http://localhost:8081/randomShortCode">
+                            <span class="url-proto">http://</span><span class="url-host">localhost:8081</span><span
+                                class="url-slash">/</span><span class="url-code-pill">randomShortCode</span>
                         </div>
                     </div>
                 </div>
@@ -4478,7 +4751,8 @@
                     <nav class="modal-nav-sidebar">
                         <button class="modal-nav-btn active" data-tab="general" type="button">
                             <span class="modal-nav-icon">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                                 </svg>
@@ -4487,7 +4761,8 @@
                         </button>
                         <button class="modal-nav-btn" data-tab="usage" type="button">
                             <span class="modal-nav-icon">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <polyline points="12 6 12 12 16 14"></polyline>
                                 </svg>
@@ -4496,7 +4771,8 @@
                         </button>
                         <button class="modal-nav-btn" data-tab="access" type="button">
                             <span class="modal-nav-icon">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                                 </svg>
                             </span>
@@ -4504,7 +4780,8 @@
                         </button>
                         <button class="modal-nav-btn" data-tab="mode" type="button">
                             <span class="modal-nav-icon">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
                                     <polyline points="2 17 12 22 22 17"></polyline>
                                     <polyline points="2 12 12 17 22 12"></polyline>
@@ -4514,8 +4791,11 @@
                         </button>
                         <button class="modal-nav-btn" data-tab="meta" type="button">
                             <span class="modal-nav-icon">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z">
+                                    </path>
                                     <line x1="7" y1="7" x2="7.01" y2="7"></line>
                                 </svg>
                             </span>
@@ -4534,9 +4814,13 @@
                             <div class="form-card">
                                 <div class="form-card-header">
                                     <div class="form-card-title">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71">
+                                            </path>
+                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71">
+                                            </path>
                                         </svg>
                                         <span>Destination URL</span>
                                     </div>
@@ -4545,16 +4829,22 @@
                                 <div class="field-group" style="margin-bottom: 0;">
                                     <div class="input-with-icon">
                                         <div class="input-icon-prefix">
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"></circle>
                                                 <line x1="2" y1="12" x2="22" y2="12"></line>
-                                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                                <path
+                                                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                                                </path>
                                             </svg>
                                         </div>
                                         <input type="url" class="form-input" id="modalDestUrl"
                                             placeholder="https://example.com/your-target-page" required>
                                     </div>
-                                    <span class="field-help" style="margin-top: 6px;">The original long URL visitors will be redirected to (must start with <code>http://</code> or <code>https://</code>).</span>
+                                    <span class="field-help" style="margin-top: 6px;">The original long URL visitors
+                                        will be redirected to (must start with <code>http://</code> or
+                                        <code>https://</code>).</span>
                                 </div>
                             </div>
 
@@ -4562,7 +4852,9 @@
                             <div class="form-card">
                                 <div class="form-card-header">
                                     <div class="form-card-title">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
                                             <polyline points="2 17 12 22 22 17"></polyline>
                                             <polyline points="2 12 12 17 22 12"></polyline>
@@ -4573,13 +4865,16 @@
 
                                 <!-- Short URL (Edit Mode only) -->
                                 <div class="field-group" id="editShortUrlGroup" style="display:none;">
-                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                                         <label for="modalShortUrlInput" style="margin: 0;">Short URL</label>
                                         <span class="form-badge-optional">Immutable</span>
                                     </div>
                                     <div class="input-with-icon">
                                         <div class="input-icon-prefix">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
                                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                             </svg>
@@ -4595,27 +4890,35 @@
                                     <label for="modalDomainSelect">Domain</label>
                                     <div class="select-with-icon">
                                         <div class="input-icon-prefix">
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"></circle>
                                                 <line x1="2" y1="12" x2="22" y2="12"></line>
-                                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                                <path
+                                                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                                                </path>
                                             </svg>
                                         </div>
                                         <select class="form-input" id="modalDomainSelect">
                                             <option value="">Default (System Domain)</option>
                                         </select>
                                         <div class="select-chevron">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
                                                 <polyline points="6 9 12 15 18 9"></polyline>
                                             </svg>
                                         </div>
                                     </div>
-                                    <span class="field-help">Select system default or one of your verified custom domains.</span>
+                                    <span class="field-help">Select system default or one of your verified custom
+                                        domains.</span>
                                 </div>
 
                                 <!-- Custom Path -->
                                 <div class="field-group">
-                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                                         <label for="modalCustomPath" style="margin: 0;">Custom Path</label>
                                         <span class="form-badge-optional">Optional</span>
                                     </div>
@@ -4623,7 +4926,8 @@
                                         <span>/</span>
                                         <input type="text" id="modalCustomPath" placeholder="campaign-2026">
                                     </div>
-                                    <span class="field-help">Readable slug placed before the short code in your URL.</span>
+                                    <span class="field-help">Readable slug placed before the short code in your
+                                        URL.</span>
                                 </div>
 
                                 <!-- Add Short Code Toggle -->
@@ -4657,47 +4961,136 @@
                             <h3>Usage Policies</h3>
                             <p class="desc">Configure click limits, schedules, and link expiration.</p>
 
-                            <div class="field-group">
-                                <label for="modalUsageType">Usage Policy</label>
-                                <select class="form-select" id="modalUsageType">
-                                    <option value="UNLIMITED">Unlimited</option>
-                                    <option value="ONE_TIME">One time only</option>
-                                    <option value="USAGE_LIMIT">Usage limit</option>
-                                </select>
-                            </div>
-
-                            <div class="field-group" id="modalUsageLimitContainer" style="display:none;">
-                                <label for="modalUsageLimit">Maximum Uses</label>
-                                <input type="number" class="form-input" id="modalUsageLimit" min="1" placeholder="100">
-                            </div>
-
-                            <div class="field-group">
-                                <label for="modalExpireAt">Expire At <span class="optional">(optional)</span></label>
-                                <input type="datetime-local" class="form-input" id="modalExpireAt">
-                                <span class="field-help">Permanent expiry timestamp after which link is disabled.</span>
-                            </div>
-
-                            <div class="setting-toggle-row" id="scheduleToggleRow">
-                                <div class="setting-toggle-info">
-                                    <strong>Schedule Access</strong>
-                                    <span>Restrict access between scheduled start and end dates.</span>
+                            <!-- Card 1: Click & Traffic Limits -->
+                            <div class="form-card">
+                                <div class="form-card-header">
+                                    <div class="form-card-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                        </svg>
+                                        <span>Click & Traffic Limits</span>
+                                    </div>
+                                    <span class="form-badge-optional">Quota Policy</span>
                                 </div>
-                                <label class="switch-toggle">
-                                    <input type="checkbox" id="modalScheduleEnabled">
-                                    <span class="switch-slider"></span>
-                                </label>
+
+                                <div class="field-group" style="margin-bottom: 0;">
+                                    <label for="modalUsageType">Usage Policy</label>
+                                    <div class="select-with-icon">
+                                        <div class="input-icon-prefix">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="8.5" cy="7" r="4"></circle>
+                                                <polyline points="17 11 19 13 23 9"></polyline>
+                                            </svg>
+                                        </div>
+                                        <select class="form-input" id="modalUsageType">
+                                            <option value="UNLIMITED">Unlimited Clicks</option>
+                                            <option value="ONE_TIME">One Time Only (Burn after first visit)</option>
+                                            <option value="USAGE_LIMIT">Custom Usage Limit (Fixed click quota)</option>
+                                        </select>
+                                        <div class="select-chevron">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <span class="field-help" style="margin-top: 6px;">Choose whether this link can be accessed indefinitely or restricted to specific quotas.</span>
+                                </div>
+
+                                <div class="field-group" id="modalUsageLimitContainer" style="display:none; margin-top: 14px; margin-bottom: 0;">
+                                    <label for="modalUsageLimit">Maximum Clicks Allowed</label>
+                                    <div class="input-with-icon">
+                                        <div class="input-icon-prefix">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="4" y1="9" x2="20" y2="9"></line>
+                                                <line x1="4" y1="15" x2="20" y2="15"></line>
+                                                <line x1="10" y1="3" x2="8" y2="21"></line>
+                                                <line x1="16" y1="3" x2="14" y2="21"></line>
+                                            </svg>
+                                        </div>
+                                        <input type="number" class="form-input" id="modalUsageLimit" min="1" placeholder="e.g. 500">
+                                    </div>
+                                    <span class="field-help" style="margin-top: 4px;">Link automatically deactivates as soon as this total click threshold is met.</span>
+                                </div>
                             </div>
 
-                            <div id="modalScheduleInputs" style="display:none;margin-bottom:16px;">
-                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                                    <div class="field-group">
-                                        <label for="modalScheduleStart">Start At</label>
-                                        <input type="datetime-local" class="form-input" id="modalScheduleStart">
+                            <!-- Card 2: Expiration & Schedule -->
+                            <div class="form-card">
+                                <div class="form-card-header">
+                                    <div class="form-card-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                        <span>Expiration & Schedule</span>
                                     </div>
-                                    <div class="field-group">
-                                        <label for="modalScheduleEnd">End At</label>
-                                        <input type="datetime-local" class="form-input" id="modalScheduleEnd">
+                                    <span class="form-badge-optional">Time Window</span>
+                                </div>
+
+                                <!-- Hard Expiry Field -->
+                                <div class="field-group">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                                        <label for="modalExpireAt" style="margin: 0;">Expire At</label>
+                                        <span class="form-badge-optional">Optional</span>
                                     </div>
+                                    <div class="input-with-icon">
+                                        <div class="input-icon-prefix">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                            </svg>
+                                        </div>
+                                        <input type="datetime-local" class="form-input" id="modalExpireAt">
+                                    </div>
+                                    <span class="field-help" style="margin-top: 4px;">Permanent expiry timestamp after which the link becomes unavailable.</span>
+                                </div>
+
+                                <!-- Schedule Toggle Row -->
+                                <div class="setting-toggle-row" id="scheduleToggleRow">
+                                    <div class="setting-toggle-info">
+                                        <strong>Scheduled Active Window</strong>
+                                        <span>Restrict visitor access to an active date and time window.</span>
+                                    </div>
+                                    <label class="switch-toggle">
+                                        <input type="checkbox" id="modalScheduleEnabled">
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <!-- Schedule Date Inputs -->
+                                <div id="modalScheduleInputs" style="display:none; margin-top: 12px;">
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                        <div class="field-group" style="margin-bottom: 0;">
+                                            <label for="modalScheduleStart">Start At</label>
+                                            <div class="input-with-icon">
+                                                <div class="input-icon-prefix">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                                    </svg>
+                                                </div>
+                                                <input type="datetime-local" class="form-input" id="modalScheduleStart">
+                                            </div>
+                                        </div>
+                                        <div class="field-group" style="margin-bottom: 0;">
+                                            <label for="modalScheduleEnd">End At</label>
+                                            <div class="input-with-icon">
+                                                <div class="input-icon-prefix">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                                    </svg>
+                                                </div>
+                                                <input type="datetime-local" class="form-input" id="modalScheduleEnd">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="field-help" style="margin-top: 6px; display: block;">Visitors attempting to open the link outside this window will be blocked with a schedule notice.</span>
                                 </div>
                             </div>
                         </div>
@@ -4705,58 +5098,153 @@
                         <!-- Tab: Access -->
                         <div class="modal-section-pane" id="paneAccess">
                             <h3>Access Control</h3>
-                            <p class="desc">Configure authentication and access restrictions for visitors.</p>
+                            <p class="desc">Configure authentication credentials and visitor access restrictions.</p>
 
-                            <div class="field-group" id="accessControlGroup">
-                                <label for="modalAccessMode">Access Mode</label>
-                                <select class="form-select" id="modalAccessMode">
-                                    <option value="PUBLIC">Public</option>
-                                    <option value="SECURED">Secured</option>
-                                </select>
+                            <!-- Card 1: Access Mode Selection -->
+                            <div class="form-card">
+                                <div class="form-card-header">
+                                    <div class="form-card-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                        </svg>
+                                        <span>Access Visibility</span>
+                                    </div>
+                                    <span class="form-badge-optional">Security Level</span>
+                                </div>
+
+                                <div class="field-group" id="accessControlGroup" style="margin-bottom: 0;">
+                                    <label for="modalAccessMode">Access Mode</label>
+                                    <div class="select-with-icon">
+                                        <div class="input-icon-prefix">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                            </svg>
+                                        </div>
+                                        <select class="form-input" id="modalAccessMode">
+                                            <option value="PUBLIC">Public (Direct access for all visitors)</option>
+                                            <option value="SECURED">Secured (Enforce passcodes, IPs, or location filters)</option>
+                                        </select>
+                                        <div class="select-chevron">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <span class="field-help" style="margin-top: 6px;">Select Secured to protect destination links behind passwords, PINs, or device/network firewalls.</span>
+                                </div>
                             </div>
 
-                            <!-- Security Policies -->
-                            <div id="modalSecuritySettings"
-                                style="display:none;margin-top:14px;border-top:1px solid var(--border-subtle);padding-top:16px;">
-                                <div class="field-group">
-                                    <label for="modalPin">PIN Protection <span class="optional">(4–12
-                                            digits)</span></label>
-                                    <input type="password" class="form-input" id="modalPin" inputmode="numeric"
-                                        maxlength="12" placeholder="e.g. 1234">
+                            <!-- Security Policies Container (Toggled when SECURED) -->
+                            <div id="modalSecuritySettings" style="display:none; margin-top: 14px;">
+                                <!-- Card 2: Passcode Authentication -->
+                                <div class="form-card">
+                                    <div class="form-card-header">
+                                        <div class="form-card-title">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="m21 2-2 2m-1.5 1.5L14 9a5 5 0 1 0 4 4l3.5-3.5a2 2 0 0 0 0-2.83l-2.17-2.17a2 2 0 0 0-2.83 0Z"></path>
+                                                <circle cx="7.5" cy="16.5" r="1.5"></circle>
+                                            </svg>
+                                            <span>Passcode Authentication</span>
+                                        </div>
+                                        <span class="form-badge-optional">Credentials</span>
+                                    </div>
+
+                                    <div class="passcode-auth-grid">
+                                        <div class="field-group passcode-auth-col" style="margin-bottom: 0;">
+                                            <label for="modalPin">PIN Protection <span class="optional">(exact 6 digits)</span></label>
+                                            <div class="input-with-icon">
+                                                <div class="input-icon-prefix">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <line x1="4" y1="9" x2="20" y2="9"></line>
+                                                        <line x1="4" y1="15" x2="20" y2="15"></line>
+                                                        <line x1="10" y1="3" x2="8" y2="21"></line>
+                                                        <line x1="16" y1="3" x2="14" y2="21"></line>
+                                                    </svg>
+                                                </div>
+                                                <input type="password" class="form-input" id="modalPin" inputmode="numeric" pattern="\d{6}" maxlength="6" placeholder="e.g. 123456">
+                                            </div>
+                                            <span class="field-help" style="margin-top: 4px;">6-digit numeric keypad code.</span>
+                                        </div>
+
+                                        <div class="passcode-or-divider">
+                                            <span class="passcode-or-badge">OR</span>
+                                        </div>
+
+                                        <div class="field-group passcode-auth-col" style="margin-bottom: 0;">
+                                            <label for="modalPassword">Password <span class="optional">(6–128 chars)</span></label>
+                                            <div class="input-with-icon">
+                                                <div class="input-icon-prefix">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                    </svg>
+                                                </div>
+                                                <input type="password" class="form-input" id="modalPassword" minlength="6" maxlength="128" placeholder="Enter secure password">
+                                            </div>
+                                            <span class="field-help" style="margin-top: 4px;">Full alphanumeric secret key.</span>
+                                        </div>
+                                    </div>
+                                    <span class="field-help" style="margin-top: 8px; display: block;">Visitors will be prompted to authenticate with either the PIN or Password before reaching the destination.</span>
                                 </div>
 
-                                <div class="field-group">
-                                    <label for="modalPassword">Password Protection <span class="optional">(6–128
-                                            characters)</span></label>
-                                    <input type="password" class="form-input" id="modalPassword" minlength="6"
-                                        maxlength="128" placeholder="Enter secure link password">
-                                </div>
+                                <!-- Card 3: Boundary & Network Restrictions -->
+                                <div class="form-card" style="margin-top: 14px;">
+                                    <div class="form-card-header">
+                                        <div class="form-card-title">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                            </svg>
+                                            <span>Visitor Boundaries</span>
+                                        </div>
+                                        <span class="form-badge-optional">Network Filters</span>
+                                    </div>
 
-                                <div class="field-group">
-                                    <label for="modalIpAllowlist">IP Allowlist <span class="optional">(one per
-                                            line)</span></label>
-                                    <textarea class="form-textarea" id="modalIpAllowlist"
-                                        placeholder="192.168.1.1&#10;10.0.0.0/24"></textarea>
-                                </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                        <div class="field-group" style="margin-bottom: 0;">
+                                            <label for="modalCountries">Allowed Countries <span class="optional">(ISO-2)</span></label>
+                                            <div class="input-with-icon">
+                                                <div class="input-icon-prefix">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                                                        <line x1="4" y1="22" x2="4" y2="15"></line>
+                                                    </svg>
+                                                </div>
+                                                <input type="text" class="form-input" id="modalCountries" placeholder="US, IN, GB">
+                                            </div>
+                                            <span class="field-help" style="margin-top: 4px;">Comma-separated ISO country codes.</span>
+                                        </div>
 
-                                <div class="field-group">
-                                    <label for="modalCountries">Country Codes <span class="optional">(comma separated
-                                            ISO-2)</span></label>
-                                    <input type="text" class="form-input" id="modalCountries" placeholder="US, IN, GB">
-                                </div>
+                                        <div class="field-group" style="margin-bottom: 0;">
+                                            <label for="modalDevices">Allowed Devices <span class="optional">(Type)</span></label>
+                                            <div class="input-with-icon">
+                                                <div class="input-icon-prefix">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                                                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                                                    </svg>
+                                                </div>
+                                                <input type="text" class="form-input" id="modalDevices" placeholder="MOBILE, DESKTOP">
+                                            </div>
+                                            <span class="field-help" style="margin-top: 4px;">MOBILE, TABLET, or DESKTOP.</span>
+                                        </div>
+                                    </div>
 
-                                <div class="field-group">
-                                    <label for="modalDevices">Allowed Devices <span class="optional">(e.g. MOBILE,
-                                            DESKTOP)</span></label>
-                                    <input type="text" class="form-input" id="modalDevices"
-                                        placeholder="MOBILE, DESKTOP">
-                                </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                                        <div class="field-group" style="margin-bottom: 0;">
+                                            <label for="modalIpAllowlist">IP Allowlist <span class="optional">(one per line)</span></label>
+                                            <textarea class="form-textarea" id="modalIpAllowlist" rows="3" placeholder="192.168.1.1&#10;10.0.0.0/24" style="font-family: var(--font-mono, monospace); font-size: 12px;"></textarea>
+                                            <span class="field-help" style="margin-top: 4px;">Allowed IPv4/IPv6 addresses or CIDR ranges.</span>
+                                        </div>
 
-                                <div class="field-group">
-                                    <label for="modalReferrers">Allowed Referrers <span class="optional">(one per
-                                            line)</span></label>
-                                    <textarea class="form-textarea" id="modalReferrers"
-                                        placeholder="twitter.com&#10;*.linkedin.com"></textarea>
+                                        <div class="field-group" style="margin-bottom: 0;">
+                                            <label for="modalReferrers">Allowed Referrers <span class="optional">(one per line)</span></label>
+                                            <textarea class="form-textarea" id="modalReferrers" rows="3" placeholder="twitter.com&#10;*.linkedin.com" style="font-family: var(--font-mono, monospace); font-size: 12px;"></textarea>
+                                            <span class="field-help" style="margin-top: 4px;">Domains or wildcards allowed as HTTP Referer.</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -4764,34 +5252,68 @@
                         <!-- Tab: Mode -->
                         <div class="modal-section-pane" id="paneMode">
                             <h3>Link Delivery Mode</h3>
-                            <p class="desc">Specify how PreonsURL delivers the destination content to the visitor.</p>
+                            <p class="desc">Choose how PreonsURL resolves and serves the destination content to your visitors.</p>
 
                             <div class="mode-cards-grid">
                                 <label class="mode-card-option selected">
                                     <input type="radio" name="modalLinkMode" value="REDIRECT" checked>
-                                    <div class="mode-card-name">Redirect</div>
-                                    <div class="mode-card-desc">HTTP 302/301 browser redirection to the original URL.
+                                    <div class="mode-card-radio-indicator">
+                                        <span class="mode-card-radio-circle"></span>
                                     </div>
-                                </label>
-
-                                <label class="mode-card-option">
-                                    <input type="radio" name="modalLinkMode" value="IFRAME">
-                                    <div class="mode-card-name">Iframe</div>
-                                    <div class="mode-card-desc">Embeds destination in a secure frame inside PreonsURL.
+                                    <div class="mode-card-icon-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="7" y1="17" x2="17" y2="7"></line>
+                                            <polyline points="7 7 17 7 17 17"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div class="mode-card-content">
+                                        <div class="mode-card-header-row">
+                                            <span class="mode-card-name">Redirect</span>
+                                            <span class="mode-card-badge">Default</span>
+                                        </div>
+                                        <div class="mode-card-desc">Standard HTTP 302/301 browser redirection. Directly routes the visitor to the target destination with zero latency overhead.</div>
                                     </div>
                                 </label>
 
                                 <label class="mode-card-option">
                                     <input type="radio" name="modalLinkMode" value="PROXY">
-                                    <div class="mode-card-name">Proxy</div>
-                                    <div class="mode-card-desc">Fetches destination server-side and streams directly.
+                                    <div class="mode-card-radio-indicator">
+                                        <span class="mode-card-radio-circle"></span>
+                                    </div>
+                                    <div class="mode-card-icon-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                                        </svg>
+                                    </div>
+                                    <div class="mode-card-content">
+                                        <div class="mode-card-header-row">
+                                            <span class="mode-card-name">Proxy</span>
+                                            <span class="mode-card-badge">Server Stream</span>
+                                        </div>
+                                        <div class="mode-card-desc">Fetches destination content server-side and streams directly to the visitor under your domain, keeping the original destination private.</div>
                                     </div>
                                 </label>
 
                                 <label class="mode-card-option">
                                     <input type="radio" name="modalLinkMode" value="MIRROR">
-                                    <div class="mode-card-name">Mirror</div>
-                                    <div class="mode-card-desc">Rewrites assets and mirrors content under PreonsURL.
+                                    <div class="mode-card-radio-indicator">
+                                        <span class="mode-card-radio-circle"></span>
+                                    </div>
+                                    <div class="mode-card-icon-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="mode-card-content">
+                                        <div class="mode-card-header-row">
+                                            <span class="mode-card-name">Mirror</span>
+                                            <span class="mode-card-badge">Asset Rewrite</span>
+                                        </div>
+                                        <div class="mode-card-desc">Rewrites internal assets, links, and styling to fully replicate the target page under your custom domain namespace.</div>
                                     </div>
                                 </label>
                             </div>
@@ -4800,18 +5322,57 @@
                         <!-- Tab: Tags & Notes -->
                         <div class="modal-section-pane" id="paneMeta">
                             <h3>Tags & Notes</h3>
-                            <p class="desc">Tag and document your link for internal organization and reporting.</p>
+                            <p class="desc">Tag and document your link for internal categorization, team collaboration, and reporting.</p>
 
-                            <div class="field-group">
-                                <label for="modalTags">Tags <span class="optional">(comma separated)</span></label>
-                                <input type="text" class="form-input" id="modalTags"
-                                    placeholder="marketing, launch, diwali">
+                            <!-- Card 1: Tags -->
+                            <div class="form-card">
+                                <div class="form-card-header">
+                                    <div class="form-card-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                        </svg>
+                                        <span>Tags & Classification</span>
+                                    </div>
+                                    <span class="form-badge-optional">Filtering</span>
+                                </div>
+
+                                <div class="field-group" style="margin-bottom: 0;">
+                                    <label for="modalTags">Link Tags <span class="optional">(comma separated)</span></label>
+                                    <div class="input-with-icon">
+                                        <div class="input-icon-prefix">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                            </svg>
+                                        </div>
+                                        <input type="text" class="form-input" id="modalTags" placeholder="e.g. marketing, launch-2026, social">
+                                    </div>
+                                    <span class="field-help" style="margin-top: 6px;">Assign keywords to filter, organize, and track links across campaigns and analytics.</span>
+                                </div>
                             </div>
 
-                            <div class="field-group">
-                                <label for="modalNotes">Internal Note</label>
-                                <textarea class="form-textarea" id="modalNotes"
-                                    placeholder="Q4 Marketing campaign launch link"></textarea>
+                            <!-- Card 2: Documentation & Notes -->
+                            <div class="form-card" style="margin-top: 14px;">
+                                <div class="form-card-header">
+                                    <div class="form-card-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            <polyline points="10 9 9 9 8 9"></polyline>
+                                        </svg>
+                                        <span>Internal Documentation</span>
+                                    </div>
+                                    <span class="form-badge-optional">Private Note</span>
+                                </div>
+
+                                <div class="field-group" style="margin-bottom: 0;">
+                                    <label for="modalNotes">Administrative Note</label>
+                                    <textarea class="form-textarea" id="modalNotes" rows="3" placeholder="Add contextual notes, client info, campaign references, or handover details..."></textarea>
+                                    <span class="field-help" style="margin-top: 6px;">Visible only to team members in the console. Never exposed to public visitors.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4826,23 +5387,43 @@
                 </div>
             </div>
 
-            <!-- Success View inside Create Modal -->
+            <!-- Success View inside Create Modal (Thin & Wide) -->
             <div class="create-success-panel" id="modalSuccessPanel">
-                <div class="success-icon-badge">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                <div class="create-success-header">
+                    <div class="create-success-header-left">
+                        <div class="success-icon-badge">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="create-success-title">Link created successfully</h2>
+                            <p class="create-success-desc">Your short URL is live, protected, and ready to share.</p>
+                        </div>
+                    </div>
+                    <button class="modal-close-btn" id="modalSuccessCloseBtn" type="button" aria-label="Close modal">&times;</button>
                 </div>
-                <h2 class="create-success-title">Link created successfully</h2>
-                <p class="create-success-desc">Your short URL is live and ready to be shared.</p>
 
                 <div class="create-url-box">
-                    <input type="text" class="form-input" id="createdShortUrlField" readonly style="font-weight:600;">
-                    <button class="btn btn-primary" id="copyCreatedUrlBtn" type="button">Copy</button>
+                    <div class="create-url-input-wrapper">
+                        <svg class="create-url-lock-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <input type="text" class="form-input" id="createdShortUrlField" readonly>
+                    </div>
+                    <button class="btn btn-primary btn-copy-created" id="copyCreatedUrlBtn" type="button">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span>Copy</span>
+                    </button>
+                    <button class="btn" id="modalDoneBtn" type="button">Done</button>
                 </div>
-
-                <button class="btn" id="modalDoneBtn" type="button">Done</button>
             </div>
         </div>
     </div>
@@ -4999,7 +5580,8 @@
                 <div class="domain-wizard-brand-box">
                     <div class="brand-box-header">
                         <span class="brand-box-check">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                         </span>
@@ -5007,15 +5589,24 @@
                     </div>
                     <ul class="brand-box-list">
                         <li>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000"
+                                stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
                             <span>Use your own domain</span>
                         </li>
                         <li>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000"
+                                stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
                             <span>Keep your links branded</span>
                         </li>
                         <li>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000"
+                                stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
                             <span>Same powerful features</span>
                         </li>
                     </ul>
@@ -5024,7 +5615,8 @@
 
             <!-- Right Main Area -->
             <div class="domain-wizard-main">
-                <button class="domain-wizard-close-btn" id="addDomainModalCloseBtn" type="button" aria-label="Close modal">
+                <button class="domain-wizard-close-btn" id="addDomainModalCloseBtn" type="button"
+                    aria-label="Close modal">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -5037,12 +5629,15 @@
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            <path
+                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                            </path>
                         </svg>
                     </div>
                     <div>
                         <h2 class="domain-wizard-title" id="domainWizardTitle">Add Custom Domain</h2>
-                        <p class="domain-wizard-desc" id="domainWizardDesc">Connect your domain or subdomain to use your own branding for short links.</p>
+                        <p class="domain-wizard-desc" id="domainWizardDesc">Connect your domain or subdomain to use your
+                            own branding for short links.</p>
                     </div>
                 </div>
 
@@ -5052,14 +5647,17 @@
                         <label for="inputDomainName" class="domain-label">Domain or Subdomain</label>
                         <div class="domain-input-wrapper">
                             <span class="domain-input-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280"
+                                    stroke-width="2">
                                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                                 </svg>
                             </span>
-                            <input type="text" id="inputDomainName" class="domain-text-input" placeholder="links.yourbrand.com" autocomplete="off" spellcheck="false" />
+                            <input type="text" id="inputDomainName" class="domain-text-input"
+                                placeholder="links.yourbrand.com" autocomplete="off" spellcheck="false" />
                         </div>
-                        <p class="domain-sub-hint">You can use a subdomain (e.g. links.yourbrand.com) or a root domain (e.g. yourbrand.com).</p>
+                        <p class="domain-sub-hint">You can use a subdomain (e.g. links.yourbrand.com) or a root domain
+                            (e.g. yourbrand.com).</p>
                         <div id="addDomainFeedback" class="domain-feedback-alert" style="display:none;"></div>
                     </div>
 
@@ -5089,14 +5687,16 @@
                             </div>
                             <div class="preview-url-bar">
                                 <span class="url-proto">https://</span>
-                                <span class="url-highlight" id="previewDomainName">links.yourbrand.com</span><span class="url-path">/abc123</span>
+                                <span class="url-highlight" id="previewDomainName">links.yourbrand.com</span><span
+                                    class="url-path">/abc123</span>
                             </div>
                             <div class="preview-skeleton-bars">
                                 <div class="skeleton-bar-1"></div>
                                 <div class="skeleton-bar-2"></div>
                             </div>
                             <div class="preview-link-badge">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000"
+                                    stroke-width="2">
                                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                                 </svg>
@@ -5109,19 +5709,38 @@
                         <span class="supported-providers-label">Supported providers</span>
                         <div class="supported-providers-list">
                             <span class="provider-tag">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000000"
+                                    stroke-width="2">
+                                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+                                </svg>
                                 Cloudflare
                             </span>
                             <span class="provider-tag">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000000"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="m15 9-6 6" />
+                                    <path d="m9 9 6 6" />
+                                </svg>
                                 GoDaddy
                             </span>
                             <span class="provider-tag">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 8 6 8"/><line x1="9" y1="8" x2="9" y2="16"/><line x1="15" y1="8" x2="15" y2="16"/></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000000"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                    <path d="m9 8 6 8" />
+                                    <line x1="9" y1="8" x2="9" y2="16" />
+                                    <line x1="15" y1="8" x2="15" y2="16" />
+                                </svg>
                                 Namecheap
                             </span>
                             <span class="provider-tag">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000000"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="2" x2="12" y2="22" />
+                                    <line x1="2" y1="12" x2="22" y2="12" />
+                                </svg>
                                 Google Domains
                             </span>
                             <span class="provider-tag">
@@ -5135,7 +5754,8 @@
                         <button class="btn-wizard-sec" id="addDomainCancelBtn" type="button">Cancel</button>
                         <button class="btn-wizard-prim" id="domainContinueBtn" type="button">
                             <span id="domainContinueSpinner" style="display:none;margin-right:6px;">
-                                <svg class="spin-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #ffffff;">
+                                <svg class="spin-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" style="color: #ffffff;">
                                     <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
                                 </svg>
                             </span>
@@ -5152,14 +5772,16 @@
                             <line x1="12" y1="16" x2="12" y2="12"></line>
                             <line x1="12" y1="8" x2="12.01" y2="8"></line>
                         </svg>
-                        <span>Use a <strong>CNAME record</strong> to point your domain to our servers. This won't affect your existing website or email.</span>
+                        <span>Use a <strong>CNAME record</strong> to point your domain to our servers. This won't affect
+                            your existing website or email.</span>
                     </div>
 
                     <div class="dns-record-card">
                         <div class="dns-record-header">
                             <h4 class="dns-record-title">DNS Record</h4>
                             <button class="btn-copy-all" id="btnCopyAllDns" type="button">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
@@ -5178,8 +5800,13 @@
                                 <span class="dns-field-label">NAME / HOST</span>
                                 <div class="dns-field-box">
                                     <span class="dns-val mono" id="dnsHostVal">links</span>
-                                    <button class="btn-copy-field" data-copy-target="dnsHostVal" type="button" title="Copy host">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    <button class="btn-copy-field" data-copy-target="dnsHostVal" type="button"
+                                        title="Copy host">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -5187,8 +5814,13 @@
                                 <span class="dns-field-label">TARGET / POINTS TO</span>
                                 <div class="dns-field-box">
                                     <span class="dns-val mono" id="dnsTargetVal">go.domain.com</span>
-                                    <button class="btn-copy-field" data-copy-target="dnsTargetVal" type="button" title="Copy target">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    <button class="btn-copy-field" data-copy-target="dnsTargetVal" type="button"
+                                        title="Copy target">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -5196,8 +5828,13 @@
                                 <span class="dns-field-label">TTL</span>
                                 <div class="dns-field-box">
                                     <span class="dns-val mono" id="dnsTtlVal">1 hour</span>
-                                    <button class="btn-copy-field" data-copy-target="dnsTtlVal" type="button" title="Copy TTL">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    <button class="btn-copy-field" data-copy-target="dnsTtlVal" type="button"
+                                        title="Copy TTL">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -5205,22 +5842,26 @@
 
                         <!-- Provider specific tips -->
                         <div class="dns-provider-tips">
-                            <span>&bull; <strong>Cloudflare</strong>: Proxy status set to <em>DNS only (Gray cloud)</em>. Root domain (@) supported.</span>
-                            <span>&bull; <strong>GoDaddy</strong>: TTL set to <em>1 Hour</em> or <em>1/2 Hour</em>.</span>
+                            <span>&bull; <strong>Cloudflare</strong>: Proxy status set to <em>DNS only (Gray
+                                    cloud)</em>. Root domain (@) supported.</span>
+                            <span>&bull; <strong>GoDaddy</strong>: TTL set to <em>1 Hour</em> or <em>1/2
+                                    Hour</em>.</span>
                         </div>
                     </div>
 
                     <div class="dns-ready-banner">
                         <div class="ready-banner-left">
                             <span class="ready-check-icon">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                    stroke-width="3">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
                             </span>
                             <span>Once added, click verify to confirm your domain.</span>
                         </div>
                         <div class="ready-banner-icon">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af"
+                                stroke-width="1.5">
                                 <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
                                 <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
                                 <path d="M3 12A9 3 0 0 0 21 12"></path>
@@ -5235,7 +5876,8 @@
                         </button>
                         <button class="btn-wizard-prim" id="addDomainSubmitBtn" type="button">
                             <span id="addDomainSubmitSpinner" style="display:none;">
-                                <svg class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #ffffff;">
+                                <svg class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" style="color: #ffffff;">
                                     <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
                                 </svg>
                             </span>
@@ -6592,15 +7234,16 @@
                 if (appState.currentPage === "links") loadLinks(0);
                 if (appState.currentPage === "home") loadOverallAnalytics();
             });
+            document.getElementById("modalSuccessCloseBtn")?.addEventListener("click", () => {
+                closeLinkModal();
+                if (appState.currentPage === "links") loadLinks(0);
+                if (appState.currentPage === "home") loadOverallAnalytics();
+            });
 
-            // Tab switching
+            // Tab switching: directly switches active tab and updates footer buttons
             document.querySelectorAll(".modal-nav-btn").forEach(btn => {
                 btn.addEventListener("click", () => {
-                    const tab = btn.dataset.tab;
-                    document.querySelectorAll(".modal-nav-btn").forEach(b => b.classList.toggle("active", b === btn));
-                    document.querySelectorAll(".modal-section-pane").forEach(pane => {
-                        pane.classList.toggle("active", pane.id === `pane${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
-                    });
+                    switchModalTab(btn.dataset.tab);
                 });
             });
 
@@ -6625,6 +7268,10 @@
                     e.target.value === "SECURED" ? "block" : "none";
             });
 
+            document.getElementById("modalPin").addEventListener("input", (e) => {
+                e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
+            });
+
             // Link mode radio cards
             document.querySelectorAll('input[name="modalLinkMode"]').forEach(radio => {
                 radio.addEventListener("change", () => {
@@ -6642,14 +7289,24 @@
                     const ok = await copyToClipboard(field.value);
                     if (ok) {
                         const btn = document.getElementById("copyCreatedUrlBtn");
-                        const originalText = btn.textContent;
-                        btn.textContent = "Copied!";
-                        setTimeout(() => btn.textContent = originalText, 1500);
+                        const originalHtml = btn.innerHTML;
+                        btn.innerHTML = `
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Copied!</span>
+                        `;
+                        setTimeout(() => btn.innerHTML = originalHtml, 1500);
                         showToast("success", "Copied", "Created link copied to clipboard.");
                     } else {
                         showToast("error", "Copy failed", "Could not copy link to clipboard.");
                     }
                 }
+            });
+
+            // Auto-select text on click
+            document.getElementById("createdShortUrlField")?.addEventListener("click", (e) => {
+                e.target.select();
             });
 
             // Modal Back button
@@ -6705,6 +7362,9 @@
         function openCreateModal() {
             appState.modalMode = "create";
             appState.editingOriginalNewUrl = null;
+
+            const dialog = document.querySelector(".link-modal-dialog");
+            if (dialog) dialog.classList.remove("is-success");
 
             document.getElementById("linkModalKicker").textContent = "NEW LINK";
             document.getElementById("linkModalTitle").textContent = "Create a new link";
@@ -6767,6 +7427,9 @@
             appState.modalMode = "edit";
             appState.editingOriginalNewUrl = newUrlToEdit;
 
+            const dialog = document.querySelector(".link-modal-dialog");
+            if (dialog) dialog.classList.remove("is-success");
+
             document.getElementById("linkModalKicker").textContent = "EDIT LINK";
             document.getElementById("linkModalTitle").textContent = "Edit link";
             document.getElementById("linkModalSubtitle").textContent = "Modify destination, path, or access settings.";
@@ -6821,11 +7484,15 @@
                     }
 
                     const mode = data.linkMode || "REDIRECT";
-                    const modeRadio = document.querySelector(`input[name="modalLinkMode"][value="${mode}"]`);
+                    let modeRadio = document.querySelector(`input[name="modalLinkMode"][value="${mode}"]`);
+                    if (!modeRadio) {
+                        modeRadio = document.querySelector('input[name="modalLinkMode"][value="REDIRECT"]');
+                    }
                     if (modeRadio) modeRadio.checked = true;
+                    const selectedMode = modeRadio ? modeRadio.value : "REDIRECT";
                     document.querySelectorAll(".mode-card-option").forEach(c => {
                         const r = c.querySelector('input[name="modalLinkMode"]');
-                        c.classList.toggle("selected", r && r.value === mode);
+                        c.classList.toggle("selected", r && r.value === selectedMode);
                     });
                 }
             } catch (err) {
@@ -6837,6 +7504,8 @@
 
         function closeLinkModal() {
             const modal = document.getElementById("linkModal");
+            const dialog = document.querySelector(".link-modal-dialog");
+            if (dialog) dialog.classList.remove("is-success");
             modal.classList.remove("open");
             modal.setAttribute("aria-hidden", "true");
             document.body.style.overflow = "";
@@ -6916,7 +7585,7 @@
                     const parsed = new URL(appState.editingOriginalNewUrl);
                     domainHost = parsed.host;
                     proto = `${parsed.protocol}//`;
-                } catch (_) {}
+                } catch (_) { }
             }
 
             let fullUrl = "";
@@ -6998,8 +7667,8 @@
                         showToast("error", "Secured policy required", "Secured access requires at least one restriction configured.");
                         return;
                     }
-                    if (pin && !/^\d{4,12}$/.test(pin)) {
-                        showToast("error", "Invalid PIN", "PIN must contain 4–12 digits.");
+                    if (pin && !/^\d{6}$/.test(pin)) {
+                        showToast("error", "Invalid PIN", "PIN must be exactly 6 digits.");
                         return;
                     }
                     if (password && (password.length < 6 || password.length > 128)) {
@@ -7090,9 +7759,9 @@
                 return;
             }
 
-            if (pin && !/^\d{4,12}$/.test(pin)) {
+            if (pin && !/^\d{6}$/.test(pin)) {
                 switchModalTab("access");
-                showToast("error", "Invalid PIN", "PIN must contain 4–12 digits.");
+                showToast("error", "Invalid PIN", "PIN must be exactly 6 digits.");
                 return;
             }
 
@@ -7149,9 +7818,11 @@
                     return;
                 }
 
-                // SUCCESS: Show success panel inside modal
+                // SUCCESS: Show success panel inside modal (thin & wide)
                 const generatedUrl = result.data?.newUrl || "";
                 document.getElementById("createdShortUrlField").value = generatedUrl;
+                const dialog = document.querySelector(".link-modal-dialog");
+                if (dialog) dialog.classList.add("is-success");
                 document.getElementById("linkModalContent").style.display = "none";
                 document.getElementById("modalSuccessPanel").style.display = "flex";
 
