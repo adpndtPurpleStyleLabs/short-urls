@@ -48,6 +48,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import com.preonsurl.apis.link.dto.UrlListItemResponse;
+import com.preonsurl.apis.link.dto.LinkAccessLogResponse;
 
 @Service
 public class NewUrlService {
@@ -800,5 +801,63 @@ public class NewUrlService {
             );
         });
     }
+
+    @Transactional(readOnly = true)
+    public Page<LinkAccessLogResponse> listAccessLogs(Long userId, String urlParam, Pageable pageable) {
+        if (userId == null) {
+            throw new AccessDeniedException("User ID is required to fetch link access logs");
+        }
+
+        Pageable effectivePageable = (pageable == null || pageable.getSort().isUnsorted())
+                ? PageRequest.of(
+                        pageable != null ? pageable.getPageNumber() : 0,
+                        pageable != null ? pageable.getPageSize() : 20,
+                        Sort.by(Sort.Order.desc("accessedAt"), Sort.Order.desc("id"))
+                  )
+                : pageable;
+
+        Page<com.preonsurl.apis.link.entity.NewUrlAccessLog> page;
+        if (urlParam != null && !urlParam.isBlank()) {
+            String trimmedUrl = urlParam.trim();
+            Optional<NewUrl> found = repository.findByNewUrlAndUserId(trimmedUrl, userId);
+
+            if (found.isEmpty() && !trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+                String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
+                found = repository.findByNewUrlAndUserId(prefixed, userId);
+            }
+
+            if (found.isEmpty()) {
+                found = repository.findByShortCodeAndUserId(trimmedUrl, userId);
+            }
+
+            NewUrl newUrl = found.orElseThrow(() -> {
+                boolean existsGlobally = repository.findByNewUrl(trimmedUrl).isPresent()
+                        || repository.findByShortCode(trimmedUrl).isPresent();
+                if (!existsGlobally && !trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+                    String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
+                    existsGlobally = repository.findByNewUrl(prefixed).isPresent();
+                }
+                if (existsGlobally) {
+                    return new AccessDeniedException("Access denied to URL access logs");
+                }
+                return new UrlNotFoundException("URL not found");
+            });
+
+            page = accessLogRepository.findByShortUrlId(newUrl.getId(), effectivePageable);
+        } else {
+            page = accessLogRepository.findAllByUserId(userId, effectivePageable);
+        }
+
+        return page.map(log -> new LinkAccessLogResponse(
+                log.getId(),
+                log.getShortUrlId(),
+                log.getShortCode(),
+                log.getIpAddress(),
+                log.getUserAgent(),
+                log.getReferer(),
+                log.getAccessedAt()
+        ));
+    }
 }
+
 

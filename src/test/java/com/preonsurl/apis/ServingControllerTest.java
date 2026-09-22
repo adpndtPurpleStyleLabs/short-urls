@@ -313,7 +313,8 @@ class ServingControllerTest {
                 .andExpect(header().string("Location", "https://example.com/spring-destination"));
 
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
-            assertEquals(2, accessLogRepository.count(), "Both slug accesses should be logged");
+            assertEquals(1, accessLogRepository.countByShortUrlId(slugUrl.getId()), "Slug access should be logged");
+            assertEquals(1, accessLogRepository.countByShortUrlId(dirSlugUrl.getId()), "Dir slug access should be logged");
         });
     }
 

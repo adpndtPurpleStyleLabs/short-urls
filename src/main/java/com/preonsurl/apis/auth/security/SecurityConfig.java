@@ -69,7 +69,7 @@ public class SecurityConfig {
                         // =========================
                         // API Key / Token protected link APIs
                         // =========================
-                        .requestMatchers("/link", "/link/**", "/create", "/create/**").authenticated()
+                        .requestMatchers("/link", "/link/**", "/create", "/create/**", "/analytics", "/analytics/**").authenticated()
                         // =========================
                         // JWT protected APIs
                         // =========================

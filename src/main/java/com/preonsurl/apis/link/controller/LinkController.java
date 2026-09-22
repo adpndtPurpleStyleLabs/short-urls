@@ -27,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import com.preonsurl.apis.link.dto.UrlListItemResponse;
+import com.preonsurl.apis.link.dto.LinkAccessLogResponse;
 
 @Tag(name = "New URL Creation", description = "Endpoints for creating and retrieving new URLs")
 @RestController
@@ -188,6 +189,75 @@ public class LinkController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("Failed to edit link: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal Server Error"));
+        }
+    }
+
+    @Operation(
+            summary = "List link access logs",
+            description = "Retrieves a paginated list of access logs for a specific short URL (or all URLs of the user if no URL parameter is provided), ordered by latest first by default. Requires authentication.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+    @GetMapping(value = {"/logs", "/access-log", "/access-logs"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<Page<LinkAccessLogResponse>>> listAccessLogs(
+            @RequestParam(value = "newUrl", required = false) String newUrl,
+            @RequestParam(value = "fullUrl", required = false) String fullUrl,
+            @RequestParam(value = "url", required = false) String url,
+            @RequestParam(value = "shortCode", required = false) String shortCode,
+            @PageableDefault(page = 0, size = 20, sort = "accessedAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        String queryUrl = (url != null && !url.isBlank()) ? url
+                : ((newUrl != null && !newUrl.isBlank()) ? newUrl
+                : ((shortCode != null && !shortCode.isBlank()) ? shortCode : fullUrl));
+        return handleListAccessLogs(queryUrl, pageable, currentUser);
+    }
+
+    @Operation(
+            summary = "List link access logs by short code",
+            description = "Retrieves a paginated list of access logs for a specific short URL given in the path, ordered by latest first by default. Requires authentication.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+    @GetMapping(value = {"/logs/{shortCode}", "/access-log/{shortCode}"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<Page<LinkAccessLogResponse>>> listAccessLogsByPath(
+            @PathVariable("shortCode") String shortCode,
+            @PageableDefault(page = 0, size = 20, sort = "accessedAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return handleListAccessLogs(shortCode, pageable, currentUser);
+    }
+
+    private ResponseEntity<ApiResponse<Page<LinkAccessLogResponse>>> handleListAccessLogs(
+            String queryUrl,
+            Pageable pageable,
+            AuthenticatedUser currentUser) {
+        try {
+            AuthenticatedUser user = resolveUser(currentUser);
+            if (user == null || user.userId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Authentication required: user ID not found"));
+            }
+
+            Page<LinkAccessLogResponse> response = newUrlService.listAccessLogs(user.userId(), queryUrl, pageable);
+            log.info("Listed access logs for userId={}, queryUrl='{}': page={}, size={}, totalElements={}",
+                    user.userId(), queryUrl, response.getNumber(), response.getSize(), response.getTotalElements());
+            return ResponseEntity.ok(ApiResponse.success(response, "Access logs retrieved successfully"));
+        } catch (UrlNotFoundException e) {
+            log.warn("New URL not found for access logs: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for access logs: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid list access logs request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to list access logs: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Internal Server Error"));
         }

@@ -12,9 +12,11 @@ import com.preonsurl.apis.auth.repository.TenantRepository;
 import com.preonsurl.apis.auth.repository.UserRepository;
 import com.preonsurl.apis.link.entity.NewUrlChangeLog;
 import com.preonsurl.apis.link.entity.NewUrlTag;
+import com.preonsurl.apis.link.entity.NewUrlAccessLog;
 import com.preonsurl.apis.link.repository.NewUrlChangeLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.repository.NewUrlTagRepository;
+import com.preonsurl.apis.link.repository.NewUrlAccessLogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
 import java.util.List;
@@ -57,6 +60,9 @@ class CreateControllerTest {
     private ApiKeyRepository apiKeyRepository;
 
     @Autowired
+    private NewUrlAccessLogRepository accessLogRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -77,6 +83,7 @@ class CreateControllerTest {
         userCache.clear();
         changeLogRepository.deleteAll();
         tagRepository.deleteAll();
+        accessLogRepository.deleteAll();
         shortUrlRepository.deleteAll();
         apiKeyRepository.deleteAll();
         userRepository.deleteAll();
@@ -1536,4 +1543,125 @@ class CreateControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
+
+    @Test
+    void listAccessLogs_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/link/logs"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void listAccessLogs_allLogsForUser_orderedByLatestUp() throws Exception {
+        Long userId = userRepository.findAll().get(0).getId();
+
+        NewUrl url1 = new NewUrl("logCode1", "https://example.com/item1", null, "http://localhost:8081/logCode1",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url1.setUserId(userId);
+        url1 = shortUrlRepository.save(url1);
+
+        NewUrl url2 = new NewUrl("logCode2", "https://example.com/item2", null, "http://localhost:8081/logCode2",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url2.setUserId(userId);
+        url2 = shortUrlRepository.save(url2);
+
+        LocalDateTime t1 = LocalDateTime.now().minusHours(3);
+        LocalDateTime t2 = LocalDateTime.now().minusHours(2);
+        LocalDateTime t3 = LocalDateTime.now().minusHours(1);
+
+        NewUrlAccessLog log1 = new NewUrlAccessLog(url1.getId(), url1.getShortCode(), "1.1.1.1", "Agent1", "ref1");
+        log1.setAccessedAt(t1);
+        accessLogRepository.save(log1);
+
+        NewUrlAccessLog log2 = new NewUrlAccessLog(url2.getId(), url2.getShortCode(), "2.2.2.2", "Agent2", "ref2");
+        log2.setAccessedAt(t2);
+        accessLogRepository.save(log2);
+
+        NewUrlAccessLog log3 = new NewUrlAccessLog(url1.getId(), url1.getShortCode(), "3.3.3.3", "Agent3", "ref3");
+        log3.setAccessedAt(t3);
+        accessLogRepository.save(log3);
+
+        mockMvc.perform(get("/link/logs")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                // Ordered by latest up (descending)
+                .andExpect(jsonPath("$.data.content[0].ipAddress").value("3.3.3.3"))
+                .andExpect(jsonPath("$.data.content[0].shortCode").value("logCode1"))
+                .andExpect(jsonPath("$.data.content[1].ipAddress").value("2.2.2.2"))
+                .andExpect(jsonPath("$.data.content[1].shortCode").value("logCode2"))
+                .andExpect(jsonPath("$.data.content[2].ipAddress").value("1.1.1.1"))
+                .andExpect(jsonPath("$.data.content[2].shortCode").value("logCode1"));
+    }
+
+    @Test
+    void listAccessLogs_byShortCodeParam_orderedByLatestUp() throws Exception {
+        Long userId = userRepository.findAll().get(0).getId();
+
+        NewUrl url1 = new NewUrl("logCodeA", "https://example.com/itemA", null, "http://localhost:8081/logCodeA",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url1.setUserId(userId);
+        url1 = shortUrlRepository.save(url1);
+
+        NewUrl url2 = new NewUrl("logCodeB", "https://example.com/itemB", null, "http://localhost:8081/logCodeB",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url2.setUserId(userId);
+        url2 = shortUrlRepository.save(url2);
+
+        LocalDateTime t1 = LocalDateTime.now().minusHours(2);
+        LocalDateTime t2 = LocalDateTime.now().minusHours(1);
+
+        NewUrlAccessLog l1 = new NewUrlAccessLog(url1.getId(), url1.getShortCode(), "10.0.0.1", "Agent1", "ref1");
+        l1.setAccessedAt(t1);
+        accessLogRepository.save(l1);
+
+        NewUrlAccessLog l2 = new NewUrlAccessLog(url1.getId(), url1.getShortCode(), "10.0.0.2", "Agent2", "ref2");
+        l2.setAccessedAt(t2);
+        accessLogRepository.save(l2);
+
+        NewUrlAccessLog l3 = new NewUrlAccessLog(url2.getId(), url2.getShortCode(), "10.0.0.3", "Agent3", "ref3");
+        l3.setAccessedAt(t2);
+        accessLogRepository.save(l3);
+
+        mockMvc.perform(get("/link/access-log")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("shortCode", "logCodeA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].ipAddress").value("10.0.0.2"))
+                .andExpect(jsonPath("$.data.content[1].ipAddress").value("10.0.0.1"));
+    }
+
+    @Test
+    void listAccessLogs_byPathVariable_success() throws Exception {
+        Long userId = userRepository.findAll().get(0).getId();
+
+        NewUrl url = new NewUrl("pathCode", "https://example.com/path", null, "http://localhost:8081/pathCode",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url.setUserId(userId);
+        url = shortUrlRepository.save(url);
+
+        NewUrlAccessLog log = new NewUrlAccessLog(url.getId(), url.getShortCode(), "192.168.1.1", "Agent", "ref");
+        log.setAccessedAt(LocalDateTime.now());
+        accessLogRepository.save(log);
+
+        mockMvc.perform(get("/link/logs/pathCode")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].ipAddress").value("192.168.1.1"))
+                .andExpect(jsonPath("$.data.content[0].shortCode").value("pathCode"));
+    }
+
+    @Test
+    void listAccessLogs_notFound_returns404() throws Exception {
+        mockMvc.perform(get("/link/logs/unknownCode123")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("URL not found"));
+    }
 }
+
