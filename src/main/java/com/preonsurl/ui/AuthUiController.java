@@ -39,14 +39,16 @@ public class AuthUiController {
     }
 
     @GetMapping("/register")
-    public String showRegisterPage(Model model) {
-        return "register";
-    }
-
+    public String showRegisterPage(Model model) {return "register";}
 
     @GetMapping("/")
-    public String shoeHomePage(Model model) {
+    public String showHomePage(Model model) {
         return "home";
+    }
+
+    @GetMapping("/contact")
+    public String showContactUsPage(Model model) {
+        return "contact";
     }
 
     @GetMapping("/login")

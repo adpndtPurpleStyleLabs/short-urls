@@ -1,452 +1,1446 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="PreonsURL — secure, programmable link infrastructure for modern products and teams.">
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+          name="description"
+          content="PreonsURL — secure, programmable link infrastructure for modern products and teams."
+  />
+
   <title>PreonsURL — Secure Link Infrastructure</title>
+
   <style>
-    :root{
-      --bg:#fff;
-      --surface:#fafafa;
-      --surface-2:#f4f4f4;
-      --text:#111;
-      --muted:#6b6b6b;
-      --line:#e8e8e8;
-      --line-dark:#d7d7d7;
-      --accent:#111;
-      --max:1180px;
-      --radius:18px;
-      --shadow:0 18px 60px rgba(0,0,0,.07);
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      -webkit-font-smoothing:antialiased;
-    }
-    a{color:inherit;text-decoration:none}
-    button{font:inherit}
-    .container{width:min(calc(100% - 40px),var(--max));margin:auto}
-    .nav{
-      height:72px;border-bottom:1px solid var(--line);
-      display:flex;align-items:center;justify-content:space-between;
-      position:sticky;top:0;background:rgba(255,255,255,.9);
-      backdrop-filter:blur(18px);z-index:20;
-    }
-    .brand{display:flex;align-items:center;gap:10px;font-weight:750;letter-spacing:-.03em}
-    .logo{
-      width:30px;height:30px;border:1.5px solid #111;border-radius:9px;
-      display:grid;place-items:center;font-size:14px;font-weight:800;
-    }
-    .navlinks{display:flex;gap:28px;color:#555;font-size:14px}
-    .navlinks a:hover{color:#111}
-    .nav-actions{display:flex;align-items:center;gap:10px}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      min-height:42px;padding:0 17px;border:1px solid var(--line-dark);
-      border-radius:10px;font-size:14px;font-weight:650;cursor:pointer;
-      transition:.2s ease;background:#fff;
-    }
-    .btn:hover{transform:translateY(-1px);border-color:#aaa}
-    .btn.primary{background:#111;color:#fff;border-color:#111}
-    .btn.primary:hover{background:#252525}
-    .hero{padding:105px 0 85px;text-align:center}
-    .eyebrow{
-      display:inline-flex;align-items:center;gap:8px;padding:7px 11px;
-      border:1px solid var(--line);border-radius:999px;background:var(--surface);
-      color:#555;font-size:12px;font-weight:650;margin-bottom:22px;
-    }
-    .dot{width:6px;height:6px;background:#111;border-radius:50%}
-    h1{
-      margin:0 auto;max-width:900px;font-size:clamp(48px,7vw,82px);
-      line-height:.98;letter-spacing:-.065em;font-weight:760;
-    }
-    .hero p{
-      max-width:690px;margin:26px auto 0;color:var(--muted);
-      font-size:18px;line-height:1.65;
-    }
-    .hero-actions{display:flex;justify-content:center;gap:10px;margin-top:32px}
-    .trust{margin-top:48px;color:#888;font-size:12px}
-    .stats{
-      margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);
-      border:1px solid var(--line);border-radius:16px;overflow:hidden;
-      background:var(--surface);
-    }
-    .stat{padding:20px;border-right:1px solid var(--line)}
-    .stat:last-child{border-right:0}
-    .stat strong{display:block;font-size:24px;letter-spacing:-.04em}
-    .stat span{display:block;color:#777;font-size:12px;margin-top:4px}
-    .section{padding:105px 0}
-    .section.alt{background:var(--surface)}
-    .section-head{max-width:720px;margin-bottom:45px}
-    .kicker{text-transform:uppercase;letter-spacing:.13em;font-size:11px;color:#777;font-weight:700}
-    h2{font-size:clamp(34px,4.5vw,54px);line-height:1.04;letter-spacing:-.055em;margin:12px 0 15px}
-    .section-head p{color:#707070;line-height:1.7;font-size:16px;margin:0}
-    .feature-grid{
-      display:grid;grid-template-columns:repeat(3,1fr);
-      border-top:1px solid var(--line);border-left:1px solid var(--line);
-    }
-    .card{
-      padding:28px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
-      min-height:205px;background:#fff;
-    }
-    .alt .card{background:var(--surface)}
-    .icon{
-      width:34px;height:34px;border:1px solid var(--line-dark);border-radius:10px;
-      display:grid;place-items:center;font-size:13px;font-weight:750;margin-bottom:22px;
-    }
-    .card h3{font-size:17px;margin:0 0 9px;letter-spacing:-.02em}
-    .card p{font-size:13px;line-height:1.65;color:#707070;margin:0}
-    .badge{
-      display:inline-flex;font-size:10px;padding:4px 7px;border-radius:5px;
-      background:#111;color:#fff;margin-top:14px;font-weight:700;letter-spacing:.04em;
-    }
-    .visual{
-      border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .browser-bar{height:48px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 17px;gap:6px}
-    .browser-dot{width:7px;height:7px;border-radius:50%;background:#ddd}
-    .mock{
-      display:grid;grid-template-columns:190px 1fr;min-height:450px;
-    }
-    .mock-side{border-right:1px solid var(--line);padding:22px 15px;background:#fcfcfc}
-    .mock-brand{font-weight:750;font-size:13px;margin-bottom:28px}
-    .mock-item{padding:9px 10px;border-radius:8px;font-size:11px;color:#777;margin-bottom:3px}
-    .mock-item.active{background:#111;color:#fff}
-    .mock-main{padding:28px}
-    .mock-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-    .mock-title{font-size:21px;font-weight:730;letter-spacing:-.04em}
-    .mock-table{border:1px solid var(--line);border-radius:12px;overflow:hidden}
-    .mock-row{display:grid;grid-template-columns:1.4fr 1fr .65fr .5fr;padding:15px 16px;border-bottom:1px solid var(--line);font-size:11px}
-    .mock-row:last-child{border-bottom:0}
-    .mock-row.header{color:#888;background:#fafafa;font-size:10px}
-    .mock-link{font-weight:650}.status{color:#333}
-    .split{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-    .checks{display:grid;gap:13px;margin-top:25px}
-    .check{display:flex;gap:11px;align-items:flex-start;font-size:14px;color:#444}
-    .check b{width:20px;height:20px;border:1px solid #111;border-radius:50%;display:grid;place-items:center;font-size:10px;flex:none}
-    .security-panel{padding:32px;border:1px solid var(--line);border-radius:22px;background:#fff}
-    .security-row{display:flex;justify-content:space-between;gap:20px;padding:17px 0;border-bottom:1px solid var(--line);font-size:13px}
-    .security-row:last-child{border-bottom:0}
-    .security-row span:last-child{color:#777;text-align:right}
-    .code{
-      background:#101010;color:#eee;border-radius:16px;padding:24px;
-      overflow:auto;font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;
-    }
-    .code .muted{color:#777}.code .key{color:#fff}.code .str{color:#cfcfcf}
-    .compare-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:18px;background:#fff}
-    .compare{width:100%;min-width:760px;border-collapse:collapse;font-size:13px}
-    .compare th,.compare td{padding:16px 18px;border-bottom:1px solid var(--line);text-align:left}
-    .compare th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#777;background:#fafafa}
-    .compare td:not(:first-child),.compare th:not(:first-child){text-align:center}
-    .compare tr:last-child td{border-bottom:0}
-    .yes{font-weight:750}.planned{color:#aaa}.dash{color:#bbb}
-    .note{font-size:11px;color:#888;margin-top:14px;line-height:1.6}
-    .arch{
-      display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:stretch;
-    }
-    .arch-box{
-      border:1px solid var(--line);border-radius:14px;padding:20px;background:#fff;
-      position:relative;
-    }
-    .arch-box:not(:last-child)::after{
-      content:"→";position:absolute;right:-17px;top:50%;transform:translateY(-50%);
-      color:#999;background:var(--surface);padding:0 4px;z-index:2;
-    }
-    .arch-num{font:11px ui-monospace;color:#999}.arch-box strong{display:block;margin-top:16px;font-size:14px}
-    .arch-box p{font-size:11px;color:#777;line-height:1.5}
-    .cta{
-      padding:80px 30px;text-align:center;background:#111;color:#fff;border-radius:26px;
-    }
-    .cta p{color:#aaa;max-width:560px;margin:15px auto 28px;line-height:1.6}
-    .cta .btn{background:#fff;border-color:#fff;color:#111}
-    .footer{border-top:1px solid var(--line);padding:34px 0;color:#777;font-size:12px}
-    .footer-inner{display:flex;justify-content:space-between;gap:20px}
-    .footer-links{display:flex;gap:20px}
-    .mobile-menu{display:none}
+    :root {
+      --bg: #fff;
 
-    .usecase-list{
-      border-top:1px solid var(--line);
-      border-left:1px solid var(--line);
-      background:#fff;
+      --surface: #fafafa;
+
+      --surface-2: #f4f4f4;
+
+      --text: #111;
+
+      --muted: #6b6b6b;
+
+      --line: #e8e8e8;
+
+      --line-dark: #d7d7d7;
+
+      --accent: #111;
+
+      --max: 1180px;
+
+      --radius: 18px;
+
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.07);
     }
-    .usecase-row{
-      display:grid;
-      grid-template-columns:48px minmax(0,1fr) auto;
-      align-items:center;
-      gap:20px;
-      padding:18px 20px;
-      border-right:1px solid var(--line);
-      border-bottom:1px solid var(--line);
-      transition:background .18s ease;
+
+    * {
+      box-sizing: border-box;
     }
-    .usecase-row:hover{background:#fafafa}
-    .usecase-num{
-      font:11px ui-monospace,SFMono-Regular,Menlo,monospace;
-      color:#aaa;
+
+    html {
+      scroll-behavior: smooth;
     }
-    .usecase-row strong{
-      display:block;
-      font-size:14px;
-      letter-spacing:-.01em;
-      margin-bottom:4px;
+
+    body {
+      margin: 0;
+
+      background: var(--bg);
+
+      color: var(--text);
+
+      font-family:
+              Inter,
+              ui-sans-serif,
+              system-ui,
+              -apple-system,
+              BlinkMacSystemFont,
+              "Segoe UI",
+              sans-serif;
+
+      -webkit-font-smoothing: antialiased;
     }
-    .usecase-row div span{
-      display:block;
-      color:#747474;
-      font-size:12px;
-      line-height:1.55;
+
+    a {
+      color: inherit;
+      text-decoration: none;
     }
-    .usecase-tag{
-      border:1px solid var(--line-dark);
-      color:#666;
-      border-radius:999px;
-      padding:5px 9px;
-      font-size:10px;
-      white-space:nowrap;
-      background:#fff;
+
+    button {
+      font: inherit;
     }
-    .usecase-roadmap{
-      border-right:1px solid var(--line);
-      border-bottom:1px solid var(--line);
-      padding:20px;
-      background:#fafafa;
+
+    .container {
+      width: min(calc(100% - 40px), var(--max));
+      margin: auto;
     }
-    .roadmap-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:20px;
-      font-size:11px;
-      font-weight:750;
-      text-transform:uppercase;
-      letter-spacing:.08em;
+
+    .nav {
+      height: 72px;
+      border-bottom: 1px solid var(--line);
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.9);
+
+      backdrop-filter: blur(18px);
+      z-index: 20;
     }
-    .roadmap-head span:last-child{
-      color:#999;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 750;
+      letter-spacing: -0.03em;
     }
-    .usecase-roadmap p{
-      margin:10px 0 0;
-      color:#777;
-      font-size:12px;
-      line-height:1.7;
+
+    .logo {
+      width: 30px;
+      height: 30px;
+      border: 1.5px solid #111;
+      border-radius: 9px;
+
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 800;
     }
-    @media(max-width:620px){
-      .usecase-row{
-        grid-template-columns:34px minmax(0,1fr);
-        gap:12px;
-        padding:16px;
+
+    .navlinks {
+      display: flex;
+      gap: 28px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .navlinks a:hover {
+      color: #111;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      min-height: 42px;
+      padding: 0 17px;
+      border: 1px solid var(--line-dark);
+
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+
+      transition: 0.2s ease;
+      background: #fff;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: #aaa;
+    }
+
+    .btn.primary {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
+    .btn.primary:hover {
+      background: #252525;
+    }
+
+    .hero {
+      padding: 105px 0 85px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+
+      color: #555;
+      font-size: 12px;
+      font-weight: 650;
+      margin-bottom: 22px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: #111;
+      border-radius: 50%;
+    }
+
+    h1 {
+      margin: 0 auto;
+      max-width: 900px;
+      font-size: clamp(48px, 7vw, 82px);
+
+      line-height: 0.98;
+      letter-spacing: -0.065em;
+      font-weight: 760;
+    }
+
+    .hero-title {
+      margin: 0 auto;
+
+      max-width: 1000px;
+
+      font-size: clamp(48px, 7vw, 82px);
+
+      line-height: 0.98;
+
+      letter-spacing: -0.065em;
+
+      font-weight: 760;
+
+      text-align: center;
+    }
+
+    .hero-animated-text {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .hero-word {
+      display: inline;
+      white-space: nowrap;
+    }
+
+    .hero-char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(0.24em);
+      filter: blur(7px);
+      transition:
+              opacity 0.28s ease,
+              transform 0.38s cubic-bezier(0.2, 0.75, 0.25, 1),
+              filter 0.38s ease;
+      will-change: opacity, transform, filter;
+    }
+
+    .hero-char.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    .hero-space {
+      display: inline-block;
+      width: 0.24em;
+      flex: none;
+    }
+
+    .hero-lock-static {
+      display: inline-flex;
+      width: 0.72em;
+      height: 0.72em;
+      align-items: center;
+      justify-content: center;
+      vertical-align: 0.02em;
+      flex: none;
+      opacity: 0;
+      transform: translateY(0.24em);
+      filter: blur(7px);
+      margin-right: 0.13em;
+      transition:
+              opacity 0.28s ease,
+              transform 0.38s cubic-bezier(0.2, 0.75, 0.25, 1),
+              filter 0.38s ease;
+      will-change: opacity, transform, filter;
+    }
+
+    .hero-lock-static svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hero-lock-static.is-visible {
+      opacity: 1;
+      transform: translateY(0.015em);
+      filter: blur(0);
+    }
+
+    .hero p {
+      max-width: 690px;
+      margin: 26px auto 0;
+      color: var(--muted);
+
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 32px;
+    }
+
+    .trust {
+      margin-top: 48px;
+      color: #888;
+      font-size: 12px;
+    }
+
+    .stats {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+
+      background: var(--surface);
+    }
+
+    .stat {
+      padding: 20px;
+      border-right: 1px solid var(--line);
+    }
+
+    .stat:last-child {
+      border-right: 0;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 24px;
+      letter-spacing: -0.04em;
+    }
+
+    .stat span {
+      display: block;
+      color: #777;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+
+    /* Ambient Geometric Grid */
+    .ambient-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+              linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+      background-size: 56px 56px;
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+      mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+      z-index: 0;
+    }
+
+    .free-banner,
+    main,
+    footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .section {
+      padding: 105px 0;
+    }
+
+    /* Scroll reveal for sections below the hero */
+    .section-reveal {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+
+    .section-reveal.reveal-pending {
+      opacity: 0;
+      transform: translate3d(0, 44px, 0);
+      filter: blur(4px);
+      transition:
+              opacity 0.8s ease,
+              transform 0.8s cubic-bezier(0.2, 0.75, 0.25, 1),
+              filter 0.8s ease;
+      will-change: opacity, transform, filter;
+    }
+
+    .section-reveal.reveal-pending.is-visible {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+      filter: blur(0);
+    }
+
+
+    .section.alt {
+      background: var(--surface);
+    }
+
+    .section-head {
+      max-width: 720px;
+      margin-bottom: 45px;
+    }
+
+    .kicker {
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font-size: 11px;
+      color: #777;
+      font-weight: 700;
+    }
+
+    h2 {
+      font-size: clamp(34px, 4.5vw, 54px);
+      line-height: 1.04;
+      letter-spacing: -0.055em;
+      margin: 12px 0 15px;
+    }
+
+    .section-head p {
+      color: #707070;
+      line-height: 1.7;
+      font-size: 16px;
+      margin: 0;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+
+      border-top: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+    }
+
+    .card {
+      padding: 28px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+
+      min-height: 205px;
+      background: #fff;
+    }
+
+    .alt .card {
+      background: var(--surface);
+    }
+
+    .icon {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line-dark);
+      border-radius: 10px;
+
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 750;
+      margin-bottom: 22px;
+    }
+
+    .card h3 {
+      font-size: 17px;
+      margin: 0 0 9px;
+      letter-spacing: -0.02em;
+    }
+
+    .card p {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #707070;
+      margin: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      font-size: 10px;
+      padding: 4px 7px;
+      border-radius: 5px;
+
+      background: #111;
+      color: #fff;
+      margin-top: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .visual {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: var(--shadow);
+
+      overflow: hidden;
+    }
+
+    .browser-bar {
+      height: 48px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      padding: 0 17px;
+      gap: 6px;
+    }
+
+    .browser-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ddd;
+    }
+
+    .mock {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      min-height: 450px;
+    }
+
+    .mock-side {
+      border-right: 1px solid var(--line);
+      padding: 22px 15px;
+      background: #fcfcfc;
+    }
+
+    .mock-brand {
+      font-weight: 750;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    .mock-item {
+      padding: 9px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: #777;
+      margin-bottom: 3px;
+    }
+
+    .mock-item.active {
+      background: #111;
+      color: #fff;
+    }
+
+    .mock-main {
+      padding: 28px;
+    }
+
+    .mock-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .mock-title {
+      font-size: 21px;
+      font-weight: 730;
+      letter-spacing: -0.04em;
+    }
+
+    .mock-table {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .mock-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 0.65fr 0.5fr;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: 11px;
+    }
+
+    .mock-row:last-child {
+      border-bottom: 0;
+    }
+
+    .mock-row.header {
+      color: #888;
+      background: #fafafa;
+      font-size: 10px;
+    }
+
+    .mock-link {
+      font-weight: 650;
+    }
+    .status {
+      color: #333;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .checks {
+      display: grid;
+      gap: 13px;
+      margin-top: 25px;
+    }
+
+    .check {
+      display: flex;
+      gap: 11px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .check b {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #111;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      flex: none;
+    }
+
+    .security-panel {
+      padding: 32px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #fff;
+    }
+
+    .security-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 17px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .security-row:last-child {
+      border-bottom: 0;
+    }
+
+    .security-row span:last-child {
+      color: #777;
+      text-align: right;
+    }
+
+    .code {
+      background: #101010;
+      color: #eee;
+      border-radius: 16px;
+      padding: 24px;
+
+      overflow: auto;
+      font:
+              12px/1.7 ui-monospace,
+              SFMono-Regular,
+              Menlo,
+              monospace;
+    }
+
+    .code .muted {
+      color: #777;
+    }
+    .code .key {
+      color: #fff;
+    }
+    .code .str {
+      color: #cfcfcf;
+    }
+
+    .compare-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .compare {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .compare th,
+    .compare td {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .compare th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #777;
+      background: #fafafa;
+    }
+
+    .compare td:not(:first-child),
+    .compare th:not(:first-child) {
+      text-align: center;
+    }
+
+    .compare tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .yes {
+      font-weight: 750;
+    }
+    .planned {
+      color: #aaa;
+    }
+    .dash {
+      color: #bbb;
+    }
+
+    .note {
+      font-size: 11px;
+      color: #888;
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    .arch {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .arch-box {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+      background: #fff;
+
+      position: relative;
+    }
+
+    .arch-box:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -17px;
+      top: 50%;
+      transform: translateY(-50%);
+
+      color: #999;
+      background: var(--surface);
+      padding: 0 4px;
+      z-index: 2;
+    }
+
+    .arch-num {
+      font: 11px ui-monospace;
+      color: #999;
+    }
+    .arch-box strong {
+      display: block;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    .arch-box p {
+      font-size: 11px;
+      color: #777;
+      line-height: 1.5;
+    }
+
+    .cta {
+      padding: 80px 30px;
+      text-align: center;
+      background: #111;
+      color: #fff;
+      border-radius: 26px;
+    }
+
+    .cta p {
+      color: #aaa;
+      max-width: 560px;
+      margin: 15px auto 28px;
+      line-height: 1.6;
+    }
+
+    .cta .btn {
+      background: #fff;
+      border-color: #fff;
+      color: #111;
+    }
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding: 34px 0;
+      color: #777;
+      font-size: 12px;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .mobile-menu {
+      display: none;
+    }
+
+    .usecase-list {
+      border-top: 1px solid var(--line);
+
+      border-left: 1px solid var(--line);
+
+      background: #fff;
+    }
+
+    .usecase-row {
+      display: grid;
+
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+
+      align-items: center;
+
+      gap: 20px;
+
+      padding: 18px 20px;
+
+      border-right: 1px solid var(--line);
+
+      border-bottom: 1px solid var(--line);
+
+      transition: background 0.18s ease;
+    }
+
+    .usecase-row:hover {
+      background: #fafafa;
+    }
+
+    .usecase-num {
+      font:
+              11px ui-monospace,
+              SFMono-Regular,
+              Menlo,
+              monospace;
+
+      color: #aaa;
+    }
+
+    .usecase-row strong {
+      display: block;
+
+      font-size: 14px;
+
+      letter-spacing: -0.01em;
+
+      margin-bottom: 4px;
+    }
+
+    .usecase-row div span {
+      display: block;
+
+      color: #747474;
+
+      font-size: 12px;
+
+      line-height: 1.55;
+    }
+
+    .usecase-tag {
+      border: 1px solid var(--line-dark);
+
+      color: #666;
+
+      border-radius: 999px;
+
+      padding: 5px 9px;
+
+      font-size: 10px;
+
+      white-space: nowrap;
+
+      background: #fff;
+    }
+
+    .usecase-roadmap {
+      border-right: 1px solid var(--line);
+
+      border-bottom: 1px solid var(--line);
+
+      padding: 20px;
+
+      background: #fafafa;
+    }
+
+    .roadmap-head {
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 20px;
+
+      font-size: 11px;
+
+      font-weight: 750;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.08em;
+    }
+
+    .roadmap-head span:last-child {
+      color: #999;
+    }
+
+    .usecase-roadmap p {
+      margin: 10px 0 0;
+
+      color: #777;
+
+      font-size: 12px;
+
+      line-height: 1.7;
+    }
+
+    @media (max-width: 620px) {
+      .usecase-row {
+        grid-template-columns: 34px minmax(0, 1fr);
+
+        gap: 12px;
+
+        padding: 16px;
       }
-      .usecase-tag{
-        grid-column:2;
-        justify-self:start;
+
+      .usecase-tag {
+        grid-column: 2;
+
+        justify-self: start;
       }
     }
 
+    .free-banner {
+      background: #111;
 
-    .free-banner{
-      background:#111;
-      color:#fff;
-      font-size:12px;
-      letter-spacing:.005em;
-    }
-    .free-banner-inner{
-      min-height:38px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:14px;
-    }
-    .free-banner-inner > span{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-    }
-    .free-banner-inner strong{
-      font-weight:750;
-    }
-    .free-banner-copy{
-      color:#a7a7a7;
-    }
-    .free-banner a{
-      color:#fff;
-      font-weight:700;
-      display:inline-flex;
-      align-items:center;
-      gap:5px;
-    }
-    .free-banner a:hover{
-      text-decoration:underline;
-      text-underline-offset:3px;
+      color: #fff;
+
+      font-size: 12px;
+
+      letter-spacing: 0.005em;
     }
 
-    .pricing-card{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:24px;
-      box-shadow:var(--shadow);
-      padding:42px;
-    }
-    .pricing-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:48px;
-      border-bottom:1px solid var(--line);
-      padding-bottom:32px;
-    }
-    .pricing-title{
-      margin-top:10px;
-      font-size:clamp(44px,6vw,72px);
-      line-height:.94;
-      letter-spacing:-.065em;
-      font-weight:760;
-    }
-    .pricing-price{
-      display:flex;
-      align-items:baseline;
-      gap:8px;
-      margin-top:24px;
-    }
-    .pricing-price strong{
-      font-size:34px;
-      letter-spacing:-.045em;
-    }
-    .pricing-price span{
-      color:#777;
-      font-size:13px;
-    }
-    .pricing-limit{
-      display:inline-flex;
-      align-items:baseline;
-      gap:7px;
-      margin-top:14px;
-      padding:8px 11px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:var(--surface);
-      width:max-content;
-    }
-    .pricing-limit strong{
-      font-size:13px;
-      letter-spacing:-.015em;
-    }
-    .pricing-limit span{
-      color:#777;
-      font-size:11px;
-    }
-    .pricing-copy{
-      max-width:470px;
-      color:#707070;
-      font-size:15px;
-      line-height:1.7;
-    }
-    .pricing-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      column-gap:40px;
-      margin-top:4px;
-    }
-    .pricing-feature{
-      display:flex;
-      align-items:flex-start;
-      gap:10px;
-      padding:17px 0;
-      border-bottom:1px solid var(--line);
-      color:#444;
-      font-size:13px;
-    }
-    .pricing-feature:nth-last-child(-n+2){
-      border-bottom:0;
-    }
-    .pricing-check{
-      width:20px;
-      height:20px;
-      flex:none;
-      display:grid;
-      place-items:center;
-      border:1px solid #111;
-      border-radius:50%;
-      font-size:10px;
-      color:#111;
-    }
-    .pricing-note{
-      margin-top:18px;
-      color:#8a8a8a;
-      font-size:11px;
-      line-height:1.6;
+    .free-banner-inner {
+      min-height: 38px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 14px;
     }
 
-    @media(max-width:900px){
-      .pricing-top{
-        align-items:flex-start;
-        flex-direction:column;
-        gap:26px;
+    .free-banner-inner > span {
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 8px;
+    }
+
+    .free-banner-inner strong {
+      font-weight: 750;
+    }
+
+    .free-banner-copy {
+      color: #a7a7a7;
+    }
+
+    .free-banner a {
+      color: #fff;
+
+      font-weight: 700;
+
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 5px;
+    }
+
+    .free-banner a:hover {
+      text-decoration: underline;
+
+      text-underline-offset: 3px;
+    }
+
+    .pricing-options {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .pricing-card {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100%;
+      padding: 34px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(34px) scale(0.985);
+      filter: blur(3px);
+      transition:
+              opacity 0.7s ease,
+              transform 0.7s cubic-bezier(0.2, 0.75, 0.25, 1),
+              filter 0.7s ease,
+              box-shadow 0.25s ease,
+              border-color 0.25s ease;
+      transition-delay: var(--pricing-delay, 0ms);
+      will-change: opacity, transform;
+    }
+
+    .pricing-card.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+
+    .pricing-card:hover {
+      border-color: #d1d1d1;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.09);
+    }
+
+    .pricing-card.enterprise {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+      box-shadow: none;
+    }
+
+    .pricing-card.enterprise:hover {
+      border-color: #111;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+    }
+
+    .pricing-card.enterprise .kicker {
+      color: #8e8e8e;
+    }
+
+    .pricing-card.enterprise .pricing-copy {
+      color: #aaa;
+    }
+
+    .pricing-card.enterprise .pricing-price span {
+      color: #999;
+    }
+
+    .pricing-card.enterprise .pricing-limit {
+      color: #fff;
+      background: #1b1b1b;
+      border-color: #333;
+    }
+
+    .pricing-card.enterprise .pricing-limit span {
+      color: #999;
+    }
+
+    .pricing-card.enterprise .pricing-feature {
+      color: #e2e2e2;
+      border-color: #292929;
+    }
+
+    .pricing-card.enterprise .pricing-check {
+      color: #fff;
+      border-color: #777;
+    }
+
+    .pricing-card.enterprise .pricing-note {
+      color: #888;
+    }
+
+    .pricing-card.enterprise .btn {
+      background: #fff;
+      color: #111;
+      border-color: #fff;
+    }
+
+    .pricing-card.enterprise .btn:hover {
+      background: #f0f0f0;
+    }
+
+    .enterprise-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 5px 8px;
+      border: 1px solid #333;
+      border-radius: 999px;
+      color: #bbb;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .pricing-top {
+      display: block;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 28px;
+      min-height: 278px;
+    }
+
+    .pricing-card.enterprise .pricing-top {
+      border-color: #292929;
+    }
+
+    .pricing-title {
+      margin-top: 10px;
+      font-size: clamp(42px, 4.3vw, 58px);
+      line-height: 0.96;
+      letter-spacing: -0.065em;
+      font-weight: 760;
+    }
+
+    .pricing-price {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .pricing-price strong {
+      font-size: 34px;
+      letter-spacing: -0.045em;
+    }
+
+    .pricing-price span {
+      color: #777;
+      font-size: 13px;
+    }
+
+    .pricing-copy {
+      max-width: none;
+      margin: 22px 0 0;
+      color: #707070;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 30px;
+      margin-top: 4px;
+    }
+
+    .pricing-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      min-width: 0;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+      color: #444;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .pricing-feature > span:last-child {
+      min-width: 0;
+    }
+
+    .pricing-feature:nth-last-child(-n + 2) {
+      border-bottom: 0;
+    }
+
+    .pricing-check {
+      width: 20px;
+      height: 20px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border: 1px solid #111;
+      border-radius: 50%;
+      font-size: 10px;
+      color: #111;
+    }
+
+    .pricing-note {
+      margin-top: 18px;
+      color: #8a8a8a;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .pricing-card > div[style*="margin-top"] {
+      margin-top: 28px !important;
+    }
+
+    .pricing-card > div[style*="margin-top"] .btn {
+      width: 100%;
+    }
+
+    @media (max-width: 1050px) {
+      .pricing-options {
+        grid-template-columns: 1fr;
+      }
+
+      .pricing-top {
+        min-height: 0;
       }
     }
-    @media(max-width:620px){
-      .free-banner-copy{display:none}
-      .free-banner-inner{
-        justify-content:space-between;
-        min-height:36px;
+
+    @media (max-width: 620px) {
+      .free-banner-copy {
+        display: none;
       }
-      .pricing-card{padding:28px 22px}
-      .pricing-grid{grid-template-columns:1fr}
-      .pricing-feature:nth-last-child(2){border-bottom:1px solid var(--line)}
+
+      .free-banner-inner {
+        justify-content: space-between;
+        min-height: 36px;
+      }
+
+      .pricing-card {
+        padding: 28px 22px;
+        border-radius: 20px;
+      }
+
+      .pricing-title {
+        font-size: clamp(42px, 14vw, 58px);
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+      }
+
+      .pricing-feature:nth-last-child(2) {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .pricing-feature:last-child {
+        border-bottom: 0;
+      }
+
+      .pricing-card.enterprise .pricing-feature:nth-last-child(2) {
+        border-bottom: 1px solid #292929;
+      }
     }
 
-    @media(max-width:900px){
-      .navlinks{display:none}.mobile-menu{display:block}
-      .feature-grid{grid-template-columns:1fr 1fr}
-      .split{grid-template-columns:1fr;gap:35px}
-      .arch{grid-template-columns:1fr}
-      .arch-box:not(:last-child)::after{content:"↓";right:auto;top:auto;bottom:-18px;left:50%;transform:translateX(-50%)}
+    @media (prefers-reduced-motion: reduce) {
+      .section-reveal.reveal-pending {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+      }
+
+      .pricing-card {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+      }
     }
-    @media(max-width:620px){
-      .container{width:min(calc(100% - 28px),var(--max))}
-      .nav{height:64px}.nav-actions .btn:not(.primary){display:none}
-      .hero{padding:75px 0 60px}.hero p{font-size:16px}
-      .hero-actions{flex-direction:column}.hero-actions .btn{width:100%}
-      .stats{grid-template-columns:1fr}.stat{border-right:0;border-bottom:1px solid var(--line)}
-      .stat:last-child{border-bottom:0}
-      .section{padding:75px 0}.feature-grid{grid-template-columns:1fr}
-      .mock{grid-template-columns:1fr}.mock-side{display:none}.mock-main{padding:18px}
-      .mock-row{grid-template-columns:1.5fr .8fr}.mock-row>*:nth-child(n+3){display:none}
-      .footer-inner{flex-direction:column}.footer-links{flex-wrap:wrap}
+
+    @media (max-width: 900px) {
+      .navlinks {
+        display: none;
+      }
+      .mobile-menu {
+        display: block;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .split {
+        grid-template-columns: 1fr;
+        gap: 35px;
+      }
+
+      .arch {
+        grid-template-columns: 1fr;
+      }
+
+      .arch-box:not(:last-child)::after {
+        content: "↓";
+        right: auto;
+        top: auto;
+        bottom: -18px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    @media (max-width: 620px) {
+      .hero-title {
+        font-size: clamp(40px, 14vw, 62px);
+      }
+
+      .container {
+        width: min(calc(100% - 28px), var(--max));
+      }
+
+      .nav {
+        height: 64px;
+      }
+      .nav-actions .btn:not(.primary) {
+        display: none;
+      }
+
+      .hero {
+        padding: 75px 0 60px;
+      }
+      .hero p {
+        font-size: 16px;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+      .hero-actions .btn {
+        width: 100%;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+      .stat {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .stat:last-child {
+        border-bottom: 0;
+      }
+
+      .section {
+        padding: 75px 0;
+      }
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mock {
+        grid-template-columns: 1fr;
+      }
+      .mock-side {
+        display: none;
+      }
+      .mock-main {
+        padding: 18px;
+      }
+
+      .mock-row {
+        grid-template-columns: 1.5fr 0.8fr;
+      }
+      .mock-row > *:nth-child(n + 3) {
+        display: none;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+      }
+      .footer-links {
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
+
 <body>
+<div class="ambient-grid" aria-hidden="true"></div>
+
 <div class="free-banner" role="note">
   <div class="container free-banner-inner">
-    <span>
-      <strong>Always Free</strong>
-      <span class="free-banner-copy">10 million URLs / month included.</span>
-    </span>
+                <span>
+                    <strong>Always Free</strong>
+
+                    <span class="free-banner-copy">1 million redirects + default domain included.</span>
+                </span>
+
     <a href="/register">Sign up now <span aria-hidden="true">→</span></a>
   </div>
 </div>
 
 <header class="nav">
-  <div class="container" style="padding:0px 60px 0px 60px;display:flex;align-items:center;justify-content:space-between;width:100%">
+  <div
+          class="container"
+          style="
+                    padding: 0px 60px 0px 60px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
+                "
+  >
     <a class="brand" href="#top"><span class="logo">P</span> PreonsURL</a>
+
     <nav class="navlinks">
       <a href="#features">Features</a>
+
       <a href="#usecases">Use cases</a>
+
       <a href="#security">Security</a>
+
       <a href="#domains">Domains</a>
+
       <a href="#compare">Compare</a>
+
       <a href="#pricing">Pricing</a>
+
       <a href="#developers">Developers</a>
     </nav>
+
     <div class="nav-actions">
       <a class="btn" href="/login">Sign in</a>
+
       <a class="btn primary" href="/register">Get started</a>
+
       <button class="btn mobile-menu" aria-label="Menu">☰</button>
     </div>
   </div>
@@ -456,455 +1450,1238 @@
   <section class="hero">
     <div class="container">
       <div class="eyebrow"><span class="dot"></span> Secure link infrastructure</div>
-      <h1>Short links with control built in.</h1>
+
+      <h1 class="hero-title" aria-label="Secure short links with control built in.">
+                        <span class="hero-animated-text" aria-hidden="true">
+                            <span class="lock-icon hero-lock-static">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M7.5 10V7.75C7.5 5.13 9.52 3 12 3s4.5 2.13 4.5 4.75V10" />
+                                    <rect x="5" y="10" width="14" height="11" rx="2.2" />
+                                    <path class="lock-key" d="M12 14v3" />
+                                </svg>
+                            </span>
+
+                            <span class="hero-char">S</span>
+                            <span class="hero-char">e</span>
+                            <span class="hero-char">c</span>
+                            <span class="hero-char">u</span>
+                            <span class="hero-char">r</span>
+                            <span class="hero-char">e</span>
+                            <span class="hero-space" aria-hidden="true"></span>
+                            <span class="hero-char">s</span>
+                            <span class="hero-char">h</span>
+                            <span class="hero-char">o</span>
+                            <span class="hero-char">r</span>
+                            <span class="hero-char">t</span>
+                            <span class="hero-space" aria-hidden="true"></span>
+                            <span class="hero-char">l</span>
+                            <span class="hero-char">i</span>
+                            <span class="hero-char">n</span>
+                            <span class="hero-char">k</span>
+                            <span class="hero-char">s</span>
+                            <span class="hero-space" aria-hidden="true"></span>
+                           <span class="hero-space" aria-hidden="true"></span>
+                           <span class="hero-space" aria-hidden="true"></span>
+                           <span class="hero-space" aria-hidden="true"></span>
+                            <span class="hero-char">w</span>
+                            <span class="hero-char">i</span>
+                            <span class="hero-char">t</span>
+                            <span class="hero-char">h</span>
+                            <span class="hero-space" aria-hidden="true"></span>
+                            <span class="hero-char">c</span>
+                            <span class="hero-char">o</span>
+                            <span class="hero-char">n</span>
+                            <span class="hero-char">t</span>
+                            <span class="hero-char">r</span>
+                            <span class="hero-char">o</span>
+                            <span class="hero-char">l</span>
+                            <span class="hero-space" aria-hidden="true"></span>
+                            <span class="hero-char">b</span>
+                            <span class="hero-char">u</span>
+                            <span class="hero-char">i</span>
+                            <span class="hero-char">l</span>
+                            <span class="hero-char">t</span>
+                            <span class="hero-space" aria-hidden="true"></span>
+                            <span class="hero-char">i</span>
+                            <span class="hero-char">n</span>
+                            <span class="hero-char">.</span>
+                        </span>
+      </h1>
+
       <p>
-        Create branded, programmable links that do more than redirect.
-        Control access, limit usage, expire links, manage domains, and understand every click.
+        Create branded, programmable links that do more than redirect. Control access, limit usage,
+        expire links, manage domains, and understand every click.
       </p>
+
       <div class="hero-actions">
         <a class="btn primary" href="/register">Create your first link →</a>
+
         <a class="btn" href="#features">Explore features</a>
       </div>
+
       <div class="trust">Built for developers, products, campaigns, and business-critical links.</div>
+
       <div class="stats">
         <div class="stat"><strong>100M</strong><span>codes benchmarked</span></div>
+
         <div class="stat"><strong>3.27M/s</strong><span>peak generated codes / sec</span></div>
+
         <div class="stat"><strong>0</strong><span>collisions in the benchmark</span></div>
       </div>
     </div>
   </section>
 
-  <section class="section" id="features">
+  <section class="section-reveal section" id="features">
     <div class="container">
       <div class="section-head">
         <div class="kicker">One link. More control.</div>
+
         <h2>A URL shortener that behaves like infrastructure.</h2>
-        <p>PreonsURL brings link creation, lifecycle controls, access protection, branded domains and delivery modes into one focused system.</p>
+
+        <p>
+          PreonsURL brings link creation, lifecycle controls, access protection, branded domains and
+          delivery modes into one focused system.
+        </p>
       </div>
+
       <div class="feature-grid">
-        <article class="card"><div class="icon">↗</div><h3>Short & custom links</h3><p>Create short URLs with random codes, custom slugs and directory-style paths such as /invoice/k9X2b.</p></article>
-        <article class="card"><div class="icon">↻</div><h3>Change destination</h3><p>Update where a live link goes without changing the public short URL.</p></article>
-        <article class="card"><div class="icon">◷</div><h3>Link lifecycle</h3><p>Expire links, disable them, enforce usage limits and create one-time access links.</p></article>
-        <article class="card"><div class="icon">▣</div><h3>Custom domains</h3><p>Connect multiple branded domains, verify DNS and create domain-specific links.</p></article>
-        <article class="card"><div class="icon">⌁</div><h3>Access protection</h3><p>Protect links with passwords or PINs when the destination should not be openly accessible.</p></article>
-        <article class="card"><div class="icon">◌</div><h3>Analytics-ready</h3><p>Capture click activity with timestamp, IP information, user-agent and referrer data.</p></article>
-        <article class="card"><div class="icon">→</div><h3>Multiple delivery modes</h3><p>Use redirect, proxy, mirror or content/file proxy delivery depending on the experience you need.</p></article>
-        <article class="card"><div class="icon">#</div><h3>Organize links</h3><p>Add tags and notes so campaigns, documents and operational links stay manageable.</p></article>
-        <article class="card"><div class="icon">⌘</div><h3>Developer API</h3><p>Create links programmatically with API-key protected endpoints designed for application integration.</p></article>
+        <article class="card">
+          <div class="icon">↗</div>
+          <h3>Short & custom links</h3>
+          <p>
+            Create short URLs with random codes, custom slugs and directory-style paths such as
+            /invoice/k9X2b.
+          </p>
+        </article>
+
+        <article class="card">
+          <div class="icon">↻</div>
+          <h3>Change destination</h3>
+          <p>Update where a live link goes without changing the public short URL.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">◷</div>
+          <h3>Link lifecycle</h3>
+          <p>Expire links, disable them, enforce usage limits and create one-time access links.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">▣</div>
+          <h3>Custom domains</h3>
+          <p>Connect multiple branded domains, verify DNS and create domain-specific links.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">⌁</div>
+          <h3>Access protection</h3>
+          <p>
+            Protect links with passwords or PINs when the destination should not be openly
+            accessible.
+          </p>
+        </article>
+
+        <article class="card">
+          <div class="icon">◌</div>
+          <h3>Analytics-ready</h3>
+          <p>Capture click activity with timestamp, IP information, user-agent and referrer data.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">→</div>
+          <h3>Multiple delivery modes</h3>
+          <p>
+            Use redirect, proxy, mirror or content/file proxy delivery depending on the experience
+            you need.
+          </p>
+        </article>
+
+        <article class="card">
+          <div class="icon">#</div>
+          <h3>Organize links</h3>
+          <p>Add tags and notes so campaigns, documents and operational links stay manageable.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">⌘</div>
+          <h3>Developer API</h3>
+          <p>
+            Create links programmatically with API-key protected endpoints designed for application
+            integration.
+          </p>
+        </article>
       </div>
     </div>
   </section>
 
-
-  <section class="section" id="usecases">
+  <section class="section-reveal section" id="usecases">
     <div class="container">
       <div class="section-head">
         <div class="kicker">Use cases</div>
+
         <h2>From everyday short links to controlled delivery.</h2>
-        <p>PreonsURL can cover straightforward link sharing, branded campaigns, operational workflows and advanced access-controlled delivery from the same link layer.</p>
+
+        <p>
+          PreonsURL can cover straightforward link sharing, branded campaigns, operational workflows
+          and advanced access-controlled delivery from the same link layer.
+        </p>
       </div>
 
       <div class="usecase-list">
         <div class="usecase-row">
           <span class="usecase-num">01</span>
-          <div><strong>Everyday link sharing</strong><span>Turn long URLs into compact links for messages, documents, websites and internal communication.</span></div>
+
+          <div>
+            <strong>Everyday link sharing</strong
+            ><span
+          >Turn long URLs into compact links for messages, documents, websites and internal
+                                    communication.</span
+          >
+          </div>
+
           <span class="usecase-tag">Core</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">02</span>
-          <div><strong>Branded short links</strong><span>Publish links from a custom domain so the visible URL matches your brand or product.</span></div>
+
+          <div>
+            <strong>Branded short links</strong
+            ><span
+          >Publish links from a custom domain so the visible URL matches your brand or
+                                    product.</span
+          >
+          </div>
+
           <span class="usecase-tag">Brand</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">03</span>
-          <div><strong>Campaign links</strong><span>Create memorable links for launches, promotions, events, seasonal campaigns and landing pages.</span></div>
+
+          <div>
+            <strong>Campaign links</strong
+            ><span
+          >Create memorable links for launches, promotions, events, seasonal campaigns and
+                                    landing pages.</span
+          >
+          </div>
+
           <span class="usecase-tag">Marketing</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">04</span>
-          <div><strong>Directory-based links</strong><span>Organize links with meaningful paths such as /invoice/k9X2b instead of using only a root short code.</span></div>
+
+          <div>
+            <strong>Directory-based links</strong
+            ><span
+          >Organize links with meaningful paths such as /invoice/k9X2b instead of using only a
+                                    root short code.</span
+          >
+          </div>
+
           <span class="usecase-tag">Routing</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">05</span>
-          <div><strong>Custom campaign slugs</strong><span>Use human-readable custom paths when a campaign, team or workflow needs a memorable URL.</span></div>
+
+          <div>
+            <strong>Custom campaign slugs</strong
+            ><span
+          >Use human-readable custom paths when a campaign, team or workflow needs a memorable
+                                    URL.</span
+          >
+          </div>
+
           <span class="usecase-tag">Core</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">06</span>
-          <div><strong>Stable links with changing destinations</strong><span>Keep the same public URL while updating the destination behind it.</span></div>
+
+          <div>
+            <strong>Stable links with changing destinations</strong
+            ><span>Keep the same public URL while updating the destination behind it.</span>
+          </div>
+
           <span class="usecase-tag">Control</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">07</span>
-          <div><strong>Document and invoice links</strong><span>Route operational documents through structured paths such as /invoice/{code}.</span></div>
+
+          <div>
+            <strong>Document and invoice links</strong
+            ><span
+          >Route operational documents through structured paths such as /invoice/{code}.</span
+          >
+          </div>
+
           <span class="usecase-tag">Operations</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">08</span>
-          <div><strong>Event registration links</strong><span>Use short, branded URLs for event pages, registration flows and attendee communications.</span></div>
+
+          <div>
+            <strong>Event registration links</strong
+            ><span
+          >Use short, branded URLs for event pages, registration flows and attendee
+                                    communications.</span
+          >
+          </div>
+
           <span class="usecase-tag">Events</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">09</span>
-          <div><strong>Product and application links</strong><span>Expose stable links from apps, product surfaces, emails and customer-facing workflows.</span></div>
+
+          <div>
+            <strong>Product and application links</strong
+            ><span
+          >Expose stable links from apps, product surfaces, emails and customer-facing
+                                    workflows.</span
+          >
+          </div>
+
           <span class="usecase-tag">Product</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">10</span>
-          <div><strong>API-driven link creation</strong><span>Generate links from your own backend, service, script or application through the protected API.</span></div>
+
+          <div>
+            <strong>API-driven link creation</strong
+            ><span
+          >Generate links from your own backend, service, script or application through the
+                                    protected API.</span
+          >
+          </div>
+
           <span class="usecase-tag">Developer</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">11</span>
-          <div><strong>Idempotent link generation</strong><span>Safely repeat the same creation request and receive the existing link instead of creating duplicates.</span></div>
+
+          <div>
+            <strong>Idempotent link generation</strong
+            ><span
+          >Safely repeat the same creation request and receive the existing link instead of
+                                    creating duplicates.</span
+          >
+          </div>
+
           <span class="usecase-tag">Developer</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">12</span>
-          <div><strong>Time-limited links</strong><span>Set an expiration point for offers, documents, temporary campaigns and other links with a defined lifetime.</span></div>
+
+          <div>
+            <strong>Time-limited links</strong
+            ><span
+          >Set an expiration point for offers, documents, temporary campaigns and other links
+                                    with a defined lifetime.</span
+          >
+          </div>
+
           <span class="usecase-tag">Lifecycle</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">13</span>
-          <div><strong>Limited-use links</strong><span>Allow access only until a configured number of uses has been reached.</span></div>
+
+          <div>
+            <strong>Limited-use links</strong
+            ><span>Allow access only until a configured number of uses has been reached.</span>
+          </div>
+
           <span class="usecase-tag">Lifecycle</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">14</span>
-          <div><strong>One-time access</strong><span>Issue a link intended to be consumed once for controlled document or resource access.</span></div>
+
+          <div>
+            <strong>One-time access</strong
+            ><span
+          >Issue a link intended to be consumed once for controlled document or resource
+                                    access.</span
+          >
+          </div>
+
           <span class="usecase-tag">Protection</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">15</span>
-          <div><strong>Disable on demand</strong><span>Turn an active link off without deleting the underlying record or changing the public URL.</span></div>
+
+          <div>
+            <strong>Disable on demand</strong
+            ><span
+          >Turn an active link off without deleting the underlying record or changing the
+                                    public URL.</span
+          >
+          </div>
+
           <span class="usecase-tag">Lifecycle</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">16</span>
-          <div><strong>Password-protected links</strong><span>Place a password gate in front of a destination that should not be openly accessible.</span></div>
+
+          <div>
+            <strong>Password-protected links</strong
+            ><span
+          >Place a password gate in front of a destination that should not be openly
+                                    accessible.</span
+          >
+          </div>
+
           <span class="usecase-tag">Security</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">17</span>
-          <div><strong>PIN-protected links</strong><span>Use a simple numeric access gate for controlled sharing scenarios.</span></div>
+
+          <div>
+            <strong>PIN-protected links</strong
+            ><span>Use a simple numeric access gate for controlled sharing scenarios.</span>
+          </div>
+
           <span class="usecase-tag">Security</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">18</span>
-          <div><strong>Controlled internal resources</strong><span>Use protected short URLs as entry points for private operational pages and business resources.</span></div>
+
+          <div>
+            <strong>Controlled internal resources</strong
+            ><span
+          >Use protected short URLs as entry points for private operational pages and business
+                                    resources.</span
+          >
+          </div>
+
           <span class="usecase-tag">Business</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">19</span>
-          <div><strong>Click and access analytics</strong><span>Record access activity with timestamp, IP information, user-agent and referrer data.</span></div>
+
+          <div>
+            <strong>Click and access analytics</strong
+            ><span
+          >Record access activity with timestamp, IP information, user-agent and referrer
+                                    data.</span
+          >
+          </div>
+
           <span class="usecase-tag">Analytics</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">20</span>
-          <div><strong>Campaign performance measurement</strong><span>Use link-level access activity to understand how often a campaign or shared destination is reached.</span></div>
+
+          <div>
+            <strong>Campaign performance measurement</strong
+            ><span
+          >Use link-level access activity to understand how often a campaign or shared
+                                    destination is reached.</span
+          >
+          </div>
+
           <span class="usecase-tag">Analytics</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">21</span>
-          <div><strong>Audit-style access records</strong><span>Retain redirect access events alongside the link record for operational investigation and reporting.</span></div>
+
+          <div>
+            <strong>Audit-style access records</strong
+            ><span
+          >Retain redirect access events alongside the link record for operational
+                                    investigation and reporting.</span
+          >
+          </div>
+
           <span class="usecase-tag">Operations</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">22</span>
-          <div><strong>Multi-domain link infrastructure</strong><span>Operate links across multiple custom domains while keeping domain-specific URLs organized.</span></div>
+
+          <div>
+            <strong>Multi-domain link infrastructure</strong
+            ><span
+          >Operate links across multiple custom domains while keeping domain-specific URLs
+                                    organized.</span
+          >
+          </div>
+
           <span class="usecase-tag">Domains</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">23</span>
-          <div><strong>Domain verification workflows</strong><span>Verify a custom domain through DNS before using it for branded short links.</span></div>
+
+          <div>
+            <strong>Domain verification workflows</strong
+            ><span
+          >Verify a custom domain through DNS before using it for branded short links.</span
+          >
+          </div>
+
           <span class="usecase-tag">Domains</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">24</span>
-          <div><strong>Custom 404 experiences</strong><span>Provide a branded not-found destination for invalid or unavailable short URLs.</span></div>
+
+          <div>
+            <strong>Custom 404 experiences</strong
+            ><span
+          >Provide a branded not-found destination for invalid or unavailable short
+                                    URLs.</span
+          >
+          </div>
+
           <span class="usecase-tag">Brand</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">25</span>
-          <div><strong>Redirect delivery</strong><span>Use the standard redirect path when the browser should move directly to the destination.</span></div>
+
+          <div>
+            <strong>Redirect delivery</strong
+            ><span
+          >Use the standard redirect path when the browser should move directly to the
+                                    destination.</span
+          >
+          </div>
+
           <span class="usecase-tag">Delivery</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">26</span>
-          <div><strong>Proxy delivery</strong><span>Route a request through the link infrastructure instead of relying solely on a browser redirect.</span></div>
+
+          <div>
+            <strong>Proxy delivery</strong
+            ><span
+          >Route a request through the link infrastructure instead of relying solely on a
+                                    browser redirect.</span
+          >
+          </div>
+
           <span class="usecase-tag">Delivery</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">27</span>
-          <div><strong>Mirrored delivery</strong><span>Use mirror-style delivery when the product experience calls for content to be served through the link layer.</span></div>
+
+          <div>
+            <strong>Mirrored delivery</strong
+            ><span
+          >Use mirror-style delivery when the product experience calls for content to be
+                                    served through the link layer.</span
+          >
+          </div>
+
           <span class="usecase-tag">Delivery</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">28</span>
-          <div><strong>File and content proxying</strong><span>Use the link layer for file or content proxy delivery scenarios instead of a basic redirect.</span></div>
+
+          <div>
+            <strong>File and content proxying</strong
+            ><span
+          >Use the link layer for file or content proxy delivery scenarios instead of a basic
+                                    redirect.</span
+          >
+          </div>
+
           <span class="usecase-tag">Delivery</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">29</span>
-          <div><strong>Marketing and sales collateral</strong><span>Publish short links for brochures, sales resources, campaign assets and customer-facing content.</span></div>
+
+          <div>
+            <strong>Marketing and sales collateral</strong
+            ><span
+          >Publish short links for brochures, sales resources, campaign assets and
+                                    customer-facing content.</span
+          >
+          </div>
+
           <span class="usecase-tag">Business</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">30</span>
-          <div><strong>Operational workflow links</strong><span>Give teams compact URLs for recurring internal workflows, invoices, documents and service entry points.</span></div>
+
+          <div>
+            <strong>Operational workflow links</strong
+            ><span
+          >Give teams compact URLs for recurring internal workflows, invoices, documents and
+                                    service entry points.</span
+          >
+          </div>
+
           <span class="usecase-tag">Operations</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">31</span>
-          <div><strong>API and service integration</strong><span>Embed URL creation into SaaS products, backend jobs, automation pipelines and customer workflows.</span></div>
+
+          <div>
+            <strong>API and service integration</strong
+            ><span
+          >Embed URL creation into SaaS products, backend jobs, automation pipelines and
+                                    customer workflows.</span
+          >
+          </div>
+
           <span class="usecase-tag">Developer</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">32</span>
-          <div><strong>High-volume code generation</strong><span>Use the pre-buffered short-code engine when link creation throughput is a primary system concern.</span></div>
+
+          <div>
+            <strong>High-volume code generation</strong
+            ><span
+          >Use the pre-buffered short-code engine when link creation throughput is a primary
+                                    system concern.</span
+          >
+          </div>
+
           <span class="usecase-tag">Scale</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">33</span>
-          <div><strong>Predictable link routing at scale</strong><span>Use pre-generated, obfuscated Base62 codes with directory routing for high-throughput link workloads.</span></div>
+
+          <div>
+            <strong>Predictable link routing at scale</strong
+            ><span
+          >Use pre-generated, obfuscated Base62 codes with directory routing for
+                                    high-throughput link workloads.</span
+          >
+          </div>
+
           <span class="usecase-tag">Scale</span>
         </div>
+
         <div class="usecase-row">
           <span class="usecase-num">34</span>
-          <div><strong>Enterprise-owned URL infrastructure</strong><span>Run branded link infrastructure around your own domains, database and deployment environment.</span></div>
+
+          <div>
+            <strong>Enterprise-owned URL infrastructure</strong
+            ><span
+          >Run branded link infrastructure around your own domains, database and deployment
+                                    environment.</span
+          >
+          </div>
+
           <span class="usecase-tag">Infrastructure</span>
         </div>
 
         <div class="usecase-roadmap">
           <div class="roadmap-head">
             <span>Advanced controls on the roadmap</span>
+
             <span>Planned</span>
           </div>
-          <p>IP allow/block lists, country and region restrictions, ASN rules, VPN/proxy detection, Tor detection, timezone and scheduled access, day/time windows, device/browser/OS restrictions, referrer restrictions, authenticated-user access, confirmation gates, automatic HTTPS/SSL, domain lifecycle controls, domain analytics, unavailable-link pages, bulk create/import/export, search, sorting and filtering.</p>
+
+          <p>
+            IP allow/block lists, country and region restrictions, ASN rules, VPN/proxy detection,
+            Tor detection, timezone and scheduled access, day/time windows, device/browser/OS
+            restrictions, referrer restrictions, authenticated-user access, confirmation gates,
+            automatic HTTPS/SSL, domain lifecycle controls, domain analytics, unavailable-link
+            pages, bulk create/import/export, search, sorting and filtering.
+          </p>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section alt" id="security">
+  <section class="section-reveal section alt" id="security">
     <div class="container split">
       <div>
         <div class="kicker">Access control</div>
+
         <h2>Put rules between the click and the destination.</h2>
-        <p style="color:#707070;line-height:1.7;max-width:560px">
-          A short link can be a controlled entry point, not just a redirect. Apply protection and lifecycle rules at the link level.
+
+        <p style="color: #707070; line-height: 1.7; max-width: 560px">
+          A short link can be a controlled entry point, not just a redirect. Apply protection and
+          lifecycle rules at the link level.
         </p>
+
         <div class="checks">
-          <div class="check"><b>✓</b><span><strong>Password protection</strong><br>Require a password before the destination is revealed.</span></div>
-          <div class="check"><b>✓</b><span><strong>PIN protection</strong><br>Use a lightweight numeric access gate.</span></div>
-          <div class="check"><b>✓</b><span><strong>One-time access</strong><br>Allow a link to be consumed once.</span></div>
-          <div class="check"><b>✓</b><span><strong>Usage limits</strong><br>Stop access automatically after a defined number of uses.</span></div>
-          <div class="check"><b>✓</b><span><strong>Expiration & disable</strong><br>Control when a link remains available.</span></div>
+          <div class="check">
+            <b>✓</b
+            ><span
+          ><strong>Password protection</strong><br />Require a password before the destination
+                                    is revealed.</span
+          >
+          </div>
+
+          <div class="check">
+            <b>✓</b
+            ><span
+          ><strong>PIN protection</strong><br />Use a lightweight numeric access gate.</span
+          >
+          </div>
+
+          <div class="check">
+            <b>✓</b
+            ><span><strong>One-time access</strong><br />Allow a link to be consumed once.</span>
+          </div>
+
+          <div class="check">
+            <b>✓</b
+            ><span
+          ><strong>Usage limits</strong><br />Stop access automatically after a defined number
+                                    of uses.</span
+          >
+          </div>
+
+          <div class="check">
+            <b>✓</b
+            ><span
+          ><strong>Expiration & disable</strong><br />Control when a link remains
+                                    available.</span
+          >
+          </div>
         </div>
       </div>
+
       <div class="security-panel">
-        <div style="font-size:12px;color:#888;margin-bottom:12px">LINK POLICY</div>
+        <div style="font-size: 12px; color: #888; margin-bottom: 12px">LINK POLICY</div>
+
         <div class="security-row"><span>Status</span><span>Active</span></div>
+
         <div class="security-row"><span>Access</span><span>Password protected</span></div>
+
         <div class="security-row"><span>Usage</span><span>17 / 100</span></div>
+
         <div class="security-row"><span>Expires</span><span>31 Dec 2026</span></div>
+
         <div class="security-row"><span>Delivery</span><span>Redirect</span></div>
+
         <div class="security-row"><span>Domain</span><span>go.acme.com</span></div>
       </div>
     </div>
   </section>
 
-  <section class="section" id="domains">
+  <section class="section-reveal section" id="domains">
     <div class="container split">
       <div class="visual">
-        <div class="browser-bar"><span class="browser-dot"></span><span class="browser-dot"></span><span class="browser-dot"></span><span style="margin-left:10px;font-size:10px;color:#999">app.preonsurl.com/domains</span></div>
+        <div class="browser-bar">
+          <span class="browser-dot"></span><span class="browser-dot"></span
+        ><span class="browser-dot"></span
+        ><span style="margin-left: 10px; font-size: 10px; color: #999"
+        >app.preonsurl.com/domains</span
+        >
+        </div>
+
         <div class="mock">
           <aside class="mock-side">
             <div class="mock-brand">PreonsURL</div>
+
             <div class="mock-item active">Links</div>
+
             <div class="mock-item">Analytics</div>
+
             <div class="mock-item">Domains</div>
+
             <div class="mock-item">API</div>
+
             <div class="mock-item">Settings</div>
           </aside>
+
           <div class="mock-main">
-            <div class="mock-top"><div class="mock-title">Your links</div><span class="btn primary" style="min-height:34px;padding:0 11px;font-size:11px">+ New link</span></div>
+            <div class="mock-top">
+              <div class="mock-title">Your links</div>
+              <span class="btn primary" style="min-height: 34px; padding: 0 11px; font-size: 11px"
+              >+ New link</span
+              >
+            </div>
+
             <div class="mock-table">
-              <div class="mock-row header"><span>LINK</span><span>DESTINATION</span><span>STATUS</span><span>CLICKS</span></div>
-              <div class="mock-row"><span class="mock-link">go.acme.com/launch</span><span>acme.com/launch</span><span class="status">Active</span><span>12,480</span></div>
-              <div class="mock-row"><span class="mock-link">go.acme.com/invoice/9K2x</span><span>billing.acme.com/...</span><span class="status">Protected</span><span>1,842</span></div>
-              <div class="mock-row"><span class="mock-link">go.acme.com/event</span><span>events.acme.com/...</span><span class="status">Active</span><span>6,201</span></div>
+              <div class="mock-row header">
+                <span>LINK</span><span>DESTINATION</span><span>STATUS</span><span>CLICKS</span>
+              </div>
+
+              <div class="mock-row">
+                <span class="mock-link">go.acme.com/launch</span><span>acme.com/launch</span
+              ><span class="status">Active</span><span>12,480</span>
+              </div>
+
+              <div class="mock-row">
+                                        <span class="mock-link">go.acme.com/invoice/9K2x</span
+                                        ><span>billing.acme.com/...</span><span class="status">Protected</span
+              ><span>1,842</span>
+              </div>
+
+              <div class="mock-row">
+                <span class="mock-link">go.acme.com/event</span><span>events.acme.com/...</span
+              ><span class="status">Active</span><span>6,201</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       <div>
         <div class="kicker">Branded infrastructure</div>
+
         <h2>Your domain. Your link. Your rules.</h2>
-        <p style="color:#707070;line-height:1.7">
-          Connect the domains you already own and keep the public URL aligned with your brand, campaign or product.
+
+        <p style="color: #707070; line-height: 1.7">
+          Connect the domains you already own and keep the public URL aligned with your brand,
+          campaign or product.
         </p>
+
         <div class="checks">
           <div class="check"><b>✓</b><span>Multiple custom domains</span></div>
+
           <div class="check"><b>✓</b><span>DNS verification</span></div>
+
           <div class="check"><b>✓</b><span>Domain-specific links</span></div>
+
           <div class="check"><b>✓</b><span>Default domain</span></div>
+
           <div class="check"><b>✓</b><span>Custom 404 page</span></div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section alt" id="developers">
+  <section class="section-reveal section alt" id="developers">
     <div class="container split">
       <div>
         <div class="kicker">Built for integration</div>
+
         <h2>One API call from your product.</h2>
-        <p style="color:#707070;line-height:1.7">
-          Keep link creation inside your own application. Protect API operations with an API key and let PreonsURL handle code generation, persistence and delivery.
+
+        <p style="color: #707070; line-height: 1.7">
+          Keep link creation inside your own application. Protect API operations with an API key and
+          let PreonsURL handle code generation, persistence and delivery.
         </p>
+
         <div class="checks">
           <div class="check"><b>✓</b><span>JSON API</span></div>
+
           <div class="check"><b>✓</b><span>API-key authentication</span></div>
+
           <div class="check"><b>✓</b><span>Idempotent link creation</span></div>
+
           <div class="check"><b>✓</b><span>High-throughput pre-generated short codes</span></div>
         </div>
       </div>
+
       <div class="code">
         <span class="muted">POST</span> <span class="key">/api/links</span>
 
         {
+
         <span class="key">"url"</span>: <span class="str">"https://acme.com/invoices/84820"</span>,
+
         <span class="key">"customPath"</span>: <span class="str">"invoice/84820"</span>,
+
         <span class="key">"usageLimit"</span>: <span class="key">100</span>,
+
         <span class="key">"expireAt"</span>: <span class="str">"2026-12-31T23:59:59Z"</span>
+
         }
 
         <span class="muted">→ 200 OK</span>
 
         {
+
         <span class="key">"newUrl"</span>: <span class="str">"https://go.acme.com/invoice/84820"</span>,
+
         <span class="key">"existing"</span>: <span class="key">false</span>
+
         }
       </div>
     </div>
   </section>
 
-  <section class="section" id="compare">
+  <section class="section-reveal section" id="compare">
     <div class="container">
       <div class="section-head">
         <div class="kicker">Feature comparison</div>
+
         <h2>Focused on controlled links.</h2>
-        <p>Feature availability changes by provider and plan. This comparison reflects publicly documented capabilities and PreonsURL's current feature set.</p>
+
+        <p>
+          Feature availability changes by provider and plan. This comparison reflects publicly
+          documented capabilities and PreonsURL's current feature set.
+        </p>
       </div>
+
       <div class="compare-wrap">
         <table class="compare">
           <thead>
-          <tr><th>Capability</th><th>PreonsURL</th><th>Short.io</th><th>Rebrandly</th><th>Dub</th></tr>
+          <tr>
+            <th>Capability</th>
+            <th>PreonsURL</th>
+            <th>Short.io</th>
+            <th>Rebrandly</th>
+            <th>Dub</th>
+          </tr>
           </thead>
+
           <tbody>
-          <tr><td>Short links</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Custom domains</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Custom slugs / paths</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Destination editing</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Link expiration</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Usage / click limits</td><td class="yes">✓</td><td class="yes">✓</td><td class="planned">Plan-dependent</td><td class="planned">Plan-dependent</td></tr>
-          <tr><td>Password protection</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>PIN protection</td><td class="yes">✓</td><td class="planned">—</td><td class="planned">—</td><td class="planned">—</td></tr>
-          <tr><td>One-time access</td><td class="yes">✓</td><td class="planned">—</td><td class="planned">—</td><td class="planned">—</td></tr>
-          <tr><td>Proxy / mirror delivery</td><td class="yes">✓</td><td class="yes">✓</td><td class="planned">—</td><td class="planned">—</td></tr>
-          <tr><td>Tags / notes</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>API</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Geo / device targeting</td><td class="planned">Roadmap</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Teams / roles / SSO</td><td class="planned">Roadmap</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr>
+            <td>Short links</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>Custom domains</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>Custom slugs / paths</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>Destination editing</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>Link expiration</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>Usage / click limits</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="planned">Plan-dependent</td>
+            <td class="planned">Plan-dependent</td>
+          </tr>
+
+          <tr>
+            <td>Password protection</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>PIN protection</td>
+            <td class="yes">✓</td>
+            <td class="planned">—</td>
+            <td class="planned">—</td>
+            <td class="planned">—</td>
+          </tr>
+
+          <tr>
+            <td>One-time access</td>
+            <td class="yes">✓</td>
+            <td class="planned">—</td>
+            <td class="planned">—</td>
+            <td class="planned">—</td>
+          </tr>
+
+          <tr>
+            <td>Proxy / mirror delivery</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="planned">—</td>
+            <td class="planned">—</td>
+          </tr>
+
+          <tr>
+            <td>Tags / notes</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>API</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>Geo / device targeting</td>
+            <td class="planned">Roadmap</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+
+          <tr>
+            <td>Teams / roles / SSO</td>
+            <td class="planned">Roadmap</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
           </tbody>
         </table>
       </div>
+
       <div class="note">
-        Comparison sources: official Short.io feature documentation, Rebrandly product/help documentation, and Dub product documentation. Provider features can depend on plan, configuration and date.
+        Comparison sources: official Short.io feature documentation, Rebrandly product/help
+        documentation, and Dub product documentation. Provider features can depend on plan,
+        configuration and date.
       </div>
     </div>
   </section>
 
 
-  <section class="section alt" id="pricing">
+
+  <section class="section alt pricing-section" id="pricing">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head pricing-section-head">
         <div class="kicker">Pricing</div>
-        <h2>Always free.</h2>
-        <p>PreonsURL keeps its core secure link infrastructure available for free, so you can create, control and deploy links without choosing a paid tier first.</p>
+        <h2>Simple pricing. Clear limits.</h2>
+        <p>
+          Start with the essentials for free. Upgrade when you need branded domains,
+          advanced delivery, analytics, automation, and longer retention.
+        </p>
       </div>
 
-      <div class="pricing-card">
-        <div class="pricing-top">
-          <div>
-            <div class="kicker">PreonsURL</div>
-            <div class="pricing-title">Always Free</div>
+      <div class="pricing-options">
+
+        <!-- FREE -->
+        <article class="pricing-card" style="--pricing-delay: 0ms">
+          <div class="pricing-top">
+            <div class="kicker">Free</div>
+            <div class="pricing-title">Free</div>
+
             <div class="pricing-price">
-              <strong>₹0</strong>
+              <strong>$0</strong>
               <span>forever</span>
             </div>
-            <div class="pricing-limit">
-              <strong>10,000,000</strong>
-              <span>URLs / month</span>
+
+            <p class="pricing-copy">
+              The essentials for creating simple short links on the default
+              PreonsURL domain.
+            </p>
+          </div>
+
+          <div class="pricing-grid">
+            <div class="pricing-feature">
+              <span class="pricing-check">✓</span>
+              <span><strong>1 million redirects</strong></span>
+            </div>
+            <div class="pricing-feature">
+              <span class="pricing-check">✓</span>
+              <span><strong>Default PreonsURL domain</strong></span>
+            </div>
+            <div class="pricing-feature">
+              <span class="pricing-check">✓</span>
+              <span><strong>Redirect delivery</strong></span>
             </div>
           </div>
 
-          <div class="pricing-copy">
-            Start with the same core experience showcased across the product: short links, custom paths, link controls, protection, domains, delivery modes and developer APIs.
-            <div style="margin-top:20px">
-              <a class="btn primary" href="/register">Sign up now →</a>
-            </div>
+          <div style="margin-top: 28px">
+            <a class="btn primary" href="/register">Start for free →</a>
           </div>
-        </div>
 
-        <div class="pricing-grid">
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>10,000,000 URLs per month</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Short links and custom slugs</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Directory-based routing</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Destination editing</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Expiration and usage limits</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>One-time access</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Password and PIN protection</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Custom domains and DNS verification</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Domain-specific links</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Tags and notes</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Access analytics logging</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Redirect, proxy and mirror delivery</span></div>
-          <div class="pricing-feature"><span class="pricing-check">✓</span><span>API-key protected link creation</span></div>
-        </div>
+          <div class="pricing-note">
+            A simple, permanent starting point for everyday link sharing.
+          </div>
+        </article>
 
-        <div class="pricing-note">
-          “Always Free” applies to the PreonsURL core described on this page. Roadmap capabilities remain identified separately.
-        </div>
+        <!-- PRO -->
+        <article class="pricing-card" style="--pricing-delay: 110ms">
+          <div class="pricing-top">
+            <div class="kicker">Pro</div>
+            <div class="pricing-title">Pro</div>
+
+            <div class="pricing-price">
+              <strong>$49.99</strong>
+              <span>per month</span>
+            </div>
+
+            <p class="pricing-copy">
+              For teams that need branded links, controlled access, advanced
+              delivery, analytics, automation, and longer data retention.
+            </p>
+          </div>
+
+          <div class="pricing-grid">
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Custom domains</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>1 month link access</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>1 million redirects</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Proxy delivery</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Mirror delivery</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Password / PIN protection</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Expiration & usage limits</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>One-time links</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Scheduled links</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Advanced analytics</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>CSV / JSON analytics export</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>1-year retention</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Downloadable retention data</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>QR code generation</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Bulk link creation</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Bulk import / export</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Developer API</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Higher API rate limits</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Webhooks</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Link health monitoring</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>IP allow / block rules</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Country restrictions</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Device / OS targeting</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Referrer restrictions</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>A/B destination routing</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Weighted traffic splitting</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>UTM builder</strong></span></div>
+          </div>
+
+          <div style="margin-top: 28px">
+            <a class="btn primary" href="/register">Get Pro →</a>
+          </div>
+
+          <div class="pricing-note">
+            $49.99/month. Includes the Pro features listed above for the subscription period.
+          </div>
+        </article>
+
+        <!-- ENTERPRISE -->
+        <article class="pricing-card enterprise" style="--pricing-delay: 220ms">
+          <div class="pricing-top">
+            <div class="kicker">Enterprise</div>
+            <div class="pricing-title">Enterprise</div>
+
+            <div class="pricing-price">
+              <strong>Custom</strong>
+              <span>pricing</span>
+            </div>
+
+            <div class="enterprise-badge">For teams & high volume</div>
+
+            <p class="pricing-copy">
+              Built around your traffic, domains, retention requirements,
+              collaboration, security, and operational needs.
+            </p>
+          </div>
+
+          <div class="pricing-grid">
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Custom traffic & limits</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Multiple custom domains</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Redirect, proxy & mirror delivery</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Extended retention</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Downloadable data & reporting</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Team members</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Roles & permissions</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Audit logs</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Advanced routing</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Traffic splitting & A/B testing</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Dedicated API limits</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>SSO / SAML</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Enterprise deployment options</strong></span></div>
+            <div class="pricing-feature"><span class="pricing-check">✓</span><span><strong>Priority support</strong></span></div>
+          </div>
+
+          <div style="margin-top: 28px">
+            <a class="btn" href="/contact">Talk to us →</a>
+          </div>
+
+          <div class="pricing-note">
+            Custom pricing based on traffic, domains, retention, security,
+            deployment, and support requirements.
+          </div>
+        </article>
+
       </div>
     </div>
   </section>
 
-  <section class="section alt">
+  <section class="section-reveal section alt">
     <div class="container">
       <div class="section-head">
         <div class="kicker">Under the hood</div>
+
         <h2>Designed for high-throughput link generation.</h2>
-        <p>The short-code engine pre-generates obfuscated Base62 codes using worker buckets, an epoch-based generator and Feistel permutation, keeping the hot creation path away from database-generated identifiers.</p>
+
+        <p>
+          The short-code engine pre-generates obfuscated Base62 codes using worker buckets, an
+          epoch-based generator and Feistel permutation, keeping the hot creation path away from
+          database-generated identifiers.
+        </p>
       </div>
+
       <div class="arch">
-        <div class="arch-box"><span class="arch-num">01</span><strong>Request</strong><p>Your application sends a link creation request.</p></div>
-        <div class="arch-box"><span class="arch-num">02</span><strong>Auth</strong><p>API key validates the creation request.</p></div>
-        <div class="arch-box"><span class="arch-num">03</span><strong>Code pool</strong><p>Pre-buffered short codes are ready for allocation.</p></div>
-        <div class="arch-box"><span class="arch-num">04</span><strong>Persistence</strong><p>Link metadata and access records are stored in MariaDB.</p></div>
-        <div class="arch-box"><span class="arch-num">05</span><strong>Delivery</strong><p>Requests are resolved, checked, logged and delivered.</p></div>
+        <div class="arch-box">
+          <span class="arch-num">01</span><strong>Request</strong>
+          <p>Your application sends a link creation request.</p>
+        </div>
+
+        <div class="arch-box">
+          <span class="arch-num">02</span><strong>Auth</strong>
+          <p>API key validates the creation request.</p>
+        </div>
+
+        <div class="arch-box">
+          <span class="arch-num">03</span><strong>Code pool</strong>
+          <p>Pre-buffered short codes are ready for allocation.</p>
+        </div>
+
+        <div class="arch-box">
+          <span class="arch-num">04</span><strong>Persistence</strong>
+          <p>Link metadata and access records are stored in MariaDB.</p>
+        </div>
+
+        <div class="arch-box">
+          <span class="arch-num">05</span><strong>Delivery</strong>
+          <p>Requests are resolved, checked, logged and delivered.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section-reveal section">
     <div class="container">
       <div class="cta">
-        <div class="kicker" style="color:#888">Ready when you are</div>
-        <h2 style="margin-top:12px;color:#fff">Build links your product can depend on.</h2>
-        <p>Create your first short link, connect a domain, and start treating URLs as programmable infrastructure.</p>
+        <div class="kicker" style="color: #888">Ready when you are</div>
+
+        <h2 style="margin-top: 12px; color: #fff">Build links your product can depend on.</h2>
+
+        <p>
+          Create your first short link, connect a domain, and start treating URLs as programmable
+          infrastructure.
+        </p>
+
         <a class="btn" href="/register">Get started with PreonsURL →</a>
       </div>
     </div>
@@ -914,13 +2691,175 @@
 <footer class="footer">
   <div class="container footer-inner">
     <div>© 2026 PreonsURL. Secure link infrastructure.</div>
+
     <div class="footer-links">
       <a href="/docs">API docs</a>
+
       <a href="/status">Status</a>
+
       <a href="/privacy">Privacy</a>
+
       <a href="/terms">Terms</a>
     </div>
   </div>
 </footer>
+
+<script>
+  (function () {
+    function startHeroAnimation() {
+      const hero = document.querySelector(".hero-animated-text");
+      if (!hero) return;
+
+      const lock = hero.querySelector(".hero-lock-static");
+      const chars = Array.from(hero.querySelectorAll(".hero-char"));
+
+      // Reset so the animation also works after a browser refresh/navigation.
+      if (lock) lock.classList.remove("is-visible");
+      chars.forEach((char) => char.classList.remove("is-visible"));
+
+      // Lock appears first, then each character enters in sequence.
+      window.setTimeout(() => {
+        if (lock) lock.classList.add("is-visible");
+      }, 80);
+
+      const startDelay = 180;
+      const step = 48;
+
+      chars.forEach((char, index) => {
+        window.setTimeout(
+                () => {
+                  char.classList.add("is-visible");
+                },
+                startDelay + index * step
+        );
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", startHeroAnimation, { once: true });
+    } else {
+      startHeroAnimation();
+    }
+  })();
+</script>
+
+<script>
+  (function () {
+    const pricingCards = Array.from(document.querySelectorAll(".pricing-card"));
+    const pricingHead = document.querySelector(".pricing-section-head");
+
+    if (!pricingCards.length) return;
+
+    if (
+            window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      pricingCards.forEach((card) => card.classList.add("is-visible"));
+      if (pricingHead) pricingHead.classList.add("pricing-head-visible");
+      return;
+    }
+
+    if (pricingHead) {
+      pricingHead.style.opacity = "0";
+      pricingHead.style.transform = "translateY(22px)";
+      pricingHead.style.filter = "blur(3px)";
+      pricingHead.style.transition =
+              "opacity 0.65s ease, transform 0.65s cubic-bezier(0.2,0.75,0.25,1), filter 0.65s ease";
+    }
+
+    const reveal = (element) => {
+      element.classList.add("is-visible");
+      if (element === pricingHead) {
+        element.classList.add("pricing-head-visible");
+        element.style.opacity = "1";
+        element.style.transform = "translateY(0)";
+        element.style.filter = "blur(0)";
+      }
+    };
+
+    const observer = new IntersectionObserver(
+            (entries, currentObserver) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+
+                reveal(entry.target);
+                currentObserver.unobserve(entry.target);
+              });
+            },
+            {
+              threshold: 0.14,
+              rootMargin: "0px 0px -60px 0px"
+            }
+    );
+
+    if (pricingHead) observer.observe(pricingHead);
+    pricingCards.forEach((card) => observer.observe(card));
+  })();
+</script>
+
+
+<script>
+  (function () {
+    const sections = Array.from(document.querySelectorAll(".section-reveal"));
+    if (!sections.length) return;
+
+    const reduceMotion =
+            window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /*
+     * Keep sections visible by default. JavaScript explicitly opts them into
+     * the reveal state, so a JavaScript failure can never leave the page blank.
+     */
+    sections.forEach((section) => section.classList.add("reveal-pending"));
+
+    if (reduceMotion) {
+      sections.forEach((section) => section.classList.add("is-visible"));
+      return;
+    }
+
+    let ticking = false;
+
+    const revealSections = () => {
+      ticking = false;
+
+      const trigger = window.innerHeight * 0.86;
+
+      sections.forEach((section) => {
+        if (section.classList.contains("is-visible")) return;
+
+        const rect = section.getBoundingClientRect();
+
+        /*
+         * Reveal when the section is entering the viewport.
+         * Using getBoundingClientRect keeps this independent of layout
+         * containers and works with normal document scrolling.
+         */
+        if (rect.top <= trigger && rect.bottom >= 0) {
+          section.classList.add("is-visible");
+        }
+      });
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(revealSections);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    /*
+     * Give the browser one paint with the hidden state before revealing
+     * anything already near the viewport. This makes the first transition
+     * visible as well.
+     */
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(revealSections);
+    });
+  })();
+</script>
+
 </body>
 </html>

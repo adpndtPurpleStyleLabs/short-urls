@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact PreonsURL for product, enterprise, integration and support enquiries.">
+    <title>Contact — PreonsURL</title>
+    <style>
+        :root{
+            --bg:#fff;
+            --surface:#fafafa;
+            --surface-2:#f4f4f4;
+            --text:#111;
+            --muted:#6b6b6b;
+            --line:#e8e8e8;
+            --line-dark:#d7d7d7;
+            --max:1180px;
+            --shadow:0 18px 60px rgba(0,0,0,.07);
+        }
+
+        *{box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{
+            margin:0;
+            background:var(--bg);
+            color:var(--text);
+            font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            -webkit-font-smoothing:antialiased;
+        }
+        a{color:inherit;text-decoration:none}
+        button,input,select,textarea{font:inherit}
+        .container{width:min(calc(100% - 40px),var(--max));margin:auto}
+
+        /* Ambient Geometric Grid */
+        .ambient-grid {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 56px 56px;
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            z-index: 0;
+        }
+
+        .free-banner,
+        .nav,
+        main,
+        .footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        .free-banner{background:#111;color:#fff;font-size:12px;letter-spacing:.005em}
+        .free-banner-inner{min-height:38px;display:flex;align-items:center;justify-content:center;gap:14px}
+        .free-banner-inner>span{display:inline-flex;align-items:center;gap:8px}
+        .free-banner strong{font-weight:750}
+        .free-banner-copy{color:#a7a7a7}
+        .free-banner a{color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:5px}
+        .free-banner a:hover{text-decoration:underline;text-underline-offset:3px}
+
+        .nav{
+            height:72px;border-bottom:1px solid var(--line);
+            display:flex;align-items:center;justify-content:space-between;
+            position:sticky;top:0;background:rgba(255,255,255,.9);
+            backdrop-filter:blur(18px);z-index:20;
+        }
+        .brand{display:flex;align-items:center;gap:10px;font-weight:750;letter-spacing:-.03em}
+        .logo{
+            width:30px;height:30px;border:1.5px solid #111;border-radius:9px;
+            display:grid;place-items:center;font-size:14px;font-weight:800;
+        }
+        .navlinks{display:flex;gap:28px;color:#555;font-size:14px}
+        .navlinks a:hover,.navlinks a.active{color:#111}
+        .nav-actions{display:flex;align-items:center;gap:10px}
+        .btn{
+            display:inline-flex;align-items:center;justify-content:center;gap:8px;
+            min-height:42px;padding:0 17px;border:1px solid var(--line-dark);
+            border-radius:10px;font-size:14px;font-weight:650;cursor:pointer;
+            transition:.2s ease;background:#fff;
+        }
+        .btn:hover{transform:translateY(-1px);border-color:#aaa}
+        .btn.primary{background:#111;color:#fff;border-color:#111}
+        .btn.primary:hover{background:#252525}
+        .mobile-menu{display:none}
+
+        .page-hero{padding:92px 0 54px;text-align:center}
+        .eyebrow{
+            display:inline-flex;align-items:center;gap:8px;padding:7px 11px;
+            border:1px solid var(--line);border-radius:999px;background:var(--surface);
+            color:#555;font-size:12px;font-weight:650;margin-bottom:22px;
+        }
+        .dot{width:6px;height:6px;background:#111;border-radius:50%}
+        h1{
+            margin:0 auto;max-width:760px;font-size:clamp(48px,7vw,78px);
+            line-height:.98;letter-spacing:-.065em;font-weight:760;
+        }
+        .page-hero p{
+            max-width:650px;margin:24px auto 0;color:var(--muted);
+            font-size:17px;line-height:1.7;
+        }
+
+        .contact-wrap{
+            padding:18px 0 105px;
+        }
+        .contact-grid{
+            display:grid;
+            grid-template-columns:.82fr 1.18fr;
+            gap:22px;
+            align-items:start;
+        }
+        .panel{
+            border:1px solid var(--line);
+            border-radius:24px;
+            background:#fff;
+            box-shadow:var(--shadow);
+        }
+        .contact-info{padding:34px}
+        .kicker{
+            text-transform:uppercase;letter-spacing:.13em;font-size:11px;
+            color:#777;font-weight:700;
+        }
+        .contact-info h2{
+            font-size:clamp(30px,4vw,44px);line-height:1.02;
+            letter-spacing:-.055em;margin:12px 0 15px;
+        }
+        .contact-info>p{color:#707070;font-size:14px;line-height:1.75;margin:0}
+        .info-list{display:grid;gap:0;margin-top:30px;border-top:1px solid var(--line)}
+        .info-item{
+            display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--line);
+        }
+        .info-icon{
+            width:34px;height:34px;border:1px solid var(--line-dark);border-radius:10px;
+            display:grid;place-items:center;font-size:12px;font-weight:750;flex:none;
+        }
+        .info-item strong{display:block;font-size:13px;margin-bottom:4px}
+        .info-item span{display:block;color:#777;font-size:12px;line-height:1.55}
+        .response-note{
+            margin-top:26px;padding:14px 15px;border:1px solid var(--line);
+            border-radius:12px;background:var(--surface);color:#777;font-size:11px;line-height:1.6;
+        }
+
+        .form-panel{padding:34px}
+        .form-head{margin-bottom:26px}
+        .form-head h2{font-size:24px;letter-spacing:-.04em;margin:8px 0 7px}
+        .form-head p{margin:0;color:#777;font-size:13px;line-height:1.6}
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+        .field{display:grid;gap:7px}
+        .field.full{grid-column:1/-1}
+        .field label{font-size:12px;font-weight:700;color:#444}
+        .field label span{font-weight:500;color:#999}
+        .field input,.field select,.field textarea{
+            width:100%;border:1px solid var(--line-dark);border-radius:11px;
+            background:#fff;color:#111;outline:none;
+            transition:border-color .18s ease,box-shadow .18s ease;
+        }
+        .field input,.field select{height:46px;padding:0 13px}
+        .field textarea{min-height:155px;padding:12px 13px;resize:vertical;line-height:1.55}
+        .field input::placeholder,.field textarea::placeholder{color:#aaa}
+        .field input:focus,.field select:focus,.field textarea:focus{
+            border-color:#111;box-shadow:0 0 0 3px rgba(17,17,17,.06)
+        }
+        .form-bottom{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:22px}
+        .form-legal{color:#999;font-size:10px;line-height:1.55;max-width:420px}
+        .submit-btn{min-width:165px}
+        .form-status{display:none;margin-top:18px;padding:13px 14px;border-radius:11px;font-size:12px;line-height:1.5}
+        .form-status.success{display:block;border:1px solid #d9d9d9;background:#fafafa;color:#333}
+        .form-status.error{display:block;border:1px solid #e1e1e1;background:#f7f7f7;color:#333}
+        .form-status[hidden]{display:none}
+
+        .footer{border-top:1px solid var(--line);padding:34px 0;color:#777;font-size:12px}
+        .footer-inner{display:flex;justify-content:space-between;gap:20px}
+        .footer-links{display:flex;gap:20px}
+        .footer-links a:hover{color:#111}
+
+        @media(max-width:900px){
+            .navlinks{display:none}
+            .mobile-menu{display:inline-flex}
+            .contact-grid{grid-template-columns:1fr}
+        }
+        @media(max-width:620px){
+            .free-banner-copy{display:none}
+            .free-banner-inner{justify-content:space-between;min-height:36px}
+            .container{width:min(calc(100% - 28px),var(--max))}
+            .nav{height:64px}
+            .nav-actions .btn:not(.primary){display:none}
+            .page-hero{padding:70px 0 40px}
+            .page-hero p{font-size:16px}
+            .contact-wrap{padding-bottom:72px}
+            .contact-info,.form-panel{padding:25px 21px}
+            .form-grid{grid-template-columns:1fr}
+            .field.full{grid-column:auto}
+            .form-bottom{align-items:stretch;flex-direction:column}
+            .submit-btn{width:100%}
+            .footer-inner{flex-direction:column}
+            .footer-links{flex-wrap:wrap}
+        }
+    </style>
+</head>
+<body>
+<div class="ambient-grid" aria-hidden="true"></div>
+
+<div class="free-banner" role="note">
+    <div class="container free-banner-inner">
+      <span>
+        <strong>Always Free</strong>
+        <span class="free-banner-copy">10 million URLs / month included.</span>
+      </span>
+        <a href="/register">Sign up now <span aria-hidden="true">→</span></a>
+    </div>
+</div>
+
+<header class="nav">
+    <div class="container" style="padding:0 60px;display:flex;align-items:center;justify-content:space-between;width:100%">
+        <a class="brand" href="/"><span class="logo">P</span> PreonsURL</a>
+        <nav class="navlinks" aria-label="Primary navigation">
+            <a href="/#features">Features</a>
+            <a href="/#usecases">Use cases</a>
+            <a href="/#security">Security</a>
+            <a href="/#domains">Domains</a>
+            <a href="/#compare">Compare</a>
+            <a href="/#pricing">Pricing</a>
+            <a href="/#developers">Developers</a>
+        </nav>
+        <div class="nav-actions">
+            <a class="btn" href="/login">Sign in</a>
+            <a class="btn primary" href="/register">Get started</a>
+            <button class="btn mobile-menu" type="button" aria-label="Menu">☰</button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="page-hero">
+        <div class="container">
+            <div class="eyebrow"><span class="dot"></span> Get in touch</div>
+            <h1>Let’s talk about your links.</h1>
+            <p>
+                Tell us what you are building, what you need from PreonsURL, or where you are getting stuck.
+                We’ll use the details below to route your enquiry to the right place.
+            </p>
+        </div>
+    </section>
+
+    <section class="contact-wrap">
+        <div class="container contact-grid">
+            <aside class="panel contact-info">
+                <div class="kicker">Contact PreonsURL</div>
+                <h2>Built for real link infrastructure.</h2>
+                <p>
+                    Whether you are evaluating PreonsURL for a product, campaign, internal workflow or higher-volume deployment,
+                    send us the context and we can take it from there.
+                </p>
+
+                <div class="info-list">
+                    <div class="info-item">
+                        <div class="info-icon">01</div>
+                        <div>
+                            <strong>Product & general enquiries</strong>
+                            <span>Questions about features, link controls, domains, delivery modes or the dashboard.</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">02</div>
+                        <div>
+                            <strong>Enterprise & high volume</strong>
+                            <span>Tell us about scale, deployment, custom domain and integration requirements.</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">03</div>
+                        <div>
+                            <strong>Technical & API help</strong>
+                            <span>Share the endpoint, error or integration context so the issue is easier to investigate.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="response-note">
+                    Please do not include passwords, API keys, tokens or other credentials in this form.
+                </div>
+            </aside>
+
+            <section class="panel form-panel" aria-labelledby="contact-form-title">
+                <div class="form-head">
+                    <div class="kicker">Send a message</div>
+                    <h2 id="contact-form-title">Contact form</h2>
+                    <p>All fields marked with <strong>*</strong> are required.</p>
+                </div>
+
+                <form id="contactForm" novalidate>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="fullName">Full name *</label>
+                            <input id="fullName" name="fullName" type="text" maxlength="100" autocomplete="name" placeholder="Your full name" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="email">Email *</label>
+                            <input id="email" name="email" type="email" maxlength="254" autocomplete="email" placeholder="you@company.com" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="company">Company <span>(optional)</span></label>
+                            <input id="company" name="company" type="text" maxlength="150" autocomplete="organization" placeholder="Company or product name">
+                        </div>
+
+                        <div class="field">
+                            <label for="topic">What can we help with? *</label>
+                            <select id="topic" name="topic" required>
+                                <option value="" selected disabled>Select a topic</option>
+                                <option value="PRODUCT">Product question</option>
+                                <option value="ENTERPRISE">Enterprise / high volume</option>
+                                <option value="API">API / integration</option>
+                                <option value="DOMAIN">Custom domains</option>
+                                <option value="SECURITY">Security / access control</option>
+                                <option value="SUPPORT">Technical support</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="field full">
+                            <label for="message">Message *</label>
+                            <textarea id="message" name="message" maxlength="5000" placeholder="Tell us what you need, what you are building, or the issue you are seeing..." required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-bottom">
+                        <div class="form-legal">
+                            By submitting this form, you are asking PreonsURL to contact you about your enquiry.
+                            Do not include sensitive credentials or secrets.
+                        </div>
+                        <button id="submitButton" class="btn primary submit-btn" type="submit">
+                            Send message <span aria-hidden="true">→</span>
+                        </button>
+                    </div>
+                    <div id="formStatus" class="form-status" role="status" aria-live="polite" hidden></div>
+                </form>
+            </section>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container footer-inner">
+        <div>© 2026 PreonsURL. Secure link infrastructure.</div>
+        <div class="footer-links">
+            <a href="/docs">API docs</a>
+            <a href="/status">Status</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    (function(){
+        const form = document.getElementById('contactForm');
+        const status = document.getElementById('formStatus');
+        const submitButton = document.getElementById('submitButton');
+
+        function showStatus(type, message){
+            status.hidden = false;
+            status.className = 'form-status ' + type;
+            status.textContent = message;
+        }
+
+        form.addEventListener('submit', async function(event){
+            event.preventDefault();
+
+            if(!form.checkValidity()){
+                form.reportValidity();
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.style.opacity = '.65';
+            status.hidden = true;
+
+            const payload = {
+                fullName: document.getElementById('fullName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                company: document.getElementById('company').value.trim() || null,
+                topic: document.getElementById('topic').value,
+                message: document.getElementById('message').value.trim()
+            };
+
+            try{
+                const response = await fetch('/api/contact', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json','Accept':'application/json'},
+                    body:JSON.stringify(payload)
+                });
+
+                let data = null;
+                try{ data = await response.json(); }catch(_){ }
+
+                if(!response.ok){
+                    const message = data?.message || data?.error || 'We could not send your message. Please try again.';
+                    throw new Error(message);
+                }
+
+                showStatus('success', data?.message || 'Your message has been sent. We will get back to you using the email address you provided.');
+                form.reset();
+            }catch(error){
+                showStatus('error', error.message || 'Something went wrong. Please try again.');
+            }finally{
+                submitButton.disabled = false;
+                submitButton.style.opacity = '1';
+            }
+        });
+    })();
+</script>
+</body>
+</html>
