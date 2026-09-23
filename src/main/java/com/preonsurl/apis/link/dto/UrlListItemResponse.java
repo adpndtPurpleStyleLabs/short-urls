@@ -40,7 +40,10 @@ public record UrlListItemResponse(
         Instant lastUsedAt,
 
         @Schema(description = "Human-readable time ago when the link was last accessed/used", example = "2 hours ago")
-        String lastUsedAgo
+        String lastUsedAgo,
+
+        @Schema(description = "Public unique identifier for the link", example = "f8K2mP9xQ7La3VnR6Tc1Zw")
+        String publicId
 ) {
     public UrlListItemResponse(
             String shortLink,
@@ -49,7 +52,7 @@ public record UrlListItemResponse(
             boolean isExpired,
             String expiredReason
     ) {
-        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, expiredReason, 0L, null, null, null, null);
+        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, expiredReason, 0L, null, null, null, null, null);
     }
 
     public UrlListItemResponse(
@@ -60,6 +63,22 @@ public record UrlListItemResponse(
             String expiredReason,
             String why
     ) {
-        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, why, 0L, null, null, null, null);
+        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, why, 0L, null, null, null, null, null);
+    }
+
+    public UrlListItemResponse(
+            String shortLink,
+            String originalLink,
+            boolean isEnabled,
+            boolean isExpired,
+            String expiredReason,
+            String why,
+            long timesClicked,
+            Instant createdAt,
+            String createdAgo,
+            Instant lastUsedAt,
+            String lastUsedAgo
+    ) {
+        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, why, timesClicked, createdAt, createdAgo, lastUsedAt, lastUsedAgo, null);
     }
 }

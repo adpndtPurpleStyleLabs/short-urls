@@ -36,8 +36,41 @@ public record CreateNewUrlResponse(
         LinkMode linkMode,
 
         @Schema(description = "Whether the URL is active", example = "true")
-        Boolean isActive
+        Boolean isActive,
+
+        @Schema(description = "Unique public identifier for the link", example = "f8K2mP9xQ7La3VnR6Tc1Zw")
+        String publicId
 ) {
+    public CreateNewUrlResponse(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            Boolean isActive
+    ) {
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, null);
+    }
+
+    public CreateNewUrlResponse(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            String publicId
+    ) {
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, true, publicId);
+    }
+
     public CreateNewUrlResponse(
             String newUrl,
             String originalUrl,
@@ -49,7 +82,7 @@ public record CreateNewUrlResponse(
             List<String> tags,
             LinkMode linkMode
     ) {
-        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, true);
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, true, null);
     }
 
     public CreateNewUrlResponse(
@@ -62,7 +95,7 @@ public record CreateNewUrlResponse(
             String notes,
             List<String> tags
     ) {
-        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, LinkMode.REDIRECT, true);
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, LinkMode.REDIRECT, true, null);
     }
 
     public CreateNewUrlResponse(
@@ -72,7 +105,7 @@ public record CreateNewUrlResponse(
             Instant expireAt,
             Long usageLimit
     ) {
-        this(shortUrl, originalUrl, null, existing, expireAt, usageLimit, null, null, LinkMode.REDIRECT);
+        this(shortUrl, originalUrl, null, existing, expireAt, usageLimit, null, null, LinkMode.REDIRECT, true, null);
     }
 
     public CreateNewUrlResponse(
@@ -81,7 +114,7 @@ public record CreateNewUrlResponse(
             boolean existing,
             Instant expireAt
     ) {
-        this(shortUrl, originalUrl, null, existing, expireAt, null, null, null, LinkMode.REDIRECT);
+        this(shortUrl, originalUrl, null, existing, expireAt, null, null, null, LinkMode.REDIRECT, true, null);
     }
 
     public Instant expiresAt() {

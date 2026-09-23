@@ -65,8 +65,7 @@ public class LinkController {
             Long userId = user != null ? user.userId() : null;
 
             CreateNewUrlResponse response = newUrlService.createNewUrl(request, userId);
-            log.info("New-URL processed: code='{}', linkMode='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}",
-                    response.newUrl(), response.linkMode(), response.existing(), response.originalUrl(), response.usageLimit(), response.notes(), response.tags());
+            log.info("New-URL processed: code='{}', linkMode='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}", response.newUrl(), response.linkMode(), response.existing(), response.originalUrl(), response.usageLimit(), response.notes(), response.tags());
             return ResponseEntity.ok(ApiResponse.success(response, "New URL created successfully"));
         } catch (IllegalArgumentException e) {
             log.warn("Invalid URL create request: {}", e.getMessage());

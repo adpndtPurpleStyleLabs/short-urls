@@ -1850,6 +1850,7 @@
             background: #ffffff;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            border-radius: var(--radius-sm);
         }
 
         .link-modal-header h2 {
@@ -2636,7 +2637,7 @@
             width: 100%;
             box-sizing: border-box;
             background: #ffffff;
-            border-radius: 14px;
+            border-radius: var(--radius-sm);
         }
 
         .create-success-header {
@@ -2748,6 +2749,186 @@
             color: #475569;
             flex-shrink: 0;
             border-radius: 8px;
+        }
+
+        .btn-qr-created {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            height: 42px;
+            padding: 0 16px;
+            font-weight: 600;
+            font-size: 13px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-qr-created:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        /* =========================
+           QR CODE MODAL
+        ========================= */
+        .qr-modal-dialog {
+            width: min(440px, calc(100vw - 32px));
+            border-radius: 16px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin: auto;
+        }
+
+        .qr-modal-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            background: #ffffff;
+        }
+
+        .qr-code-display-card {
+            width: 100%;
+            background: #f8fafc;
+            border: 1.5px dashed #cbd5e1;
+            border-radius: 14px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 270px;
+            box-sizing: border-box;
+        }
+
+        .qr-state-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .qr-state-box.qr-error-box {
+            color: #ef4444;
+        }
+
+        .qr-image-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 14px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+        }
+
+        .qr-code-img {
+            width: 200px;
+            height: 200px;
+            display: block;
+            border-radius: 4px;
+            image-rendering: pixelated;
+        }
+
+        .qr-url-box {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+            box-sizing: border-box;
+        }
+
+        .qr-url-box .form-input {
+            flex: 1;
+            font-size: 13px;
+            height: 40px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0 12px;
+            color: #0f172a;
+            font-family: var(--font-mono, monospace);
+        }
+
+        .qr-url-box .btn {
+            height: 40px;
+            padding: 0 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .qr-url-box .btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .qr-modal-footer {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+            box-sizing: border-box;
+        }
+
+        .qr-modal-footer .btn {
+            flex: 1;
+            height: 42px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .qr-modal-footer .btn-primary {
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+        }
+
+        .qr-modal-footer .btn-primary:hover {
+            background: #1e293b;
+        }
+
+        .qr-modal-footer .btn-secondary {
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+        }
+
+        .qr-modal-footer .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .btn-qr-action {
+            margin-left: 2px;
         }
 
         /* =========================
@@ -5408,7 +5589,6 @@
                             <p class="create-success-desc">Your short URL is live, protected, and ready to share.</p>
                         </div>
                     </div>
-                    <button class="modal-close-btn" id="modalSuccessCloseBtn" type="button" aria-label="Close modal">&times;</button>
                 </div>
 
                 <div class="create-url-box">
@@ -5427,6 +5607,16 @@
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>
                         <span>Copy</span>
+                    </button>
+                    <button class="btn btn-secondary btn-qr-created" id="createdUrlQrBtn" type="button" title="View QR Code">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                        </svg>
+                        <span>QR Code</span>
                     </button>
                     <button class="btn" id="modalDoneBtn" type="button">Done</button>
                 </div>
@@ -5458,13 +5648,24 @@
                         <strong id="analyticsShortUrlDisplay">—</strong>
                         <span id="analyticsOriginalUrlDisplay">—</span>
                     </div>
-                    <button class="btn btn-primary" id="analyticsEditLinkBtn" type="button">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                        </svg>
-                        <span>Edit Link</span>
-                    </button>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button class="btn btn-secondary" id="analyticsQrBtn" type="button" style="display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 14px; font-size:12.5px; border-radius:8px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                            </svg>
+                            <span>QR Code</span>
+                        </button>
+                        <button class="btn btn-primary" id="analyticsEditLinkBtn" type="button">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                            </svg>
+                            <span>Edit Link</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Clicks Chart Card -->
@@ -5536,6 +5737,82 @@
                             <button class="pagination-btn" id="accessLogsNextBtn" type="button">Next →</button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+     QR CODE MODAL
+    ============================================================ -->
+    <div class="modal" id="qrCodeModal" aria-hidden="true">
+        <div class="modal-backdrop" id="qrCodeModalBackdrop"></div>
+        <div class="modal-dialog qr-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="qrCodeModalTitle">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-kicker">QR Code</div>
+                    <h2 id="qrCodeModalTitle">Link QR Code</h2>
+                    <p id="qrCodeModalSubtitle" style="word-break: break-all; margin-top: 2px;">Scan with phone camera to open short link</p>
+                </div>
+                <button class="modal-close-btn" id="qrCodeModalCloseBtn" type="button" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-content qr-modal-content">
+                <div class="qr-code-display-card">
+                    <!-- Loading state -->
+                    <div class="qr-state-box" id="qrModalLoading">
+                        <svg class="spin-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#0f172a;">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                        <span>Generating high-res QR code...</span>
+                    </div>
+
+                    <!-- Error state -->
+                    <div class="qr-state-box qr-error-box" id="qrModalError" style="display:none;">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <span id="qrModalErrorMsg">Failed to load QR code.</span>
+                        <button type="button" class="btn btn-secondary btn-sm" id="qrModalRetryBtn" style="margin-top:4px; height:32px; padding:0 12px; font-size:12px;">Try Again</button>
+                    </div>
+
+                    <!-- QR Image View -->
+                    <div class="qr-image-container" id="qrModalImageContainer" style="display:none;">
+                        <img id="qrModalImg" src="" alt="QR Code" class="qr-code-img" />
+                    </div>
+                </div>
+
+                <div class="qr-url-box">
+                    <input type="text" id="qrModalUrlInput" class="form-input mono" readonly />
+                    <button type="button" class="btn btn-secondary" id="qrModalCopyUrlBtn" title="Copy URL">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                        <span>Copy</span>
+                    </button>
+                </div>
+
+                <div class="qr-modal-footer">
+                    <button type="button" class="btn btn-primary" id="qrModalDownloadBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        <span>Download PNG</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="qrModalShareBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3" />
+                            <circle cx="6" cy="12" r="3" />
+                            <circle cx="18" cy="19" r="3" />
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
+                        <span>Share</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -6822,6 +7099,7 @@
             container.innerHTML = filtered.map(link => {
                 const shortUrl = link.shortLink || "";
                 const originalUrl = link.originalLink || "";
+                const publicId = link.publicId || "";
                 const isActive = link.isEnabled === true && link.isExpired !== true;
                 const timesClicked = link.timesClicked || 0;
                 const createdAgo = link.createdAgo || "Just now";
@@ -6838,7 +7116,7 @@
                     : `${window.location.origin}/${shortUrl.replace(/^\//, "")}`;
 
                 return `
-                <div class="link-item-row" data-short-url="${escapeAttribute(shortUrl)}" data-orig-url="${escapeAttribute(originalUrl)}" data-full-url="${escapeAttribute(fullShortUrl)}">
+                <div class="link-item-row" data-short-url="${escapeAttribute(shortUrl)}" data-orig-url="${escapeAttribute(originalUrl)}" data-full-url="${escapeAttribute(fullShortUrl)}" data-public-id="${escapeAttribute(publicId)}">
                     <div class="link-item-icon">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -6853,6 +7131,14 @@
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                            </button>
+                            <button type="button" class="btn-copy-short-url btn-qr-action" data-public-id="${escapeAttribute(publicId)}" data-url="${escapeAttribute(fullShortUrl)}" title="View QR Code">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
                                 </svg>
                             </button>
                         </div>
@@ -6894,6 +7180,15 @@
                             </svg>
                         </button>
                         <div class="link-action-dropdown">
+                            <button type="button" class="action-dropdown-item action-qr" data-public-id="${escapeAttribute(publicId)}" data-url="${escapeAttribute(fullShortUrl)}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                                </svg>
+                                <span>QR Code</span>
+                            </button>
                             <button type="button" class="action-dropdown-item action-analytics" data-short-url="${escapeAttribute(shortUrl)}" data-orig-url="${escapeAttribute(originalUrl)}">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="18" y1="20" x2="18" y2="10" />
@@ -6933,7 +7228,7 @@
             // Click row to view analytics
             container.querySelectorAll(".link-item-row").forEach(row => {
                 row.addEventListener("click", (e) => {
-                    if (e.target.closest(".btn-copy-short-url") || e.target.closest(".link-item-actions")) {
+                    if (e.target.closest(".btn-copy-short-url") || e.target.closest(".btn-qr-action") || e.target.closest(".link-item-actions")) {
                         return;
                     }
                     const shortUrl = row.getAttribute("data-short-url");
@@ -6943,7 +7238,7 @@
             });
 
             // Inline copy icon button
-            container.querySelectorAll(".btn-copy-short-url").forEach(btn => {
+            container.querySelectorAll(".btn-copy-short-url:not(.btn-qr-action)").forEach(btn => {
                 btn.addEventListener("click", async (e) => {
                     e.stopPropagation();
                     const url = btn.getAttribute("data-url");
@@ -6961,6 +7256,16 @@
                 });
             });
 
+            // Inline QR icon button
+            container.querySelectorAll(".btn-qr-action").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const pubId = btn.getAttribute("data-public-id");
+                    const url = btn.getAttribute("data-url");
+                    openQrCodeModal(pubId, url);
+                });
+            });
+
             // More actions toggle
             container.querySelectorAll(".btn-more-actions").forEach(btn => {
                 btn.addEventListener("click", (e) => {
@@ -6971,6 +7276,17 @@
                     if (!isOpen && dropdown) {
                         dropdown.classList.add("show");
                     }
+                });
+            });
+
+            // Dropdown: QR Code
+            container.querySelectorAll(".action-qr").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll(".link-action-dropdown.show").forEach(d => d.classList.remove("show"));
+                    const pubId = btn.getAttribute("data-public-id");
+                    const url = btn.getAttribute("data-url");
+                    openQrCodeModal(pubId, url);
                 });
             });
 
@@ -7049,12 +7365,207 @@
         }
 
         /*
+         * 9B. QR CODE MODAL
+         */
+        let currentQrBlob = null;
+        let currentQrPublicId = null;
+        let currentQrShortUrl = null;
+
+        async function openQrCodeModal(publicId, shortUrl) {
+            currentQrPublicId = publicId || "";
+            currentQrShortUrl = shortUrl || "";
+            currentQrBlob = null;
+
+            const modal = document.getElementById("qrCodeModal");
+            if (!modal) return;
+
+            const subtitleEl = document.getElementById("qrCodeModalSubtitle");
+            const urlInput = document.getElementById("qrModalUrlInput");
+            const loadingState = document.getElementById("qrModalLoading");
+            const errorState = document.getElementById("qrModalError");
+            const imgContainer = document.getElementById("qrModalImageContainer");
+            const imgEl = document.getElementById("qrModalImg");
+
+            if (subtitleEl) subtitleEl.textContent = shortUrl || "Scan with phone camera to open short link";
+            if (urlInput) urlInput.value = shortUrl || "";
+
+            // Reset states
+            if (loadingState) loadingState.style.display = "flex";
+            if (errorState) errorState.style.display = "none";
+            if (imgContainer) imgContainer.style.display = "none";
+            if (imgEl) imgEl.src = "";
+
+            modal.classList.add("open");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.style.overflow = "hidden";
+
+            // If publicId is missing, attempt to resolve from link info
+            if (!currentQrPublicId && shortUrl) {
+                try {
+                    const query = new URLSearchParams({ newUrl: shortUrl });
+                    const res = await authenticatedFetch(`/link?${query.toString()}`);
+                    const json = await parseResponse(res);
+                    if (res.ok && json.success && json.data?.publicId) {
+                        currentQrPublicId = json.data.publicId;
+                    }
+                } catch (e) {
+                    console.warn("Could not resolve publicId:", e);
+                }
+            }
+
+            if (!currentQrPublicId) {
+                if (loadingState) loadingState.style.display = "none";
+                if (errorState) {
+                    errorState.style.display = "flex";
+                    const errorMsg = document.getElementById("qrModalErrorMsg");
+                    if (errorMsg) errorMsg.textContent = "No public identifier available for this link.";
+                }
+                return;
+            }
+
+            await loadQrCode(currentQrPublicId);
+        }
+
+        function closeQrCodeModal() {
+            const modal = document.getElementById("qrCodeModal");
+            if (!modal) return;
+            modal.classList.remove("open");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = "";
+
+            // Release object URL
+            const imgEl = document.getElementById("qrModalImg");
+            if (imgEl && imgEl.src && imgEl.src.startsWith("blob:")) {
+                URL.revokeObjectURL(imgEl.src);
+                imgEl.src = "";
+            }
+        }
+
+        async function loadQrCode(publicId) {
+            const loadingState = document.getElementById("qrModalLoading");
+            const errorState = document.getElementById("qrModalError");
+            const errorMsg = document.getElementById("qrModalErrorMsg");
+            const imgContainer = document.getElementById("qrModalImageContainer");
+            const imgEl = document.getElementById("qrModalImg");
+
+            if (loadingState) loadingState.style.display = "flex";
+            if (errorState) errorState.style.display = "none";
+            if (imgContainer) imgContainer.style.display = "none";
+
+            try {
+                const response = await authenticatedFetch(`/api/links/${encodeURIComponent(publicId)}/qr`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load QR code (HTTP ${response.status})`);
+                }
+                const blob = await response.blob();
+                currentQrBlob = blob;
+                const blobUrl = URL.createObjectURL(blob);
+                if (imgEl) imgEl.src = blobUrl;
+                if (loadingState) loadingState.style.display = "none";
+                if (imgContainer) imgContainer.style.display = "flex";
+            } catch (err) {
+                if (loadingState) loadingState.style.display = "none";
+                if (errorState) errorState.style.display = "flex";
+                if (errorMsg) errorMsg.textContent = err.message || "Failed to load QR code.";
+            }
+        }
+
+        // Setup QR modal listeners
+        document.getElementById("qrCodeModalCloseBtn")?.addEventListener("click", closeQrCodeModal);
+        document.getElementById("qrCodeModalBackdrop")?.addEventListener("click", closeQrCodeModal);
+        document.getElementById("qrModalRetryBtn")?.addEventListener("click", () => {
+            if (currentQrPublicId) loadQrCode(currentQrPublicId);
+        });
+
+        // Copy short link inside QR modal
+        document.getElementById("qrModalCopyUrlBtn")?.addEventListener("click", async () => {
+            if (!currentQrShortUrl) return;
+            const ok = await copyToClipboard(currentQrShortUrl);
+            if (ok) {
+                showToast("success", "Copied", "Link copied to clipboard.");
+            } else {
+                showToast("error", "Copy failed", "Could not copy link.");
+            }
+        });
+
+        // Download PNG QR code
+        document.getElementById("qrModalDownloadBtn")?.addEventListener("click", () => {
+            if (!currentQrBlob) {
+                showToast("error", "Download failed", "QR code image not ready yet.");
+                return;
+            }
+            const blobUrl = URL.createObjectURL(currentQrBlob);
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            let filename = "qr-code.png";
+            if (currentQrShortUrl) {
+                try {
+                    const parsed = new URL(currentQrShortUrl);
+                    const pathPart = parsed.pathname.replace(/^\//, "").replace(/\//g, "-");
+                    filename = (pathPart || "short-link") + "-qr.png";
+                } catch {
+                    filename = "qr-" + (currentQrPublicId || "link") + ".png";
+                }
+            }
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+            showToast("success", "Downloaded", "QR code image saved as PNG.");
+        });
+
+        // Share QR code
+        document.getElementById("qrModalShareBtn")?.addEventListener("click", async () => {
+            const shareUrl = currentQrShortUrl || window.location.href;
+            const shareTitle = "Scan QR Code";
+            const shareText = `Scan this QR code to visit: ${shareUrl}`;
+
+            if (navigator.share) {
+                try {
+                    if (currentQrBlob && navigator.canShare) {
+                        const file = new File([currentQrBlob], "qr-code.png", { type: "image/png" });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                title: shareTitle,
+                                text: shareText,
+                                url: shareUrl,
+                                files: [file]
+                            });
+                            return;
+                        }
+                    }
+                    await navigator.share({
+                        title: shareTitle,
+                        text: shareText,
+                        url: shareUrl
+                    });
+                } catch (shareErr) {
+                    if (shareErr.name !== "AbortError") {
+                        await copyToClipboard(shareUrl);
+                        showToast("info", "Link copied", "Link copied to clipboard for sharing.");
+                    }
+                }
+            } else {
+                const ok = await copyToClipboard(shareUrl);
+                if (ok) {
+                    showToast("success", "Link copied", "Link copied to clipboard! Share it anywhere.");
+                } else {
+                    showToast("error", "Share failed", "Could not copy link to clipboard.");
+                }
+            }
+        });
+
+        /*
          * 10. URL ANALYTICS MODAL
          */
         function openUrlAnalyticsModal(shortUrl, originalUrl) {
             appState.selectedUrl = shortUrl;
             appState.selectedOriginalUrl = originalUrl;
             appState.accessLogPage = 0;
+
+            const foundLink = (appState.currentLinksData || []).find(l => l.shortLink === shortUrl);
+            appState.selectedPublicId = foundLink?.publicId || "";
 
             document.getElementById("analyticsShortUrlDisplay").textContent = shortUrl;
             document.getElementById("analyticsOriginalUrlDisplay").textContent = originalUrl || "—";
@@ -7078,6 +7589,11 @@
 
         document.getElementById("urlAnalyticsCloseBtn").addEventListener("click", closeUrlAnalyticsModal);
         document.getElementById("urlAnalyticsBackdrop").addEventListener("click", closeUrlAnalyticsModal);
+        document.getElementById("analyticsQrBtn")?.addEventListener("click", () => {
+            const shortUrl = appState.selectedUrl;
+            const pubId = appState.selectedPublicId;
+            openQrCodeModal(pubId, shortUrl);
+        });
 
         document.getElementById("analyticsModalRange").addEventListener("change", (e) => {
             appState.urlAnalyticsRange = Number(e.target.value) || 30;
@@ -7240,10 +7756,11 @@
                 if (appState.currentPage === "links") loadLinks(0);
                 if (appState.currentPage === "home") loadOverallAnalytics();
             });
-            document.getElementById("modalSuccessCloseBtn")?.addEventListener("click", () => {
-                closeLinkModal();
-                if (appState.currentPage === "links") loadLinks(0);
-                if (appState.currentPage === "home") loadOverallAnalytics();
+            document.getElementById("createdUrlQrBtn")?.addEventListener("click", () => {
+                const btn = document.getElementById("createdUrlQrBtn");
+                const pubId = btn?.dataset.publicId;
+                const url = btn?.dataset.url || document.getElementById("createdShortUrlField")?.value;
+                if (pubId) openQrCodeModal(pubId, url);
             });
 
             // Tab switching: directly switches active tab and updates footer buttons
@@ -7826,7 +8343,13 @@
 
                 // SUCCESS: Show success panel inside modal (thin & wide)
                 const generatedUrl = result.data?.newUrl || "";
+                const publicId = result.data?.publicId || "";
                 document.getElementById("createdShortUrlField").value = generatedUrl;
+                const qrBtn = document.getElementById("createdUrlQrBtn");
+                if (qrBtn) {
+                    qrBtn.dataset.publicId = publicId;
+                    qrBtn.dataset.url = generatedUrl;
+                }
                 const dialog = document.querySelector(".link-modal-dialog");
                 if (dialog) dialog.classList.add("is-success");
                 document.getElementById("linkModalContent").style.display = "none";

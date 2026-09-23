@@ -59,7 +59,7 @@ public class SecurityConfig {
                         // =========================
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // =========================
-                        // Authentication & Verification & Console UI
+                        // Authentication & Verification & Console UI & Link QR Codes
                         // =========================
                         .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**", "/console", "/console/**").permitAll()
                         // =========================

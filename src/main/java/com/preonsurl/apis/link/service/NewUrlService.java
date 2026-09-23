@@ -12,6 +12,7 @@ import com.preonsurl.apis.link.entity.NewUrlAccessLog;
 import com.preonsurl.apis.link.entity.NewUrlChangeLog;
 import com.preonsurl.apis.link.entity.NewUrlTag;
 import com.preonsurl.apis.link.enums.LinkMode;
+import com.preonsurl.apis.link.exception.ResourceNotFoundException;
 import com.preonsurl.apis.link.repository.NewUrlAccessLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlChangeLogRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
@@ -28,6 +29,7 @@ import com.preonsurl.apis.link.exception.UrlExpiredException;
 import com.preonsurl.apis.link.exception.UrlNotFoundException;
 import com.preonsurl.apis.link.exception.UrlUsageLimitExceededException;
 import com.preonsurl.core.ShortCodePool;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -214,7 +216,9 @@ public class NewUrlService {
                             found.getUsageLimit(),
                             found.getNote(),
                             tags,
-                            found.getLinkMode()
+                            found.getLinkMode(),
+                            found.isActive(),
+                            found.getPublicId()
                     );
                 }
 
@@ -244,7 +248,9 @@ public class NewUrlService {
                         saved.getUsageLimit(),
                         saved.getNote(),
                         savedTags,
-                        saved.getLinkMode()
+                        saved.getLinkMode(),
+                        saved.isActive(),
+                        saved.getPublicId()
                 );
             } else {
                 String fullPath = customPath;
@@ -290,7 +296,9 @@ public class NewUrlService {
                                 existing.getUsageLimit(),
                                 existing.getNote(),
                                 tags,
-                                existing.getLinkMode()
+                                existing.getLinkMode(),
+                                existing.isActive(),
+                                existing.getPublicId()
                         );
                     }
 
@@ -324,7 +332,9 @@ public class NewUrlService {
                             saved.getUsageLimit(),
                             saved.getNote(),
                             savedTags,
-                            saved.getLinkMode()
+                            saved.getLinkMode(),
+                            saved.isActive(),
+                            saved.getPublicId()
                     );
                 }
 
@@ -349,7 +359,9 @@ public class NewUrlService {
                         saved.getUsageLimit(),
                         saved.getNote(),
                         savedTags,
-                        saved.getLinkMode()
+                        saved.getLinkMode(),
+                        saved.isActive(),
+                        saved.getPublicId()
                 );
             }
         } else {
@@ -388,7 +400,9 @@ public class NewUrlService {
                         found.getUsageLimit(),
                         found.getNote(),
                         tags,
-                        found.getLinkMode()
+                        found.getLinkMode(),
+                        found.isActive(),
+                        found.getPublicId()
                 );
             }
 
@@ -416,7 +430,9 @@ public class NewUrlService {
                     saved.getUsageLimit(),
                     saved.getNote(),
                     savedTags,
-                    saved.getLinkMode()
+                    saved.getLinkMode(),
+                    saved.isActive(),
+                    saved.getPublicId()
             );
         }
     }
@@ -498,7 +514,8 @@ public class NewUrlService {
                 newUrl.getNote(),
                 tags,
                 newUrl.getLinkMode(),
-                newUrl.isActive()
+                newUrl.isActive(),
+                newUrl.getPublicId()
         );
     }
 
@@ -677,7 +694,8 @@ public class NewUrlService {
                 entity.getNote(),
                 finalTags,
                 entity.getLinkMode(),
-                entity.isActive()
+                entity.isActive(),
+                entity.getPublicId()
         );
     }
 
@@ -903,7 +921,8 @@ public class NewUrlService {
                     createdAt,
                     createdAgo,
                     lastUsedAt,
-                    lastUsedAgo
+                    lastUsedAgo,
+                    entity.getPublicId()
             );
         });
     }
@@ -983,6 +1002,28 @@ public class NewUrlService {
                 log.getReferer(),
                 log.getAccessedAt()
         ));
+    }
+
+    public NewUrl getNewUrlByPublicId(String publicId){
+       return repository
+                .findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Link not found"));
+    }
+
+    @PostConstruct
+    public void backfillMissingPublicIds() {
+        try {
+            List<NewUrl> missing = repository.findAllByPublicIdIsNull();
+            if (missing != null && !missing.isEmpty()) {
+                for (NewUrl url : missing) {
+                    url.setPublicId(NewUrl.generatePublicId());
+                }
+                repository.saveAll(missing);
+                log.info("Backfilled {} short URLs with missing publicId", missing.size());
+            }
+        } catch (Exception e) {
+            log.warn("Could not backfill missing publicIds: {}", e.getMessage());
+        }
     }
 }
 

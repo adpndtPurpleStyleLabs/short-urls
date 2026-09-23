@@ -60,5 +60,11 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
     @Modifying
     @Query("UPDATE NewUrl s SET s.clickCount = s.clickCount + 1, s.updatedAt = CURRENT_INSTANT WHERE s.id = :id")
     void incrementClickCount(@Param("id") Long id);
+
+    Optional<NewUrl> findByPublicId(String publicId);
+
+    boolean existsByPublicId(String publicId);
+
+    List<NewUrl> findAllByPublicIdIsNull();
 }
 
