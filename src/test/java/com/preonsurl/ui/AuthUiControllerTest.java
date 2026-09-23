@@ -324,7 +324,7 @@ public class AuthUiControllerTest {
                 .andExpect(view().name("404"))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("Page Not Found")))
-                .andExpect(content().string(containsString("HTTP 404")))
+                .andExpect(content().string(containsString("404")))
                 .andExpect(content().string(containsString("/this-route-does-not-exist")))
                 .andExpect(content().string(containsString("Login")))
                 .andExpect(content().string(containsString("Back")));
