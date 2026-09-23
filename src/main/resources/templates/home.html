@@ -1,3 +1,4 @@
+
 <!doctype html>
 
 <html lang="en">
@@ -221,75 +222,100 @@
     }
 
     .hero-animated-text {
-      display: block;
+      display: grid;
       width: 100%;
       max-width: 100%;
+      min-height: 2.08em;
+      place-items: center;
+      position: relative;
       text-align: center;
-      line-height: 1;
+      line-height: 1.02;
     }
 
-    .hero-word {
-      display: inline;
-      white-space: nowrap;
+    .hero-animation-line {
+      grid-area: 1 / 1;
+      display: block;
+      width: min(100%, 940px);
+      margin: 0 auto;
+      text-align: center;
+      line-height: 1.02;
+      visibility: hidden;
+      pointer-events: none;
     }
 
-    .hero-char {
+    .hero-animation-line.is-current {
+      visibility: visible;
+    }
+
+    .hero-animation-char {
       display: inline-block;
       opacity: 0;
-      transform: translateY(0.24em);
+      transform: translate3d(0, 0.25em, 0);
       filter: blur(7px);
       transition:
-              opacity 0.28s ease,
-              transform 0.38s cubic-bezier(0.2, 0.75, 0.25, 1),
-              filter 0.38s ease;
+              opacity 0.22s ease,
+              transform 0.34s cubic-bezier(0.2, 0.75, 0.25, 1),
+              filter 0.34s ease;
       will-change: opacity, transform, filter;
     }
 
-    .hero-char.is-visible {
+    .hero-animation-char.is-visible {
       opacity: 1;
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0);
       filter: blur(0);
     }
 
-    .hero-space {
-      display: inline-block;
-      width: 0.24em;
-      flex: none;
-    }
-
-    .hero-lock-static {
+    .hero-animation-lock {
       display: inline-flex;
-      width: 0.72em;
-      height: 0.72em;
+      width: 0.68em;
+      height: 0.68em;
       align-items: center;
       justify-content: center;
       vertical-align: 0.02em;
-      flex: none;
-      opacity: 0;
-      transform: translateY(0.24em);
-      filter: blur(7px);
       margin-right: 0.13em;
+      opacity: 0;
+      transform: translate3d(0, 0.25em, 0) scale(0.92);
+      filter: blur(7px);
       transition:
-              opacity 0.28s ease,
+              opacity 0.24s ease,
               transform 0.38s cubic-bezier(0.2, 0.75, 0.25, 1),
               filter 0.38s ease;
       will-change: opacity, transform, filter;
     }
 
-    .hero-lock-static svg {
+    .hero-animation-lock svg {
       display: block;
       width: 100%;
       height: 100%;
+      overflow: visible;
+    }
+
+    .hero-animation-lock .lock-shackle {
       fill: none;
       stroke: currentColor;
-      stroke-width: 1.8;
+      stroke-width: 3.2;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
 
-    .hero-lock-static.is-visible {
+    .hero-animation-lock .lock-body {
+      fill: currentColor;
+    }
+
+    .hero-animation-lock .lock-keyhole,
+    .hero-animation-lock .lock-stem {
+      fill: #fff;
+      stroke: #fff;
+      stroke-linecap: round;
+    }
+
+    .hero-animation-lock .lock-stem {
+      stroke-width: 1.9;
+    }
+
+    .hero-animation-lock.is-visible {
       opacity: 1;
-      transform: translateY(0.015em);
+      transform: translate3d(0, 0.015em, 0) scale(1);
       filter: blur(0);
     }
 
@@ -1321,6 +1347,10 @@
         font-size: clamp(40px, 14vw, 62px);
       }
 
+      .hero-animation-line {
+        width: min(100%, 92vw);
+      }
+
       .container {
         width: min(calc(100% - 28px), var(--max));
       }
@@ -1451,61 +1481,24 @@
     <div class="container">
       <div class="eyebrow"><span class="dot"></span> Secure link infrastructure</div>
 
-      <h1 class="hero-title" aria-label="Secure short links with control built in.">
-                        <span class="hero-animated-text" aria-hidden="true">
-                            <span class="lock-icon hero-lock-static">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M7.5 10V7.75C7.5 5.13 9.52 3 12 3s4.5 2.13 4.5 4.75V10" />
-                                    <rect x="5" y="10" width="14" height="11" rx="2.2" />
-                                    <path class="lock-key" d="M12 14v3" />
-                                </svg>
-                            </span>
+      <h1 class="hero-title" aria-label="Secure gateway to your URL. Secure short links with control built in.">
+        <span class="hero-animated-text" aria-hidden="true">
+          <span class="hero-animation-line hero-gateway-line">
+            SECURE GATEWAY TO YOUR URL
+          </span>
 
-                            <span class="hero-char">S</span>
-                            <span class="hero-char">e</span>
-                            <span class="hero-char">c</span>
-                            <span class="hero-char">u</span>
-                            <span class="hero-char">r</span>
-                            <span class="hero-char">e</span>
-                            <span class="hero-space" aria-hidden="true"></span>
-                            <span class="hero-char">s</span>
-                            <span class="hero-char">h</span>
-                            <span class="hero-char">o</span>
-                            <span class="hero-char">r</span>
-                            <span class="hero-char">t</span>
-                            <span class="hero-space" aria-hidden="true"></span>
-                            <span class="hero-char">l</span>
-                            <span class="hero-char">i</span>
-                            <span class="hero-char">n</span>
-                            <span class="hero-char">k</span>
-                            <span class="hero-char">s</span>
-                            <span class="hero-space" aria-hidden="true"></span>
-                           <span class="hero-space" aria-hidden="true"></span>
-                           <span class="hero-space" aria-hidden="true"></span>
-                           <span class="hero-space" aria-hidden="true"></span>
-                            <span class="hero-char">w</span>
-                            <span class="hero-char">i</span>
-                            <span class="hero-char">t</span>
-                            <span class="hero-char">h</span>
-                            <span class="hero-space" aria-hidden="true"></span>
-                            <span class="hero-char">c</span>
-                            <span class="hero-char">o</span>
-                            <span class="hero-char">n</span>
-                            <span class="hero-char">t</span>
-                            <span class="hero-char">r</span>
-                            <span class="hero-char">o</span>
-                            <span class="hero-char">l</span>
-                            <span class="hero-space" aria-hidden="true"></span>
-                            <span class="hero-char">b</span>
-                            <span class="hero-char">u</span>
-                            <span class="hero-char">i</span>
-                            <span class="hero-char">l</span>
-                            <span class="hero-char">t</span>
-                            <span class="hero-space" aria-hidden="true"></span>
-                            <span class="hero-char">i</span>
-                            <span class="hero-char">n</span>
-                            <span class="hero-char">.</span>
-                        </span>
+          <span class="hero-animation-line hero-secure-line">
+            <span class="hero-animation-lock">
+              <svg viewBox="0 0 32 32" aria-hidden="true">
+                <path class="lock-shackle" d="M9 14V9.5C9 5.91 11.91 3 15.5 3S22 5.91 22 9.5V14" />
+                <rect class="lock-body" x="4.5" y="12" width="22" height="17" rx="4" />
+                <circle class="lock-keyhole" cx="15.5" cy="20" r="1.8" />
+                <path class="lock-stem" d="M15.5 21.7v3" />
+              </svg>
+            </span>
+            <span class="hero-animation-copy">SECURE SHORT LINKS WITH CONTROL BUILT IN.</span>
+          </span>
+        </span>
       </h1>
 
       <p>
@@ -2706,39 +2699,110 @@
 
 <script>
   (function () {
-    function startHeroAnimation() {
-      const hero = document.querySelector(".hero-animated-text");
-      if (!hero) return;
+    function initHeroAnimation() {
+      const root = document.querySelector('.hero-animated-text');
+      if (!root) return;
 
-      const lock = hero.querySelector(".hero-lock-static");
-      const chars = Array.from(hero.querySelectorAll(".hero-char"));
+      const gateway = root.querySelector('.hero-gateway-line');
+      const secure = root.querySelector('.hero-secure-line');
+      const secureCopy = root.querySelector('.hero-animation-copy');
+      const lock = root.querySelector('.hero-animation-lock');
 
-      // Reset so the animation also works after a browser refresh/navigation.
-      if (lock) lock.classList.remove("is-visible");
-      chars.forEach((char) => char.classList.remove("is-visible"));
+      if (!gateway || !secure || !secureCopy) return;
 
-      // Lock appears first, then each character enters in sequence.
-      window.setTimeout(() => {
-        if (lock) lock.classList.add("is-visible");
-      }, 80);
+      const GATEWAY_TEXT = 'SECURE GATEWAY TO UR URL';
+      const SECURE_TEXT = 'SECURE SHORT LINKS      CONTROL BUILT IN.';
+      const LETTER_STEP = 80;
+      const HOLD_TIME = 2000;
+      const REVERSE_STEP = 42;
+      const BETWEEN_TIME = 250;
 
-      const startDelay = 180;
-      const step = 48;
+      const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+      const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 
-      chars.forEach((char, index) => {
-        window.setTimeout(
-                () => {
-                  char.classList.add("is-visible");
-                },
-                startDelay + index * step
-        );
-      });
+      function buildLine(line, text) {
+        line.replaceChildren();
+        for (const character of text) {
+          if (character === ' ') {
+            line.appendChild(document.createTextNode(' '));
+            // continue;
+          }
+          const char = document.createElement('span');
+          char.className = 'hero-animation-char';
+          char.textContent = character;
+          line.appendChild(char);
+        }
+        return [...line.querySelectorAll('.hero-animation-char')];
+      }
+
+      const gatewayChars = buildLine(gateway, GATEWAY_TEXT);
+      const secureChars = buildLine(secureCopy, SECURE_TEXT);
+
+      function reset() {
+        gateway.classList.remove('is-current');
+        secure.classList.remove('is-current');
+        gatewayChars.forEach((char) => char.classList.remove('is-visible'));
+        secureChars.forEach((char) => char.classList.remove('is-visible'));
+        if (lock) lock.classList.remove('is-visible');
+      }
+
+      async function showChars(chars) {
+        for (const char of chars) {
+          char.classList.add('is-visible');
+          await sleep(LETTER_STEP);
+        }
+      }
+
+      async function hideCharsReverse(chars) {
+        for (let i = chars.length - 1; i >= 0; i--) {
+          chars[i].classList.remove('is-visible');
+          await sleep(REVERSE_STEP);
+        }
+      }
+
+      async function play(line, chars, withLock) {
+        reset();
+        line.classList.add('is-current');
+
+        // Force a paint of the visible line before the first character transition.
+        await frame();
+        await frame();
+
+        if (withLock && lock) {
+          lock.classList.add('is-visible');
+          await sleep(90);
+        }
+
+        await showChars(chars);
+        await sleep(HOLD_TIME);
+
+        // Reverse exactly the entry sequence: last character leaves first.
+        if (withLock && lock) {
+          lock.classList.remove('is-visible');
+        }
+        await hideCharsReverse(chars);
+
+        line.classList.remove('is-current');
+        await sleep(BETWEEN_TIME);
+      }
+
+      reset();
+
+      // Intentionally keep this hero animation active even when the browser
+      // reports prefers-reduced-motion, because the product hero is explicitly
+      // designed around the animated messaging sequence.
+      (async function runForever() {
+        while (document.body.contains(root)) {
+          await play(gateway, gatewayChars, false);
+          await play(secure, secureChars, true);
+        }
+      })();
     }
 
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", startHeroAnimation, { once: true });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initHeroAnimation, { once: true });
     } else {
-      startHeroAnimation();
+      initHeroAnimation();
     }
   })();
 </script>
