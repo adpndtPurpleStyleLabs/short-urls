@@ -78,12 +78,13 @@ public class AuthAndLinkSecurityIntegrationTest {
     @Test
     void registerNewUserSucceeds() throws Exception {
         String payload = """
-                {
-                    "fullName": "Alice Johnson",
-                    "username": "alice",
-                    "password": "Password123!"
-                }
-                """;
+            {
+                "fullName": "Alice Johnson",
+                "username": "alice",
+                "email": "alice@example.com",
+                "password": "Password123!"
+            }
+            """;
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -93,23 +94,36 @@ public class AuthAndLinkSecurityIntegrationTest {
                 .andExpect(jsonPath("$.data.username").value("alice"));
 
         assertTrue(userRepository.findByUsername("alice").isPresent());
+
         User user = userRepository.findByUsername("alice").get();
+
         assertEquals("Alice Johnson", user.getFullName());
+        assertEquals("alice@example.com", user.getEmail());
         assertTrue(passwordEncoder.matches("Password123!", user.getPasswordHash()));
     }
 
     @Test
     void registerWithDuplicateUsernameReturns400BadRequest() throws Exception {
         Tenant tenant = tenantRepository.save(new Tenant("Existing Tenant"));
-        userRepository.save(new User(tenant.getId(), "Bob Smith", "bob", passwordEncoder.encode("Secret!")));
+
+        User existingUser = new User(
+                tenant.getId(),
+                "Bob Smith",
+                "bob",
+                passwordEncoder.encode("Secret!")
+        );
+        existingUser.setEmail("bob@example.com");
+
+        userRepository.save(existingUser);
 
         String payload = """
-                {
-                    "fullName": "Another Bob",
-                    "username": "bob",
-                    "password": "NewPassword123!"
-                }
-                """;
+            {
+                "fullName": "Another Bob",
+                "username": "bob",
+                "email": "anotherbob@example.com",
+                "password": "NewPassword123!"
+            }
+            """;
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

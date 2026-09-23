@@ -56,10 +56,7 @@ public class AuthService {
             throw new IllegalArgumentException("Username already exists: " + username);
         }
 
-        String email = (request.email() != null && !request.email().isBlank())
-                ? request.email().trim().toLowerCase()
-                : (username + "@example.com");
-
+        String email = request.email().trim();
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email address is already in use: " + email);
         }
@@ -94,8 +91,11 @@ public class AuthService {
         }
         String identifier = request.username().trim();
 
-        User user = userRepository.findByUsernameOrEmail(identifier, identifier.toLowerCase())
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
+        User user = userCache.getByEmail(identifier.toLowerCase());
+        if(user == null){
+            user = userRepository.findByUsernameOrEmail(identifier, identifier.toLowerCase())
+                    .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
+        }
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid username or password");
@@ -106,6 +106,7 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user);
+        userCache.put(user);
         return new LoginResponse(token, "Bearer", jwtService.getExpirationSeconds(), true, user.getEmail());
     }
 
