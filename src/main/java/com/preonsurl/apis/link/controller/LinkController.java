@@ -79,7 +79,7 @@ public class LinkController {
 
     @Operation(
             summary = "Fetch new URL details",
-            description = "Retrieves new URL details, notes, and tags by destination URL or new URL. Requires API key or Bearer token authentication.",
+            description = "Retrieves new URL details, notes, and tags by public ID. Requires API key or Bearer token authentication.",
             security = {
                     @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
                     @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
@@ -87,8 +87,7 @@ public class LinkController {
     )
     @GetMapping(value = {""})
     public ResponseEntity<ApiResponse<CreateNewUrlResponse>> getLinkInfo(
-            @RequestParam(value = "newUrl", required = false) String newUrl,
-            @RequestParam(value = "fullUrl", required = false) String fullUrl,
+            @RequestParam(value = "id", required = true) String publicId,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
         try {
             AuthenticatedUser user = resolveUser(currentUser);
@@ -96,14 +95,12 @@ public class LinkController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Authentication required: user ID not found"));
             }
-
-            String queryUrl = (newUrl != null && !newUrl.isBlank()) ? newUrl : fullUrl;
-            if (queryUrl == null || queryUrl.isBlank()) {
+            if (publicId == null || publicId.isBlank()) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("URL parameter 'newUrl' cannot be empty"));
+                        .body(ApiResponse.error("URL parameter 'id' cannot be empty"));
             }
 
-            CreateNewUrlResponse response = newUrlService.getLinkInfo(queryUrl.trim(), user.userId());
+            CreateNewUrlResponse response = newUrlService.getLinkInfo(publicId, user.userId());
             log.info("New URL info retrieved: url='{}', original='{}', userId={}", response.newUrl(), response.originalUrl(), user.userId());
             return ResponseEntity.ok(ApiResponse.success(response, "Link details retrieved successfully"));
         } catch (UrlNotFoundException e) {
@@ -198,56 +195,31 @@ public class LinkController {
 
     @Operation(
             summary = "List link access logs",
-            description = "Retrieves a paginated list of access logs for a specific short URL (or all URLs of the user if no URL parameter is provided), ordered by latest first by default. Requires authentication.",
+            description = "Retrieves a paginated list of access logs for a specific link by its public ID, ordered by latest first by default. Requires authentication.",
             security = {
                     @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
                     @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
             }
     )
-    @GetMapping(value = {"/logs", "/access-log", "/access-logs"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{id}/accessLog", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<Page<LinkAccessLogResponse>>> listAccessLogs(
-            @RequestParam(value = "newUrl", required = false) String newUrl,
-            @RequestParam(value = "fullUrl", required = false) String fullUrl,
-            @RequestParam(value = "url", required = false) String url,
-            @RequestParam(value = "shortCode", required = false) String shortCode,
+            @PathVariable("id") String publicId,
             @PageableDefault(page = 0, size = 20, sort = "accessedAt", direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
-        String queryUrl = (url != null && !url.isBlank()) ? url
-                : ((newUrl != null && !newUrl.isBlank()) ? newUrl
-                : ((shortCode != null && !shortCode.isBlank()) ? shortCode : fullUrl));
-        return handleListAccessLogs(queryUrl, pageable, currentUser);
-    }
-
-    @Operation(
-            summary = "List link access logs by short code",
-            description = "Retrieves a paginated list of access logs for a specific short URL given in the path, ordered by latest first by default. Requires authentication.",
-            security = {
-                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
-                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
-            }
-    )
-    @GetMapping(value = {"/logs/{shortCode}", "/access-log/{shortCode}"}, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<Page<LinkAccessLogResponse>>> listAccessLogsByPath(
-            @PathVariable("shortCode") String shortCode,
-            @PageableDefault(page = 0, size = 20, sort = "accessedAt", direction = Sort.Direction.DESC) Pageable pageable,
-            @AuthenticationPrincipal AuthenticatedUser currentUser) {
-        return handleListAccessLogs(shortCode, pageable, currentUser);
-    }
-
-    private ResponseEntity<ApiResponse<Page<LinkAccessLogResponse>>> handleListAccessLogs(
-            String queryUrl,
-            Pageable pageable,
-            AuthenticatedUser currentUser) {
         try {
             AuthenticatedUser user = resolveUser(currentUser);
             if (user == null || user.userId() == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Authentication required: user ID not found"));
             }
+            if (publicId == null || publicId.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("ID parameter 'id' cannot be empty"));
+            }
 
-            Page<LinkAccessLogResponse> response = newUrlService.listAccessLogs(user.userId(), queryUrl, pageable);
-            log.info("Listed access logs for userId={}, queryUrl='{}': page={}, size={}, totalElements={}",
-                    user.userId(), queryUrl, response.getNumber(), response.getSize(), response.getTotalElements());
+            Page<LinkAccessLogResponse> response = newUrlService.listAccessLogs(user.userId(), publicId, pageable);
+            log.info("Listed access logs for userId={}, publicId='{}': page={}, size={}, totalElements={}",
+                    user.userId(), publicId, response.getNumber(), response.getSize(), response.getTotalElements());
             return ResponseEntity.ok(ApiResponse.success(response, "Access logs retrieved successfully"));
         } catch (UrlNotFoundException e) {
             log.warn("New URL not found for access logs: {}", e.getMessage());

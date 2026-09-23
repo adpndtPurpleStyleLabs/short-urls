@@ -6762,13 +6762,23 @@
             if (searchInput) searchInput.disabled = true;
 
             try {
-                const query = new URLSearchParams({ newUrl: term });
+                const localMatch = (appState.currentLinksData || []).find(l =>
+                    l.publicId === term ||
+                    l.shortLink === term ||
+                    (l.originalLink && l.originalLink.toLowerCase().includes(term.toLowerCase())) ||
+                    (l.customPath && l.customPath === term)
+                );
+
+                const targetPublicId = localMatch?.publicId || term;
+                const query = new URLSearchParams({ id: targetPublicId });
                 const response = await authenticatedFetch(`/link?${query.toString()}`);
                 const result = await parseResponse(response);
 
                 if (response.ok && result.success && result.data) {
                     const link = result.data;
-                    openUrlAnalyticsModal(link.newUrl, link.originalUrl);
+                    openUrlAnalyticsModal(link.newUrl, link.originalUrl, link.publicId);
+                } else if (localMatch) {
+                    openUrlAnalyticsModal(localMatch.shortLink, localMatch.originalLink, localMatch.publicId);
                 } else {
                     showToast("warning", "No link found", "We couldn't find a PreonsURL link matching your search.");
                 }
@@ -7189,7 +7199,7 @@
                                 </svg>
                                 <span>QR Code</span>
                             </button>
-                            <button type="button" class="action-dropdown-item action-analytics" data-short-url="${escapeAttribute(shortUrl)}" data-orig-url="${escapeAttribute(originalUrl)}">
+                            <button type="button" class="action-dropdown-item action-analytics" data-short-url="${escapeAttribute(shortUrl)}" data-orig-url="${escapeAttribute(originalUrl)}" data-public-id="${escapeAttribute(publicId)}">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="18" y1="20" x2="18" y2="10" />
                                     <line x1="12" y1="20" x2="12" y2="4" />
@@ -7197,7 +7207,7 @@
                                 </svg>
                                 <span>Analytics</span>
                             </button>
-                            <button type="button" class="action-dropdown-item action-edit" data-short-url="${escapeAttribute(shortUrl)}">
+                            <button type="button" class="action-dropdown-item action-edit" data-short-url="${escapeAttribute(shortUrl)}" data-public-id="${escapeAttribute(publicId)}">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -7233,7 +7243,8 @@
                     }
                     const shortUrl = row.getAttribute("data-short-url");
                     const origUrl = row.getAttribute("data-orig-url");
-                    if (shortUrl) openUrlAnalyticsModal(shortUrl, origUrl);
+                    const pubId = row.getAttribute("data-public-id");
+                    if (shortUrl) openUrlAnalyticsModal(shortUrl, origUrl, pubId);
                 });
             });
 
@@ -7297,7 +7308,8 @@
                     document.querySelectorAll(".link-action-dropdown.show").forEach(d => d.classList.remove("show"));
                     const shortUrl = btn.getAttribute("data-short-url");
                     const origUrl = btn.getAttribute("data-orig-url");
-                    if (shortUrl) openUrlAnalyticsModal(shortUrl, origUrl);
+                    const pubId = btn.getAttribute("data-public-id");
+                    if (shortUrl) openUrlAnalyticsModal(shortUrl, origUrl, pubId);
                 });
             });
 
@@ -7307,7 +7319,8 @@
                     e.stopPropagation();
                     document.querySelectorAll(".link-action-dropdown.show").forEach(d => d.classList.remove("show"));
                     const shortUrl = btn.getAttribute("data-short-url");
-                    if (shortUrl) await openEditModal(shortUrl);
+                    const pubId = btn.getAttribute("data-public-id");
+                    if (shortUrl || pubId) await openEditModal(shortUrl, pubId);
                 });
             });
 
@@ -7399,17 +7412,11 @@
             modal.setAttribute("aria-hidden", "false");
             document.body.style.overflow = "hidden";
 
-            // If publicId is missing, attempt to resolve from link info
+            // If publicId is missing, attempt to resolve from loaded link state
             if (!currentQrPublicId && shortUrl) {
-                try {
-                    const query = new URLSearchParams({ newUrl: shortUrl });
-                    const res = await authenticatedFetch(`/link?${query.toString()}`);
-                    const json = await parseResponse(res);
-                    if (res.ok && json.success && json.data?.publicId) {
-                        currentQrPublicId = json.data.publicId;
-                    }
-                } catch (e) {
-                    console.warn("Could not resolve publicId:", e);
+                const found = (appState.currentLinksData || []).find(l => l.shortLink === shortUrl);
+                if (found?.publicId) {
+                    currentQrPublicId = found.publicId;
                 }
             }
 
@@ -7559,13 +7566,13 @@
         /*
          * 10. URL ANALYTICS MODAL
          */
-        function openUrlAnalyticsModal(shortUrl, originalUrl) {
+        function openUrlAnalyticsModal(shortUrl, originalUrl, publicId) {
             appState.selectedUrl = shortUrl;
             appState.selectedOriginalUrl = originalUrl;
             appState.accessLogPage = 0;
 
             const foundLink = (appState.currentLinksData || []).find(l => l.shortLink === shortUrl);
-            appState.selectedPublicId = foundLink?.publicId || "";
+            appState.selectedPublicId = publicId || foundLink?.publicId || "";
 
             document.getElementById("analyticsShortUrlDisplay").textContent = shortUrl;
             document.getElementById("analyticsOriginalUrlDisplay").textContent = originalUrl || "—";
@@ -7624,13 +7631,14 @@
 
         // "Edit Link" from URL Analytics modal
         document.getElementById("analyticsEditLinkBtn").addEventListener("click", async () => {
-            if (!appState.selectedUrl) return;
+            if (!appState.selectedUrl && !appState.selectedPublicId) return;
             const targetUrl = appState.selectedUrl;
+            const targetPubId = appState.selectedPublicId;
             const btn = document.getElementById("analyticsEditLinkBtn");
             setLoading(btn, true, "Loading...");
             try {
                 closeUrlAnalyticsModal();
-                await openEditModal(targetUrl);
+                await openEditModal(targetUrl, targetPubId);
             } finally {
                 setLoading(btn, false, "Edit Link");
             }
@@ -7673,7 +7681,7 @@
         }
 
         async function loadAccessLogsData() {
-            if (!appState.selectedUrl) return;
+            if (!appState.selectedUrl && !appState.selectedPublicId) return;
 
             const tbody = document.getElementById("accessLogsTableBody");
             tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state" style="padding:40px 16px;">${getSpinnerHtml(20, "Loading access logs...")}</td></tr>`;
@@ -7683,15 +7691,20 @@
             if (prevBtn) prevBtn.disabled = true;
             if (nextBtn) nextBtn.disabled = true;
 
+            const pubId = appState.selectedPublicId || (appState.currentLinksData || []).find(l => l.shortLink === appState.selectedUrl)?.publicId;
+            if (!pubId) {
+                tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No public identifier available for this link.</td></tr>`;
+                return;
+            }
+
             try {
                 const query = new URLSearchParams({
-                    newUrl: appState.selectedUrl,
                     page: String(appState.accessLogPage),
                     size: String(appState.accessLogPageSize),
                     sort: "accessedAt,desc"
                 });
 
-                const response = await authenticatedFetch(`/link/logs?${query.toString()}`);
+                const response = await authenticatedFetch(`/link/${encodeURIComponent(pubId)}/accessLog?${query.toString()}`);
                 const result = await parseResponse(response);
 
                 if (response.ok && result.success && result.data) {
@@ -7946,9 +7959,19 @@
             setTimeout(() => document.getElementById("modalDestUrl").focus(), 100);
         }
 
-        async function openEditModal(newUrlToEdit) {
+        async function openEditModal(newUrlToEdit, publicId) {
             appState.modalMode = "edit";
             appState.editingOriginalNewUrl = newUrlToEdit;
+
+            let resolvedPublicId = publicId;
+            if (!resolvedPublicId && newUrlToEdit) {
+                const found = (appState.currentLinksData || []).find(l => l.shortLink === newUrlToEdit || l.publicId === newUrlToEdit);
+                if (found?.publicId) {
+                    resolvedPublicId = found.publicId;
+                } else if (!newUrlToEdit.includes("/") && !newUrlToEdit.includes(".")) {
+                    resolvedPublicId = newUrlToEdit;
+                }
+            }
 
             const dialog = document.querySelector(".link-modal-dialog");
             if (dialog) dialog.classList.remove("is-success");
@@ -7978,12 +8001,33 @@
 
             // Fetch current values
             try {
-                const query = new URLSearchParams({ newUrl: newUrlToEdit });
-                const response = await authenticatedFetch(`/link?${query.toString()}`);
-                const result = await parseResponse(response);
+                let data = null;
+                if (resolvedPublicId) {
+                    const query = new URLSearchParams({ id: resolvedPublicId });
+                    const response = await authenticatedFetch(`/link?${query.toString()}`);
+                    const result = await parseResponse(response);
+                    if (response.ok && result.success && result.data) {
+                        data = result.data;
+                    }
+                }
 
-                if (response.ok && result.success && result.data) {
-                    const data = result.data;
+                if (!data && newUrlToEdit) {
+                    const fallback = (appState.currentLinksData || []).find(l => l.shortLink === newUrlToEdit);
+                    if (fallback) {
+                        data = {
+                            newUrl: fallback.shortLink,
+                            originalUrl: fallback.originalLink,
+                            notes: "",
+                            tags: [],
+                            usageLimit: null,
+                            isActive: true,
+                            expireAt: null,
+                            linkMode: "REDIRECT"
+                        };
+                    }
+                }
+
+                if (data) {
                     document.getElementById("modalShortUrlInput").value = data.newUrl || newUrlToEdit;
                     document.getElementById("modalDestUrl").value = data.originalUrl || "";
                     const editUrl = data.newUrl || newUrlToEdit;

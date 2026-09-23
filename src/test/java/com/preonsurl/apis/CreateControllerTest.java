@@ -681,12 +681,14 @@ class CreateControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+        String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
 
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("fullUrl", newUrl))
+                        .param("id", publicId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.publicId").value(publicId))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/details-test"))
                 .andExpect(jsonPath("$.data.linkMode").value("REDIRECT"))
                 .andExpect(jsonPath("$.data.customPath").value("promo/details-test"))
@@ -721,7 +723,7 @@ class CreateControllerTest {
 
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("fullUrl", newUrl))
+                        .param("id", dbUrl.getPublicId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.linkMode").value("IFRAME"));
     }
@@ -769,7 +771,7 @@ class CreateControllerTest {
 
 
     @Test
-    void getLinkInfo_byFullShortUrl_success() throws Exception {
+    void getLinkInfo_byPublicId_success() throws Exception {
         String createPayload = """
                 {
                     "url": "https://example.com/short-code-lookup-test"
@@ -784,29 +786,29 @@ class CreateControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+        String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
 
-        // Lookup by full newUrl via fullUrl
+        // Lookup by publicId via id param
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("fullUrl", newUrl))
+                        .param("id", publicId))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.publicId").value(publicId))
                 .andExpect(jsonPath("$.data.newUrl").value(newUrl))
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/short-code-lookup-test"));
     }
 
     @Test
     void getLinkInfo_missingOrEmptyUrl_returns400BadRequest() throws Exception {
-        // Missing param
+        // Missing param: Spring returns 400 Bad Request
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message", containsString("cannot be empty")));
+                .andExpect(status().isBadRequest());
 
         // Empty param
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("fullUrl", "   "))
+                        .param("id", "   "))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message", containsString("cannot be empty")));
@@ -815,7 +817,7 @@ class CreateControllerTest {
     @Test
     void getLinkInfo_unauthenticated_returns401Unauthorized() throws Exception {
         mockMvc.perform(get("/link")
-                        .param("fullUrl", "https://example.com/unauth-test"))
+                        .param("id", "pub-unauth-test"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -823,7 +825,7 @@ class CreateControllerTest {
     void getLinkInfo_nonExistentUrl_returns404NotFound() throws Exception {
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("fullUrl", "https://nonexistent-404-link.com"))
+                        .param("id", "nonexistent-404-link"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message", containsString("not found")));
@@ -846,7 +848,7 @@ class CreateControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+        String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
 
         // Create User 2 with User 2's API key
         Tenant tenant2 = tenantRepository.save(new Tenant("Second Tenant"));
@@ -863,7 +865,7 @@ class CreateControllerTest {
         // User 2 attempts to fetch User 1's link -> not found for User 2
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", USER2_API_KEY)
-                        .param("fullUrl", newUrl))
+                        .param("id", publicId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message", containsString("not found")));
@@ -898,10 +900,10 @@ class CreateControllerTest {
         assertEquals(generatedCode, dbEntity.getShortCode());
         assertEquals("https://example.com/invoice/order123", dbEntity.getOriginalUrl());
 
-        // Verify lookup by newUrl parameter
+        // Verify lookup by id parameter
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("newUrl", generatedNewUrl))
+                        .param("id", dbEntity.getPublicId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.newUrl").value(generatedNewUrl))
                 .andExpect(jsonPath("$.data.customPath").value("invoice"));
@@ -932,10 +934,10 @@ class CreateControllerTest {
         assertEquals("winter-fest", dbEntity.getShortCode());
         assertEquals("http://localhost:8081/winter-fest", dbEntity.getNewUrl());
 
-        // Lookup by relative path
+        // Lookup by public id
         mockMvc.perform(get("/link")
                         .header("X-API-KEY", VALID_API_KEY)
-                        .param("newUrl", "winter-fest"))
+                        .param("id", dbEntity.getPublicId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/winter-fest"));
     }
@@ -1553,12 +1555,12 @@ class CreateControllerTest {
 
     @Test
     void listAccessLogs_unauthenticated_returns401() throws Exception {
-        mockMvc.perform(get("/link/logs"))
+        mockMvc.perform(get("/link/pub-unauth/accessLog"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void listAccessLogs_allLogsForUser_orderedByLatestUp() throws Exception {
+    void listAccessLogs_byPublicId_orderedByLatestUp() throws Exception {
         Long userId = userRepository.findAll().get(0).getId();
 
         NewUrl url1 = new NewUrl("logCode1", "https://example.com/item1", null, "http://localhost:8081/logCode1",
@@ -1587,57 +1589,16 @@ class CreateControllerTest {
         log3.setAccessedAt(t3);
         accessLogRepository.save(log3);
 
-        mockMvc.perform(get("/link/logs")
+        mockMvc.perform(get("/link/" + url1.getPublicId() + "/accessLog")
                         .header("X-API-KEY", VALID_API_KEY))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
                 // Ordered by latest up (descending)
                 .andExpect(jsonPath("$.data.content[0].ipAddress").value("3.3.3.3"))
                 .andExpect(jsonPath("$.data.content[0].shortCode").value("logCode1"))
-                .andExpect(jsonPath("$.data.content[1].ipAddress").value("2.2.2.2"))
-                .andExpect(jsonPath("$.data.content[1].shortCode").value("logCode2"))
-                .andExpect(jsonPath("$.data.content[2].ipAddress").value("1.1.1.1"))
-                .andExpect(jsonPath("$.data.content[2].shortCode").value("logCode1"));
-    }
-
-    @Test
-    void listAccessLogs_byShortCodeParam_orderedByLatestUp() throws Exception {
-        Long userId = userRepository.findAll().get(0).getId();
-
-        NewUrl url1 = new NewUrl("logCodeA", "https://example.com/itemA", null, "http://localhost:8081/logCodeA",
-                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
-        url1.setUserId(userId);
-        url1 = shortUrlRepository.save(url1);
-
-        NewUrl url2 = new NewUrl("logCodeB", "https://example.com/itemB", null, "http://localhost:8081/logCodeB",
-                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
-        url2.setUserId(userId);
-        url2 = shortUrlRepository.save(url2);
-
-        LocalDateTime t1 = LocalDateTime.now().minusHours(2);
-        LocalDateTime t2 = LocalDateTime.now().minusHours(1);
-
-        NewUrlAccessLog l1 = new NewUrlAccessLog(url1.getId(), url1.getShortCode(), "10.0.0.1", "Agent1", "ref1");
-        l1.setAccessedAt(t1);
-        accessLogRepository.save(l1);
-
-        NewUrlAccessLog l2 = new NewUrlAccessLog(url1.getId(), url1.getShortCode(), "10.0.0.2", "Agent2", "ref2");
-        l2.setAccessedAt(t2);
-        accessLogRepository.save(l2);
-
-        NewUrlAccessLog l3 = new NewUrlAccessLog(url2.getId(), url2.getShortCode(), "10.0.0.3", "Agent3", "ref3");
-        l3.setAccessedAt(t2);
-        accessLogRepository.save(l3);
-
-        mockMvc.perform(get("/link/access-log")
-                        .header("X-API-KEY", VALID_API_KEY)
-                        .param("shortCode", "logCodeA"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.content[0].ipAddress").value("10.0.0.2"))
-                .andExpect(jsonPath("$.data.content[1].ipAddress").value("10.0.0.1"));
+                .andExpect(jsonPath("$.data.content[1].ipAddress").value("1.1.1.1"))
+                .andExpect(jsonPath("$.data.content[1].shortCode").value("logCode1"));
     }
 
     @Test
@@ -1653,7 +1614,7 @@ class CreateControllerTest {
         log.setAccessedAt(LocalDateTime.now());
         accessLogRepository.save(log);
 
-        mockMvc.perform(get("/link/logs/pathCode")
+        mockMvc.perform(get("/link/" + url.getPublicId() + "/accessLog")
                         .header("X-API-KEY", VALID_API_KEY))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -1664,11 +1625,37 @@ class CreateControllerTest {
 
     @Test
     void listAccessLogs_notFound_returns404() throws Exception {
-        mockMvc.perform(get("/link/logs/unknownCode123")
+        mockMvc.perform(get("/link/unknownCode123/accessLog")
                         .header("X-API-KEY", VALID_API_KEY))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("URL not found"));
+    }
+
+    @Test
+    void listAccessLogs_otherUserLink_returns403() throws Exception {
+        Long userId = userRepository.findAll().get(0).getId();
+
+        NewUrl url = new NewUrl("otherUserCode", "https://example.com/other-user", null, "http://localhost:8081/otherUserCode",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url.setUserId(userId);
+        url = shortUrlRepository.save(url);
+
+        Tenant tenant2 = tenantRepository.save(new Tenant("AccessLog Tenant 2"));
+        User user2 = userRepository.save(new User(tenant2.getId(), "AccessLog User 2", "accessloguser2", "pass123"));
+        String USER2_API_KEY = "user2-accesslog-key-99999";
+
+        ApiKey apiKey2 = new ApiKey();
+        apiKey2.setUserId(user2.getId());
+        apiKey2.setName("User2 AccessLog Key");
+        apiKey2.setApiKeyHash(sha256(USER2_API_KEY));
+        apiKey2.setActive(true);
+        apiKeyRepository.save(apiKey2);
+
+        mockMvc.perform(get("/link/" + url.getPublicId() + "/accessLog")
+                        .header("X-API-KEY", USER2_API_KEY))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test

@@ -26,7 +26,7 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
     Optional<NewUrl> findByNewUrl(String newUrl);
 
     Optional<NewUrl> findByNewUrlAndUserId(String newUrl, Long userId);
-
+    Optional<NewUrl> findByPublicIdAndUserId(String publicId, Long userId);
     Optional<NewUrl> findByShortCode(String shortCode);
 
     Optional<NewUrl> findByShortCodeAndUserId(String shortCode, Long userId);

@@ -472,31 +472,9 @@ public class NewUrlService {
     }
 
     @Transactional(readOnly = true)
-    public CreateNewUrlResponse getLinkInfo(String urlParam, Long userId) {
-        if (userId == null) {
-            throw new AccessDeniedException("User ID is required to fetch link details");
-        }
-
-        if (urlParam == null || urlParam.isBlank()) {
-            throw new IllegalArgumentException("URL parameter 'newUrl' cannot be empty");
-        }
-
-        String trimmedUrl = urlParam.trim();
-
-        Optional<NewUrl> found = repository.findByNewUrlAndUserId(trimmedUrl, userId);
-
-        if (found.isEmpty() && !trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
-            String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
-            found = repository.findByNewUrlAndUserId(prefixed, userId);
-        }
-
-        if (found.isEmpty()) {
-            found = repository.findByShortCodeAndUserId(trimmedUrl, userId);
-        }
-
-        if (found.isEmpty()) {
-            found = repository.findFirstByOriginalUrlAndUserId(trimmedUrl, userId);
-        }
+    public CreateNewUrlResponse getLinkInfo(String publicId, Long userId) {
+        String trimmedPublicId = publicId.trim();
+        Optional<NewUrl> found = repository.findByPublicIdAndUserId(trimmedPublicId, userId);
 
         NewUrl newUrl = found.orElseThrow(() -> new UrlNotFoundException("URL not found"));
 
@@ -948,11 +926,8 @@ public class NewUrlService {
     }
 
     @Transactional(readOnly = true)
-    public Page<LinkAccessLogResponse> listAccessLogs(Long userId, String urlParam, Pageable pageable) {
-        if (userId == null) {
-            throw new AccessDeniedException("User ID is required to fetch link access logs");
-        }
-
+    public Page<LinkAccessLogResponse> listAccessLogs(Long userId, String publicId, Pageable pageable) {
+        String trimmedPublicId = publicId.trim();
         Pageable effectivePageable = (pageable == null || pageable.getSort().isUnsorted())
                 ? PageRequest.of(
                         pageable != null ? pageable.getPageNumber() : 0,
@@ -961,37 +936,16 @@ public class NewUrlService {
                   )
                 : pageable;
 
-        Page<com.preonsurl.apis.link.entity.NewUrlAccessLog> page;
-        if (urlParam != null && !urlParam.isBlank()) {
-            String trimmedUrl = urlParam.trim();
-            Optional<NewUrl> found = repository.findByNewUrlAndUserId(trimmedUrl, userId);
+        Optional<NewUrl> found = repository.findByPublicIdAndUserId(trimmedPublicId, userId);
 
-            if (found.isEmpty() && !trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
-                String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
-                found = repository.findByNewUrlAndUserId(prefixed, userId);
+        NewUrl newUrl = found.orElseThrow(() -> {
+            if (repository.findByPublicId(trimmedPublicId).isPresent()) {
+                return new AccessDeniedException("Access denied to URL access logs");
             }
+            return new UrlNotFoundException("URL not found");
+        });
 
-            if (found.isEmpty()) {
-                found = repository.findByShortCodeAndUserId(trimmedUrl, userId);
-            }
-
-            NewUrl newUrl = found.orElseThrow(() -> {
-                boolean existsGlobally = repository.findByNewUrl(trimmedUrl).isPresent()
-                        || repository.findByShortCode(trimmedUrl).isPresent();
-                if (!existsGlobally && !trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
-                    String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
-                    existsGlobally = repository.findByNewUrl(prefixed).isPresent();
-                }
-                if (existsGlobally) {
-                    return new AccessDeniedException("Access denied to URL access logs");
-                }
-                return new UrlNotFoundException("URL not found");
-            });
-
-            page = accessLogRepository.findByShortUrlId(newUrl.getId(), effectivePageable);
-        } else {
-            page = accessLogRepository.findAllByUserId(userId, effectivePageable);
-        }
+        Page<com.preonsurl.apis.link.entity.NewUrlAccessLog> page = accessLogRepository.findByShortUrlId(newUrl.getId(), effectivePageable);
 
         return page.map(log -> new LinkAccessLogResponse(
                 log.getId(),

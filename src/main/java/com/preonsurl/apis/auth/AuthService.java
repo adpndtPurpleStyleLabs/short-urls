@@ -1,5 +1,6 @@
 package com.preonsurl.apis.auth;
 
+import com.preonsurl.apis.auth.cache.UserCache;
 import com.preonsurl.apis.auth.dto.LoginRequest;
 import com.preonsurl.apis.auth.dto.LoginResponse;
 import com.preonsurl.apis.auth.dto.RegisterRequest;
@@ -27,17 +28,20 @@ public class AuthService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final SecureRandom secureRandom = new SecureRandom();
+    private final UserCache userCache;
 
     public AuthService(TenantRepository tenantRepository,
                        UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
+                       UserCache userCache,
                        EmailService emailService) {
         this.passwordEncoder = passwordEncoder;
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.userCache = userCache;
     }
 
     private String generate6DigitCode() {
@@ -89,6 +93,7 @@ public class AuthService {
             throw new BadCredentialsException("Username and password cannot be empty");
         }
         String identifier = request.username().trim();
+
         User user = userRepository.findByUsernameOrEmail(identifier, identifier.toLowerCase())
                 .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
