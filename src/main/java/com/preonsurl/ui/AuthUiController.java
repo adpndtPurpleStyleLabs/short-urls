@@ -43,6 +43,12 @@ public class AuthUiController {
         return "register";
     }
 
+
+    @GetMapping("/")
+    public String shoeHomePage(Model model) {
+        return "home";
+    }
+
     @GetMapping("/login")
     public String showLoginPage(
             @RequestParam(value = "registered", required = false, defaultValue = "false") boolean registered,
