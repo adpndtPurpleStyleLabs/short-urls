@@ -150,7 +150,7 @@ public class MirrorService {
         URI targetUri;
 
         try {
-            targetUri = urlResolver.resolveTargetUri(originalUri, mirrorPath, request.getQueryString());
+            targetUri = urlResolver.resolveTargetUri(originalUri, mirrorPath, request.getQueryString(), shortCode);
             targetUri = ProxyResourceValidator.validateAndNormalizeUri(targetUri.toString());
         } catch (IllegalArgumentException e) {
             log.warn("Rejected mirror request for shortCode '{}', path '{}': {}", shortCode, mirrorPath, e.getMessage());

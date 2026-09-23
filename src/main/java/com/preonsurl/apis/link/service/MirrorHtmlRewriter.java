@@ -1,6 +1,7 @@
 package com.preonsurl.apis.link.service;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -128,7 +129,8 @@ public class MirrorHtmlRewriter {
             for (Element script : inlineScripts) {
                 String data = script.data();
                 if (data != null && !data.isBlank() && data.contains(upstreamOrigin)) {
-                    script.text(data.replace(upstreamOrigin, mirrorPrefix));
+                    script.empty();
+                    script.appendChild(new DataNode(data.replace(upstreamOrigin, mirrorPrefix)));
                 }
             }
 
@@ -140,24 +142,75 @@ public class MirrorHtmlRewriter {
     }
 
     private void injectClientInterceptor(Document doc, String shortCode, String upstreamOrigin, String upstreamHost, String mirrorPrefix) {
-        String interceptorJs = String.format("""
+        String cleanSc = shortCode.trim();
+        while (cleanSc.startsWith("/")) {
+            cleanSc = cleanSc.substring(1);
+        }
+        while (cleanSc.endsWith("/")) {
+            cleanSc = cleanSc.substring(0, cleanSc.length() - 1);
+        }
+
+        String template = """
                 (function() {
-                    var upstreamOrigin = '%s';
-                    var upstreamHost = '%s';
-                    var mirrorPrefix = '%s';
+                    var upstreamOrigin = '__UPSTREAM_ORIGIN__';
+                    var upstreamHost = '__UPSTREAM_HOST__';
+                    var mirrorPrefix = '__MIRROR_PREFIX__';
+                    var shortCode = '__SHORT_CODE__';
+
+                    function cleanQuery(qs) {
+                        if (!qs || typeof qs !== 'string') return qs;
+                        var sc = shortCode.replace(/[^a-zA-Z0-9]/g, '\\\\$&');
+                        // 1. key equals shortCode alone (root page) -> "home"
+                        qs = qs.replace(new RegExp('("key"\\\\s*:\\\\s*")/?' + sc + '/?(")', 'g'), '$1home$2');
+                        qs = qs.replace(new RegExp('(%22key%22\\\\s*(?::|%3A)\\\\s*(?:%22|"))(?:/|%2F)?' + sc + '(?:/|%2F)?((?:%22|"))', 'gi'), '$1home$2');
+
+                        // 2. key with subpath: "key":"/shortCode/path" -> "key":"/path"
+                        qs = qs.replace(new RegExp('("key"\\\\s*:\\\\s*")/?' + sc + '/', 'g'), '$1/');
+                        qs = qs.replace(new RegExp('(%22key%22\\\\s*(?::|%3A)\\\\s*(?:%22|"))(?:/|%2F)?' + sc + '(%2F|/)', 'gi'), '$1$2');
+
+                        // 3. Any /shortCode/ in query string -> /
+                        qs = qs.replace(new RegExp('/' + sc + '/', 'g'), '/');
+                        qs = qs.replace(new RegExp('%2F' + sc + '%2F', 'gi'), '%2F');
+                        qs = qs.replace(new RegExp('%2F' + sc + '/', 'gi'), '/');
+                        qs = qs.replace(new RegExp('/' + sc + '%2F', 'gi'), '%2F');
+
+                        // 4. Any standalone /shortCode at end of value
+                        qs = qs.replace(new RegExp('/' + sc + '(?=[&"\\'\\\\}\\]]|%22|%27|%7D|$)', 'g'), '/');
+                        qs = qs.replace(new RegExp('%2F' + sc + '(?=[&"\\'\\\\}\\]]|%22|%27|%7D|$)', 'gi'), '%2F');
+
+                        return qs;
+                    }
+
                     function rewriteUrl(url) {
                         if (!url || typeof url !== 'string') return url;
-                        if (url.indexOf(upstreamOrigin) === 0) {
-                            return mirrorPrefix + url.substring(upstreamOrigin.length);
+
+                        var hashIdx = url.indexOf('#');
+                        var hash = '';
+                        var baseAndQuery = url;
+                        if (hashIdx >= 0) {
+                            hash = url.substring(hashIdx);
+                            baseAndQuery = url.substring(0, hashIdx);
                         }
-                        if (url.indexOf('//' + upstreamHost) === 0) {
-                            return mirrorPrefix + url.substring(('//' + upstreamHost).length);
+
+                        var qIdx = baseAndQuery.indexOf('?');
+                        var base = qIdx >= 0 ? baseAndQuery.substring(0, qIdx) : baseAndQuery;
+                        var query = qIdx >= 0 ? baseAndQuery.substring(qIdx) : '';
+
+                        if (base.indexOf(upstreamOrigin) === 0) {
+                            base = mirrorPrefix + base.substring(upstreamOrigin.length);
+                        } else if (base.indexOf('//' + upstreamHost) === 0) {
+                            base = mirrorPrefix + base.substring(('//' + upstreamHost).length);
+                        } else if (base.charAt(0) === '/' && base.indexOf(mirrorPrefix + '/') !== 0 && base !== mirrorPrefix) {
+                            base = mirrorPrefix + base;
                         }
-                        if (url.charAt(0) === '/' && url.indexOf(mirrorPrefix + '/') !== 0 && url !== mirrorPrefix) {
-                            return mirrorPrefix + url;
+
+                        if (query) {
+                            query = cleanQuery(query);
                         }
-                        return url;
+
+                        return base + query + hash;
                     }
+
                     if (window.fetch) {
                         var _origFetch = window.fetch;
                         window.fetch = function(input, init) {
@@ -185,12 +238,36 @@ public class MirrorHtmlRewriter {
                             return _origBeacon.call(this, rewriteUrl(url), data);
                         };
                     }
+                    if (window.history && window.history.pushState) {
+                        var _origPushState = window.history.pushState;
+                        window.history.pushState = function(state, title, url) {
+                            if (typeof url === 'string') {
+                                url = rewriteUrl(url);
+                            }
+                            return _origPushState.call(this, state, title, url);
+                        };
+                    }
+                    if (window.history && window.history.replaceState) {
+                        var _origReplaceState = window.history.replaceState;
+                        window.history.replaceState = function(state, title, url) {
+                            if (typeof url === 'string') {
+                                url = rewriteUrl(url);
+                            }
+                            return _origReplaceState.call(this, state, title, url);
+                        };
+                    }
                 })();
-                """, upstreamOrigin, upstreamHost, mirrorPrefix);
+                """;
+
+        String interceptorJs = template
+                .replace("__UPSTREAM_ORIGIN__", upstreamOrigin)
+                .replace("__UPSTREAM_HOST__", upstreamHost)
+                .replace("__MIRROR_PREFIX__", mirrorPrefix)
+                .replace("__SHORT_CODE__", cleanSc);
 
         Element scriptTag = doc.createElement("script");
         scriptTag.attr("id", "__preons_mirror_interceptor");
-        scriptTag.text(interceptorJs);
+        scriptTag.appendChild(new DataNode(interceptorJs));
 
         if (doc.head() != null) {
             doc.head().prependChild(scriptTag);

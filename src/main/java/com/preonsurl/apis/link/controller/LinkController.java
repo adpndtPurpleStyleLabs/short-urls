@@ -29,7 +29,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import com.preonsurl.apis.link.dto.UrlListItemResponse;
 import com.preonsurl.apis.link.dto.LinkAccessLogResponse;
-
+import com.preonsurl.apis.link.dto.CorsCheckRequest;
+import com.preonsurl.apis.link.dto.CorsCheckResult;
+import com.preonsurl.apis.link.service.CorsCheckerService;
+import java.util.List;
 
 @Profile("app")
 @Tag(name = "New URL Creation", description = "Endpoints for creating and retrieving new URLs")
@@ -40,9 +43,11 @@ public class LinkController {
     private static final Logger log = LoggerFactory.getLogger(LinkController.class);
 
     private final NewUrlService newUrlService;
+    private final CorsCheckerService corsCheckerService;
 
-    public LinkController(NewUrlService newUrlService) {
+    public LinkController(NewUrlService newUrlService, CorsCheckerService corsCheckerService) {
         this.newUrlService = newUrlService;
+        this.corsCheckerService = corsCheckerService;
     }
 
     @Operation(
@@ -232,6 +237,46 @@ public class LinkController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("Failed to list access logs: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal Server Error"));
+        }
+    }
+
+    @Operation(
+            summary = "Check CORS configuration",
+            description = "Validates CORS headers on the destination target URL for Proxy or Mirror delivery mode. Requires authentication.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+    @PostMapping(value = "/check-cors", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<CorsCheckResult>> checkCors(
+            @RequestBody @Valid CorsCheckRequest request,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        try {
+            AuthenticatedUser user = resolveUser(currentUser);
+            if (user == null || user.userId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Authentication required: user ID not found"));
+            }
+
+            CorsCheckResult result = corsCheckerService.check(
+                    request.url(),
+                    request.origin(),
+                    request.method(),
+                    request.headers()
+            );
+
+            log.info("CORS check executed: url='{}', origin='{}', allowed={}, status={}",
+                    request.url(), request.origin(), result.allowed(), result.status());
+
+            return ResponseEntity.ok(ApiResponse.success(result, "CORS check completed"));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid CORS check request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to check CORS for URL {}: {}", request.url(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Internal Server Error"));
         }

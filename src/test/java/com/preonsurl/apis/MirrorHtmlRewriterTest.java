@@ -194,6 +194,13 @@ class MirrorHtmlRewriterTest {
         assertTrue(rewritten.contains("upstreamOrigin = 'https://www.perniaspopupshop.com'"));
         assertTrue(rewritten.contains("mirrorPrefix = '/1BiVqa8OZJl'"));
 
+        // Verify JavaScript operators (&&) are not HTML-escaped to &amp;&amp;
+        assertFalse(rewritten.contains("&amp;&amp;"), "Script should not contain HTML-escaped &amp;&amp;");
+        assertTrue(rewritten.contains("base.charAt(0) === '/' && base.indexOf(mirrorPrefix + '/') !== 0 && base !== mirrorPrefix"));
+        assertTrue(rewritten.contains("cleanQuery(query)"));
+        assertTrue(rewritten.contains("window.history.pushState"));
+        assertTrue(rewritten.contains("window.history.replaceState"));
+
         // Verify inline script URL is rewritten
         assertTrue(rewritten.contains("window.API_URL = \"/1BiVqa8OZJl/napi\""));
         assertFalse(rewritten.contains("\"https://www.perniaspopupshop.com/napi\""));

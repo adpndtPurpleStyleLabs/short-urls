@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /**
  * Resolves target upstream URIs from mirror paths and converts upstream URIs
@@ -21,6 +22,20 @@ public class MirrorUrlResolver {
      * @return The fully resolved upstream target URI
      */
     public URI resolveTargetUri(URI originalUri, String mirrorPath, String queryString) {
+        return resolveTargetUri(originalUri, mirrorPath, queryString, null);
+    }
+
+    /**
+     * Resolves the target upstream URI given the original destination URI, mirror path,
+     * optional query string, and mirror shortCode to clean from query parameters.
+     *
+     * @param originalUri The configured original destination URI
+     * @param mirrorPath  The requested subpath
+     * @param queryString Optional query string from the client request
+     * @param shortCode   The mirror shortCode or prefix to sanitize out of query parameters
+     * @return The fully resolved upstream target URI
+     */
+    public URI resolveTargetUri(URI originalUri, String mirrorPath, String queryString, String shortCode) {
         if (originalUri == null) {
             throw new IllegalArgumentException("originalUri cannot be null");
         }
@@ -52,34 +67,82 @@ public class MirrorUrlResolver {
             throw new IllegalArgumentException("Mirror path escapes allowed origin: " + target);
         }
 
+        // Clean mirror shortCode out of query parameters before forwarding to upstream
+        String cleanedQuery = cleanQueryString(queryString, shortCode);
+
         // Preserve / append query string if present and not already part of target
-        if (queryString != null && !queryString.isBlank()) {
+        if (cleanedQuery != null && !cleanedQuery.isBlank()) {
             String existingQuery = target.getRawQuery();
             String finalQuery;
             if (existingQuery == null || existingQuery.isBlank()) {
-                finalQuery = queryString;
-            } else if (!existingQuery.equals(queryString)) {
-                finalQuery = existingQuery + "&" + queryString;
+                finalQuery = cleanedQuery;
+            } else if (!existingQuery.equals(cleanedQuery)) {
+                finalQuery = existingQuery + "&" + cleanedQuery;
             } else {
                 finalQuery = existingQuery;
             }
 
-            try {
-                target = new URI(
-                        target.getScheme(),
-                        target.getAuthority(),
-                        target.getPath(),
-                        finalQuery,
-                        target.getFragment()
-                );
-            } catch (Exception e) {
-                // Fallback string construction if standard constructor complains
-                String baseStr = target.getScheme() + "://" + target.getAuthority() + target.getRawPath();
-                target = URI.create(baseStr + "?" + finalQuery + (target.getRawFragment() != null ? "#" + target.getRawFragment() : ""));
-            }
+            String safeQuery = finalQuery
+                    .replace("{", "%7B")
+                    .replace("}", "%7D")
+                    .replace("\"", "%22")
+                    .replace(" ", "%20");
+
+            String path = target.getRawPath() != null ? target.getRawPath() : "";
+            String baseStr = target.getScheme() + "://" + target.getAuthority() + path;
+            target = URI.create(baseStr + "?" + safeQuery + (target.getRawFragment() != null ? "#" + target.getRawFragment() : ""));
         }
 
         return target;
+    }
+
+    /**
+     * Sanitizes mirror shortCode prefix out of query strings so upstream servers receive
+     * clean query parameters (e.g. {"key":"home"} instead of {"key":"/2QflRxFUHLv"}).
+     *
+     * @param queryString Raw or URL-encoded query string from client request
+     * @param shortCode   The mirror shortCode
+     * @return The cleaned query string ready for upstream transmission
+     */
+    public String cleanQueryString(String queryString, String shortCode) {
+        if (queryString == null || queryString.isBlank() || shortCode == null || shortCode.isBlank()) {
+            return queryString;
+        }
+
+        String sc = shortCode.trim();
+        while (sc.startsWith("/")) {
+            sc = sc.substring(1);
+        }
+        while (sc.endsWith("/")) {
+            sc = sc.substring(0, sc.length() - 1);
+        }
+        if (sc.isBlank()) {
+            return queryString;
+        }
+
+        String cleaned = queryString;
+
+        // 1. JSON key alone equals shortCode (root page) -> map to "home"
+        // Plain: "key":"/shortCode" or "key":"/shortCode/"
+        cleaned = cleaned.replaceAll("(\"key\"\\s*:\\s*\")/?" + Pattern.quote(sc) + "/?(\")", "$1home$2");
+        // URL-encoded: %22key%22%3A%22%2FshortCode%22
+        cleaned = cleaned.replaceAll("(?i)(%22key%22\\s*(?::|%3A)\\s*(?:%22|\"))(?:/|%2F)?" + Pattern.quote(sc) + "(?:/|%2F)?((?:%22|\"))", "$1home$2");
+
+        // 2. JSON key with subpath: "key":"/shortCode/path" -> "key":"/path"
+        cleaned = cleaned.replaceAll("(\"key\"\\s*:\\s*\")/?" + Pattern.quote(sc) + "/", "$1/");
+        cleaned = cleaned.replaceAll("(?i)(%22key%22\\s*(?::|%3A)\\s*(?:%22|\"))(?:/|%2F)?" + Pattern.quote(sc) + "(%2F|/)", "$1$2");
+
+        // 3. Any /shortCode/ in query string -> /
+        cleaned = cleaned.replace("/" + sc + "/", "/");
+        cleaned = cleaned.replaceAll("(?i)%2F" + Pattern.quote(sc) + "%2F", "%2F");
+        cleaned = cleaned.replaceAll("(?i)%2F" + Pattern.quote(sc) + "/", "/");
+        cleaned = cleaned.replaceAll("(?i)/" + Pattern.quote(sc) + "%2F", "%2F");
+
+        // 4. Any standalone /shortCode at end of value (before &, ", ', }, %, or end of string)
+        cleaned = cleaned.replaceAll("/" + Pattern.quote(sc) + "(?=[&\"'}\\]]|%22|%27|%7D|$)", "/");
+        cleaned = cleaned.replaceAll("(?i)%2F" + Pattern.quote(sc) + "(?=[&\"'}\\]]|%22|%27|%7D|$)", "%2F");
+
+        return cleaned;
     }
 
     /**

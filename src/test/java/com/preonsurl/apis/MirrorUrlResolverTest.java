@@ -82,4 +82,58 @@ class MirrorUrlResolverTest {
 
         assertEquals("/1BiVqa8OZJl/", resolver.toMirrorUrl("1BiVqa8OZJl", currentDoc, "https://www.ogaan.com"));
     }
+
+    @Test
+    void testCleanQueryStringPerniaFooterData() {
+        String shortCode = "2QflRxFUHLv";
+
+        // Plain JSON root key -> home
+        assertEquals(
+                "queryData={\"key\":\"home\"}",
+                resolver.cleanQueryString("queryData={\"key\":\"/2QflRxFUHLv\"}", shortCode)
+        );
+
+        // URL-encoded JSON root key -> home
+        assertEquals(
+                "queryData=%7B%22key%22%3A%22home%22%7D",
+                resolver.cleanQueryString("queryData=%7B%22key%22%3A%22%2F2QflRxFUHLv%22%7D", shortCode)
+        );
+
+        // Subpath JSON key -> stripped prefix
+        assertEquals(
+                "queryData={\"key\":\"/designers\"}",
+                resolver.cleanQueryString("queryData={\"key\":\"/2QflRxFUHLv/designers\"}", shortCode)
+        );
+        assertEquals(
+                "queryData=%7B%22key%22%3A%22%2Fdesigners%22%7D",
+                resolver.cleanQueryString("queryData=%7B%22key%22%3A%22%2F2QflRxFUHLv%2Fdesigners%22%7D", shortCode)
+        );
+
+        // General query parameters
+        assertEquals(
+                "ref=/checkout&user=123",
+                resolver.cleanQueryString("ref=/2QflRxFUHLv/checkout&user=123", shortCode)
+        );
+
+        // Normal parameters untouched
+        assertEquals(
+                "q=dress&sort=asc",
+                resolver.cleanQueryString("q=dress&sort=asc", shortCode)
+        );
+    }
+
+    @Test
+    void testResolveTargetUriCleansQueryStringWithShortCode() {
+        URI base = URI.create("https://www.perniaspopupshop.com");
+        String shortCode = "2QflRxFUHLv";
+        String contaminatedQuery = "queryData={%22key%22:%22/2QflRxFUHLv%22}";
+
+        URI resolved = resolver.resolveTargetUri(base, "/napi/getFooterData", contaminatedQuery, shortCode);
+        assertEquals("https://www.perniaspopupshop.com/napi/getFooterData?queryData=%7B%22key%22:%22home%22%7D", resolved.toString());
+
+        // Subpath resolution
+        String subpathQuery = "queryData=%7B%22key%22%3A%22%2F2QflRxFUHLv%2Fdesigners%22%7D";
+        URI resolvedSubpath = resolver.resolveTargetUri(base, "/napi/getFooterData", subpathQuery, shortCode);
+        assertEquals("https://www.perniaspopupshop.com/napi/getFooterData?queryData=%7B%22key%22%3A%22%2Fdesigners%22%7D", resolvedSubpath.toString());
+    }
 }
