@@ -248,6 +248,158 @@
       }
     }
 
+
+    .free-banner{
+      background:#111;
+      color:#fff;
+      font-size:12px;
+      letter-spacing:.005em;
+    }
+    .free-banner-inner{
+      min-height:38px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+    }
+    .free-banner-inner > span{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .free-banner-inner strong{
+      font-weight:750;
+    }
+    .free-banner-copy{
+      color:#a7a7a7;
+    }
+    .free-banner a{
+      color:#fff;
+      font-weight:700;
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+    }
+    .free-banner a:hover{
+      text-decoration:underline;
+      text-underline-offset:3px;
+    }
+
+    .pricing-card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:42px;
+    }
+    .pricing-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:48px;
+      border-bottom:1px solid var(--line);
+      padding-bottom:32px;
+    }
+    .pricing-title{
+      margin-top:10px;
+      font-size:clamp(44px,6vw,72px);
+      line-height:.94;
+      letter-spacing:-.065em;
+      font-weight:760;
+    }
+    .pricing-price{
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+      margin-top:24px;
+    }
+    .pricing-price strong{
+      font-size:34px;
+      letter-spacing:-.045em;
+    }
+    .pricing-price span{
+      color:#777;
+      font-size:13px;
+    }
+    .pricing-limit{
+      display:inline-flex;
+      align-items:baseline;
+      gap:7px;
+      margin-top:14px;
+      padding:8px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--surface);
+      width:max-content;
+    }
+    .pricing-limit strong{
+      font-size:13px;
+      letter-spacing:-.015em;
+    }
+    .pricing-limit span{
+      color:#777;
+      font-size:11px;
+    }
+    .pricing-copy{
+      max-width:470px;
+      color:#707070;
+      font-size:15px;
+      line-height:1.7;
+    }
+    .pricing-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      column-gap:40px;
+      margin-top:4px;
+    }
+    .pricing-feature{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:17px 0;
+      border-bottom:1px solid var(--line);
+      color:#444;
+      font-size:13px;
+    }
+    .pricing-feature:nth-last-child(-n+2){
+      border-bottom:0;
+    }
+    .pricing-check{
+      width:20px;
+      height:20px;
+      flex:none;
+      display:grid;
+      place-items:center;
+      border:1px solid #111;
+      border-radius:50%;
+      font-size:10px;
+      color:#111;
+    }
+    .pricing-note{
+      margin-top:18px;
+      color:#8a8a8a;
+      font-size:11px;
+      line-height:1.6;
+    }
+
+    @media(max-width:900px){
+      .pricing-top{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:26px;
+      }
+    }
+    @media(max-width:620px){
+      .free-banner-copy{display:none}
+      .free-banner-inner{
+        justify-content:space-between;
+        min-height:36px;
+      }
+      .pricing-card{padding:28px 22px}
+      .pricing-grid{grid-template-columns:1fr}
+      .pricing-feature:nth-last-child(2){border-bottom:1px solid var(--line)}
+    }
+
     @media(max-width:900px){
       .navlinks{display:none}.mobile-menu{display:block}
       .feature-grid{grid-template-columns:1fr 1fr}
@@ -270,6 +422,15 @@
   </style>
 </head>
 <body>
+<div class="free-banner" role="note">
+  <div class="container free-banner-inner">
+    <span>
+      <strong>Always Free</strong>
+      <span class="free-banner-copy">10 million URLs / month included.</span>
+    </span>
+    <a href="/register">Sign up now <span aria-hidden="true">→</span></a>
+  </div>
+</div>
 
 <header class="nav">
   <div class="container" style="padding:0px 60px 0px 60px;display:flex;align-items:center;justify-content:space-between;width:100%">
@@ -280,6 +441,7 @@
       <a href="#security">Security</a>
       <a href="#domains">Domains</a>
       <a href="#compare">Compare</a>
+      <a href="#pricing">Pricing</a>
       <a href="#developers">Developers</a>
     </nav>
     <div class="nav-actions">
@@ -661,6 +823,61 @@
       </div>
       <div class="note">
         Comparison sources: official Short.io feature documentation, Rebrandly product/help documentation, and Dub product documentation. Provider features can depend on plan, configuration and date.
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section alt" id="pricing">
+    <div class="container">
+      <div class="section-head">
+        <div class="kicker">Pricing</div>
+        <h2>Always free.</h2>
+        <p>PreonsURL keeps its core secure link infrastructure available for free, so you can create, control and deploy links without choosing a paid tier first.</p>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-top">
+          <div>
+            <div class="kicker">PreonsURL</div>
+            <div class="pricing-title">Always Free</div>
+            <div class="pricing-price">
+              <strong>₹0</strong>
+              <span>forever</span>
+            </div>
+            <div class="pricing-limit">
+              <strong>10,000,000</strong>
+              <span>URLs / month</span>
+            </div>
+          </div>
+
+          <div class="pricing-copy">
+            Start with the same core experience showcased across the product: short links, custom paths, link controls, protection, domains, delivery modes and developer APIs.
+            <div style="margin-top:20px">
+              <a class="btn primary" href="/register">Sign up now →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="pricing-grid">
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>10,000,000 URLs per month</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Short links and custom slugs</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Directory-based routing</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Destination editing</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Expiration and usage limits</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>One-time access</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Password and PIN protection</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Custom domains and DNS verification</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Domain-specific links</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Tags and notes</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Access analytics logging</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>Redirect, proxy and mirror delivery</span></div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span><span>API-key protected link creation</span></div>
+        </div>
+
+        <div class="pricing-note">
+          “Always Free” applies to the PreonsURL core described on this page. Roadmap capabilities remain identified separately.
+        </div>
       </div>
     </div>
   </section>
