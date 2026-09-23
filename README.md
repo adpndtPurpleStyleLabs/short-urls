@@ -345,7 +345,7 @@ docker run -d \
 - [x] Enable / disable link
 - [x] Expiration
 - [x] Usage limit
-- [ ] One-time use
+- [x] One-time use
 - [x] Link status: Active / Expired / Disabled / Limit Reached
 - [ ] Bulk URL creation
 - [ ] Bulk URL import
@@ -359,15 +359,15 @@ docker run -d \
 
 # 2. Custom Domains
 
-- [ ] Add custom domain
-- [ ] DNS verification
+- [x] Add custom domain
+- [x] DNS verification
 - [ ] Automatic HTTPS / SSL
-- [ ] Multiple custom domains
-- [ ] Default domain
-- [ ] Domain-specific links
+- [x] Multiple custom domains
+- [x] Default domain
+- [x] Domain-specific links
 - [ ] Domain enable / disable
 - [ ] Custom domain analytics
-- [ ] Custom 404 page
+- [x] Custom 404 page
 - [ ] Custom unavailable-link page
 
 ---
@@ -376,12 +376,12 @@ docker run -d \
 
 ## Authentication & Protection
 
-- [ ] Password protection
-- [ ] PIN protection
+- [x] Password protection
+- [x] PIN protection
 - [ ] Require user authentication
 - [ ] Require confirmation before access
-- [ ] One-time access
-- [ ] Maximum usage limit
+- [x] One-time access
+- [x] Maximum usage limit
 
 ## Network Restrictions
 
@@ -415,11 +415,11 @@ docker run -d \
 
 A SecureLink can deliver its destination using different delivery modes.
 
-- [ ] Redirect
+- [x] Redirect
 - [ ] Iframe
-- [ ] Proxy
-- [ ] Mirror
-- [ ] File / content proxy
+- [x] Proxy
+- [x] Mirror
+- [x] File / content proxy
 
 ## Delivery Mode
 
