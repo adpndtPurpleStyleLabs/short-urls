@@ -201,12 +201,7 @@ public class ServingController {
 
         // 2. Cache Miss: Locate entity by fullUrl, shortCode, or customPath in DB
         Optional<NewUrl> entityOpt = repository.findByNewUrl(fullUrl);
-        if (entityOpt.isEmpty()) {
-            entityOpt = repository.findByShortCode(path);
-        }
-        if (entityOpt.isEmpty()) {
-            entityOpt = repository.findByCustomPath(path);
-        }
+
 
         if (entityOpt.isEmpty()) {
             // Check if this is a MIRROR subrequest: /{shortCode}/**
@@ -265,10 +260,8 @@ public class ServingController {
 
         // 3. Check Usage Policy & Expiration
         Optional<UsagePolicy> usagePolicyOpt = usagePolicyRepository.findByShortUrlId(entity.getId());
-        boolean isExpired = (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt()))
-                || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isExpired());
-        boolean isLimitReached = (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit())
-                || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isUsageLimitReached());
+        boolean isExpired = (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt())) || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isExpired());
+        boolean isLimitReached = (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit()) || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isUsageLimitReached());
         boolean isOutsideSchedule = usagePolicyOpt.isPresent() && usagePolicyOpt.get().isOutsideSchedule();
 
         if (isExpired || isLimitReached || isOutsideSchedule) {
