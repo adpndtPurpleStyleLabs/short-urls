@@ -37,6 +37,21 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.CountryPolicy;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.DevicePolicy;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.IpAllowlistPolicy;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.PasswordPolicy;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.PinPolicy;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.ReferrerPolicy;
+import com.preonsurl.apis.link.dto.CreateRequest.UsagePolicies.AccessSchedule;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -334,7 +349,9 @@ public class NewUrlService {
                             savedTags,
                             saved.getLinkMode(),
                             saved.isActive(),
-                            saved.getPublicId()
+                            saved.getPublicId(),
+                            buildUsagePoliciesDto(saved),
+                            buildAccessPoliciesDto(saved.getId())
                     );
                 }
 
@@ -361,7 +378,9 @@ public class NewUrlService {
                         savedTags,
                         saved.getLinkMode(),
                         saved.isActive(),
-                        saved.getPublicId()
+                        saved.getPublicId(),
+                        buildUsagePoliciesDto(saved),
+                        buildAccessPoliciesDto(saved.getId())
                 );
             }
         } else {
@@ -432,7 +451,9 @@ public class NewUrlService {
                     savedTags,
                     saved.getLinkMode(),
                     saved.isActive(),
-                    saved.getPublicId()
+                    saved.getPublicId(),
+                    buildUsagePoliciesDto(saved),
+                    buildAccessPoliciesDto(saved.getId())
             );
         }
     }
@@ -471,16 +492,69 @@ public class NewUrlService {
         return distinctTags;
     }
 
+    public UsagePolicies buildUsagePoliciesDto(NewUrl newUrl) {
+        return usagePolicyRepository.findByShortUrlId(newUrl.getId())
+                .map(up -> new UsagePolicies(
+                        up.getPolicyType(),
+                        up.getUsageLimit(),
+                        up.getExpireAt(),
+                        (up.getStartAt() != null && up.getEndAt() != null)
+                                ? new AccessSchedule(up.getStartAt(), up.getEndAt())
+                                : null
+                ))
+                .orElseGet(() -> new UsagePolicies(
+                        newUrl.getUsageLimit() != null ? (newUrl.getUsageLimit() == 1 ? UsagePolicyType.ONE_TIME : UsagePolicyType.USAGE_LIMIT) : UsagePolicyType.UNLIMITED,
+                        newUrl.getUsageLimit(),
+                        newUrl.getExpireAt(),
+                        null
+                ));
+    }
+
+    public AccessPolicies buildAccessPoliciesDto(Long urlId) {
+        return accessPolicyRepository.findByShortUrlId(urlId)
+                .map(ap -> new AccessPolicies(
+                        ap.getMode(),
+                        ap.hasPin() ? new PinPolicy("******") : null,
+                        ap.hasPassword() ? new PasswordPolicy("******") : null,
+                        (ap.getIpAllowlist() != null && !ap.getIpAllowlist().isBlank())
+                                ? new IpAllowlistPolicy(Arrays.stream(ap.getIpAllowlist().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList())
+                                : null,
+                        (ap.getCountries() != null && !ap.getCountries().isBlank())
+                                ? new CountryPolicy(Arrays.stream(ap.getCountries().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList())
+                                : null,
+                        (ap.getDeviceTypes() != null && !ap.getDeviceTypes().isBlank())
+                                ? new DevicePolicy(Arrays.stream(ap.getDeviceTypes().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList())
+                                : null,
+                        (ap.getReferrers() != null && !ap.getReferrers().isBlank())
+                                ? new ReferrerPolicy(Arrays.stream(ap.getReferrers().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList())
+                                : null
+                ))
+                .orElseGet(AccessPolicies::publicAccess);
+    }
+
     @Transactional(readOnly = true)
     public CreateNewUrlResponse getLinkInfo(String publicId, Long userId) {
         String trimmedPublicId = publicId.trim();
         Optional<NewUrl> found = repository.findByPublicIdAndUserId(trimmedPublicId, userId);
+        if (found.isEmpty()) {
+            found = repository.findByShortCodeAndUserId(trimmedPublicId, userId);
+        }
+        if (found.isEmpty()) {
+            found = repository.findByNewUrlAndUserId(trimmedPublicId, userId);
+        }
+        if (found.isEmpty() && !trimmedPublicId.startsWith("http://") && !trimmedPublicId.startsWith("https://")) {
+            String prefixed = domain + (trimmedPublicId.startsWith("/") ? "" : "/") + trimmedPublicId;
+            found = repository.findByNewUrlAndUserId(prefixed, userId);
+        }
 
         NewUrl newUrl = found.orElseThrow(() -> new UrlNotFoundException("URL not found"));
 
         List<String> tags = tagRepository.findByUrlId(newUrl.getId()).stream()
                 .map(NewUrlTag::getTag)
                 .toList();
+
+        UsagePolicies usagePolicies = buildUsagePoliciesDto(newUrl);
+        AccessPolicies accessPolicies = buildAccessPoliciesDto(newUrl.getId());
 
         return new CreateNewUrlResponse(
                 newUrl.getNewUrl(),
@@ -493,7 +567,9 @@ public class NewUrlService {
                 tags,
                 newUrl.getLinkMode(),
                 newUrl.isActive(),
-                newUrl.getPublicId()
+                newUrl.getPublicId(),
+                usagePolicies,
+                accessPolicies
         );
     }
 
@@ -521,6 +597,7 @@ public class NewUrlService {
         }
 
         NewUrl entity = found.orElseThrow(() -> new UrlNotFoundException("Link not found or access denied"));
+        final Long shortUrlId = entity.getId();
 
         LinkMode finalMode = request.linkMode() != null ? request.linkMode() : entity.getLinkMode();
         String finalUrl = (request.originalUrl() != null && !request.originalUrl().isBlank())
@@ -558,19 +635,14 @@ public class NewUrlService {
             }
         }
 
-        // C. expireAt
-        if (request.expireAt() != null) {
-            if (!Objects.equals(entity.getExpireAt(), request.expireAt())) {
-                String oldVal = entity.getExpireAt() != null ? entity.getExpireAt().toString() : null;
-                entity.setExpireAt(request.expireAt());
-                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "expire_at", oldVal, request.expireAt().toString()));
-                modified = true;
-            }
-        }
+        // C & D. Usage Policies
+        if (request.hasUsagePolicies()) {
+            UsagePolicies upReq = request.usagePolicies();
+            UsagePolicyType newType = upReq.resolvedType();
+            Long newUsageLimit = upReq.resolvedUsageLimit();
+            Instant newExpireAt = upReq.expireAt();
+            AccessSchedule schedule = upReq.schedule();
 
-        // D. usageLimit
-        if (request.hasUsageLimit()) {
-            Long newUsageLimit = request.resolvedUsageLimit();
             if (!Objects.equals(entity.getUsageLimit(), newUsageLimit)) {
                 String oldVal = entity.getUsageLimit() != null ? entity.getUsageLimit().toString() : null;
                 String newVal = newUsageLimit != null ? newUsageLimit.toString() : null;
@@ -578,21 +650,134 @@ public class NewUrlService {
                 changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "usage_limit", oldVal, newVal));
                 modified = true;
             }
+
+            if (!Objects.equals(entity.getExpireAt(), newExpireAt)) {
+                String oldVal = entity.getExpireAt() != null ? entity.getExpireAt().toString() : null;
+                String newVal = newExpireAt != null ? newExpireAt.toString() : null;
+                entity.setExpireAt(newExpireAt);
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "expire_at", oldVal, newVal));
+                modified = true;
+            }
+
+            UsagePolicy up = usagePolicyRepository.findByShortUrlId(shortUrlId)
+                    .orElseGet(() -> new UsagePolicy(shortUrlId, newType, newUsageLimit, newExpireAt, null, null));
+            up.setPolicyType(newType);
+            up.setUsageLimit(newUsageLimit);
+            up.setExpireAt(newExpireAt);
+            if (schedule != null) {
+                schedule.validate();
+                up.setStartAt(schedule.startAt());
+                up.setEndAt(schedule.endAt());
+            } else {
+                up.setStartAt(null);
+                up.setEndAt(null);
+            }
+            usagePolicyRepository.save(up);
+        } else {
+            // Legacy C. expireAt
+            if (request.expireAt() != null) {
+                if (!Objects.equals(entity.getExpireAt(), request.expireAt())) {
+                    String oldVal = entity.getExpireAt() != null ? entity.getExpireAt().toString() : null;
+                    entity.setExpireAt(request.expireAt());
+                    changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "expire_at", oldVal, request.expireAt().toString()));
+                    modified = true;
+                }
+            }
+
+            // Legacy D. usageLimit
+            if (request.hasUsageLimit()) {
+                Long newUsageLimit = request.resolvedUsageLimit();
+                if (!Objects.equals(entity.getUsageLimit(), newUsageLimit)) {
+                    String oldVal = entity.getUsageLimit() != null ? entity.getUsageLimit().toString() : null;
+                    String newVal = newUsageLimit != null ? newUsageLimit.toString() : null;
+                    entity.setUsageLimit(newUsageLimit);
+                    changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "usage_limit", oldVal, newVal));
+                    modified = true;
+                }
+            }
+
+            if (request.expireAt() != null || request.hasUsageLimit()) {
+                usagePolicyRepository.findByShortUrlId(entity.getId()).ifPresent(up -> {
+                    if (request.expireAt() != null) {
+                        up.setExpireAt(request.expireAt());
+                    }
+                    if (request.hasUsageLimit()) {
+                        up.setUsageLimit(request.resolvedUsageLimit());
+                        up.setPolicyType(request.resolvedUsageLimit() != null ? UsagePolicyType.USAGE_LIMIT : UsagePolicyType.UNLIMITED);
+                    }
+                    usagePolicyRepository.save(up);
+                });
+            }
         }
 
-        if (request.expireAt() != null || request.hasUsageLimit()) {
-            usagePolicyRepository.findByShortUrlId(entity.getId()).ifPresent(up -> {
-                if (request.expireAt() != null) {
-                    up.setExpireAt(request.expireAt());
-                }
-                if (request.hasUsageLimit()) {
-                    up.setUsageLimit(request.resolvedUsageLimit());
-                    up.setPolicyType(request.resolvedUsageLimit() != null ? UsagePolicyType.USAGE_LIMIT : UsagePolicyType.UNLIMITED);
-                }
-                usagePolicyRepository.save(up);
-            });
-        }
+        // Access Policies
+        if (request.hasAccessPolicies()) {
+            AccessPolicies apReq = request.accessPolicies();
+            AccessPolicy ap = accessPolicyRepository.findByShortUrlId(shortUrlId)
+                    .orElseGet(() -> new AccessPolicy(shortUrlId, apReq.mode() != null ? apReq.mode() : AccessPolicyMode.PUBLIC));
 
+            AccessPolicyMode mode = apReq.mode() != null ? apReq.mode() : AccessPolicyMode.PUBLIC;
+            ap.setMode(mode);
+
+            if (mode == AccessPolicyMode.SECURED) {
+                // PIN
+                if (apReq.pin() != null && apReq.pin().pin() != null && !apReq.pin().pin().isBlank()) {
+                    String pinVal = apReq.pin().pin().trim();
+                    if (!"******".equals(pinVal)) {
+                        ap.setPinHash(passwordEncoder.encode(pinVal));
+                    }
+                } else {
+                    ap.setPinHash(null);
+                }
+
+                // Password
+                if (apReq.password() != null && apReq.password().password() != null && !apReq.password().password().isBlank()) {
+                    String passVal = apReq.password().password();
+                    if (!"******".equals(passVal)) {
+                        ap.setPasswordHash(passwordEncoder.encode(passVal));
+                    }
+                } else {
+                    ap.setPasswordHash(null);
+                }
+
+                // IP Allowlist
+                if (apReq.ipAllowlist() != null && apReq.ipAllowlist().addresses() != null && !apReq.ipAllowlist().addresses().isEmpty()) {
+                    ap.setIpAllowlist(String.join(",", apReq.ipAllowlist().addresses()));
+                } else {
+                    ap.setIpAllowlist(null);
+                }
+
+                // Countries
+                if (apReq.country() != null && apReq.country().countries() != null && !apReq.country().countries().isEmpty()) {
+                    ap.setCountries(String.join(",", apReq.country().countries()));
+                } else {
+                    ap.setCountries(null);
+                }
+
+                // Devices
+                if (apReq.device() != null && apReq.device().devices() != null && !apReq.device().devices().isEmpty()) {
+                    ap.setDeviceTypes(String.join(",", apReq.device().devices()));
+                } else {
+                    ap.setDeviceTypes(null);
+                }
+
+                // Referrers
+                if (apReq.referrer() != null && apReq.referrer().referrers() != null && !apReq.referrer().referrers().isEmpty()) {
+                    ap.setReferrers(String.join(",", apReq.referrer().referrers()));
+                } else {
+                    ap.setReferrers(null);
+                }
+            } else {
+                ap.setPinHash(null);
+                ap.setPasswordHash(null);
+                ap.setIpAllowlist(null);
+                ap.setCountries(null);
+                ap.setDeviceTypes(null);
+                ap.setReferrers(null);
+            }
+
+            accessPolicyRepository.save(ap);
+        }
 
         // E. notes
         if (request.notes() != null) {
@@ -662,6 +847,9 @@ public class NewUrlService {
                 .map(NewUrlTag::getTag)
                 .toList();
 
+        UsagePolicies finalUsagePolicies = buildUsagePoliciesDto(entity);
+        AccessPolicies finalAccessPolicies = buildAccessPoliciesDto(entity.getId());
+
         return new CreateNewUrlResponse(
                 entity.getNewUrl(),
                 entity.getOriginalUrl(),
@@ -673,7 +861,9 @@ public class NewUrlService {
                 finalTags,
                 entity.getLinkMode(),
                 entity.isActive(),
-                entity.getPublicId()
+                entity.getPublicId(),
+                finalUsagePolicies,
+                finalAccessPolicies
         );
     }
 

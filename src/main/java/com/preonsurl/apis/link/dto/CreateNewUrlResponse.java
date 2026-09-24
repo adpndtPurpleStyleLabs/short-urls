@@ -1,5 +1,7 @@
 package com.preonsurl.apis.link.dto;
 
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.AccessPolicies;
+import com.preonsurl.apis.link.dto.CreateRequest.UsagePolicies.UsagePolicies;
 import com.preonsurl.apis.link.enums.LinkMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -39,7 +41,13 @@ public record CreateNewUrlResponse(
         Boolean isActive,
 
         @Schema(description = "Unique public identifier for the link", example = "f8K2mP9xQ7La3VnR6Tc1Zw")
-        String publicId
+        String publicId,
+
+        @Schema(description = "Usage and lifetime policies for the shortened URL")
+        UsagePolicies usagePolicies,
+
+        @Schema(description = "Access-control policies for the shortened URL")
+        AccessPolicies accessPolicies
 ) {
     public CreateNewUrlResponse(
             String newUrl,
@@ -51,9 +59,10 @@ public record CreateNewUrlResponse(
             String notes,
             List<String> tags,
             LinkMode linkMode,
-            Boolean isActive
+            Boolean isActive,
+            String publicId
     ) {
-        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, null);
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, publicId, null, null);
     }
 
     public CreateNewUrlResponse(

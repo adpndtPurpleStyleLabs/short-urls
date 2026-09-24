@@ -1,8 +1,11 @@
 package com.preonsurl.apis.link.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.AccessPolicies;
+import com.preonsurl.apis.link.dto.CreateRequest.UsagePolicies.UsagePolicies;
 import com.preonsurl.apis.link.enums.LinkMode;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.Instant;
@@ -44,8 +47,40 @@ public record EditNewUrlRequest(
 
         @Schema(description = "Whether the URL is active", example = "true", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         @JsonAlias({"active", "is_active"})
-        Boolean isActive
+        Boolean isActive,
+
+        @Valid
+        @Schema(description = "Updated usage and lifetime policies for the shortened URL", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"usage_policies", "usagePolicy"})
+        UsagePolicies usagePolicies,
+
+        @Valid
+        @Schema(description = "Updated access-control policies for the shortened URL", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"access_policies", "accessPolicy"})
+        AccessPolicies accessPolicies
 ) {
+    public EditNewUrlRequest(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            Instant expireAt,
+            Object usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            Boolean isActive
+    ) {
+        this(newUrl, originalUrl, customPath, expireAt, usageLimit, notes, tags, linkMode, isActive, null, null);
+    }
+
+    public boolean hasUsagePolicies() {
+        return usagePolicies != null;
+    }
+
+    public boolean hasAccessPolicies() {
+        return accessPolicies != null;
+    }
+
     public boolean hasUsageLimit() {
         return usageLimit != null;
     }

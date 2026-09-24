@@ -2827,6 +2827,161 @@
             user-select: none;
         }
 
+        /* Security Tag / Chip Input Containers */
+        .chip-input-box {
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            min-height: 42px;
+            max-height: 110px;
+            overflow-y: auto;
+            padding: 5px 8px 5px 34px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            cursor: text;
+            transition: all 0.15s ease;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .chip-input-box:focus-within {
+            border-color: #0f172a;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+        }
+
+        .chip-input-box .input-icon-prefix {
+            position: absolute;
+            left: 11px;
+            top: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            pointer-events: none;
+            transition: color 0.15s ease;
+            z-index: 1;
+        }
+
+        .chip-input-box:focus-within .input-icon-prefix {
+            color: #0f172a;
+        }
+
+        .chip-input-box.is-monospaced .chip-item-text,
+        .chip-input-box.is-monospaced .chip-inline-input {
+            font-family: var(--font-mono, monospace);
+            font-size: 12px;
+        }
+
+        .chip-items-list {
+            display: contents;
+        }
+
+        .chip-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px 2px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.4;
+            color: #0f172a;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            user-select: none;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+            max-width: 100%;
+            word-break: break-all;
+            box-sizing: border-box;
+        }
+
+        .chip-item:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        .chip-item-text {
+            display: inline-block;
+        }
+
+        .chip-remove-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+            height: 15px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+            margin-left: 2px;
+        }
+
+        .chip-remove-btn:hover {
+            color: #ef4444;
+            background-color: #fee2e2;
+        }
+
+        .chip-inline-input {
+            flex: 1 1 80px;
+            min-width: 80px;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 3px 2px !important;
+            font-size: 13px !important;
+            color: #0f172a !important;
+            height: 26px !important;
+            box-sizing: border-box;
+        }
+
+        .chip-inline-input::placeholder {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .chip-input-box::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chip-input-box::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Device Chips Below Dropdown */
+        .device-chips-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            margin-top: 8px;
+            min-height: 0;
+        }
+
+        .device-chips-wrapper:empty {
+            display: none;
+            margin-top: 0;
+        }
+
+        @keyframes chipPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(15, 23, 42, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.15); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(15, 23, 42, 0); }
+        }
+
+        .chip-item-highlight {
+            animation: chipPulse 0.4s ease-in-out;
+        }
+
         .modal-footer {
             display: flex;
             align-items: center;
@@ -5614,45 +5769,90 @@
 
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                         <div class="field-group" style="margin-bottom: 0;">
-                                            <label for="modalCountries">Allowed Countries <span class="optional">(ISO-2)</span></label>
-                                            <div class="input-with-icon">
+                                            <label for="modalCountriesInput">Allowed Countries <span class="optional">(ISO-2)</span></label>
+                                            <div class="chip-input-box" id="modalCountriesBox">
                                                 <div class="input-icon-prefix">
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
                                                         <line x1="4" y1="22" x2="4" y2="15"></line>
                                                     </svg>
                                                 </div>
-                                                <input type="text" class="form-input" id="modalCountries" placeholder="US, IN, GB">
+                                                <div class="chip-items-list" id="modalCountriesChips"></div>
+                                                <input type="text" class="chip-inline-input" id="modalCountriesInput" placeholder="e.g. US, IN, GB" autocomplete="off">
                                             </div>
-                                            <span class="field-help" style="margin-top: 4px;">Comma-separated ISO country codes.</span>
+                                            <input type="hidden" id="modalCountries" value="">
+                                            <span class="field-help" style="margin-top: 4px;">Type ISO code &amp; press Enter to add.</span>
                                         </div>
 
                                         <div class="field-group" style="margin-bottom: 0;">
-                                            <label for="modalDevices">Allowed Devices <span class="optional">(Type)</span></label>
-                                            <div class="input-with-icon">
+                                            <label for="modalDevicesSelect">Allowed Devices <span class="optional">(Type / OS)</span></label>
+                                            <div class="select-with-icon">
                                                 <div class="input-icon-prefix">
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                         <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
                                                         <line x1="12" y1="18" x2="12.01" y2="18"></line>
                                                     </svg>
                                                 </div>
-                                                <input type="text" class="form-input" id="modalDevices" placeholder="MOBILE, DESKTOP">
+                                                <select class="form-input" id="modalDevicesSelect">
+                                                    <option value="" disabled selected>Select device or OS...</option>
+                                                    <optgroup label="Device Form Factors">
+                                                        <option value="MOBILE">Mobile</option>
+                                                        <option value="TABLET">Tablet</option>
+                                                        <option value="DESKTOP">Desktop</option>
+                                                    </optgroup>
+                                                    <optgroup label="Operating Systems">
+                                                        <option value="IOS">iOS</option>
+                                                        <option value="ANDROID">Android</option>
+                                                        <option value="WINDOWS">Windows</option>
+                                                        <option value="MACOS">macOS</option>
+                                                        <option value="LINUX">Linux</option>
+                                                    </optgroup>
+                                                </select>
+                                                <div class="select-chevron">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                                    </svg>
+                                                </div>
                                             </div>
-                                            <span class="field-help" style="margin-top: 4px;">MOBILE, TABLET, or DESKTOP.</span>
+                                            <div class="chip-items-list device-chips-wrapper" id="modalDevicesChips"></div>
+                                            <input type="hidden" id="modalDevices" value="">
+                                            <span class="field-help" style="margin-top: 4px;">Select devices or platforms from dropdown to allow.</span>
                                         </div>
                                     </div>
 
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
                                         <div class="field-group" style="margin-bottom: 0;">
-                                            <label for="modalIpAllowlist">IP Allowlist <span class="optional">(one per line)</span></label>
-                                            <textarea class="form-textarea" id="modalIpAllowlist" rows="3" placeholder="192.168.1.1&#10;10.0.0.0/24" style="font-family: var(--font-mono, monospace); font-size: 12px;"></textarea>
-                                            <span class="field-help" style="margin-top: 4px;">Allowed IPv4/IPv6 addresses or CIDR ranges.</span>
+                                            <label for="modalIpAllowlistInput">IP Allowlist <span class="optional">(IPv4 / IPv6 / CIDR)</span></label>
+                                            <div class="chip-input-box is-monospaced" id="modalIpAllowlistBox">
+                                                <div class="input-icon-prefix">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                                        <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                                        <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                                                    </svg>
+                                                </div>
+                                                <div class="chip-items-list" id="modalIpAllowlistChips"></div>
+                                                <input type="text" class="chip-inline-input" id="modalIpAllowlistInput" placeholder="e.g. 192.168.1.1 or 10.0.0.0/24" autocomplete="off">
+                                            </div>
+                                            <input type="hidden" id="modalIpAllowlist" value="">
+                                            <span class="field-help" style="margin-top: 4px;">Type IP/CIDR &amp; press Enter to add.</span>
                                         </div>
 
                                         <div class="field-group" style="margin-bottom: 0;">
-                                            <label for="modalReferrers">Allowed Referrers <span class="optional">(one per line)</span></label>
-                                            <textarea class="form-textarea" id="modalReferrers" rows="3" placeholder="twitter.com&#10;*.linkedin.com" style="font-family: var(--font-mono, monospace); font-size: 12px;"></textarea>
-                                            <span class="field-help" style="margin-top: 4px;">Domains or wildcards allowed as HTTP Referer.</span>
+                                            <label for="modalReferrersInput">Allowed Referrers <span class="optional">(Domain / Wildcard)</span></label>
+                                            <div class="chip-input-box is-monospaced" id="modalReferrersBox">
+                                                <div class="input-icon-prefix">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                                    </svg>
+                                                </div>
+                                                <div class="chip-items-list" id="modalReferrersChips"></div>
+                                                <input type="text" class="chip-inline-input" id="modalReferrersInput" placeholder="e.g. twitter.com or *.linkedin.com" autocomplete="off">
+                                            </div>
+                                            <input type="hidden" id="modalReferrers" value="">
+                                            <span class="field-help" style="margin-top: 4px;">Type domain &amp; press Enter to add.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -5791,16 +5991,18 @@
                                 </div>
 
                                 <div class="field-group" style="margin-bottom: 0;">
-                                    <label for="modalTags">Link Tags <span class="optional">(comma separated)</span></label>
-                                    <div class="input-with-icon">
+                                    <label for="modalTagsInput">Link Tags <span class="optional">(Press Enter to add)</span></label>
+                                    <div class="chip-input-box" id="modalTagsBox">
                                         <div class="input-icon-prefix">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
                                                 <line x1="7" y1="7" x2="7.01" y2="7"></line>
                                             </svg>
                                         </div>
-                                        <input type="text" class="form-input" id="modalTags" placeholder="e.g. marketing, launch-2026, social">
+                                        <div class="chip-items-list" id="modalTagsChips"></div>
+                                        <input type="text" class="chip-inline-input" id="modalTagsInput" placeholder="e.g. marketing, launch-2026, social" autocomplete="off">
                                     </div>
+                                    <input type="hidden" id="modalTags" value="">
                                     <span class="field-help" style="margin-top: 6px;">Assign keywords to filter, organize, and track links across campaigns and analytics.</span>
                                 </div>
                             </div>
@@ -8025,6 +8227,291 @@
         /*
          * 11. CREATE & EDIT LINK MODAL HANDLING
          */
+        const DEVICE_LABELS = {
+            MOBILE: "Mobile",
+            TABLET: "Tablet",
+            DESKTOP: "Desktop",
+            IOS: "iOS",
+            ANDROID: "Android",
+            WINDOWS: "Windows",
+            MACOS: "macOS",
+            LINUX: "Linux",
+            OTHER: "Other"
+        };
+
+        const SecurityChipManager = {
+            state: {
+                countries: [],
+                devices: [],
+                ipAllowlist: [],
+                referrers: [],
+                tags: []
+            },
+
+            getContainerId(field) {
+                switch (field) {
+                    case "countries": return "modalCountriesChips";
+                    case "devices": return "modalDevicesChips";
+                    case "ipAllowlist": return "modalIpAllowlistChips";
+                    case "referrers": return "modalReferrersChips";
+                    case "tags": return "modalTagsChips";
+                    default: return null;
+                }
+            },
+
+            getInputId(field) {
+                switch (field) {
+                    case "countries": return "modalCountriesInput";
+                    case "ipAllowlist": return "modalIpAllowlistInput";
+                    case "referrers": return "modalReferrersInput";
+                    case "tags": return "modalTagsInput";
+                    default: return null;
+                }
+            },
+
+            getHiddenId(field) {
+                switch (field) {
+                    case "countries": return "modalCountries";
+                    case "devices": return "modalDevices";
+                    case "ipAllowlist": return "modalIpAllowlist";
+                    case "referrers": return "modalReferrers";
+                    case "tags": return "modalTags";
+                    default: return null;
+                }
+            },
+
+            init() {
+                this.setupTextInput("countries", "modalCountriesBox", "modalCountriesInput", "modalCountriesChips", "modalCountries", {
+                    transform: v => v.toUpperCase(),
+                    delimiters: /,|\s+/
+                });
+
+                this.setupTextInput("ipAllowlist", "modalIpAllowlistBox", "modalIpAllowlistInput", "modalIpAllowlistChips", "modalIpAllowlist", {
+                    delimiters: /,|\r?\n|\s+/
+                });
+
+                this.setupTextInput("referrers", "modalReferrersBox", "modalReferrersInput", "modalReferrersChips", "modalReferrers", {
+                    delimiters: /,|\r?\n|\s+/
+                });
+
+                this.setupTextInput("tags", "modalTagsBox", "modalTagsInput", "modalTagsChips", "modalTags", {
+                    delimiters: /,|\s+/
+                });
+
+                this.setupDeviceSelect();
+            },
+
+            setupTextInput(field, boxId, inputId, chipsContainerId, hiddenId, options = {}) {
+                const box = document.getElementById(boxId);
+                const input = document.getElementById(inputId);
+                const chipsEl = document.getElementById(chipsContainerId);
+                const hidden = document.getElementById(hiddenId);
+                if (!box || !input || !chipsEl || !hidden) return;
+
+                box.addEventListener("click", (e) => {
+                    if (!e.target.closest(".chip-remove-btn")) {
+                        input.focus();
+                    }
+                });
+
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault();
+                        this.commitInput(field, input, options);
+                    } else if (e.key === "Backspace" && !input.value) {
+                        this.removeLast(field);
+                    }
+                });
+
+                input.addEventListener("paste", (e) => {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData("text");
+                    if (!text) return;
+                    const tokens = text.split(options.delimiters || /,|\s+/).map(t => t.trim()).filter(Boolean);
+                    tokens.forEach(tok => this.add(field, tok, options));
+                    input.value = "";
+                });
+
+                input.addEventListener("blur", () => {
+                    this.commitInput(field, input, options);
+                });
+            },
+
+            setupDeviceSelect() {
+                const select = document.getElementById("modalDevicesSelect");
+                if (!select) return;
+                select.addEventListener("change", (e) => {
+                    const val = e.target.value;
+                    if (val) {
+                        this.add("devices", val, { transform: v => v.toUpperCase() });
+                        select.value = "";
+                    }
+                });
+            },
+
+            commitInput(field, input, options) {
+                const val = input.value.trim();
+                if (!val) return;
+                const tokens = val.split(options.delimiters || /,|\s+/).map(t => t.trim()).filter(Boolean);
+                tokens.forEach(tok => this.add(field, tok, options));
+                input.value = "";
+            },
+
+            commitPendingInputs() {
+                const cInput = document.getElementById("modalCountriesInput");
+                if (cInput && cInput.value.trim()) this.commitInput("countries", cInput, { transform: v => v.toUpperCase(), delimiters: /,|\s+/ });
+
+                const ipInput = document.getElementById("modalIpAllowlistInput");
+                if (ipInput && ipInput.value.trim()) this.commitInput("ipAllowlist", ipInput, { delimiters: /,|\r?\n|\s+/ });
+
+                const refInput = document.getElementById("modalReferrersInput");
+                if (refInput && refInput.value.trim()) this.commitInput("referrers", refInput, { delimiters: /,|\r?\n|\s+/ });
+
+                const tagInput = document.getElementById("modalTagsInput");
+                if (tagInput && tagInput.value.trim()) this.commitInput("tags", tagInput, { delimiters: /,|\s+/ });
+            },
+
+            add(field, rawValue, options = {}) {
+                if (!rawValue) return;
+                let val = rawValue.trim();
+                if (options.transform) val = options.transform(val);
+                if (!val) return;
+
+                const exists = this.state[field].some(existing => existing.toUpperCase() === val.toUpperCase());
+                if (exists) {
+                    const containerId = this.getContainerId(field);
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                        const existingChip = Array.from(container.children).find(child => (child.dataset.value || "").toUpperCase() === val.toUpperCase());
+                        if (existingChip) {
+                            existingChip.classList.remove("chip-item-highlight");
+                            void existingChip.offsetWidth;
+                            existingChip.classList.add("chip-item-highlight");
+                        }
+                    }
+                    return;
+                }
+
+                this.state[field].push(val);
+                this.renderChip(field, val);
+                this.sync(field);
+                this.updatePlaceholder(field);
+            },
+
+            remove(field, val) {
+                this.state[field] = this.state[field].filter(item => item !== val);
+                const containerId = this.getContainerId(field);
+                const container = document.getElementById(containerId);
+                if (container) {
+                    Array.from(container.children).forEach(child => {
+                        if (child.dataset.value === val) child.remove();
+                    });
+                }
+                this.sync(field);
+                this.updatePlaceholder(field);
+            },
+
+            removeLast(field) {
+                if (!this.state[field].length) return;
+                const lastVal = this.state[field][this.state[field].length - 1];
+                this.remove(field, lastVal);
+            },
+
+            renderChip(field, val) {
+                const containerId = this.getContainerId(field);
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                const chip = document.createElement("span");
+                chip.className = "chip-item";
+                chip.dataset.value = val;
+
+                const labelText = field === "devices" ? (DEVICE_LABELS[val] || val) : val;
+
+                chip.innerHTML = `
+                    <span class="chip-item-text">${escapeHtml(labelText)}</span>
+                    <button type="button" class="chip-remove-btn" title="Remove" aria-label="Remove ${escapeHtml(labelText)}">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                `;
+
+                const btn = chip.querySelector(".chip-remove-btn");
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    this.remove(field, val);
+                });
+
+                container.appendChild(chip);
+            },
+
+            sync(field) {
+                const hiddenId = this.getHiddenId(field);
+                const hidden = document.getElementById(hiddenId);
+                if (!hidden) return;
+
+                if (field === "countries" || field === "devices" || field === "tags") {
+                    hidden.value = this.state[field].join(", ");
+                } else {
+                    hidden.value = this.state[field].join("\n");
+                }
+            },
+
+            updatePlaceholder(field) {
+                const inputId = this.getInputId(field);
+                if (!inputId) return;
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                const count = this.state[field].length;
+                if (field === "countries") {
+                    input.placeholder = count > 0 ? "Add more..." : "e.g. US, IN, GB";
+                } else if (field === "ipAllowlist") {
+                    input.placeholder = count > 0 ? "Add more..." : "e.g. 192.168.1.1 or 10.0.0.0/24";
+                } else if (field === "referrers") {
+                    input.placeholder = count > 0 ? "Add more..." : "e.g. twitter.com or *.linkedin.com";
+                } else if (field === "tags") {
+                    input.placeholder = count > 0 ? "Add more tags..." : "e.g. marketing, launch-2026, social";
+                }
+            },
+
+            get(field) {
+                return [...this.state[field]];
+            },
+
+            set(field, values) {
+                this.clear(field);
+                if (Array.isArray(values)) {
+                    const opts = field === "countries" || field === "devices" ? { transform: v => v.toUpperCase() } : {};
+                    values.forEach(v => this.add(field, v, opts));
+                }
+            },
+
+            clear(field) {
+                this.state[field] = [];
+                const containerId = this.getContainerId(field);
+                const container = document.getElementById(containerId);
+                if (container) container.innerHTML = "";
+
+                const inputId = this.getInputId(field);
+                if (inputId) {
+                    const input = document.getElementById(inputId);
+                    if (input) input.value = "";
+                }
+                if (field === "devices") {
+                    const sel = document.getElementById("modalDevicesSelect");
+                    if (sel) sel.value = "";
+                }
+                this.sync(field);
+                this.updatePlaceholder(field);
+            },
+
+            clearAll() {
+                ["countries", "devices", "ipAllowlist", "referrers", "tags"].forEach(f => this.clear(f));
+            }
+        };
+
         function setupModalHandlers() {
             const modal = document.getElementById("linkModal");
             document.getElementById("linkModalCloseBtn").addEventListener("click", closeLinkModal);
@@ -8079,6 +8566,9 @@
             document.getElementById("modalPin").addEventListener("input", (e) => {
                 e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
             });
+
+            // Initialize security tag & dropdown chip handlers
+            SecurityChipManager.init();
 
             // Link mode radio cards
             document.querySelectorAll('input[name="modalLinkMode"]').forEach(radio => {
@@ -8494,6 +8984,7 @@
             document.getElementById("modalCountries").value = "";
             document.getElementById("modalDevices").value = "";
             document.getElementById("modalReferrers").value = "";
+            SecurityChipManager.clearAll();
             document.getElementById("modalTags").value = "";
             document.getElementById("modalNotes").value = "";
 
@@ -8546,6 +9037,7 @@
             if (domainGroupEditEl) domainGroupEditEl.style.display = "none";
             document.getElementById("addShortCodeRow").style.display = "none";
             document.getElementById("editActiveToggleRow").style.display = "flex";
+            SecurityChipManager.clearAll();
 
             switchModalTab("general");
 
@@ -8588,6 +9080,7 @@
                 if (data) {
                     document.getElementById("modalShortUrlInput").value = data.newUrl || newUrlToEdit;
                     document.getElementById("modalDestUrl").value = data.originalUrl || "";
+                    document.getElementById("modalCustomPath").value = data.customPath || "";
                     const editUrl = data.newUrl || newUrlToEdit;
                     const previewEl = document.getElementById("linkModalPreviewUrl");
                     if (previewEl) {
@@ -8595,19 +9088,60 @@
                         previewEl.setAttribute("data-full-url", editUrl);
                     }
                     document.getElementById("modalNotes").value = data.notes || "";
-                    document.getElementById("modalTags").value = Array.isArray(data.tags) ? data.tags.join(", ") : "";
-                    document.getElementById("modalUsageLimit").value = data.usageLimit ?? "";
+                    SecurityChipManager.set("tags", Array.isArray(data.tags) ? data.tags : []);
                     document.getElementById("modalLinkActive").checked = data.isActive !== false;
 
-                    if (data.expireAt) {
-                        const d = new Date(data.expireAt);
-                        if (!isNaN(d.getTime())) {
-                            document.getElementById("modalExpireAt").value = toDateTimeLocal(d);
-                        }
+                    // 1. Usage Policies
+                    const up = data.usagePolicies;
+                    const usageType = up?.type || (data.usageLimit ? (data.usageLimit === 1 ? "ONE_TIME" : "USAGE_LIMIT") : "UNLIMITED");
+                    const usageTypeSelect = document.getElementById("modalUsageType");
+                    if (usageTypeSelect) usageTypeSelect.value = usageType;
+                    const usageLimitContainer = document.getElementById("modalUsageLimitContainer");
+                    if (usageLimitContainer) usageLimitContainer.style.display = (usageType === "USAGE_LIMIT") ? "block" : "none";
+                    document.getElementById("modalUsageLimit").value = (up?.usageLimit != null) ? up.usageLimit : (data.usageLimit ?? "");
+
+                    const exp = up?.expireAt || data.expireAt;
+                    if (exp) {
+                        const d = new Date(exp);
+                        document.getElementById("modalExpireAt").value = !isNaN(d.getTime()) ? toDateTimeLocal(d) : "";
                     } else {
                         document.getElementById("modalExpireAt").value = "";
                     }
 
+                    const sched = up?.schedule;
+                    const schedToggle = document.getElementById("modalScheduleEnabled");
+                    const schedInputs = document.getElementById("modalScheduleInputs");
+                    if (sched && sched.startAt && sched.endAt) {
+                        if (schedToggle) schedToggle.checked = true;
+                        if (schedInputs) schedInputs.style.display = "block";
+                        const sDate = new Date(sched.startAt);
+                        const eDate = new Date(sched.endAt);
+                        document.getElementById("modalScheduleStart").value = !isNaN(sDate.getTime()) ? toDateTimeLocal(sDate) : "";
+                        document.getElementById("modalScheduleEnd").value = !isNaN(eDate.getTime()) ? toDateTimeLocal(eDate) : "";
+                    } else {
+                        if (schedToggle) schedToggle.checked = false;
+                        if (schedInputs) schedInputs.style.display = "none";
+                        document.getElementById("modalScheduleStart").value = "";
+                        document.getElementById("modalScheduleEnd").value = "";
+                    }
+
+                    // 2. Access Policies
+                    const ap = data.accessPolicies;
+                    const accessMode = ap?.mode || "PUBLIC";
+                    const accessModeSelect = document.getElementById("modalAccessMode");
+                    if (accessModeSelect) accessModeSelect.value = accessMode;
+                    const secSettings = document.getElementById("modalSecuritySettings");
+                    if (secSettings) secSettings.style.display = (accessMode === "SECURED") ? "block" : "none";
+
+                    document.getElementById("modalPin").value = (ap?.pin?.pin) ? "******" : "";
+                    document.getElementById("modalPassword").value = (ap?.password?.password) ? "******" : "";
+
+                    SecurityChipManager.set("countries", ap?.country?.countries || []);
+                    SecurityChipManager.set("devices", ap?.device?.devices || []);
+                    SecurityChipManager.set("ipAllowlist", ap?.ipAllowlist?.addresses || []);
+                    SecurityChipManager.set("referrers", ap?.referrer?.referrers || []);
+
+                    // 3. Link Mode
                     const mode = data.linkMode || "REDIRECT";
                     let modeRadio = document.querySelector(`input[name="modalLinkMode"][value="${mode}"]`);
                     if (!modeRadio) {
@@ -8635,6 +9169,7 @@
 
         function closeLinkModal() {
             resetModalCorsUI();
+            SecurityChipManager.clearAll();
             const modal = document.getElementById("linkModal");
             const dialog = document.querySelector(".link-modal-dialog");
             if (dialog) dialog.classList.remove("is-success");
@@ -8786,24 +9321,25 @@
                         return;
                     }
                 } else if (currentModalTab === "access") {
+                    SecurityChipManager.commitPendingInputs();
                     const accessMode = document.getElementById("modalAccessMode").value;
                     const pin = document.getElementById("modalPin").value.trim();
                     const password = document.getElementById("modalPassword").value;
-                    const ipAddresses = document.getElementById("modalIpAllowlist").value.split(/\r?\n/).map(v => v.trim()).filter(Boolean);
-                    const countries = parseTags(document.getElementById("modalCountries").value).map(v => v.toUpperCase());
-                    const devices = parseTags(document.getElementById("modalDevices").value).map(v => v.toUpperCase());
-                    const referrers = document.getElementById("modalReferrers").value.split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+                    const ipAddresses = SecurityChipManager.get("ipAllowlist");
+                    const countries = SecurityChipManager.get("countries");
+                    const devices = SecurityChipManager.get("devices");
+                    const referrers = SecurityChipManager.get("referrers");
 
                     if (accessMode === "SECURED" &&
                         !pin && !password && !ipAddresses.length && !countries.length && !devices.length && !referrers.length) {
                         showToast("error", "Secured policy required", "Secured access requires at least one restriction configured.");
                         return;
                     }
-                    if (pin && !/^\d{6}$/.test(pin)) {
+                    if (pin && pin !== "******" && !/^\d{6}$/.test(pin)) {
                         showToast("error", "Invalid PIN", "PIN must be exactly 6 digits.");
                         return;
                     }
-                    if (password && (password.length < 6 || password.length > 128)) {
+                    if (password && password !== "******" && (password.length < 6 || password.length > 128)) {
                         showToast("error", "Invalid Password", "Password must contain 6–128 characters.");
                         return;
                     }
@@ -8825,10 +9361,11 @@
         }
 
         async function submitCreateLink() {
+            SecurityChipManager.commitPendingInputs();
             const url = document.getElementById("modalDestUrl").value.trim();
             const customPath = document.getElementById("modalCustomPath").value.trim();
             const notes = document.getElementById("modalNotes").value.trim();
-            const tags = parseTags(document.getElementById("modalTags").value);
+            const tags = SecurityChipManager.get("tags");
             const linkMode = document.querySelector('input[name="modalLinkMode"]:checked')?.value || "REDIRECT";
             const addShortCode = document.getElementById("modalAddShortCode").checked;
             const domain = document.getElementById("modalDomainSelect")?.value?.trim() || "";
@@ -8874,15 +9411,14 @@
                 return;
             }
 
+            SecurityChipManager.commitPendingInputs();
             const accessMode = document.getElementById("modalAccessMode").value;
             const pin = document.getElementById("modalPin").value.trim();
             const password = document.getElementById("modalPassword").value;
-            const ipAddresses = document.getElementById("modalIpAllowlist").value
-                .split(/\r?\n/).map(v => v.trim()).filter(Boolean);
-            const countries = parseTags(document.getElementById("modalCountries").value).map(v => v.toUpperCase());
-            const devices = parseTags(document.getElementById("modalDevices").value).map(v => v.toUpperCase());
-            const referrers = document.getElementById("modalReferrers").value
-                .split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+            const ipAddresses = SecurityChipManager.get("ipAllowlist");
+            const countries = SecurityChipManager.get("countries");
+            const devices = SecurityChipManager.get("devices");
+            const referrers = SecurityChipManager.get("referrers");
 
             if (accessMode === "SECURED" &&
                 !pin && !password && !ipAddresses.length && !countries.length && !devices.length && !referrers.length) {
@@ -8981,25 +9517,110 @@
             const newUrl = appState.editingOriginalNewUrl;
             if (!newUrl) return;
 
+            SecurityChipManager.commitPendingInputs();
             const originalUrl = document.getElementById("modalDestUrl").value.trim();
             const customPath = document.getElementById("modalCustomPath").value.trim();
             const notes = document.getElementById("modalNotes").value.trim();
-            const tags = parseTags(document.getElementById("modalTags").value);
+            const tags = SecurityChipManager.get("tags");
             const linkMode = document.querySelector('input[name="modalLinkMode"]:checked')?.value || "REDIRECT";
             const isActive = document.getElementById("modalLinkActive").checked;
+
+            if (!originalUrl) {
+                switchModalTab("general");
+                showToast("error", "Destination URL is required", "Please enter a valid target URL.");
+                document.getElementById("modalDestUrl").focus();
+                return;
+            }
+
+            if (!/^https?:\/\//i.test(originalUrl)) {
+                switchModalTab("general");
+                showToast("error", "Invalid destination URL", "URL must start with http:// or https://");
+                document.getElementById("modalDestUrl").focus();
+                return;
+            }
+
+            const usageType = document.getElementById("modalUsageType").value;
+            const usageLimitValue = document.getElementById("modalUsageLimit").value.trim();
             const expireAtVal = document.getElementById("modalExpireAt").value;
-            const usageLimitVal = document.getElementById("modalUsageLimit").value.trim();
+
+            if (usageType === "USAGE_LIMIT" && (!usageLimitValue || Number(usageLimitValue) <= 0)) {
+                switchModalTab("usage");
+                showToast("error", "Usage limit required", "Usage limit must be greater than 0.");
+                document.getElementById("modalUsageLimit").focus();
+                return;
+            }
+
+            const scheduleEnabled = document.getElementById("modalScheduleEnabled").checked;
+            const scheduleStart = document.getElementById("modalScheduleStart").value;
+            const scheduleEnd = document.getElementById("modalScheduleEnd").value;
+
+            if (scheduleEnabled && (!scheduleStart || !scheduleEnd)) {
+                switchModalTab("usage");
+                showToast("error", "Incomplete schedule", "Both start and end dates are required when schedule is enabled.");
+                return;
+            }
+
+            if (scheduleEnabled && new Date(scheduleEnd).getTime() <= new Date(scheduleStart).getTime()) {
+                switchModalTab("usage");
+                showToast("error", "Invalid schedule", "End date must be after start date.");
+                return;
+            }
+
+            const accessMode = document.getElementById("modalAccessMode").value;
+            const pin = document.getElementById("modalPin").value.trim();
+            const password = document.getElementById("modalPassword").value;
+            const ipAddresses = SecurityChipManager.get("ipAllowlist");
+            const countries = SecurityChipManager.get("countries");
+            const devices = SecurityChipManager.get("devices");
+            const referrers = SecurityChipManager.get("referrers");
+
+            if (accessMode === "SECURED" &&
+                !pin && !password && !ipAddresses.length && !countries.length && !devices.length && !referrers.length) {
+                switchModalTab("access");
+                showToast("error", "Secured policy required", "Secured access requires at least one restriction configured.");
+                return;
+            }
+
+            if (pin && pin !== "******" && !/^\d{6}$/.test(pin)) {
+                switchModalTab("access");
+                showToast("error", "Invalid PIN", "PIN must be exactly 6 digits.");
+                return;
+            }
+
+            if (password && password !== "******" && (password.length < 6 || password.length > 128)) {
+                switchModalTab("access");
+                showToast("error", "Invalid Password", "Password must contain 6–128 characters.");
+                return;
+            }
 
             const payload = {
                 newUrl,
                 originalUrl,
-                customPath,
-                notes,
+                customPath: customPath || null,
+                notes: notes || null,
                 tags,
                 linkMode,
                 isActive,
                 expireAt: expireAtVal ? new Date(expireAtVal).toISOString() : null,
-                usageLimit: usageLimitVal ? Number(usageLimitVal) : null
+                usageLimit: usageType === "USAGE_LIMIT" ? Number(usageLimitValue) : (usageType === "ONE_TIME" ? 1 : null),
+                usagePolicies: {
+                    type: usageType,
+                    usageLimit: usageType === "USAGE_LIMIT" ? Number(usageLimitValue) : (usageType === "ONE_TIME" ? 1 : null),
+                    expireAt: expireAtVal ? new Date(expireAtVal).toISOString() : null,
+                    schedule: scheduleEnabled ? {
+                        startAt: new Date(scheduleStart).toISOString(),
+                        endAt: new Date(scheduleEnd).toISOString()
+                    } : null
+                },
+                accessPolicies: {
+                    mode: accessMode,
+                    pin: pin ? { pin } : null,
+                    password: password ? { password } : null,
+                    ipAllowlist: ipAddresses.length ? { addresses: ipAddresses } : null,
+                    country: countries.length ? { countries } : null,
+                    device: devices.length ? { devices } : null,
+                    referrer: referrers.length ? { referrers } : null
+                }
             };
 
             const btn = document.getElementById("modalSubmitBtn");

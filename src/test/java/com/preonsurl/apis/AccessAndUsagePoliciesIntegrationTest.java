@@ -411,4 +411,269 @@ class AccessAndUsagePoliciesIntegrationTest {
                 .andExpect(content().string(containsString("Link Has Expired")))
                 .andExpect(content().string(containsString("is no longer accessible.")));
     }
+
+    @Test
+    void ipRestrictedLink_whenIpForbidden_showsProperWebpageWithReasonAndDetails() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/target-internal-system",
+                    "customPath": "corp-only",
+                    "accessPolicies": {
+                        "mode": "SECURED",
+                        "ipAllowlist": {
+                            "addresses": ["192.168.10.5", "10.0.0.0/16"]
+                        }
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk());
+
+        // Visit with unauthorized IP
+        MvcResult result = mockMvc.perform(get("/corp-only")
+                        .header("Accept", "text/html,application/xhtml+xml,*/*")
+                        .header("X-Forwarded-For", "203.0.113.195"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("id=\"exhausted-container\"")))
+                .andExpect(content().string(containsString("Access Restricted: IP Not Allowed")))
+                .andExpect(content().string(containsString("IP Restricted")))
+                .andExpect(content().string(containsString("203.0.113.195")))
+                .andReturn();
+
+        String html = result.getResponse().getContentAsString();
+        assertTrue(html.contains("Your IP Address"), "Should show client IP diagnostic key");
+    }
+
+    @Test
+    void countryRestrictedLink_whenCountryBlocked_showsProperWebpageWithReasonAndDetails() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/us-only-promo",
+                    "customPath": "us-promo",
+                    "accessPolicies": {
+                        "mode": "SECURED",
+                        "country": {
+                            "countries": ["US", "CA"]
+                        }
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk());
+
+        // Visit from FR
+        mockMvc.perform(get("/us-promo")
+                        .header("Accept", "text/html,application/xhtml+xml,*/*")
+                        .header("CF-IPCountry", "FR"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("id=\"exhausted-container\"")))
+                .andExpect(content().string(containsString("Access Restricted: Country Restriction")))
+                .andExpect(content().string(containsString("Country Blocked")))
+                .andExpect(content().string(containsString("FR")))
+                .andExpect(content().string(containsString("US,CA")));
+    }
+
+    @Test
+    void deviceRestrictedLink_whenDeviceIncompatible_showsProperWebpageWithReasonAndDetails() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/app-download",
+                    "customPath": "mobile-app-link",
+                    "accessPolicies": {
+                        "mode": "SECURED",
+                        "device": {
+                            "devices": ["MOBILE"]
+                        }
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk());
+
+        // Visit with Desktop browser User-Agent
+        mockMvc.perform(get("/mobile-app-link")
+                        .header("Accept", "text/html,application/xhtml+xml,*/*")
+                        .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("id=\"exhausted-container\"")))
+                .andExpect(content().string(containsString("Access Restricted: Device Incompatible")))
+                .andExpect(content().string(containsString("Device Incompatible")))
+                .andExpect(content().string(containsString("Desktop (macOS)")));
+    }
+
+    @Test
+    void referrerRestrictedLink_whenReferrerBlocked_showsProperWebpageWithReasonAndDetails() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/partner-portal",
+                    "customPath": "partner-link",
+                    "accessPolicies": {
+                        "mode": "SECURED",
+                        "referrer": {
+                            "referrers": ["*.authorized-partner.com"]
+                        }
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk());
+
+        // Visit without Referer (Direct visit)
+        mockMvc.perform(get("/partner-link")
+                        .header("Accept", "text/html,application/xhtml+xml,*/*"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("id=\"exhausted-container\"")))
+                .andExpect(content().string(containsString("Access Restricted: Unauthorized Referrer")))
+                .andExpect(content().string(containsString("Referrer Blocked")))
+                .andExpect(content().string(containsString("Direct Access (No Referer)")));
+    }
+
+    @Test
+    void editLink_fetchesDetailsAndConfig_populatesProperlyAndUpdatesCorrectly() throws Exception {
+        // 1. Create a link initially with unlimited usage and public access
+        String createPayload = """
+                {
+                    "url": "https://example.com/initial-destination",
+                    "customPath": "edit-flow-link",
+                    "notes": "Initial notes",
+                    "tags": ["test", "v1"]
+                }
+                """;
+
+        MvcResult createResult = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.publicId").isNotEmpty())
+                .andExpect(jsonPath("$.data.usagePolicies.type").value("UNLIMITED"))
+                .andExpect(jsonPath("$.data.accessPolicies.mode").value("PUBLIC"))
+                .andReturn();
+
+        String publicId = com.jayway.jsonpath.JsonPath.read(createResult.getResponse().getContentAsString(), "$.data.publicId");
+        String shortUrl = com.jayway.jsonpath.JsonPath.read(createResult.getResponse().getContentAsString(), "$.data.newUrl");
+
+        // 2. Fetch all details and conf via GET /link?id={publicId}
+        mockMvc.perform(get("/link")
+                        .param("id", publicId)
+                        .header("X-API-KEY", API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/initial-destination"))
+                .andExpect(jsonPath("$.data.customPath").value("edit-flow-link"))
+                .andExpect(jsonPath("$.data.notes").value("Initial notes"))
+                .andExpect(jsonPath("$.data.tags", hasItems("test", "v1")))
+                .andExpect(jsonPath("$.data.usagePolicies.type").value("UNLIMITED"))
+                .andExpect(jsonPath("$.data.accessPolicies.mode").value("PUBLIC"));
+
+        // 3. Edit the link with full usagePolicies & accessPolicies
+        Instant startWindow = Instant.now().minus(1, ChronoUnit.HOURS);
+        Instant endWindow = Instant.now().plus(48, ChronoUnit.HOURS);
+        Instant expireTime = Instant.now().plus(72, ChronoUnit.HOURS);
+
+        String editPayload = String.format("""
+                {
+                    "newUrl": "%s",
+                    "originalUrl": "https://example.com/updated-destination",
+                    "notes": "Updated campaign notes",
+                    "tags": ["marketing", "updated"],
+                    "linkMode": "REDIRECT",
+                    "isActive": true,
+                    "usagePolicies": {
+                        "type": "USAGE_LIMIT",
+                        "usageLimit": 50,
+                        "expireAt": "%s",
+                        "schedule": {
+                            "startAt": "%s",
+                            "endAt": "%s"
+                        }
+                    },
+                    "accessPolicies": {
+                        "mode": "SECURED",
+                        "pin": { "pin": "987654" },
+                        "country": { "countries": ["US", "IN"] },
+                        "device": { "devices": ["MOBILE", "DESKTOP"] },
+                        "ipAllowlist": { "addresses": ["10.0.0.0/16", "192.168.1.1"] },
+                        "referrer": { "referrers": ["*.example.com"] }
+                    }
+                }
+                """, shortUrl, expireTime, startWindow, endWindow);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/updated-destination"))
+                .andExpect(jsonPath("$.data.notes").value("Updated campaign notes"))
+                .andExpect(jsonPath("$.data.tags", hasItems("marketing", "updated")))
+                .andExpect(jsonPath("$.data.usagePolicies.type").value("USAGE_LIMIT"))
+                .andExpect(jsonPath("$.data.usagePolicies.usageLimit").value(50))
+                .andExpect(jsonPath("$.data.accessPolicies.mode").value("SECURED"))
+                .andExpect(jsonPath("$.data.accessPolicies.pin.pin").value("******"))
+                .andExpect(jsonPath("$.data.accessPolicies.country.countries", hasItems("US", "IN")))
+                .andExpect(jsonPath("$.data.accessPolicies.device.devices", hasItems("MOBILE", "DESKTOP")))
+                .andExpect(jsonPath("$.data.accessPolicies.ipAllowlist.addresses", hasItems("10.0.0.0/16", "192.168.1.1")))
+                .andExpect(jsonPath("$.data.accessPolicies.referrer.referrers", hasItems("*.example.com")));
+
+        // 4. Fetch details again via GET /link?id={publicId} to verify retrieval for Edit Modal
+        mockMvc.perform(get("/link")
+                        .param("id", publicId)
+                        .header("X-API-KEY", API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/updated-destination"))
+                .andExpect(jsonPath("$.data.usagePolicies.type").value("USAGE_LIMIT"))
+                .andExpect(jsonPath("$.data.usagePolicies.usageLimit").value(50))
+                .andExpect(jsonPath("$.data.usagePolicies.schedule.startAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.usagePolicies.schedule.endAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.accessPolicies.mode").value("SECURED"))
+                .andExpect(jsonPath("$.data.accessPolicies.pin.pin").value("******"))
+                .andExpect(jsonPath("$.data.accessPolicies.country.countries", hasItems("US", "IN")))
+                .andExpect(jsonPath("$.data.accessPolicies.device.devices", hasItems("MOBILE", "DESKTOP")))
+                .andExpect(jsonPath("$.data.accessPolicies.ipAllowlist.addresses", hasItems("10.0.0.0/16", "192.168.1.1")))
+                .andExpect(jsonPath("$.data.accessPolicies.referrer.referrers", hasItems("*.example.com")));
+
+        // 5. Subsequent edit keeping masked PIN "******" preserves existing PIN hash
+        String editKeepMaskPayload = String.format("""
+                {
+                    "newUrl": "%s",
+                    "originalUrl": "https://example.com/updated-destination-2",
+                    "accessPolicies": {
+                        "mode": "SECURED",
+                        "pin": { "pin": "******" },
+                        "country": { "countries": ["US", "IN"] }
+                    }
+                }
+                """, shortUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editKeepMaskPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/updated-destination-2"))
+                .andExpect(jsonPath("$.data.accessPolicies.pin.pin").value("******"));
+
+        AccessPolicy ap = accessPolicyRepository.findAll().stream().findFirst().orElseThrow();
+        assertTrue(passwordEncoder.matches("987654", ap.getPinHash()));
+    }
 }

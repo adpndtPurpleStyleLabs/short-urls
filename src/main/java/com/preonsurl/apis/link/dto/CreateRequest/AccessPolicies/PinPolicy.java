@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern;
 public record PinPolicy(
 
         @Pattern(
-                regexp = "^\\d{4,12}$",
+                regexp = "^(\\d{4,12}|\\*{4,12})$",
                 message = "PIN must contain between 4 and 12 digits"
         )
         @Schema(

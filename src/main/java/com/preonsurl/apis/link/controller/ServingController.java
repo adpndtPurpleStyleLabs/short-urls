@@ -1,16 +1,15 @@
 package com.preonsurl.apis.link.controller;
 
 import com.preonsurl.apis.link.dto.ApiResponse;
+import com.preonsurl.apis.link.dto.PolicyEvaluationResult;
 import com.preonsurl.apis.link.entity.AccessPolicy;
 import com.preonsurl.apis.link.entity.NewUrl;
-import com.preonsurl.apis.link.entity.UsagePolicy;
+import com.preonsurl.apis.link.enums.LinkMode;
 import com.preonsurl.apis.link.event.ShortUrlServedEvent;
 import com.preonsurl.apis.link.exception.UrlExpiredException;
 import com.preonsurl.apis.link.exception.UrlUsageLimitExceededException;
-import com.preonsurl.apis.link.repository.AccessPolicyRepository;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
-import com.preonsurl.apis.link.repository.UsagePolicyRepository;
-import com.preonsurl.apis.link.enums.LinkMode;
+import com.preonsurl.apis.link.service.LinkAccessAndUsageService;
 import com.preonsurl.apis.link.service.MirrorService;
 import com.preonsurl.apis.link.service.NewUrlServingCacheService;
 import com.preonsurl.apis.link.service.ProxyService;
@@ -28,7 +27,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,29 +50,23 @@ public class ServingController {
 
     private final NewUrlServingCacheService servingCacheService;
     private final NewUrlRepository repository;
-    private final AccessPolicyRepository accessPolicyRepository;
-    private final UsagePolicyRepository usagePolicyRepository;
+    private final LinkAccessAndUsageService policyService;
     private final LinkUiRenderer linkUiRenderer;
-    private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
     private final ProxyService proxyService;
     private final MirrorService mirrorService;
 
     public ServingController(NewUrlServingCacheService servingCacheService,
                              NewUrlRepository repository,
-                             AccessPolicyRepository accessPolicyRepository,
-                             UsagePolicyRepository usagePolicyRepository,
+                             LinkAccessAndUsageService policyService,
                              LinkUiRenderer linkUiRenderer,
-                             PasswordEncoder passwordEncoder,
                              ApplicationEventPublisher eventPublisher,
                              ProxyService proxyService,
                              MirrorService mirrorService) {
         this.servingCacheService = servingCacheService;
         this.repository = repository;
-        this.accessPolicyRepository = accessPolicyRepository;
-        this.usagePolicyRepository = usagePolicyRepository;
+        this.policyService = policyService;
         this.linkUiRenderer = linkUiRenderer;
-        this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
         this.proxyService = proxyService;
         this.mirrorService = mirrorService;
@@ -127,40 +119,33 @@ public class ServingController {
         String referer = request.getHeader("Referer");
 
         // 1. Check LRU Cache first
-        com.preonsurl.apis.link.cache.CachedNewUrlDto cached = servingCacheService.getLruCache().get(fullUrl);
+            com.preonsurl.apis.link.cache.CachedNewUrlDto cached = servingCacheService.getLruCache().get(fullUrl);
         if (cached != null) {
-            if (!cached.isActive()) {
-                servingCacheService.getLruCache().remove(fullUrl);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
-            }
-            if (cached.isExpired()) {
-                servingCacheService.getLruCache().remove(fullUrl);
-                if (isBrowserHtmlRequest(request)) {
-                    return ResponseEntity.status(HttpStatus.GONE)
-                            .contentType(MediaType.TEXT_HTML)
-                            .body(linkUiRenderer.renderExhaustedPage("Link Has Expired", "This short link has expired and is no longer accessible.", "Expired"));
+            PolicyEvaluationResult evalResult = policyService.evaluatePolicies(
+                    cached.getId(),
+                    cached.getNewUrl(),
+                    cached.getOriginalUrl(),
+                    cached.isActive(),
+                    cached.getExpireAt(),
+                    cached.getUsageLimit(),
+                    cached.getClickCount(),
+                    request
+            );
+
+            if (evalResult.isRejected()) {
+                if (evalResult.violationType() == PolicyEvaluationResult.ViolationType.EXPIRED
+                        || evalResult.violationType() == PolicyEvaluationResult.ViolationType.USAGE_LIMIT_EXCEEDED
+                        || evalResult.violationType() == PolicyEvaluationResult.ViolationType.INACTIVE) {
+                    servingCacheService.getLruCache().remove(fullUrl);
                 }
-                return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL has expired"));
-            }
-            if (cached.isUsageLimitBreached()) {
-                servingCacheService.getLruCache().remove(fullUrl);
-                if (isBrowserHtmlRequest(request)) {
-                    return ResponseEntity.status(HttpStatus.GONE)
-                            .contentType(MediaType.TEXT_HTML)
-                            .body(linkUiRenderer.renderExhaustedPage("Usage Limit Reached", "This short link has reached its maximum allowed number of accesses and is no longer accessible.", "Limit Reached"));
-                }
-                return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL usage limit reached"));
+                return handlePolicyRejection(evalResult, request);
             }
 
-            // Check if secured by PIN or password
-            Optional<AccessPolicy> apOpt = accessPolicyRepository.findByShortUrlId(cached.getId());
-            if (apOpt.isPresent() && apOpt.get().isPinOrPasswordProtected()) {
-                AccessPolicy policy = apOpt.get();
-                if (!isVerifiedByCookie(request, cached.getId())) {
-                    return ResponseEntity.ok()
-                            .contentType(MediaType.TEXT_HTML)
-                            .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
-                }
+            if (evalResult.isChallengeRequired()) {
+                AccessPolicy policy = evalResult.accessPolicy();
+                return ResponseEntity.ok()
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
             }
 
             // Serve from cache
@@ -185,22 +170,48 @@ public class ServingController {
                     return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
                 }
             } catch (UrlExpiredException e) {
-                if (isBrowserHtmlRequest(request)) {
-                    return ResponseEntity.status(HttpStatus.GONE).contentType(MediaType.TEXT_HTML)
-                            .body(linkUiRenderer.renderExhaustedPage("Link Has Expired", "This short link has expired and is no longer accessible.", "Expired"));
-                }
-                return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL has expired"));
+                return handlePolicyRejection(
+                        PolicyEvaluationResult.rejected(
+                                PolicyEvaluationResult.ViolationType.EXPIRED,
+                                HttpStatus.GONE,
+                                "Link Has Expired",
+                                "This short link has expired and is no longer accessible.",
+                                "Expired",
+                                "This URL has reached the end of its active lifecycle.",
+                                "clock",
+                                Map.of("Status", "Expired"),
+                                null,
+                                null
+                        ),
+                        request
+                );
             } catch (UrlUsageLimitExceededException e) {
-                if (isBrowserHtmlRequest(request)) {
-                    return ResponseEntity.status(HttpStatus.GONE).contentType(MediaType.TEXT_HTML)
-                            .body(linkUiRenderer.renderExhaustedPage("Usage Limit Reached", "This short link has reached its maximum allowed number of accesses.", "Limit Reached"));
-                }
-                return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL usage limit reached"));
+                return handlePolicyRejection(
+                        PolicyEvaluationResult.rejected(
+                                PolicyEvaluationResult.ViolationType.USAGE_LIMIT_EXCEEDED,
+                                HttpStatus.GONE,
+                                "Usage Limit Reached",
+                                "This short link has reached its maximum allowed number of accesses.",
+                                "Limit Reached",
+                                "This URL has reached the end of its active lifecycle.",
+                                "limit",
+                                Map.of("Status", "Limit Reached"),
+                                null,
+                                null
+                        ),
+                        request
+                );
             }
         }
 
         // 2. Cache Miss: Locate entity by fullUrl, shortCode, or customPath in DB
         Optional<NewUrl> entityOpt = repository.findByNewUrl(fullUrl);
+        if (entityOpt.isEmpty()) {
+            entityOpt = repository.findByShortCode(path);
+        }
+        if (entityOpt.isEmpty()) {
+            entityOpt = repository.findByCustomPath(path);
+        }
 
 
         if (entityOpt.isEmpty()) {
@@ -211,21 +222,52 @@ public class ServingController {
                 NewUrl mirrorEntity = match.entity();
                 if ("/".equals(match.subPath())) {
                     // Root URL with trailing slash: treat as root link visit
+                    PolicyEvaluationResult mirrorEval = policyService.evaluatePolicies(mirrorEntity, request);
+                    if (mirrorEval.isRejected()) {
+                        return handlePolicyRejection(mirrorEval, request);
+                    }
+                    if (mirrorEval.isChallengeRequired()) {
+                        AccessPolicy policy = mirrorEval.accessPolicy();
+                        return ResponseEntity.ok()
+                                .contentType(MediaType.TEXT_HTML)
+                                .body(linkUiRenderer.renderSecurityChallenge(match.prefix(), policy.hasPin(), policy.hasPassword(), null));
+                    }
+
                     try {
                         Optional<String> orig = servingCacheService.resolveAndServe(mirrorEntity.getNewUrl(), ipAddress, userAgent, referer);
                         return mirrorService.mirrorRequest(match.prefix(), "/", mirrorEntity, request);
                     } catch (UrlExpiredException e) {
-                        if (isBrowserHtmlRequest(request)) {
-                            return ResponseEntity.status(HttpStatus.GONE).contentType(MediaType.TEXT_HTML)
-                                    .body(linkUiRenderer.renderExhaustedPage("Link Has Expired", "This short link has expired and is no longer accessible.", "Expired"));
-                        }
-                        return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL has expired"));
+                        return handlePolicyRejection(
+                                PolicyEvaluationResult.rejected(
+                                        PolicyEvaluationResult.ViolationType.EXPIRED,
+                                        HttpStatus.GONE,
+                                        "Link Has Expired",
+                                        "This short link has expired and is no longer accessible.",
+                                        "Expired",
+                                        "This URL has reached the end of its active lifecycle.",
+                                        "clock",
+                                        Map.of("Status", "Expired"),
+                                        null,
+                                        null
+                                ),
+                                request
+                        );
                     } catch (UrlUsageLimitExceededException e) {
-                        if (isBrowserHtmlRequest(request)) {
-                            return ResponseEntity.status(HttpStatus.GONE).contentType(MediaType.TEXT_HTML)
-                                    .body(linkUiRenderer.renderExhaustedPage("Usage Limit Reached", "This short link has reached its maximum allowed number of accesses.", "Limit Reached"));
-                        }
-                        return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL usage limit reached"));
+                        return handlePolicyRejection(
+                                PolicyEvaluationResult.rejected(
+                                        PolicyEvaluationResult.ViolationType.USAGE_LIMIT_EXCEEDED,
+                                        HttpStatus.GONE,
+                                        "Usage Limit Reached",
+                                        "This short link has reached its maximum allowed number of accesses.",
+                                        "Limit Reached",
+                                        "This URL has reached the end of its active lifecycle.",
+                                        "limit",
+                                        Map.of("Status", "Limit Reached"),
+                                        null,
+                                        null
+                                ),
+                                request
+                        );
                     }
                 } else {
                     // Subrequest: validate policies without incrementing user click count
@@ -253,60 +295,20 @@ public class ServingController {
         }
 
         NewUrl entity = entityOpt.get();
-        if (!entity.isActive()) {
-            log.warn("Short URL is inactive: url='{}'", entity.getOriginalUrl());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
+        PolicyEvaluationResult evalResult = policyService.evaluatePolicies(entity, request);
+        if (evalResult.isRejected()) {
+            return handlePolicyRejection(evalResult, request);
         }
 
-        // 3. Check Usage Policy & Expiration
-        Optional<UsagePolicy> usagePolicyOpt = usagePolicyRepository.findByShortUrlId(entity.getId());
-        boolean isExpired = (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt())) || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isExpired());
-        boolean isLimitReached = (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit()) || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isUsageLimitReached());
-        boolean isOutsideSchedule = usagePolicyOpt.isPresent() && usagePolicyOpt.get().isOutsideSchedule();
-
-        if (isExpired || isLimitReached || isOutsideSchedule) {
-            log.warn("Link exhausted: expired={}, limitReached={}, outsideSchedule={}, url='{}'",
-                    isExpired, isLimitReached, isOutsideSchedule, entity.getNewUrl());
-
-            if (isBrowserHtmlRequest(request)) {
-                String title = isExpired ? "Link Has Expired" : isLimitReached ? "Usage Limit Reached" : "Link Outside Schedule";
-                String desc = isExpired
-                        ? "This short link expired on " + entity.getExpireAt() + " and is no longer accessible."
-                        : isLimitReached
-                        ? "This short link has reached its maximum allowed number of accesses and is no longer accessible."
-                        : "This short link is not currently accessible according to its access schedule.";
-                String badge = isExpired ? "Expired" : isLimitReached ? "Limit Reached" : "Schedule Inactive";
-
-                HttpStatus status = isOutsideSchedule ? HttpStatus.FORBIDDEN : HttpStatus.GONE;
-                return ResponseEntity.status(status)
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderExhaustedPage(title, desc, badge));
-            } else {
-                if (isExpired) {
-                    return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL has expired"));
-                } else if (isLimitReached) {
-                    return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL usage limit reached"));
-                } else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Link is outside scheduled access window"));
-                }
-            }
+        if (evalResult.isChallengeRequired()) {
+            log.info("Prompting PIN/Password for url='{}' [IP={}]", fullUrl, ipAddress);
+            AccessPolicy policy = evalResult.accessPolicy();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
         }
 
-        // 4. Check Access Policy (PIN / Password Protection)
-        Optional<AccessPolicy> accessPolicyOpt = accessPolicyRepository.findByShortUrlId(entity.getId());
-        if (accessPolicyOpt.isPresent() && accessPolicyOpt.get().isPinOrPasswordProtected()) {
-            AccessPolicy policy = accessPolicyOpt.get();
-
-            // Check if already verified by cookie
-            if (!isVerifiedByCookie(request, entity.getId())) {
-                log.info("Prompting PIN/Password for url='{}' [IP={}]", fullUrl, ipAddress);
-                return ResponseEntity.ok()
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
-            }
-        }
-
-        // 5. Public or Verified: Serve using cache service
+        // Serve using cache service
         try {
             Optional<String> originalUrl = servingCacheService.resolveAndServe(entity.getNewUrl(), ipAddress, userAgent, referer);
             LinkMode mode = entity.getLinkMode() != null ? entity.getLinkMode() : LinkMode.REDIRECT;
@@ -337,20 +339,38 @@ public class ServingController {
             return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(entity.getOriginalUrl())).build();
         } catch (UrlExpiredException e) {
             log.warn("New code expired: '{}' [IP={}]", path, ipAddress);
-            if (isBrowserHtmlRequest(request)) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderExhaustedPage("Link Has Expired", "This short link has expired and is no longer accessible.", "Expired"));
-            }
-            return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL has expired"));
+            return handlePolicyRejection(
+                    PolicyEvaluationResult.rejected(
+                            PolicyEvaluationResult.ViolationType.EXPIRED,
+                            HttpStatus.GONE,
+                            "Link Has Expired",
+                            "This short link has expired and is no longer accessible.",
+                            "Expired",
+                            "This URL has reached the end of its active lifecycle.",
+                            "clock",
+                            Map.of("Status", "Expired"),
+                            null,
+                            null
+                    ),
+                    request
+            );
         } catch (UrlUsageLimitExceededException e) {
             log.warn("New code usage limit exceeded: '{}' [IP={}]", path, ipAddress);
-            if (isBrowserHtmlRequest(request)) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderExhaustedPage("Usage Limit Reached", "This short link has reached its maximum allowed number of accesses.", "Limit Reached"));
-            }
-            return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL usage limit reached"));
+            return handlePolicyRejection(
+                    PolicyEvaluationResult.rejected(
+                            PolicyEvaluationResult.ViolationType.USAGE_LIMIT_EXCEEDED,
+                            HttpStatus.GONE,
+                            "Usage Limit Reached",
+                            "This short link has reached its maximum allowed number of accesses.",
+                            "Limit Reached",
+                            "This URL has reached the end of its active lifecycle.",
+                            "limit",
+                            Map.of("Status", "Limit Reached"),
+                            null,
+                            null
+                    ),
+                    request
+            );
         }
     }
 
@@ -422,62 +442,19 @@ public class ServingController {
         }
 
         NewUrl entity = entityOpt.get();
-        if (!entity.isActive()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
-        }
+        PolicyEvaluationResult verification = policyService.verifyCredentials(entity, pin, password, request);
 
-        // Check usage policy / expiration
-        Optional<UsagePolicy> usagePolicyOpt = usagePolicyRepository.findByShortUrlId(entity.getId());
-        boolean isExpired = (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt()))
-                || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isExpired());
-        boolean isLimitReached = (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit())
-                || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isUsageLimitReached());
-        boolean isOutsideSchedule = usagePolicyOpt.isPresent() && usagePolicyOpt.get().isOutsideSchedule();
-
-        if (isExpired || isLimitReached || isOutsideSchedule) {
-            String title = isExpired ? "Link Has Expired" : isLimitReached ? "Usage Limit Reached" : "Link Outside Schedule";
-            String desc = isExpired
-                    ? "This short link expired on " + entity.getExpireAt() + " and is no longer accessible."
-                    : isLimitReached
-                    ? "This short link has reached its maximum allowed number of accesses and is no longer accessible."
-                    : "This short link is not currently accessible according to its access schedule.";
-            String badge = isExpired ? "Expired" : isLimitReached ? "Limit Reached" : "Schedule Inactive";
-
-            return ResponseEntity.status(HttpStatus.GONE)
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(linkUiRenderer.renderExhaustedPage(title, desc, badge));
-        }
-
-        // Validate AccessPolicy credentials
-        Optional<AccessPolicy> accessPolicyOpt = accessPolicyRepository.findByShortUrlId(entity.getId());
-        if (accessPolicyOpt.isPresent() && accessPolicyOpt.get().isPinOrPasswordProtected()) {
-            AccessPolicy policy = accessPolicyOpt.get();
-
-            boolean pinValid = true;
-            if (policy.hasPin()) {
-                pinValid = pin != null && !pin.isBlank() && passwordEncoder.matches(pin.trim(), policy.getPinHash());
-            }
-
-            boolean passwordValid = true;
-            if (policy.hasPassword()) {
-                passwordValid = password != null && !password.isBlank() && passwordEncoder.matches(password, policy.getPasswordHash());
-            }
-
-            if (!pinValid || !passwordValid) {
-                String errorMsg;
-                if (policy.hasPin() && policy.hasPassword()) {
-                    errorMsg = "Invalid PIN or Password. Please check your credentials and try again.";
-                } else if (policy.hasPin()) {
-                    errorMsg = "Invalid PIN. Please try again.";
-                } else {
-                    errorMsg = "Invalid Password. Please try again.";
-                }
-
+        if (verification.isRejected()) {
+            if (verification.violationType() == PolicyEvaluationResult.ViolationType.INVALID_CREDENTIALS) {
                 log.warn("Failed security challenge attempt for url='{}' [IP={}]", fullUrl, ipAddress);
+                AccessPolicy policy = verification.accessPolicy();
+                boolean reqPin = policy != null && policy.hasPin();
+                boolean reqPass = policy != null && policy.hasPassword();
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), errorMsg));
+                        .body(linkUiRenderer.renderSecurityChallenge(path, reqPin, reqPass, verification.description()));
             }
+            return handlePolicyRejection(verification, request);
         }
 
         // Credentials verified: record serve & increment usage
@@ -501,17 +478,32 @@ public class ServingController {
                 .build();
     }
 
+    private ResponseEntity<?> handlePolicyRejection(PolicyEvaluationResult result, HttpServletRequest request) {
+        if (isBrowserHtmlRequest(request)) {
+            return ResponseEntity.status(result.httpStatus())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(linkUiRenderer.renderAccessDeniedPage(result));
+        }
+
+        String message;
+        if (result.violationType() == PolicyEvaluationResult.ViolationType.INACTIVE) {
+            message = "New URL not found";
+        } else if (result.violationType() == PolicyEvaluationResult.ViolationType.EXPIRED) {
+            message = "New URL has expired";
+        } else if (result.violationType() == PolicyEvaluationResult.ViolationType.USAGE_LIMIT_EXCEEDED) {
+            message = "New URL usage limit reached";
+        } else if (result.violationType() == PolicyEvaluationResult.ViolationType.OUTSIDE_SCHEDULE) {
+            message = "Link is outside scheduled access window";
+        } else {
+            message = result.description();
+        }
+
+        return ResponseEntity.status(result.httpStatus())
+                .body(ApiResponse.error(message));
+    }
+
     private boolean isVerifiedByCookie(HttpServletRequest request, Long shortUrlId) {
-        if (request.getCookies() == null) {
-            return false;
-        }
-        String cookieName = "PREONS_SEC_" + shortUrlId;
-        for (Cookie cookie : request.getCookies()) {
-            if (cookieName.equals(cookie.getName()) && "VERIFIED".equals(cookie.getValue())) {
-                return true;
-            }
-        }
-        return false;
+        return policyService.isVerifiedByCookie(request, shortUrlId);
     }
 
     private boolean isBrowserHtmlRequest(HttpServletRequest request) {
@@ -520,11 +512,7 @@ public class ServingController {
     }
 
     private String extractClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+        return policyService.extractClientIp(request);
     }
 
     record ProxySubResourceTarget(String targetUrl, String upstreamReferer, String cookieIdentifier) {}
@@ -677,53 +665,19 @@ public class ServingController {
     }
 
     private ResponseEntity<?> validateMirrorSubrequestPolicies(NewUrl entity, HttpServletRequest request, String path) {
-        if (!entity.isActive()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
+        PolicyEvaluationResult result = policyService.evaluatePolicies(entity, request);
+        if (result.isRejected()) {
+            return handlePolicyRejection(result, request);
         }
 
-        Optional<UsagePolicy> usagePolicyOpt = usagePolicyRepository.findByShortUrlId(entity.getId());
-        boolean isExpired = (entity.getExpireAt() != null && Instant.now().isAfter(entity.getExpireAt()))
-                || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isExpired());
-        boolean isLimitReached = (entity.getUsageLimit() != null && entity.getClickCount() >= entity.getUsageLimit())
-                || (usagePolicyOpt.isPresent() && usagePolicyOpt.get().isUsageLimitReached());
-        boolean isOutsideSchedule = usagePolicyOpt.isPresent() && usagePolicyOpt.get().isOutsideSchedule();
-
-        if (isExpired || isLimitReached || isOutsideSchedule) {
+        if (result.isChallengeRequired()) {
+            AccessPolicy policy = result.accessPolicy();
             if (isBrowserHtmlRequest(request)) {
-                String title = isExpired ? "Link Has Expired" : isLimitReached ? "Usage Limit Reached" : "Link Outside Schedule";
-                String desc = isExpired
-                        ? "This short link expired on " + entity.getExpireAt() + " and is no longer accessible."
-                        : isLimitReached
-                        ? "This short link has reached its maximum allowed number of accesses and is no longer accessible."
-                        : "This short link is not currently accessible according to its access schedule.";
-                String badge = isExpired ? "Expired" : isLimitReached ? "Limit Reached" : "Schedule Inactive";
-
-                HttpStatus status = isOutsideSchedule ? HttpStatus.FORBIDDEN : HttpStatus.GONE;
-                return ResponseEntity.status(status)
+                return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderExhaustedPage(title, desc, badge));
+                        .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
             } else {
-                if (isExpired) {
-                    return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL has expired"));
-                } else if (isLimitReached) {
-                    return ResponseEntity.status(HttpStatus.GONE).body(ApiResponse.error("New URL usage limit reached"));
-                } else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Link is outside scheduled access window"));
-                }
-            }
-        }
-
-        Optional<AccessPolicy> accessPolicyOpt = accessPolicyRepository.findByShortUrlId(entity.getId());
-        if (accessPolicyOpt.isPresent() && accessPolicyOpt.get().isPinOrPasswordProtected()) {
-            if (!isVerifiedByCookie(request, entity.getId())) {
-                AccessPolicy policy = accessPolicyOpt.get();
-                if (isBrowserHtmlRequest(request)) {
-                    return ResponseEntity.ok()
-                            .contentType(MediaType.TEXT_HTML)
-                            .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
-                } else {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("PIN or password verification required"));
-                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("PIN or password verification required"));
             }
         }
 

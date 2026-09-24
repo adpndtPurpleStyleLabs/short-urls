@@ -45,10 +45,44 @@ public class LinkUiRenderer {
             String reasonDescription,
             String badgeText
     ) {
+        return renderExhaustedPage(reasonTitle, reasonDescription, badgeText, null, "alert", null);
+    }
+
+    /**
+     * Renders the Exhausted / Inaccessible Link webpage with full diagnostic context.
+     */
+    public String renderExhaustedPage(
+            String reasonTitle,
+            String reasonDescription,
+            String badgeText,
+            String infoMessage,
+            String iconType,
+            java.util.Map<String, String> details
+    ) {
         Context context = new Context();
         context.setVariable("title", reasonTitle);
         context.setVariable("description", reasonDescription);
         context.setVariable("badge", badgeText);
+        context.setVariable("infoMessage", infoMessage);
+        context.setVariable("iconType", iconType != null ? iconType : "alert");
+        context.setVariable("details", details != null ? details : java.util.Map.of());
         return templateEngine.process("link-exhausted", context);
+    }
+
+    /**
+     * Renders the access denied / policy violation page directly from a PolicyEvaluationResult.
+     */
+    public String renderAccessDeniedPage(com.preonsurl.apis.link.dto.PolicyEvaluationResult result) {
+        if (result == null) {
+            return renderExhaustedPage("Link Inaccessible", "This link is currently not accessible.", "Inaccessible");
+        }
+        return renderExhaustedPage(
+                result.title(),
+                result.description(),
+                result.badge(),
+                result.infoMessage(),
+                result.iconType(),
+                result.details()
+        );
     }
 }
