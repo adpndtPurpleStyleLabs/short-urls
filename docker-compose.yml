@@ -27,9 +27,9 @@ services:
 
       MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
 
-      SHORTENER_DOMAIN: https://secure.indexrender.dev
-      APP_DOMAIN: https://go.indexrender.dev
-      PSECURE_DOMAIN: https://psecure.indexrender.dev
+      SHORTENER_DOMAIN: https://secure.indexrender.io
+      APP_DOMAIN: https://go.indexrender.io
+      PSECURE_DOMAIN: https://psecure.indexrender.io
 
       JWT_SECRET: ${JWT_SECRET}
       SHORTENER_SECRET: ${SHORTENER_SECRET}
@@ -86,9 +86,9 @@ services:
 
       MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
 
-      SHORTENER_DOMAIN: https://secure.indexrender.dev
-      APP_DOMAIN: https://go.indexrender.dev
-      PSECURE_DOMAIN: https://psecure.indexrender.dev
+      SHORTENER_DOMAIN: https://secure.indexrender.io
+      APP_DOMAIN: https://go.indexrender.io
+      PSECURE_DOMAIN: https://psecure.indexrender.io
 
       JWT_SECRET: ${JWT_SECRET}
       SHORTENER_SECRET: ${SHORTENER_SECRET}
@@ -145,9 +145,9 @@ services:
 
       MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
 
-      SHORTENER_DOMAIN: https://secure.indexrender.dev
-      APP_DOMAIN: https://go.indexrender.dev
-      PSECURE_DOMAIN: https://psecure.indexrender.dev
+      SHORTENER_DOMAIN: https://secure.indexrender.io
+      APP_DOMAIN: https://go.indexrender.io
+      PSECURE_DOMAIN: https://psecure.indexrender.io
 
       JWT_SECRET: ${JWT_SECRET}
       SHORTENER_SECRET: ${SHORTENER_SECRET}
