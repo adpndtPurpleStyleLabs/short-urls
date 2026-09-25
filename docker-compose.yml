@@ -60,20 +60,20 @@ services:
 
 
   # =========================
-  # SECURE SERVICE
+  # serve SERVICE
   # =========================
-  secure:
+  serve:
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: preonsurl-secure
+    container_name: preonsurl-serve
 
     ports:
       - "4983:8878"
 
     environment:
-      SPRING_PROFILES_ACTIVE: secure
+      SPRING_PROFILES_ACTIVE: serve
       SERVER_PORT: 8878
 
       LOG_PATH: /app/logs
