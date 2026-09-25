@@ -121,12 +121,12 @@ services:
   # =========================
   # SECURE SERVICE
   # =========================
-  psecureServe:
+  psecureserve:
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: preonsurl-psecureserve
+    container_name: preonsurlpsecureserve
 
     ports:
       - "4984:8878"
