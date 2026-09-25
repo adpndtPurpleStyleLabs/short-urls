@@ -126,7 +126,7 @@ services:
       context: .
       dockerfile: Dockerfile
 
-    container_name: preonsurl-psecureServe
+    container_name: preonsurl-psecureserve
 
     ports:
       - "4984:8878"
