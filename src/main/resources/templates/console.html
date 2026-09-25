@@ -1511,8 +1511,8 @@
 
         /* Sidebar Promo Card */
         .sidebar-promo-card {
-            margin: 16px 14px 12px;
-            padding: 14px 14px;
+            margin: 0 14px 10px;
+            padding: 13px 14px;
             background: #ffffff;
             border: 1px solid var(--border);
             border-radius: var(--radius);
@@ -1523,11 +1523,39 @@
             display: block;
         }
 
+        .sidebar-promo-card:first-of-type {
+            margin-top: 14px;
+        }
+
         .sidebar-promo-card:hover {
             border-color: #cbd5e1;
             background: var(--surface-soft);
             box-shadow: var(--shadow);
             transform: translateY(-1px);
+        }
+
+        .sidebar-upgrade-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f7ff 100%);
+            border: 1px solid #dbeafe;
+        }
+
+        .sidebar-upgrade-card:hover {
+            border-color: #93c5fd;
+            background: linear-gradient(135deg, #f8faff 0%, #eff6ff 100%);
+        }
+
+        .promo-badge-pro {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 6px;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #1d4ed8;
+            background: #dbeafe;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
         }
 
         .sidebar-promo-title {
@@ -1536,6 +1564,9 @@
             color: var(--text);
             margin-bottom: 5px;
             line-height: 1.3;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .sidebar-promo-desc {
@@ -1553,6 +1584,121 @@
             font-size: 14px;
             font-weight: 600;
             flex-shrink: 0;
+            transition: transform 0.15s ease;
+        }
+
+        .sidebar-promo-card:hover .promo-arrow {
+            transform: translateX(2px);
+        }
+
+        /* Upgrade to Pro Modal */
+        .upgrade-modal-dialog {
+            width: min(720px, calc(100vw - 32px));
+            border-radius: var(--radius);
+        }
+
+        .upgrade-modal-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .upgrade-plans-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .upgrade-plan-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--surface);
+            position: relative;
+        }
+
+        .upgrade-plan-card.featured {
+            border-color: #2563eb;
+            background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+        }
+
+        .upgrade-plan-badge {
+            position: absolute;
+            top: -10px;
+            right: 16px;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .upgrade-plan-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .upgrade-plan-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .upgrade-plan-price {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text);
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .upgrade-plan-price span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+        }
+
+        .upgrade-plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .upgrade-plan-features li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upgrade-plan-features svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            stroke-width: 2.5;
+        }
+
+        .upgrade-plan-features .check-icon {
+            color: var(--success);
+        }
+
+        .upgrade-plan-features .muted-feature {
+            color: var(--muted);
+            opacity: 0.6;
         }
 
         .table-empty-state {
@@ -4715,6 +4861,17 @@
                 </button>
             </nav>
 
+            <div class="sidebar-promo-card sidebar-upgrade-card" id="sidebarUpgradeCard" role="button" tabindex="0">
+                <div class="sidebar-promo-title">
+                    <span>Upgrade to Pro</span>
+                    <span class="promo-badge-pro">PRO</span>
+                </div>
+                <div class="sidebar-promo-desc">
+                    <span>Unlimited URLs, custom domains &amp; analytics.</span>
+                    <span class="promo-arrow">&rarr;</span>
+                </div>
+            </div>
+
             <div class="sidebar-promo-card" id="sidebarPromoCard" role="button" tabindex="0">
                 <div class="sidebar-promo-title">Build more with our API</div>
                 <div class="sidebar-promo-desc">
@@ -5372,8 +5529,9 @@
                     <div class="modal-form-scroll">
                         <!-- Tab: General -->
                         <div class="modal-section-pane active" id="paneGeneral">
-                            <h3>General Settings</h3>
-                            <p class="desc">Define the target destination and configure your short link.</p>
+                            <h3>General</h3>
+                            <br>
+<!--                            <p class="desc">Define the target destination and configure your short link.</p>-->
 
                             <!-- Card 1: Destination -->
                             <div class="form-card">
@@ -5408,9 +5566,7 @@
                                             placeholder="https://example.com/your-target-page" required>
                                     </div>
                                     <div id="destUrlCorsIndicator" style="display: none; margin-top: 6px;"></div>
-                                    <span class="field-help" style="margin-top: 6px;">The original long URL visitors
-                                        will be redirected to (must start with <code>http://</code> or
-                                        <code>https://</code>).</span>
+<!--                                    <span class="field-help" style="margin-top: 6px;">The original long URL visitorswill be redirected to (must start with <code>http://</code> or<code>https://</code>).</span>-->
                                 </div>
                             </div>
 
@@ -5477,30 +5633,28 @@
                                             </svg>
                                         </div>
                                     </div>
-                                    <span class="field-help">Select system default or one of your verified custom
-                                        domains.</span>
+<!--                                    <span class="field-help">Select system default or one of your verified customdomains.</span>-->
                                 </div>
 
                                 <!-- Custom Path -->
                                 <div class="field-group">
-                                    <div
-                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                                        <label for="modalCustomPath" style="margin: 0;">Custom Path</label>
-                                        <span class="form-badge-optional">Optional</span>
-                                    </div>
+<!--                                    <div-->
+<!--                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">-->
+<!--                                        <label for="modalCustomPath" style="margin: 0;">Add Path</label>-->
+<!--                                        <span class="form-badge-optional">Optional</span>-->
+<!--                                    </div>-->
                                     <div class="custom-path-group">
-                                        <span>/</span>
+                                        <span>Add Path</span>
                                         <input type="text" id="modalCustomPath" placeholder="campaign-2026">
                                     </div>
-                                    <span class="field-help">Readable slug placed before the short code in your
-                                        URL.</span>
+<!--                                    <span class="field-help">Readable slug placed before the short code in yourURL.</span>-->
                                 </div>
 
                                 <!-- Add Short Code Toggle -->
                                 <div class="setting-toggle-row" id="addShortCodeRow">
                                     <div class="setting-toggle-info">
                                         <strong>Add Short Code</strong>
-                                        <span>Generate an automated short code such as <code>a8K2mP</code>.</span>
+<!--                                        <span>Generate an automated short code such as <code>a8K2mP</code>.</span>-->
                                     </div>
                                     <label class="switch-toggle">
                                         <input type="checkbox" id="modalAddShortCode" checked>
@@ -5525,7 +5679,8 @@
                         <!-- Tab: Usage -->
                         <div class="modal-section-pane" id="paneUsage">
                             <h3>Usage Policies</h3>
-                            <p class="desc">Configure click limits, schedules, and link expiration.</p>
+                            <br>
+<!--                            <p class="desc">Configure click limits, schedules, and link expiration.</p>-->
 
                             <!-- Card 1: Click & Traffic Limits -->
                             <div class="form-card">
@@ -5560,7 +5715,7 @@
                                             </svg>
                                         </div>
                                     </div>
-                                    <span class="field-help" style="margin-top: 6px;">Choose whether this link can be accessed indefinitely or restricted to specific quotas.</span>
+<!--                                    <span class="field-help" style="margin-top: 6px;">Choose whether this link can be accessed indefinitely or restricted to specific quotas.</span>-->
                                 </div>
 
                                 <div class="field-group" id="modalUsageLimitContainer" style="display:none; margin-top: 14px; margin-bottom: 0;">
@@ -5596,7 +5751,7 @@
                                 <!-- Hard Expiry Field -->
                                 <div class="field-group">
                                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                                        <label for="modalExpireAt" style="margin: 0;">Expire At</label>
+                                        <label for="modalExpireAt" style="margin: 0;">Set Expiry</label>
                                         <span class="form-badge-optional">Optional</span>
                                     </div>
                                     <div class="input-with-icon">
@@ -5609,14 +5764,14 @@
                                         </div>
                                         <input type="datetime-local" class="form-input" id="modalExpireAt">
                                     </div>
-                                    <span class="field-help" style="margin-top: 4px;">Permanent expiry timestamp after which the link becomes unavailable.</span>
+<!--                                    <span class="field-help" style="margin-top: 4px;">Permanent expiry timestamp after which the link becomes unavailable.</span>-->
                                 </div>
 
                                 <!-- Schedule Toggle Row -->
                                 <div class="setting-toggle-row" id="scheduleToggleRow">
                                     <div class="setting-toggle-info">
                                         <strong>Scheduled Active Window</strong>
-                                        <span>Restrict visitor access to an active date and time window.</span>
+<!--                                        <span>Restrict visitor access to an active date and time window.</span>-->
                                     </div>
                                     <label class="switch-toggle">
                                         <input type="checkbox" id="modalScheduleEnabled">
@@ -5656,7 +5811,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <span class="field-help" style="margin-top: 6px; display: block;">Visitors attempting to open the link outside this window will be blocked with a schedule notice.</span>
+<!--                                    <span class="field-help" style="margin-top: 6px; display: block;">Visitors attempting to open the link outside this window will be blocked with a schedule notice.</span>-->
                                 </div>
                             </div>
                         </div>
@@ -5664,7 +5819,8 @@
                         <!-- Tab: Access -->
                         <div class="modal-section-pane" id="paneAccess">
                             <h3>Access Control</h3>
-                            <p class="desc">Configure authentication credentials and visitor access restrictions.</p>
+                           <br>
+<!--                            <p class="desc">Configure authentication credentials and visitor access restrictions.</p>-->
 
                             <!-- Card 1: Access Mode Selection -->
                             <div class="form-card">
@@ -5688,8 +5844,8 @@
                                             </svg>
                                         </div>
                                         <select class="form-input" id="modalAccessMode">
-                                            <option value="PUBLIC">Public (Direct access for all visitors)</option>
-                                            <option value="SECURED">Secured (Enforce passcodes, IPs, or location filters)</option>
+                                            <option value="PUBLIC">Public</option>
+                                            <option value="SECURED">Secured </option>
                                         </select>
                                         <div class="select-chevron">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -5697,7 +5853,7 @@
                                             </svg>
                                         </div>
                                     </div>
-                                    <span class="field-help" style="margin-top: 6px;">Select Secured to protect destination links behind passwords, PINs, or device/network firewalls.</span>
+<!--                                    <span class="field-help" style="margin-top: 6px;">Select Secured to protect destination links behind passwords, PINs, or device/network firewalls.</span>-->
                                 </div>
                             </div>
 
@@ -5730,7 +5886,7 @@
                                                 </div>
                                                 <input type="password" class="form-input" id="modalPin" inputmode="numeric" pattern="\d{6}" maxlength="6" placeholder="e.g. 123456">
                                             </div>
-                                            <span class="field-help" style="margin-top: 4px;">6-digit numeric keypad code.</span>
+<!--                                            <span class="field-help" style="margin-top: 4px;">6-digit numeric keypad code.</span>-->
                                         </div>
 
                                         <div class="passcode-or-divider">
@@ -5748,10 +5904,10 @@
                                                 </div>
                                                 <input type="password" class="form-input" id="modalPassword" minlength="6" maxlength="128" placeholder="Enter secure password">
                                             </div>
-                                            <span class="field-help" style="margin-top: 4px;">Full alphanumeric secret key.</span>
+<!--                                            <span class="field-help" style="margin-top: 4px;">Full alphanumeric secret key.</span>-->
                                         </div>
                                     </div>
-                                    <span class="field-help" style="margin-top: 8px; display: block;">Visitors will be prompted to authenticate with either the PIN or Password before reaching the destination.</span>
+<!--                                    <span class="field-help" style="margin-top: 8px; display: block;">Visitors will be prompted to authenticate with either the PIN or Password before reaching the destination.</span>-->
                                 </div>
 
                                 <!-- Card 3: Boundary & Network Restrictions -->
@@ -5782,7 +5938,7 @@
                                                 <input type="text" class="chip-inline-input" id="modalCountriesInput" placeholder="e.g. US, IN, GB" autocomplete="off">
                                             </div>
                                             <input type="hidden" id="modalCountries" value="">
-                                            <span class="field-help" style="margin-top: 4px;">Type ISO code &amp; press Enter to add.</span>
+<!--                                            <span class="field-help" style="margin-top: 4px;">Type ISO code &amp; press Enter to add.</span>-->
                                         </div>
 
                                         <div class="field-group" style="margin-bottom: 0;">
@@ -5817,7 +5973,7 @@
                                             </div>
                                             <div class="chip-items-list device-chips-wrapper" id="modalDevicesChips"></div>
                                             <input type="hidden" id="modalDevices" value="">
-                                            <span class="field-help" style="margin-top: 4px;">Select devices or platforms from dropdown to allow.</span>
+<!--                                            <span class="field-help" style="margin-top: 4px;">Select devices or platforms from dropdown to allow.</span>-->
                                         </div>
                                     </div>
 
@@ -5837,7 +5993,7 @@
                                                 <input type="text" class="chip-inline-input" id="modalIpAllowlistInput" placeholder="e.g. 192.168.1.1 or 10.0.0.0/24" autocomplete="off">
                                             </div>
                                             <input type="hidden" id="modalIpAllowlist" value="">
-                                            <span class="field-help" style="margin-top: 4px;">Type IP/CIDR &amp; press Enter to add.</span>
+<!--                                            <span class="field-help" style="margin-top: 4px;">Type IP/CIDR &amp; press Enter to add.</span>-->
                                         </div>
 
                                         <div class="field-group" style="margin-bottom: 0;">
@@ -5853,7 +6009,7 @@
                                                 <input type="text" class="chip-inline-input" id="modalReferrersInput" placeholder="e.g. twitter.com or *.linkedin.com" autocomplete="off">
                                             </div>
                                             <input type="hidden" id="modalReferrers" value="">
-                                            <span class="field-help" style="margin-top: 4px;">Type domain &amp; press Enter to add.</span>
+<!--                                            <span class="field-help" style="margin-top: 4px;">Type domain &amp; press Enter to add.</span>-->
                                         </div>
                                     </div>
                                 </div>
@@ -5906,7 +6062,8 @@
                             </div>
 
                             <h3>Link Delivery Mode</h3>
-                            <p class="desc">Choose how PreonsURL resolves and serves the destination content to your visitors.</p>
+                            <br>
+<!--                            <p class="desc">Choose how PreonsURL resolves and serves the destination content to your visitors.</p>-->
 
                             <div class="mode-cards-grid">
                                 <label class="mode-card-option selected">
@@ -5925,7 +6082,7 @@
                                             <span class="mode-card-name">Redirect</span>
                                             <span class="mode-card-badge">Default</span>
                                         </div>
-                                        <div class="mode-card-desc">Standard HTTP 302/301 browser redirection. Directly routes the visitor to the target destination with zero latency overhead.</div>
+                                        <div class="mode-card-desc">Directly routes the visitor to the set destination.</div>
                                     </div>
                                 </label>
 
@@ -5947,7 +6104,7 @@
                                             <span class="mode-card-name">Proxy</span>
                                             <span class="mode-card-badge">Server Stream</span>
                                         </div>
-                                        <div class="mode-card-desc">Fetches destination content server-side and streams directly to the visitor under your domain, keeping the original destination private.</div>
+                                        <div class="mode-card-desc">Streams destination content under your domain while hiding the original URL.</div>
                                     </div>
                                 </label>
 
@@ -5967,8 +6124,7 @@
                                             <span class="mode-card-name">Mirror</span>
                                             <span class="mode-card-badge">Asset Rewrite</span>
                                         </div>
-                                        <div class="mode-card-desc">Rewrites internal assets, links, and styling to fully replicate the target page under your custom domain namespace.</div>
-                                    </div>
+                                        <div class="mode-card-desc">Replicates the target page under your new URL, including assets, links, and styling.</div>                                    </div>
                                 </label>
                             </div>
                         </div>
@@ -5976,7 +6132,8 @@
                         <!-- Tab: Tags & Notes -->
                         <div class="modal-section-pane" id="paneMeta">
                             <h3>Tags & Notes</h3>
-                            <p class="desc">Tag and document your link for internal categorization, team collaboration, and reporting.</p>
+                            <br>
+<!--                            <p class="desc">Tag and document your link for internal categorization, team collaboration, and reporting.</p>-->
 
                             <!-- Card 1: Tags -->
                             <div class="form-card">
@@ -6004,7 +6161,7 @@
                                         <input type="text" class="chip-inline-input" id="modalTagsInput" placeholder="e.g. marketing, launch-2026, social" autocomplete="off">
                                     </div>
                                     <input type="hidden" id="modalTags" value="">
-                                    <span class="field-help" style="margin-top: 6px;">Assign keywords to filter, organize, and track links across campaigns and analytics.</span>
+<!--                                    <span class="field-help" style="margin-top: 6px;">Assign keywords to filter, organize, and track links across campaigns and analytics.</span>-->
                                 </div>
                             </div>
 
@@ -6019,15 +6176,15 @@
                                             <line x1="16" y1="17" x2="8" y2="17"></line>
                                             <polyline points="10 9 9 9 8 9"></polyline>
                                         </svg>
-                                        <span>Internal Documentation</span>
+                                        <span>Notes</span>
                                     </div>
                                     <span class="form-badge-optional">Private Note</span>
                                 </div>
 
                                 <div class="field-group" style="margin-bottom: 0;">
-                                    <label for="modalNotes">Administrative Note</label>
+<!--                                    <label for="modalNotes">Administrative Note</label>-->
                                     <textarea class="form-textarea" id="modalNotes" rows="3" placeholder="Add contextual notes, client info, campaign references, or handover details..."></textarea>
-                                    <span class="field-help" style="margin-top: 6px;">Visible only to team members in the console. Never exposed to public visitors.</span>
+<!--                                    <span class="field-help" style="margin-top: 6px;">Visible only to team members in the console. Never exposed to public visitors.</span>-->
                                 </div>
                             </div>
                         </div>
@@ -6647,6 +6804,89 @@
     </div>
 
     <!-- ============================================================
+     UPGRADE TO PRO MODAL
+============================================================ -->
+    <div class="modal" id="upgradeModal" aria-hidden="true">
+        <div class="modal-backdrop" id="upgradeModalBackdrop"></div>
+        <div class="modal-dialog upgrade-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="upgradeModalTitle">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-kicker">SUBSCRIPTION &amp; LIMITS</div>
+                    <h2 class="modal-title" id="upgradeModalTitle">Upgrade to Preons Pro</h2>
+                </div>
+                <button class="modal-close-btn" id="upgradeModalCloseBtn" type="button" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-content upgrade-modal-content">
+                <div class="upgrade-plans-grid">
+                    <div class="upgrade-plan-card">
+                        <div class="upgrade-plan-header">
+                            <div class="upgrade-plan-name">Free Starter</div>
+                            <div class="upgrade-plan-price">$0 <span>/ month</span></div>
+                            <div style="font-size: 12px; color: var(--muted);">Current active workspace plan</div>
+                        </div>
+                        <ul class="upgrade-plan-features">
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Up to 1,000 active URLs</span>
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>1 custom domain</span>
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Basic analytics (30 days)</span>
+                            </li>
+                            <li class="muted-feature">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                <span>No mirror &amp; proxy edge routing</span>
+                            </li>
+                            <li class="muted-feature">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                <span>Standard API rate limits</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="upgrade-plan-card featured">
+                        <div class="upgrade-plan-badge">Popular</div>
+                        <div class="upgrade-plan-header">
+                            <div class="upgrade-plan-name">Pro Unlimited</div>
+                            <div class="upgrade-plan-price">$29 <span>/ month</span></div>
+                            <div style="font-size: 12px; color: #2563eb; font-weight: 500;">Scale without limits or caps</div>
+                        </div>
+                        <ul class="upgrade-plan-features">
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                                <strong>Unlimited URLs created</strong>
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Unlimited custom domains</span>
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Full Mirror &amp; Proxy edge modes</span>
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Real-time geo &amp; device tracking</span>
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>10,000 req/min API rate limit</span>
+                            </li>
+                        </ul>
+                        <button class="btn btn-primary" id="btnUpgradeAction" type="button" style="margin-top: auto; padding: 10px 16px; background: #2563eb; color: #ffffff; border-radius: var(--radius-sm); font-weight: 600;">
+                            Upgrade to Pro Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
      CONFIRMATION MODAL
 ============================================================ -->
     <div class="modal" id="confirmModal" aria-hidden="true">
@@ -6873,6 +7113,32 @@
 
             // Links header controls (filters and sorts)
             setupLinksHeaderControls();
+
+            // Sidebar upgrade to Pro card
+            const upgradeCard = document.getElementById("sidebarUpgradeCard");
+            if (upgradeCard) {
+                upgradeCard.addEventListener("click", () => {
+                    openUpgradeModal();
+                });
+            }
+
+            const upgradeCloseBtn = document.getElementById("upgradeModalCloseBtn");
+            if (upgradeCloseBtn) {
+                upgradeCloseBtn.addEventListener("click", closeUpgradeModal);
+            }
+
+            const upgradeBackdrop = document.getElementById("upgradeModalBackdrop");
+            if (upgradeBackdrop) {
+                upgradeBackdrop.addEventListener("click", closeUpgradeModal);
+            }
+
+            const upgradeActionBtn = document.getElementById("btnUpgradeAction");
+            if (upgradeActionBtn) {
+                upgradeActionBtn.addEventListener("click", () => {
+                    showToast("success", "Pro Upgrade Requested", "Thank you! Our team will activate Unlimited URLs on your account.");
+                    closeUpgradeModal();
+                });
+            }
 
             // Sidebar promo card
             const promoCard = document.getElementById("sidebarPromoCard");
@@ -7143,6 +7409,22 @@
             modal.classList.remove("open");
             modal.setAttribute("aria-hidden", "true");
             appState.confirmCallback = null;
+        }
+
+        function openUpgradeModal() {
+            const modal = document.getElementById("upgradeModal");
+            if (modal) {
+                modal.classList.add("open");
+                modal.setAttribute("aria-hidden", "false");
+            }
+        }
+
+        function closeUpgradeModal() {
+            const modal = document.getElementById("upgradeModal");
+            if (modal) {
+                modal.classList.remove("open");
+                modal.setAttribute("aria-hidden", "true");
+            }
         }
 
         document.getElementById("confirmCancelBtn").addEventListener("click", closeConfirmDialog);
