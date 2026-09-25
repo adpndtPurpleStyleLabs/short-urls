@@ -41,6 +41,9 @@ public class AuthUiController {
     @GetMapping("/register")
     public String showRegisterPage(Model model) {return "register";}
 
+    @GetMapping("/features")
+    public String showfeaturesPage(Model model) {return "feature";}
+
     @GetMapping("/")
     public String showHomePage(Model model) {
         return "home";

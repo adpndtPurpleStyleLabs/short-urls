@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="PreonsURL features — secure, programmable links with access control and lifecycle management.">
+<title>PreonsURL — Features</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--surface:#fafafa;--text:#111;--muted:#6b6b6b;--line:#e8e8e8;--line-dark:#d7d7d7;--max:1180px;--shadow:0 18px 60px rgba(0,0,0,.07)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.container{width:min(calc(100% - 40px),var(--max));margin:auto}
+.ambient-grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(0,0,0,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.03) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(circle at center,black 35%,transparent 82%);mask-image:radial-gradient(circle at center,black 35%,transparent 82%);z-index:0}
+.page,main,footer{position:relative;z-index:1}
+.free-banner{background:#111;color:#fff;font-size:12px}.free-banner-inner{min-height:38px;display:flex;align-items:center;justify-content:center;gap:14px}.free-banner-inner>span{display:inline-flex;align-items:center;gap:8px}.free-banner strong{font-weight:750}.free-banner-copy{color:#a7a7a7}.free-banner a{color:#fff;font-weight:700}.free-banner a:hover{text-decoration:underline;text-underline-offset:3px}
+.nav{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;position:sticky;top:0;background:rgba(255,255,255,.9);backdrop-filter:blur(18px);z-index:20}.nav-inner{width:100%;padding:0 60px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:10px;font-weight:750;letter-spacing:-.03em;white-space:nowrap}.logo{width:30px;height:30px;border:1.5px solid #111;border-radius:9px;display:grid;place-items:center;font-size:14px;font-weight:800}.navlinks{display:flex;gap:28px;color:#555;font-size:14px}.navlinks a:hover{color:#111}.nav-actions{display:flex;align-items:center;gap:10px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 17px;border:1px solid var(--line-dark);border-radius:10px;font-size:14px;font-weight:650;cursor:pointer;transition:.2s ease;background:#fff}.btn:hover{transform:translateY(-1px);border-color:#aaa}.btn.primary{background:#111;color:#fff;border-color:#111}.btn.primary:hover{background:#252525}.mobile-menu{display:none}
+.hero{padding:105px 0 90px;text-align:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:#555;font-size:12px;font-weight:650;margin-bottom:22px}.dot{width:6px;height:6px;background:#111;border-radius:50%}.hero h1{margin:0 auto;max-width:920px;font-size:clamp(48px,7vw,82px);line-height:.98;letter-spacing:-.065em;font-weight:760}.hero h1 span{display:block}.hero h1 .muted{color:#a0a0a0}.hero p{max-width:700px;margin:26px auto 0;color:var(--muted);font-size:18px;line-height:1.65}.hero-actions{display:flex;justify-content:center;gap:10px;margin-top:32px}
+.section{padding:105px 0}.section.alt{background:var(--surface)}.section-head{max-width:760px;margin-bottom:45px}.kicker{text-transform:uppercase;letter-spacing:.13em;font-size:11px;color:#777;font-weight:700}h2{font-size:clamp(34px,4.5vw,54px);line-height:1.04;letter-spacing:-.055em;margin:12px 0 15px}.section-head p{color:#707070;line-height:1.7;font-size:16px;margin:0}
+.feature-table-wrap{
+    overflow-x:auto;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:#fff;
+    box-shadow:var(--shadow);
+}
+.feature-table{
+    width:100%;
+    min-width:820px;
+    border-collapse:collapse;
+}
+.feature-table th,
+.feature-table td{
+    padding:20px 22px;
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    vertical-align:middle;
+}
+.feature-table th{
+    background:#fafafa;
+    color:#777;
+    font-size:10px;
+    font-weight:750;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+}
+.feature-table td{
+    font-size:13px;
+    color:#555;
+    line-height:1.55;
+}
+.feature-table tr:last-child td{border-bottom:0}
+.feature-table tbody tr{transition:background .18s ease}
+.feature-table tbody tr:hover{background:#fafafa}
+.feature-name{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:260px;
+    color:#111;
+    font-weight:700;
+    letter-spacing:-.015em;
+}
+.feature-num{
+    width:30px;
+    height:30px;
+    flex:none;
+    border:1px solid var(--line-dark);
+    border-radius:9px;
+    display:grid;
+    place-items:center;
+    color:#777;
+    font:10px ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+.feature-name-text{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+}
+.feature-premium{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    width:max-content;
+    color:#777;
+    font-size:9px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+.feature-premium sup{
+    position:relative;
+    top:-1px;
+    font-size:9px;
+    color:#111;
+}
+.feature-quote{
+    color:#111!important;
+    font-weight:650;
+}
+.feature-table .check-mark{
+    width:22px;
+    height:22px;
+    border:1px solid #111;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    font-size:10px;
+    color:#111;
+}
+@media(max-width:620px){
+    .feature-table-wrap{border-radius:16px}
+    .feature-table th,.feature-table td{padding:16px}
+}
+.spotlight{display:grid;grid-template-columns:.85fr 1.15fr;gap:70px;align-items:center}.spotlight-copy p{color:#707070;line-height:1.75;font-size:15px;margin:0}.checks{display:grid;gap:13px;margin-top:26px}.check{display:flex;gap:11px;align-items:flex-start;font-size:14px;color:#444}.check b{width:20px;height:20px;border:1px solid #111;border-radius:50%;display:grid;place-items:center;font-size:10px;flex:none}.control-panel{border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:var(--shadow);overflow:hidden}.panel-head{min-height:52px;padding:0 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.panel-dots{display:flex;gap:6px}.panel-dot{width:7px;height:7px;border-radius:50%;background:#ddd}.panel-title{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.08em;font-weight:700}.control-body{padding:25px}.control-row{padding:17px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px}.control-row:last-child{border-bottom:0}.control-label strong{display:block;font-size:13px;margin-bottom:4px}.control-label span{display:block;color:#888;font-size:11px}.control-value{border:1px solid var(--line-dark);padding:6px 9px;border-radius:7px;font-size:10px;font-weight:700;white-space:nowrap}.control-value.dark{background:#111;color:#fff;border-color:#111}
+.cta{padding:90px 30px;text-align:center;background:#111;color:#fff;border-radius:26px}.cta .kicker{color:#888}.cta h2{max-width:720px;margin-left:auto;margin-right:auto}.cta p{color:#aaa;max-width:580px;margin:15px auto 28px;line-height:1.65}.cta .btn{background:#fff;color:#111;border-color:#fff}.cta .btn:hover{background:#f0f0f0}
+.footer{border-top:1px solid var(--line);padding:34px 0;color:#777;font-size:12px}.footer-inner{display:flex;justify-content:space-between;gap:20px}.footer-links{display:flex;gap:20px}.footer-links a:hover{color:#111}
+@media(max-width:900px){.navlinks{display:none}.mobile-menu{display:inline-flex}.feature-grid{grid-template-columns:1fr}.spotlight{grid-template-columns:1fr;gap:40px}}
+@media(max-width:620px){.container{width:min(calc(100% - 28px),var(--max))}.nav{height:64px}.nav-inner{padding:0 16px}.nav-actions .btn:not(.primary){display:none}.free-banner-copy{display:none}.free-banner-inner{justify-content:space-between;min-height:36px;padding:0 14px}.hero{padding:75px 0 60px}.hero h1{font-size:clamp(42px,14vw,62px)}.hero p{font-size:16px}.hero-actions{flex-direction:column}.hero-actions .btn{width:100%}.section{padding:75px 0}.feature-card{min-height:0;padding:25px 22px}.control-body{padding:18px}.control-row{align-items:flex-start;flex-direction:column;gap:10px}.control-value{align-self:flex-start}.cta{border-radius:20px;padding:70px 22px}.footer-inner{flex-direction:column}.footer-links{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="ambient-grid" aria-hidden="true"></div>
+<div class="page">
+<div class="free-banner"><div class="container free-banner-inner"><span><strong>Always Free</strong><span class="free-banner-copy">Secure link infrastructure, without a paid plan.</span></span><a href="/register">Sign up now <span aria-hidden="true">→</span></a></div></div>
+<header class="nav"><div class="nav-inner">
+<a class="brand" href="/" aria-label="PreonsURL home"><span class="logo">P</span><span>PreonsURL</span></a>
+<nav class="navlinks" aria-label="Primary navigation"><a href="/feature.html">Features</a><a href="/#usecases">Use cases</a><a href="/#security">Security</a><a href="/#domains">Domains</a><a href="/#compare">Compare</a><a href="/#pricing">Pricing</a><a href="/#developers">Developers</a></nav>
+<div class="nav-actions"><a class="btn" href="/login">Sign in</a><a class="btn primary" href="/register">Get started</a><button class="btn mobile-menu" type="button" aria-label="Menu">☰</button></div>
+</div></header>
+
+<main>
+<section class="hero"><div class="container">
+<div class="eyebrow"><span class="dot"></span> More than a short link</div>
+<h1><span>Links with</span><span class="muted">control built in.</span></h1>
+<p>Create links that do more than redirect. Protect access, control usage, define when a link works, and put your brand behind every destination.</p>
+<div class="hero-actions"><a class="btn primary" href="/register">Start for free →</a><a class="btn" href="#features">Explore features</a></div>
+</div></section>
+
+<section class="section" id="features"><div class="container">
+<div class="section-head"><div class="kicker">High-value features</div><h2>Every link gets its own layer of control.</h2><p>PreonsURL gives you practical controls for sharing, protecting and managing links — without turning a simple URL into a complicated workflow.</p></div>
+<div class="feature-table-wrap">
+<table class="feature-table">
+<thead>
+<tr>
+<th>Feature</th>
+<th>Control</th>
+<th>What you get</th>
+<th>Selling message</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">01</span>
+        <span class="feature-name-text">
+            <span>Password / PIN Protected Links</span>
+            
+        </span>
+    </div>
+</td>
+<td>ACCESS</td>
+<td>Require a PIN before opening.</td>
+<td class="feature-quote">“Only the people you choose can access it.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">02</span>
+        <span class="feature-name-text">
+            <span>One-Time Links</span>
+            <span class="feature-premium"><sup>*</sup> Premium</span>
+        </span>
+    </div>
+</td>
+<td>ACCESS</td>
+<td>Link becomes invalid after the first successful visit.</td>
+<td class="feature-quote">“Share once. Access once.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">03</span>
+        <span class="feature-name-text">
+            <span>Expiration</span>
+            
+        </span>
+    </div>
+</td>
+<td>LIFECYCLE</td>
+<td>Automatically disable links at a defined date or time.</td>
+<td class="feature-quote">“Every link has an expiration date.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">04</span>
+        <span class="feature-name-text">
+            <span>Usage Limits</span>
+            <span class="feature-premium"><sup>*</sup> Premium</span>
+        </span>
+    </div>
+</td>
+<td>LIFECYCLE</td>
+<td>Allow exactly a configured number of visits.</td>
+<td class="feature-quote">“Control exactly how many times a link can be used.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">05</span>
+        <span class="feature-name-text">
+            <span>Burn After Read</span>
+            <span class="feature-premium"><sup>*</sup> Premium</span>
+        </span>
+    </div>
+</td>
+<td>ACCESS</td>
+<td>Destroy access after the content has been viewed.</td>
+<td class="feature-quote">“When it’s opened, it’s gone.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">06</span>
+        <span class="feature-name-text">
+            <span>Geo Restrictions</span>
+            <span class="feature-premium"><sup>*</sup> Premium</span>
+        </span>
+    </div>
+</td>
+<td>LOCATION</td>
+<td>Allow or block access by country or region.</td>
+<td class="feature-quote">“Control where your links work.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">07</span>
+        <span class="feature-name-text">
+            <span>Device Restrictions</span>
+            <span class="feature-premium"><sup>*</sup> Premium</span>
+        </span>
+    </div>
+</td>
+<td>DEVICE</td>
+<td>Restrict access by device type.</td>
+<td class="feature-quote">“Control the devices that can access your link.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">08</span>
+        <span class="feature-name-text">
+            <span>Time-Based Access</span>
+            <span class="feature-premium"><sup>*</sup> Premium</span>
+        </span>
+    </div>
+</td>
+<td>TIME</td>
+<td>Make a link work only during defined hours.</td>
+<td class="feature-quote">“Make your links available when they should be.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">09</span>
+        <span class="feature-name-text">
+            <span>Custom Domains</span>
+            
+        </span>
+    </div>
+</td>
+<td>BRAND</td>
+<td>Use branded URLs such as go.yourbrand.com/...</td>
+<td class="feature-quote">“Put your brand behind every link.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">10</span>
+        <span class="feature-name-text">
+            <span>Private Links</span>
+            <span class="feature-premium"><sup>*</sup> Premium</span>
+        </span>
+    </div>
+</td>
+<td>PRIVATE</td>
+<td>Require authentication before access.</td>
+<td class="feature-quote">“Keep sensitive links behind a login.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div></section>
+
+<section class="section alt"><div class="container"><div class="spotlight">
+<div class="spotlight-copy"><div class="kicker">One link. Multiple controls.</div><h2>Build the access rules your link needs.</h2><p>Start with a simple short URL, then add the controls that match the situation. A private resource can require authentication. A temporary resource can expire. A sensitive share can be limited to one successful visit.</p><div class="checks">
+<div class="check"><b>✓</b><span>Protect access with a password or PIN.</span></div>
+<div class="check"><b>✓</b><span>Define exactly when the link remains available.</span></div>
+<div class="check"><b>✓</b><span>Limit how many successful visits are allowed.</span></div>
+<div class="check"><b>✓</b><span>Control location, device and authentication requirements.</span></div>
+</div></div>
+<div class="control-panel"><div class="panel-head"><div class="panel-dots"><span class="panel-dot"></span><span class="panel-dot"></span><span class="panel-dot"></span></div><span class="panel-title">Link controls</span></div><div class="control-body">
+<div class="control-row"><div class="control-label"><strong>Access protection</strong><span>PIN required before opening</span></div><div class="control-value dark">PROTECTED</div></div>
+<div class="control-row"><div class="control-label"><strong>Usage limit</strong><span>Maximum successful visits</span></div><div class="control-value">1 VISIT</div></div>
+<div class="control-row"><div class="control-label"><strong>Expiration</strong><span>Automatic link disable time</span></div><div class="control-value">SET</div></div>
+<div class="control-row"><div class="control-label"><strong>Location</strong><span>Allowed regions</span></div><div class="control-value">CONTROLLED</div></div>
+<div class="control-row"><div class="control-label"><strong>Authentication</strong><span>Identity required before access</span></div><div class="control-value">PRIVATE</div></div>
+</div></div>
+</div></div></section>
+
+<section class="section"><div class="container"><div class="cta"><div class="kicker">Ready when you are</div><h2>Turn a URL into a link you can control.</h2><p>Create your first PreonsURL link and choose exactly how much control you need.</p><a class="btn" href="/register">Create your first link →</a></div></div></section>
+</main>
+
+<footer class="footer"><div class="container footer-inner"><div>© 2026 PreonsURL. Links with control built in.</div><div class="footer-links"><a href="/feature.html">Features</a><a href="/#pricing">Pricing</a><a href="/#developers">Developers</a><a href="/login">Sign in</a><a href="/register">Get started</a></div></div></footer>
+</div>
+</body>
+</html>
