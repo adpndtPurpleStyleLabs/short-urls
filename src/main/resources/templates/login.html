@@ -1,69 +1,120 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>PreonsURL — Access Terminal</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    >
+
     <script>
         (function checkExistingAuth() {
+
             function parseJwtPayload(token) {
                 if (!token || typeof token !== 'string') return null;
+
                 const parts = token.trim().split('.');
                 if (parts.length !== 3) return null;
+
                 try {
-                    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-                    while (base64.length % 4 !== 0) base64 += '=';
+                    let base64 = parts[1]
+                        .replace(/-/g, '+')
+                        .replace(/_/g, '/');
+
+                    while (base64.length % 4 !== 0) {
+                        base64 += '=';
+                    }
+
                     const binary = atob(base64);
                     const bytes = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                    return JSON.parse(new TextDecoder().decode(bytes));
+
+                    for (let i = 0; i < binary.length; i++) {
+                        bytes[i] = binary.charCodeAt(i);
+                    }
+
+                    return JSON.parse(
+                        new TextDecoder().decode(bytes)
+                    );
+
                 } catch (e) {
                     return null;
                 }
             }
+
             function isJwtValid(token) {
                 const payload = parseJwtPayload(token);
-                if (!payload || typeof payload !== 'object') return false;
-                if (payload.exp && typeof payload.exp === 'number') {
-                    if (payload.exp <= Math.floor(Date.now() / 1000)) return false;
+
+                if (!payload || typeof payload !== 'object') {
+                    return false;
                 }
+
+                if (payload.exp && typeof payload.exp === 'number') {
+                    if (payload.exp <= Math.floor(Date.now() / 1000)) {
+                        return false;
+                    }
+                }
+
                 return true;
             }
 
             try {
-                const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
+                const token =
+                    localStorage.getItem('preonsurl_token') ||
+                    localStorage.getItem('preons_token');
+
                 if (token) {
+
                     if (isJwtValid(token)) {
+
                         window.location.replace('/console');
+
                     } else {
+
                         localStorage.removeItem('preonsurl_token');
                         localStorage.removeItem('preonsurl_username');
                         localStorage.removeItem('preons_token');
-                        document.cookie = 'preons_jwt=; path=/; max-age=0; SameSite=Strict';
+
+                        document.cookie =
+                            'preons_jwt=; path=/; max-age=0; SameSite=Strict';
                     }
                 }
-            } catch (e) {}
+
+            } catch (e) {
+            }
+
         })();
     </script>
+
     <style>
+
         :root {
             --bg-canvas: #ffffff;
             --surface-card: #ffffff;
+
             --border-subtle: #e4e4e7;
             --border-medium: #d4d4d8;
             --border-focus: #000000;
+
             --text-pure: #000000;
             --text-high: #09090b;
             --text-muted: #52525b;
             --text-subtle: #71717a;
+
             --accent-glow: rgba(0, 0, 0, 0.08);
             --accent-glow-strong: rgba(0, 0, 0, 0.18);
+
             --error-bg: #fef2f2;
             --error-border: #fca5a5;
             --error-text: #991b1b;
+
             --success-bg: #f4f4f5;
             --success-border: #18181b;
             --success-text: #09090b;
@@ -76,48 +127,98 @@
         }
 
         body {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family:
+                    "Inter",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+
             background-color: var(--bg-canvas);
             color: var(--text-pure);
+
             min-height: 100vh;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             padding: 32px 16px;
+
             position: relative;
             overflow-x: hidden;
+
             background-image:
-                radial-gradient(ellipse 70% 40% at 50% -10%, rgba(0, 0, 0, 0.03) 0%, transparent 70%),
-                radial-gradient(ellipse 60% 40% at 50% 110%, rgba(0, 0, 0, 0.02) 0%, transparent 60%);
+                    radial-gradient(
+                            ellipse 70% 40% at 50% -10%,
+                            rgba(0, 0, 0, 0.03) 0%,
+                            transparent 70%
+                    ),
+                    radial-gradient(
+                            ellipse 60% 40% at 50% 110%,
+                            rgba(0, 0, 0, 0.02) 0%,
+                            transparent 60%
+                    );
         }
 
-        /* Ambient Geometric Grid */
+        /* Ambient Grid */
+
         .ambient-grid {
             position: fixed;
             inset: 0;
+
             pointer-events: none;
-            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+
+            background-image:
+                    linear-gradient(
+                            to right,
+                            rgba(0, 0, 0, 0.03) 1px,
+                            transparent 1px
+                    ),
+                    linear-gradient(
+                            to bottom,
+                            rgba(0, 0, 0, 0.03) 1px,
+                            transparent 1px
+                    );
+
             background-size: 56px 56px;
-            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+
+            mask-image:
+                    radial-gradient(
+                            circle at center,
+                            black 40%,
+                            transparent 80%
+                    );
+
             z-index: 0;
         }
 
-        /* Luxury White Card Container */
+        /* Main Card */
+
         .luxury-card {
             width: 100%;
-            max-width: 440px;
+            max-width: 550px;
+
             background: var(--surface-card);
+
             border: 1px solid var(--border-medium);
-            border-radius: var(--radius-sm);
-            padding: 48px 40px;
+            border-radius: 8px;
+
+            padding: 40px;
+
             position: relative;
             z-index: 1;
+
             box-shadow:
-                0 0 0 1px rgba(0, 0, 0, 0.03),
-                0 20px 48px -12px rgba(0, 0, 0, 0.08),
-                0 1px 3px rgba(0, 0, 0, 0.04);
-            animation: cardAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                    0 0 0 1px rgba(0, 0, 0, 0.03),
+                    0 20px 48px -12px rgba(0, 0, 0, 0.08),
+                    0 1px 3px rgba(0, 0, 0, 0.04);
+
+            animation:
+                    cardAppear
+                    0.5s
+                    cubic-bezier(0.16, 1, 0.3, 1)
+                    forwards;
         }
 
         @keyframes cardAppear {
@@ -125,35 +226,113 @@
                 opacity: 0;
                 transform: translateY(16px) scale(0.99);
             }
+
             100% {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
         }
 
-        /* Auth Header */
+        /* =========================================
+           AUTH HEADER
+           ========================================= */
+
         .auth-header {
-            text-align: center;
+            position: relative;
+
+            width: 100%;
+            min-height: 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
             margin-bottom: 32px;
         }
 
-        .auth-title {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            color: var(--text-pure);
+        /*
+         * Keep Back to Home on the left.
+         * The title remains mathematically centered
+         * within the entire card width.
+         */
+        .back-home {
+            position: absolute;
+            left: 0;
+
+            display: inline-flex;
+            align-items: center;
+
+            gap: 7px;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            color: var(--text-muted);
+
+            text-decoration: none;
+
+            padding: 6px 0;
+
+            transition:
+                    color 0.2s ease,
+                    transform 0.2s ease;
         }
 
-        /* Banner Alerts */
+        .back-home:hover {
+            color: var(--text-pure);
+            transform: translateX(-2px);
+        }
+
+        .back-home-arrow {
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .auth-title {
+            font-family:
+                    "Inter",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+
+            font-size: 26px;
+            font-weight: 700;
+
+            letter-spacing: -0.02em;
+
+            color: var(--text-pure);
+
+            /*
+             * Extra horizontal breathing room between
+             * Back to Home and Welcome Back.
+             */
+            padding: 0 90px;
+
+            text-align: center;
+
+            white-space: nowrap;
+        }
+
+        /* Alerts */
+
         .alert-banner {
             display: none;
+
             padding: 14px 16px;
-            border-radius:var(--radius-sm);
+
+            border-radius: 8px;
+
             font-size: 13px;
             line-height: 1.5;
+
             margin-bottom: 24px;
-            animation: fadeIn 0.3s ease-out forwards;
+
+            animation:
+                    fadeIn
+                    0.3s
+                    ease-out
+                    forwards;
         }
 
         .alert-banner.error {
@@ -166,8 +345,11 @@
             background: var(--success-bg);
             border: 1px solid var(--success-border);
             color: var(--success-text);
+
             font-weight: 500;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+            box-shadow:
+                    0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         .alert-banner.visible {
@@ -177,11 +359,19 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-6px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* Form Layout */
+        /* Form */
+
         .form-group {
             margin-bottom: 22px;
             position: relative;
@@ -189,30 +379,42 @@
 
         .form-label {
             display: block;
+
             font-size: 11px;
             font-weight: 700;
+
             letter-spacing: 0.14em;
             text-transform: uppercase;
+
             color: var(--text-pure);
+
             margin-bottom: 8px;
         }
 
         .input-wrapper {
             position: relative;
+
             display: flex;
             align-items: center;
         }
 
         .form-input {
             width: 100%;
+
             background: #ffffff;
+
             border: 1px solid var(--border-medium);
-            border-radius: var(--radius-sm);
+            border-radius: 8px;
+
             padding: 14px 16px;
+
             font-size: 14px;
             font-family: inherit;
+
             color: var(--text-pure);
+
             outline: none;
+
             transition: all 0.2s ease;
         }
 
@@ -223,21 +425,33 @@
 
         .form-input:focus {
             background: #ffffff;
+
             border-color: var(--border-focus);
-            box-shadow: 0 0 0 1px #000000, 0 0 16px var(--accent-glow);
+
+            box-shadow:
+                    0 0 0 1px #000000,
+                    0 0 16px var(--accent-glow);
         }
+
+        /* Password Button */
 
         .input-icon-btn {
             position: absolute;
             right: 14px;
+
             background: none;
             border: none;
+
             color: var(--text-muted);
+
             cursor: pointer;
+
             padding: 4px;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             transition: color 0.2s;
         }
 
@@ -245,32 +459,50 @@
             color: var(--text-pure);
         }
 
-        /* Action Buttons */
+        /* Submit */
+
         .submit-btn {
             width: 100%;
+
             background: #000000;
             color: #ffffff;
+
             border: 1px solid #000000;
-            border-radius: var(--radius-sm);
+            border-radius: 8px;
+
             padding: 15px;
+
             font-size: 12px;
             font-weight: 700;
+
             letter-spacing: 0.18em;
             text-transform: uppercase;
+
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+            transition:
+                    all 0.25s
+                    cubic-bezier(0.16, 1, 0.3, 1);
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             gap: 10px;
+
             margin-top: 28px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+
+            box-shadow:
+                    0 4px 14px rgba(0, 0, 0, 0.12);
         }
 
         .submit-btn:hover {
             background: #18181b;
+
             transform: translateY(-1px);
-            box-shadow: 0 8px 24px var(--accent-glow-strong);
+
+            box-shadow:
+                    0 8px 24px var(--accent-glow-strong);
         }
 
         .submit-btn:active {
@@ -284,42 +516,65 @@
         }
 
         /* Spinner */
+
         .spinner {
             display: none;
+
             width: 16px;
             height: 16px;
+
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: #ffffff;
+
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+
+            animation:
+                    spin
+                    0.7s
+                    linear
+                    infinite;
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-        /* Card Footer */
+        /* Footer */
+
         .card-footer {
             margin-top: 32px;
+
             text-align: center;
+
             border-top: 1px solid var(--border-subtle);
+
             padding-top: 24px;
         }
 
         .footer-text {
             font-size: 12px;
             color: var(--text-muted);
+
             letter-spacing: 0.04em;
         }
 
         .footer-link {
             color: var(--text-pure);
+
             font-weight: 700;
+
             text-decoration: none;
+
             margin-left: 6px;
+
             letter-spacing: 0.06em;
+
             border-bottom: 1.5px solid #000000;
+
             padding-bottom: 2px;
+
             transition: all 0.2s ease;
         }
 
@@ -328,239 +583,674 @@
             border-bottom-color: #52525b;
         }
 
-        /* Authenticated Success Card Overlay */
+        /* Token Display */
+
         .token-display {
             display: none;
+
             margin-top: 20px;
+
             padding: 16px;
+
             background: #f4f4f5;
+
             border: 1px solid var(--border-medium);
             border-radius: 10px;
+
             word-break: break-all;
+
             font-family: monospace;
+
             font-size: 11px;
+
             color: #18181b;
         }
+
+        /* Mobile */
+
+        @media only screen and (max-width: 480px) {
+
+            .luxury-card {
+                padding: 32px 24px;
+            }
+
+            .auth-header {
+                min-height: 30px;
+            }
+
+            .auth-title {
+                font-size: 22px;
+
+                /*
+                 * Reduce spacing on smaller screens.
+                 */
+                padding: 0 65px;
+            }
+
+            .back-home {
+                font-size: 10px;
+            }
+
+            .back-home-arrow {
+                font-size: 14px;
+            }
+        }
+
     </style>
 </head>
+
 <body>
-    <div class="ambient-grid"></div>
 
-    <main class="luxury-card">
-        <!-- Auth Header -->
-        <header class="auth-header">
-            <h1 class="auth-title">Welcome Back</h1>
-        </header>
+<div class="ambient-grid"></div>
 
-        <!-- Status Alerts -->
-        <div id="alertBanner" class="alert-banner" role="alert">
-            <span id="alertIcon">&#9679;</span>
-            <span id="alertMessage"></span>
-        </div>
+<main class="luxury-card">
 
-        <!-- Success Banner from Registration Redirect -->
-        <div th:if="${registered}" id="registeredSuccessBanner" class="alert-banner success visible" role="status">
-            <span>&#10003;</span>
-            <span>Account registered successfully. Please sign in to authenticate.</span>
-        </div>
+    <!-- Auth Header -->
+    <header class="auth-header">
 
-        <!-- Success Banner from Verification Redirect -->
-        <div th:if="${verified}" id="verifiedSuccessBanner" class="alert-banner success visible" role="status">
-            <span>&#10003;</span>
-            <span>Email verified successfully. Please sign in to authenticate.</span>
-        </div>
+        <a href="/" class="back-home">
+            <span class="back-home-arrow">←</span>
+            Back to Home
+        </a>
 
-        <!-- Server-side error banner -->
-        <div th:if="${error}" class="alert-banner error visible" role="alert">
-            <span>&#9679;</span>
-            <span th:text="${error}"></span>
-        </div>
+        <h1 class="auth-title">
+            Welcome Back
+        </h1>
 
-        <!-- Login Form -->
-        <form id="loginForm" method="POST" action="/login" novalidate>
-            <div class="form-group">
-                <label for="username" class="form-label">Username</label>
-                <div class="input-wrapper">
-                    <input type="text"
-                           id="username"
-                           name="username"
-                           class="form-input"
-                           placeholder="Enter your username"
-                           th:value="${username}"
-                           required
-                           autocomplete="username"
-                           spellcheck="false">
-                </div>
+    </header>
+
+
+    <!-- Status Alerts -->
+
+    <div
+            id="alertBanner"
+            class="alert-banner"
+            role="alert"
+    >
+        <span id="alertIcon">&#9679;</span>
+        <span id="alertMessage"></span>
+    </div>
+
+
+    <!-- Registration Success -->
+
+    <div
+            th:if="${registered}"
+            id="registeredSuccessBanner"
+            class="alert-banner success visible"
+            role="status"
+    >
+        <span>&#10003;</span>
+
+        <span>
+            Account registered successfully.
+            Please sign in to authenticate.
+        </span>
+    </div>
+
+
+    <!-- Verification Success -->
+
+    <div
+            th:if="${verified}"
+            id="verifiedSuccessBanner"
+            class="alert-banner success visible"
+            role="status"
+    >
+        <span>&#10003;</span>
+
+        <span>
+            Email verified successfully.
+            Please sign in to authenticate.
+        </span>
+    </div>
+
+
+    <!-- Server Error -->
+
+    <div
+            th:if="${error}"
+            class="alert-banner error visible"
+            role="alert"
+    >
+        <span>&#9679;</span>
+        <span th:text="${error}"></span>
+    </div>
+
+
+    <!-- Login Form -->
+
+    <form
+            id="loginForm"
+            method="POST"
+            action="/login"
+            novalidate
+    >
+
+        <div class="form-group">
+
+            <label
+                    for="username"
+                    class="form-label"
+            >
+                Username
+            </label>
+
+            <div class="input-wrapper">
+
+                <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        class="form-input"
+                        placeholder="Enter your username"
+                        th:value="${username}"
+                        required
+                        autocomplete="username"
+                        spellcheck="false"
+                >
+
             </div>
 
-            <div class="form-group">
-                <label for="password" class="form-label">Master Key / Password</label>
-                <div class="input-wrapper">
-                    <input type="password"
-                           id="password"
-                           name="password"
-                           class="form-input"
-                           placeholder="Enter your password"
-                           required
-                           autocomplete="current-password">
-                    <button type="button" id="togglePasswordBtn" class="input-icon-btn" aria-label="Toggle password visibility">
-                        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                    </button>
-                </div>
+        </div>
+
+
+        <div class="form-group">
+
+            <label
+                    for="password"
+                    class="form-label"
+            >
+                Master Key / Password
+            </label>
+
+            <div class="input-wrapper">
+
+                <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-input"
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                >
+
+                <button
+                        type="button"
+                        id="togglePasswordBtn"
+                        class="input-icon-btn"
+                        aria-label="Toggle password visibility"
+                >
+
+                    <svg
+                            id="eyeIcon"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                    >
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+
+                </button>
+
             </div>
 
-            <button type="submit" id="submitBtn" class="submit-btn">
-                <span class="spinner" id="btnSpinner"></span>
-                <span id="btnText">Authenticate</span>
-                <span id="btnArrow">&rarr;</span>
-            </button>
-        </form>
+        </div>
 
-        <div id="tokenDisplay" class="token-display"></div>
 
-        <!-- Footer Navigation -->
-        <footer class="card-footer">
-            <p class="footer-text">
-                Not yet enrolled?
-                <a href="/register" class="footer-link">Join PreonsURL &rarr;</a>
-            </p>
-        </footer>
-    </main>
+        <!-- Submit -->
 
-    <script>
-        const form = document.getElementById('loginForm');
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnSpinner = document.getElementById('btnSpinner');
-        const btnText = document.getElementById('btnText');
-        const btnArrow = document.getElementById('btnArrow');
-        const alertBanner = document.getElementById('alertBanner');
-        const alertMessage = document.getElementById('alertMessage');
-        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
-        const tokenDisplay = document.getElementById('tokenDisplay');
+        <button
+                type="submit"
+                id="submitBtn"
+                class="submit-btn"
+        >
 
-        // Check if redirected with ?registered=true or ?verified=true in query string
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('registered') === 'true' && !document.getElementById('registeredSuccessBanner')) {
-            showAlert('Account registered successfully. Please sign in to authenticate.', 'success');
+            <span
+                    class="spinner"
+                    id="btnSpinner"
+            ></span>
+
+            <span id="btnText">
+                Authenticate
+            </span>
+
+            <span id="btnArrow">
+                &rarr;
+            </span>
+
+        </button>
+
+    </form>
+
+
+    <div
+            id="tokenDisplay"
+            class="token-display"
+    ></div>
+
+
+    <!-- Footer -->
+
+    <footer class="card-footer">
+
+        <p class="footer-text">
+
+            Not yet enrolled?
+
+            <a
+                    href="/register"
+                    class="footer-link"
+            >
+                Join PreonsURL &rarr;
+            </a>
+
+        </p>
+
+    </footer>
+
+</main>
+
+
+<script>
+
+    const form =
+        document.getElementById('loginForm');
+
+    const usernameInput =
+        document.getElementById('username');
+
+    const passwordInput =
+        document.getElementById('password');
+
+    const submitBtn =
+        document.getElementById('submitBtn');
+
+    const btnSpinner =
+        document.getElementById('btnSpinner');
+
+    const btnText =
+        document.getElementById('btnText');
+
+    const btnArrow =
+        document.getElementById('btnArrow');
+
+    const alertBanner =
+        document.getElementById('alertBanner');
+
+    const alertMessage =
+        document.getElementById('alertMessage');
+
+    const togglePasswordBtn =
+        document.getElementById('togglePasswordBtn');
+
+    const tokenDisplay =
+        document.getElementById('tokenDisplay');
+
+
+    /* URL parameters */
+
+    const urlParams =
+        new URLSearchParams(
+            window.location.search
+        );
+
+
+    if (
+        urlParams.get('registered') === 'true' &&
+        !document.getElementById(
+            'registeredSuccessBanner'
+        )
+    ) {
+
+        showAlert(
+            'Account registered successfully. Please sign in to authenticate.',
+            'success'
+        );
+    }
+
+
+    if (
+        urlParams.get('verified') === 'true' &&
+        !document.getElementById(
+            'verifiedSuccessBanner'
+        )
+    ) {
+
+        showAlert(
+            'Email verified successfully. Please sign in to authenticate.',
+            'success'
+        );
+    }
+
+
+    /* Session expiry */
+
+    try {
+
+        const logoutReason =
+            sessionStorage.getItem(
+                "preons_logout_message"
+            );
+
+        if (logoutReason) {
+
+            showAlert(
+                logoutReason,
+                'error'
+            );
+
+            sessionStorage.removeItem(
+                "preons_logout_message"
+            );
         }
-        if (urlParams.get('verified') === 'true' && !document.getElementById('verifiedSuccessBanner')) {
-            showAlert('Email verified successfully. Please sign in to authenticate.', 'success');
+
+    } catch (e) {
+    }
+
+
+    /* Server-side login success */
+
+    /*[# th:if="${loginSuccess}"]*/
+
+    const serverToken =
+        "[[${token}]]";
+
+    const serverUsername =
+        "[[${username}]]";
+
+
+    if (
+        serverToken &&
+        serverToken !== 'null'
+    ) {
+
+        localStorage.setItem(
+            "preonsurl_token",
+            serverToken
+        );
+
+        localStorage.setItem(
+            "preons_token",
+            serverToken
+        );
+
+
+        if (
+            serverUsername &&
+            serverUsername !== 'null'
+        ) {
+
+            localStorage.setItem(
+                "preonsurl_username",
+                serverUsername
+            );
         }
 
-        // Check for session expiry / auto logout message
-        try {
-            const logoutReason = sessionStorage.getItem("preons_logout_message");
-            if (logoutReason) {
-                showAlert(logoutReason, 'error');
-                sessionStorage.removeItem("preons_logout_message");
-            }
-        } catch (e) {}
 
-        /*[# th:if="${loginSuccess}"]*/
-        const serverToken = "[[${token}]]";
-        const serverUsername = "[[${username}]]";
-        if (serverToken && serverToken !== 'null') {
-            localStorage.setItem("preonsurl_token", serverToken);
-            localStorage.setItem("preons_token", serverToken);
-            if (serverUsername && serverUsername !== 'null') localStorage.setItem("preonsurl_username", serverUsername);
-            window.location.href = "/console";
+        window.location.href =
+            "/console";
+    }
+
+    /*[/]*/
+
+
+    /* Password visibility */
+
+    togglePasswordBtn.addEventListener(
+        'click',
+        () => {
+
+            const isPassword =
+                passwordInput.getAttribute(
+                    'type'
+                ) === 'password';
+
+            passwordInput.setAttribute(
+                'type',
+                isPassword
+                    ? 'text'
+                    : 'password'
+            );
+
         }
-        /*[/]*/
+    );
 
-        // Toggle password view
-        togglePasswordBtn.addEventListener('click', () => {
-            const isPassword = passwordInput.getAttribute('type') === 'password';
-            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
-        });
 
-        function showAlert(message, type = 'error') {
-            alertBanner.className = `alert-banner ${type} visible`;
-            alertMessage.textContent = message;
-        }
+    /* Show alert */
 
-        function hideAlert() {
-            alertBanner.className = 'alert-banner';
-            alertMessage.textContent = '';
-        }
+    function showAlert(
+        message,
+        type = 'error'
+    ) {
 
-        function setLoading(loading) {
-            submitBtn.disabled = loading;
-            btnSpinner.style.display = loading ? 'inline-block' : 'none';
-            btnArrow.style.display = loading ? 'none' : 'inline-block';
-            btnText.textContent = loading ? 'Verifying...' : 'Authenticate';
-        }
+        alertBanner.className =
+            `alert-banner ${type} visible`;
 
-        // Intercept form submission to invoke AuthController API
-        form.addEventListener('submit', async (e) => {
+        alertMessage.textContent =
+            message;
+    }
+
+
+    /* Hide alert */
+
+    function hideAlert() {
+
+        alertBanner.className =
+            'alert-banner';
+
+        alertMessage.textContent =
+            '';
+    }
+
+
+    /* Loading */
+
+    function setLoading(
+        loading
+    ) {
+
+        submitBtn.disabled =
+            loading;
+
+        btnSpinner.style.display =
+            loading
+                ? 'inline-block'
+                : 'none';
+
+        btnArrow.style.display =
+            loading
+                ? 'none'
+                : 'inline-block';
+
+        btnText.textContent =
+            loading
+                ? 'Verifying...'
+                : 'Authenticate';
+    }
+
+
+    /* Login */
+
+    form.addEventListener(
+        'submit',
+        async (e) => {
+
             e.preventDefault();
+
             hideAlert();
 
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value;
+            const username =
+                usernameInput.value.trim();
+
+            const password =
+                passwordInput.value;
 
             if (!username) {
-                showAlert('Username cannot be empty.');
+
+                showAlert(
+                    'Please enter your username.'
+                );
+
                 usernameInput.focus();
+
                 return;
             }
+
             if (!password) {
-                showAlert('Password cannot be empty.');
+
+                showAlert(
+                    'Please enter your password.'
+                );
+
                 passwordInput.focus();
+
                 return;
             }
+
 
             setLoading(true);
 
+
             try {
-                // Call AuthController endpoint: /api/auth/login
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                });
 
-                const data = await response.json();
+                const response =
+                    await fetch(
+                        '/api/auth/login',
+                        {
+                            method: 'POST',
 
-                if (response.ok && data.success) {
-                    if (data.data && data.data.verified === false) {
-                        showAlert('Email verification required. Redirecting to verification...', 'error');
-                        const redirectEmail = data.data.email || username;
-                        setTimeout(() => {
-                            window.location.href = '/verification?email=' + encodeURIComponent(redirectEmail);
-                        }, 800);
-                        return;
-                    }
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
 
-                    const token = data.data.accessToken;
-                    localStorage.setItem("preonsurl_token", token);
-                    localStorage.setItem("preonsurl_username", username);
-                    localStorage.setItem("preons_token", token);
-                    document.cookie = `preons_jwt=${token}; path=/; max-age=86400; SameSite=Strict`;
+                            body: JSON.stringify({
+                                username: username,
+                                password: password
+                            })
+                        }
+                    );
 
-                    showAlert('Authentication successful. Redirecting to console...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/console';
-                    }, 400);
-                } else {
-                    showAlert(data.message || 'Invalid username or password.');
-                    setLoading(false);
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data?.message ||
+                        data?.error ||
+                        'Authentication failed.'
+                    );
                 }
-            } catch (err) {
-                console.warn('Fetch failed, falling back to form POST:', err);
-                form.submit();
+
+
+                const result =
+                    data?.data || data;
+
+
+                /*
+                 * Email verification required
+                 */
+
+                if (
+                    result?.verified === false
+                ) {
+
+                    window.location.href =
+                        `/verification?email=${encodeURIComponent(
+                            result.email || username
+                        )}`;
+
+                    return;
+                }
+
+
+                /*
+                 * Store JWT
+                 */
+
+                const accessToken =
+                    result?.accessToken ||
+                    result?.token;
+
+
+                if (!accessToken) {
+
+                    throw new Error(
+                        'Authentication succeeded but no access token was returned.'
+                    );
+                }
+
+
+                localStorage.setItem(
+                    'preonsurl_token',
+                    accessToken
+                );
+
+                localStorage.setItem(
+                    'preons_token',
+                    accessToken
+                );
+
+
+                if (result?.username) {
+
+                    localStorage.setItem(
+                        'preonsurl_username',
+                        result.username
+                    );
+
+                } else {
+
+                    localStorage.setItem(
+                        'preonsurl_username',
+                        username
+                    );
+                }
+
+
+                /*
+                 * Cookie
+                 */
+
+                document.cookie =
+                    `preons_jwt=${encodeURIComponent(
+                        accessToken
+                    )}; path=/; SameSite=Strict`;
+
+
+                /*
+                 * Redirect
+                 */
+
+                window.location.href =
+                    '/console';
+
+            } catch (error) {
+
+                showAlert(
+                    error?.message ||
+                    'Authentication failed. Please try again.',
+                    'error'
+                );
+
+                setLoading(false);
             }
-        });
-    </script>
+
+        }
+    );
+
+</script>
+
 </body>
 </html>

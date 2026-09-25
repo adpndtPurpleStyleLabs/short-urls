@@ -13,4 +13,12 @@ public interface EmailService {
      * @param recipientName recipient full name or username
      */
     void sendVerificationCode(String toEmail, String code, String recipientName);
+
+    /**
+     * Dispatches the welcome email upon successful account verification.
+     *
+     * @param toEmail   recipient email address
+     * @param userName  recipient name (full name or username)
+     */
+    void sendWelcomeEmail(String toEmail, String userName);
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -33,6 +34,18 @@ public class MailtrapEmailService implements EmailService {
 
     @Value("${mailtrap.sender-name:PruneUrl}")
     private String senderName;
+
+    @Value("${preonsurl.email.welcome.dashboard-url:https://secure.indexrender.io/console}")
+    private String welcomeDashboardUrl;
+
+    @Value("${preonsurl.email.welcome.help-center-url:https://secure.indexrender.io/help}")
+    private String welcomeHelpCenterUrl;
+
+    @Value("${preonsurl.email.welcome.support-email:support@indexrender.io}")
+    private String welcomeSupportEmail;
+
+    @Value("${preonsurl.email.welcome.docs-url:https://secure.indexrender.io/docs}")
+    private String welcomeDocsUrl;
 
     private MailtrapClient mailtrapClient;
     private final TemplateEngine templateEngine;
@@ -244,5 +257,140 @@ public class MailtrapEmailService implements EmailService {
             Privacy policy: https://preonsurl.com/privacy
             Terms of service: https://preonsurl.com/terms
             """.formatted(formattedCode);
+    }
+
+    @Override
+    public void sendWelcomeEmail(String toEmail, String userName) {
+        if (toEmail == null || toEmail.isBlank()) {
+            log.warn("PREONS-EMAILER: Cannot send welcome email because recipient email is blank.");
+            return;
+        }
+
+        String safeName = (userName != null && !userName.isBlank()) ? userName.trim() : "Member";
+        String subject = "Your URL is Secured - Welcome to SecureURL";
+
+        String htmlContent = buildWelcomeEmailHtml(safeName);
+        String textContent = buildWelcomeEmailPlainText(safeName);
+
+        log.info("PREONS-EMAILER [Mailtrap API] Dispatching welcome email to '{}' (userName: '{}')", toEmail, safeName);
+
+        if (apiToken == null || apiToken.isBlank()) {
+            log.info("PREONS-EMAILER: Mailtrap API token not configured. Welcome email logged for '{}'.", toEmail);
+            return;
+        }
+
+        try {
+            MailtrapClient client = getClient();
+            if (client == null) {
+                log.info("PREONS-EMAILER: MailtrapClient unavailable. Welcome email logged for '{}'.", toEmail);
+                return;
+            }
+
+            Address from = new Address(senderEmail, senderName);
+            Address to = new Address(toEmail, safeName);
+
+            MailtrapMail mail = MailtrapMail.builder()
+                    .from(from)
+                    .to(List.of(to))
+                    .subject(subject)
+                    .html(htmlContent)
+                    .text(textContent)
+                    .category("Welcome Email")
+                    .build();
+
+            SendResponse response = client.send(mail);
+            log.info("PREONS-EMAILER: Welcome email successfully dispatched via Mailtrap API to '{}' (response: {})",
+                    toEmail, response);
+        } catch (Exception e) {
+            log.warn("PREONS-EMAILER: Mailtrap API welcome email dispatch to '{}' encountered: {}",
+                    toEmail, e.getMessage());
+        }
+    }
+
+    private String welcomeTemplateHtmlCache = null;
+
+    private synchronized String getWelcomeTemplateHtml() {
+        if (welcomeTemplateHtmlCache != null) {
+            return welcomeTemplateHtmlCache;
+        }
+        try (var is = getClass().getResourceAsStream("/templates/email/welcome.html")) {
+            if (is != null) {
+                welcomeTemplateHtmlCache = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                return welcomeTemplateHtmlCache;
+            }
+        } catch (Exception e) {
+            log.warn("Could not load /templates/email/welcome.html from classpath: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    private String buildWelcomeEmailHtml(String userName) {
+        String template = getWelcomeTemplateHtml();
+        String dashboardUrl = (welcomeDashboardUrl != null && !welcomeDashboardUrl.isBlank())
+                ? welcomeDashboardUrl : "https://secure.indexrender.io/console";
+        String helpCenterUrl = (welcomeHelpCenterUrl != null && !welcomeHelpCenterUrl.isBlank())
+                ? welcomeHelpCenterUrl : "https://secure.indexrender.io/help";
+        String supportEmail = (welcomeSupportEmail != null && !welcomeSupportEmail.isBlank())
+                ? welcomeSupportEmail : "support@indexrender.io";
+        String docsUrl = (welcomeDocsUrl != null && !welcomeDocsUrl.isBlank())
+                ? welcomeDocsUrl : "https://secure.indexrender.io/docs";
+
+        if (template != null) {
+            return template
+                    .replace("{{userName}}", userName)
+                    .replace("{{dashboardUrl}}", dashboardUrl)
+                    .replace("{{helpCenterUrl}}", helpCenterUrl)
+                    .replace("{{supportEmail}}", supportEmail)
+                    .replace("{{docsUrl}}", docsUrl);
+        }
+
+        return buildFallbackWelcomeHtml(userName, dashboardUrl, helpCenterUrl, supportEmail, docsUrl);
+    }
+
+    private String buildFallbackWelcomeHtml(String userName, String dashboardUrl, String helpCenterUrl, String supportEmail, String docsUrl) {
+        return """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head><meta charset="UTF-8"><title>Your URL is Secured - SecureURL</title></head>
+            <body>
+                <p>Hello %s,</p>
+                <p><strong>Your URL is secured. 🔒</strong></p>
+                <p>Welcome to SecureURL — your links now have built-in control and protection.</p>
+                <p><a href="%s">Open SecureURL</a></p>
+                <p>Need help? Visit our <a href="%s">Help Center</a> or email <a href="mailto:%s">%s</a>.</p>
+                <p><a href="%s">Dashboard</a> | <a href="%s">Docs</a> | <a href="%s">Help</a></p>
+            </body>
+            </html>
+            """.formatted(userName, dashboardUrl, helpCenterUrl, supportEmail, supportEmail, dashboardUrl, docsUrl, helpCenterUrl);
+    }
+
+    private String buildWelcomeEmailPlainText(String userName) {
+        String dashboardUrl = (welcomeDashboardUrl != null && !welcomeDashboardUrl.isBlank())
+                ? welcomeDashboardUrl : "https://secure.indexrender.io/console";
+        String helpCenterUrl = (welcomeHelpCenterUrl != null && !welcomeHelpCenterUrl.isBlank())
+                ? welcomeHelpCenterUrl : "https://secure.indexrender.io/help";
+        String supportEmail = (welcomeSupportEmail != null && !welcomeSupportEmail.isBlank())
+                ? welcomeSupportEmail : "support@indexrender.io";
+        String docsUrl = (welcomeDocsUrl != null && !welcomeDocsUrl.isBlank())
+                ? welcomeDocsUrl : "https://secure.indexrender.io/docs";
+
+        return """
+            Hello %s,
+
+            Your URL is secured. 🔒
+            Welcome to SecureURL — your links now have built-in control and protection.
+
+            Create short, branded URLs and control how they are accessed, when they expire, and where your visitors go.
+
+            Open SecureURL: %s
+
+            Need help getting started?
+            Visit our Help Center: %s
+            Or contact us at: %s
+            Documentation: %s
+
+            Keep your links under control,
+            The SecureURL Team
+            """.formatted(userName, dashboardUrl, helpCenterUrl, supportEmail, docsUrl);
     }
 }

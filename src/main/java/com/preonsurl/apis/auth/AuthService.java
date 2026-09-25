@@ -11,6 +11,8 @@ import com.preonsurl.apis.auth.repository.TenantRepository;
 import com.preonsurl.apis.auth.repository.UserRepository;
 import com.preonsurl.emailer.EmailService;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ import java.time.temporal.ChronoUnit;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
@@ -134,6 +138,19 @@ public class AuthService {
         user.setVerificationCode(null);
         user.setVerificationCodeExpiresAt(null);
         userRepository.save(user);
+
+        // Send welcome email upon successful account verification
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            String recipientName = (user.getFullName() != null && !user.getFullName().isBlank())
+                    ? user.getFullName().trim()
+                    : user.getUsername();
+            try {
+                emailService.sendWelcomeEmail(user.getEmail(), recipientName);
+            } catch (Exception e) {
+                log.warn("Failed to dispatch welcome email to '{}': {}", user.getEmail(), e.getMessage());
+            }
+        }
+
         return true;
     }
 

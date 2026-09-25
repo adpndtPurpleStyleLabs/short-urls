@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Your URL is Secured - SecureURL</title>
+
+    <style>
+
+        /* =====================================================
+           RESET
+           ===================================================== */
+
+        body {
+            margin: 0;
+            padding: 0;
+
+            width: 100%;
+
+            background: #f5f5f3;
+
+            color: #111111;
+
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+
+            -webkit-font-smoothing: antialiased;
+
+            text-rendering: optimizeLegibility;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           OUTER WRAPPER
+           ===================================================== */
+
+        .email-wrapper {
+            width: 100%;
+
+            background: #f5f5f3;
+
+            padding: 44px 16px;
+        }
+
+
+        /* =====================================================
+           MAIN CARD
+           ===================================================== */
+
+        .email-container {
+
+            width: 100%;
+            max-width: 620px;
+
+            margin: 0 auto;
+
+            background: #ffffff;
+
+            border: 1px solid #e5e5e2;
+
+            box-shadow:
+                    0 24px 70px rgba(0, 0, 0, 0.08),
+                    0 4px 16px rgba(0, 0, 0, 0.035);
+        }
+
+
+        /* =====================================================
+           TOP ACCENT
+           ===================================================== */
+
+        .top-line {
+
+            height: 3px;
+
+            background: #111111;
+
+            font-size: 0;
+            line-height: 0;
+        }
+
+
+        /* =====================================================
+           CONTENT
+           ===================================================== */
+
+        .content {
+
+            padding:
+                    52px
+                    52px
+                    46px;
+        }
+
+
+        /* =====================================================
+           BRAND
+           ===================================================== */
+
+        .brand {
+
+            text-align: center;
+
+            padding-bottom: 46px;
+        }
+
+        .brand-mark {
+
+            display: inline-block;
+
+            width: 42px;
+            height: 42px;
+
+            line-height: 42px;
+
+            border:
+                    1.5px
+                    solid
+                    #111111;
+
+            background: #ffffff;
+
+            font-size: 17px;
+
+            font-weight: 800;
+
+            letter-spacing: -0.04em;
+
+            text-align: center;
+
+            vertical-align: middle;
+
+            margin-right: 10px;
+
+            box-shadow:
+                    3px 3px 0 #111111;
+        }
+
+        .brand-name {
+
+            display: inline-block;
+
+            vertical-align: middle;
+
+            font-size: 27px;
+
+            line-height: 42px;
+
+            font-weight: 700;
+
+            letter-spacing: -0.8px;
+
+            color: #111111;
+        }
+
+
+        /* =====================================================
+           EYEBROW
+           ===================================================== */
+
+        .eyebrow {
+
+            font-size: 10px;
+
+            line-height: 1.4;
+
+            font-weight: 700;
+
+            letter-spacing: 0.18em;
+
+            text-transform: uppercase;
+
+            color: #777777;
+
+            margin: 0 0 12px;
+        }
+
+
+        /* =====================================================
+           GREETING
+           ===================================================== */
+
+        .greeting {
+
+            font-size: 15px;
+
+            line-height: 1.7;
+
+            color: #444444;
+
+            margin: 0 0 20px;
+        }
+
+
+        /* =====================================================
+           HEADLINE
+           ===================================================== */
+
+        .headline {
+
+            font-size: 31px;
+
+            line-height: 1.15;
+
+            font-weight: 700;
+
+            letter-spacing: -1.15px;
+
+            color: #111111;
+
+            margin: 0 0 22px;
+        }
+
+
+        /* =====================================================
+           INTRO
+           ===================================================== */
+
+        .intro {
+
+            font-size: 15px;
+
+            line-height: 1.75;
+
+            color: #555555;
+
+            margin: 0 0 17px;
+        }
+
+        .intro strong {
+
+            color: #111111;
+
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           DIVIDER
+           ===================================================== */
+
+        .divider {
+
+            height: 1px;
+
+            background: #ededeb;
+
+            margin:
+                    36px
+                    0
+                    31px;
+        }
+
+
+        /* =====================================================
+           SECTION HEADING
+           ===================================================== */
+
+        .section-heading {
+
+            font-size: 11px;
+
+            line-height: 1.4;
+
+            font-weight: 700;
+
+            letter-spacing: 0.16em;
+
+            text-transform: uppercase;
+
+            color: #777777;
+
+            margin: 0 0 18px;
+        }
+
+
+        /* =====================================================
+           FEATURES
+           ===================================================== */
+
+        .features {
+
+            width: 100%;
+
+            margin-bottom: 34px;
+        }
+
+        .feature-cell {
+
+            width: 50%;
+
+            vertical-align: top;
+
+            background: #fafaf8;
+
+            border:
+                    1px
+                    solid
+                    #e8e8e5;
+
+            padding: 20px;
+        }
+
+        .feature-icon {
+
+            width: 28px;
+            height: 28px;
+
+            line-height: 28px;
+
+            border:
+                    1px
+                    solid
+                    #d7d7d3;
+
+            background: #ffffff;
+
+            text-align: center;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+
+            font-size: 14px;
+
+            line-height: 1.4;
+
+            font-weight: 700;
+
+            color: #111111;
+
+            margin-bottom: 7px;
+        }
+
+        .feature-text {
+
+            font-size: 12px;
+
+            line-height: 1.65;
+
+            color: #737373;
+        }
+
+
+        /* =====================================================
+           CTA
+           ===================================================== */
+
+        .cta-section {
+
+            text-align: center;
+
+            padding:
+                    12px
+                    0
+                    38px;
+        }
+
+        .cta {
+
+            display: inline-block;
+
+            background: #111111;
+
+            color: #ffffff !important;
+
+            padding:
+                    15px
+                    30px;
+
+            font-size: 12px;
+
+            line-height: 1;
+
+            font-weight: 700;
+
+            letter-spacing: 0.12em;
+
+            text-transform: uppercase;
+
+            border:
+                    1px
+                    solid
+                    #111111;
+
+            box-shadow:
+                    0 8px 18px
+                    rgba(0, 0, 0, 0.14);
+        }
+
+        .cta-subtext {
+
+            font-size: 11px;
+
+            line-height: 1.5;
+
+            color: #8a8a86;
+
+            margin-top: 13px;
+        }
+
+
+        /* =====================================================
+           BODY COPY
+           ===================================================== */
+
+        .body-copy {
+
+            font-size: 14px;
+
+            line-height: 1.8;
+
+            color: #555555;
+
+            margin:
+                    0
+                    0
+                    22px;
+        }
+
+        .body-copy a {
+
+            color: #111111;
+
+            font-weight: 600;
+
+            border-bottom:
+                    1px
+                    solid
+                    #111111;
+
+            padding-bottom: 1px;
+        }
+
+
+        /* =====================================================
+           SIGNATURE
+           ===================================================== */
+
+        .signature {
+
+            font-size: 14px;
+
+            line-height: 1.7;
+
+            color: #444444;
+
+            margin:
+                    32px
+                    0
+                    0;
+        }
+
+        .signature strong {
+
+            color: #111111;
+
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           FOOTER
+           ===================================================== */
+
+        .footer {
+
+            border-top:
+                    1px
+                    solid
+                    #eeeeeb;
+
+            background: #fafaf8;
+
+            padding:
+                    27px
+                    32px
+                    30px;
+
+            text-align: center;
+        }
+
+        .footer-brand {
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.05em;
+
+            color: #333333;
+
+            margin-bottom: 8px;
+        }
+
+        .footer-text {
+
+            font-size: 11px;
+
+            line-height: 1.6;
+
+            color: #999999;
+
+            margin: 0;
+        }
+
+        .footer-links {
+
+            margin-top: 14px;
+        }
+
+        .footer-links a {
+
+            display: inline-block;
+
+            font-size: 11px;
+
+            color: #666666;
+
+            margin:
+                    0
+                    8px;
+        }
+
+
+        /* =====================================================
+           MOBILE
+           ===================================================== */
+
+        @media only screen and (max-width: 620px) {
+
+            .email-wrapper {
+
+                padding:
+                        20px
+                        10px;
+            }
+
+            .content {
+
+                padding:
+                        38px
+                        22px
+                        34px;
+            }
+
+            .brand {
+
+                padding-bottom: 38px;
+            }
+
+            .brand-name {
+
+                font-size: 24px;
+            }
+
+            .headline {
+
+                font-size: 26px;
+
+                letter-spacing: -0.8px;
+            }
+
+            .feature-cell {
+
+                padding: 15px;
+            }
+
+            .feature-title {
+
+                font-size: 13px;
+            }
+
+            .feature-text {
+
+                font-size: 11px;
+            }
+
+            .footer {
+
+                padding:
+                        24px
+                        18px
+                        26px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<table
+        role="presentation"
+        width="100%"
+        class="email-wrapper"
+>
+
+    <tr>
+
+        <td align="center">
+
+
+            <!-- =================================================
+                 MAIN CARD
+                 ================================================= -->
+
+            <table
+                    role="presentation"
+                    width="100%"
+                    class="email-container"
+            >
+
+
+                <!-- TOP ACCENT -->
+
+                <tr>
+
+                    <td class="top-line">
+                        &nbsp;
+                    </td>
+
+                </tr>
+
+
+                <!-- =================================================
+                     CONTENT
+                     ================================================= -->
+
+                <tr>
+
+                    <td class="content">
+
+
+                        <!-- BRAND -->
+
+                        <div class="brand">
+
+                            <span class="brand-mark">
+                                S
+                            </span>
+
+                            <span class="brand-name">
+                                SecureURL
+                            </span>
+
+                        </div>
+
+
+                        <!-- EYEBROW -->
+
+                        <p class="eyebrow">
+                            Welcome to SecureURL
+                        </p>
+
+
+                        <!-- GREETING -->
+
+                        <p class="greeting">
+
+                            Hello {{userName}},
+
+                        </p>
+
+
+                        <!-- HEADLINE -->
+
+                        <h1 class="headline">
+
+                            Your links are now<br>
+                            under your control.
+
+                        </h1>
+
+
+                        <!-- INTRO -->
+
+                        <p class="intro">
+
+                            Welcome to
+                            <strong>SecureURL</strong> —
+                            a place where your links are
+                            more than short addresses.
+                            They are links you can manage,
+                            protect, and trust.
+
+                        </p>
+
+
+                        <p class="intro">
+
+                            From the moment you create your
+                            first link, you decide how it
+                            behaves, who can access it,
+                            and how long it stays available.
+                            Everything is designed to keep
+                            control in your hands.
+
+                        </p>
+
+
+                        <!-- DIVIDER -->
+
+                        <div class="divider">
+                            &nbsp;
+                        </div>
+
+
+                        <!-- SECTION HEADING -->
+
+                        <p class="section-heading">
+
+                            Everything you need.
+                            Nothing you don't.
+
+                        </p>
+
+
+                        <!-- =================================================
+                             FEATURES
+                             ================================================= -->
+
+                        <table
+                                role="presentation"
+                                width="100%"
+                                class="features"
+                        >
+
+
+                            <!-- FEATURE ROW 1 -->
+
+                            <tr>
+
+                                <!-- SMART LINKS -->
+
+                                <td
+                                        class="feature-cell"
+                                        width="50%"
+                                        valign="top"
+                                >
+
+                                    <div class="feature-icon">
+                                        ↗
+                                    </div>
+
+                                    <div class="feature-title">
+                                        Smart Links
+                                    </div>
+
+                                    <div class="feature-text">
+
+                                        Create clean,
+                                        memorable links
+                                        that take people
+                                        exactly where you
+                                        want them to go.
+
+                                    </div>
+
+                                </td>
+
+
+                                <td
+                                        width="12"
+                                        style="
+                                            font-size:0;
+                                            line-height:0;
+                                        "
+                                >
+                                    &nbsp;
+                                </td>
+
+
+                                <!-- ACCESS CONTROL -->
+
+                                <td
+                                        class="feature-cell"
+                                        width="50%"
+                                        valign="top"
+                                >
+
+                                    <div class="feature-icon">
+                                        ⌁
+                                    </div>
+
+                                    <div class="feature-title">
+                                        Access Control
+                                    </div>
+
+                                    <div class="feature-text">
+
+                                        Decide who gets
+                                        access and when.
+                                        Add protection,
+                                        expiration, and
+                                        usage limits when
+                                        you need them.
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+
+                            <!-- SPACING -->
+
+                            <tr>
+
+                                <td
+                                        height="12"
+                                        style="
+                                            font-size:0;
+                                            line-height:0;
+                                        "
+                                >
+                                    &nbsp;
+                                </td>
+
+                                <td></td>
+
+                                <td
+                                        height="12"
+                                        style="
+                                            font-size:0;
+                                            line-height:0;
+                                        "
+                                >
+                                    &nbsp;
+                                </td>
+
+                            </tr>
+
+
+                            <!-- FEATURE ROW 2 -->
+
+                            <tr>
+
+                                <!-- ANALYTICS -->
+
+                                <td
+                                        class="feature-cell"
+                                        width="50%"
+                                        valign="top"
+                                >
+
+                                    <div class="feature-icon">
+                                        ◉
+                                    </div>
+
+                                    <div class="feature-title">
+                                        Analytics
+                                    </div>
+
+                                    <div class="feature-text">
+
+                                        See how your links
+                                        perform and
+                                        understand the
+                                        people and traffic
+                                        behind every visit.
+
+                                    </div>
+
+                                </td>
+
+
+                                <td
+                                        width="12"
+                                        style="
+                                            font-size:0;
+                                            line-height:0;
+                                        "
+                                >
+                                    &nbsp;
+                                </td>
+
+
+                                <!-- CUSTOM DOMAINS -->
+
+                                <td
+                                        class="feature-cell"
+                                        width="50%"
+                                        valign="top"
+                                >
+
+                                    <div class="feature-icon">
+                                        ◇
+                                    </div>
+
+                                    <div class="feature-title">
+                                        Custom Domains
+                                    </div>
+
+                                    <div class="feature-text">
+
+                                        Put your brand
+                                        behind every link
+                                        with a domain that
+                                        feels familiar,
+                                        trusted, and yours.
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+
+                        </table>
+
+
+                        <!-- =================================================
+                             CTA
+                             ================================================= -->
+
+                        <div class="cta-section">
+
+                            <a
+                                    href="{{dashboardUrl}}"
+                                    class="cta"
+                                    target="_blank"
+                            >
+                                Enter Your Dashboard
+                            </a>
+
+                            <div class="cta-subtext">
+
+                                Everything is ready
+                                when you are.
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             CLOSING MESSAGE
+                             ================================================= -->
+
+                        <p class="body-copy">
+
+                            Whether you're sharing
+                            something important, building
+                            your brand, or simply sending
+                            a link, SecureURL gives you
+                            the confidence that you're
+                            always in control of what
+                            happens next.
+
+                        </p>
+
+
+                        <p class="body-copy">
+
+                            Your links should work the way
+                            you expect them to.
+                            That's what SecureURL is built for.
+
+                        </p>
+
+
+                        <!-- =================================================
+                             SUPPORT
+                             ================================================= -->
+
+                        <p class="body-copy">
+
+                            If you ever need a hand,
+                            our
+
+                            <a
+                                    href="{{helpCenterUrl}}"
+                                    target="_blank"
+                            >
+                                Help Center
+                            </a>
+
+                            is always available.
+
+                            You can also reach us directly
+                            at
+
+                            <a
+                                    href="mailto:{{supportEmail}}"
+                            >
+                                {{supportEmail}}
+                            </a>.
+
+                        </p>
+
+
+                        <!-- =================================================
+                             SIGNATURE
+                             ================================================= -->
+
+                        <p class="signature">
+
+                            Here's to better links,
+
+                            <br>
+
+                            <strong>
+                                The SecureURL Team
+                            </strong>
+
+                        </p>
+
+
+                    </td>
+
+                </tr>
+
+
+                <!-- =================================================
+                     FOOTER
+                     ================================================= -->
+
+                <tr>
+
+                    <td class="footer">
+
+
+                        <div class="footer-brand">
+
+                            SECUREURL
+
+                        </div>
+
+
+                        <p class="footer-text">
+
+                            Links with control built in.
+
+                        </p>
+
+
+                        <div class="footer-links">
+
+                            <a
+                                    href="{{dashboardUrl}}"
+                                    target="_blank"
+                            >
+                                Dashboard
+                            </a>
+
+                            <a
+                                    href="{{docsUrl}}"
+                                    target="_blank"
+                            >
+                                Docs
+                            </a>
+
+                            <a
+                                    href="{{helpCenterUrl}}"
+                                    target="_blank"
+                            >
+                                Help
+                            </a>
+
+                        </div>
+
+
+                    </td>
+
+                </tr>
+
+
+            </table>
+
+
+        </td>
+
+    </tr>
+
+</table>
+
+
+</body>
+
+</html>
