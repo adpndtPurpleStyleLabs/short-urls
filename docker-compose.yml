@@ -1,60 +1,105 @@
 services:
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
+
     container_name: preonsurl-app
+
     ports:
-      - "8081:8081"
+      - "4982:8878"
+
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SERVER_PORT: 8081
+      SPRING_PROFILES_ACTIVE: app
+
+      SERVER_PORT: 8878
+
       LOG_PATH: /app/logs
+
+      # Docker Compose service name
       DB_HOST: mariadb
       DB_PORT: 3306
-      DB_NAME: preonsurl
-      DB_USER: preons
-      DB_PASSWORD: preonspass
-      API_KEY: preons-secret-api-key-2026
-      SHORTENER_DOMAIN: http://localhost:8081
+      DB_NAME: ${MARIADB_DATABASE}
+      DB_USER: ${MARIADB_USER}
+      DB_PASSWORD: ${MARIADB_PASSWORD}
+
+      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
+      # Browser/client-facing URL
+      SHORTENER_DOMAIN: https://secure.ppustage.dev
+      APP_DOMAIN: https://go.ppustage.dev
+      PSECURE_DOMAIN: https://psecure.ppustage.dev
+      JWT_SECRET: laudaLasan
+
       SHORTENER_SECRET: PREONS-URL-SECRET-KEY-123456789
-      JAVA_OPTS: "-XX:+UseG1GC -Xms128m -Xmx512m -Xss512k -XX:MaxMetaspaceSize=160m -XX:+ExitOnOutOfMemoryError"
+
+      JAVA_OPTS: >-
+        -XX:+UseG1GC
+        -Xms128m
+        -Xmx512m
+        -Xss512k
+        -XX:MaxMetaspaceSize=160m
+        -XX:+ExitOnOutOfMemoryError
+
     volumes:
       - app_logs:/app/logs
+
     deploy:
       resources:
         limits:
           memory: 600M
         reservations:
           memory: 256M
+
     depends_on:
       mariadb:
         condition: service_healthy
+
     restart: unless-stopped
+
 
   mariadb:
     image: mariadb:11.4
+
     container_name: preonsurl-mariadb
+
     environment:
-      MARIADB_ROOT_PASSWORD: rootpass
-      MARIADB_DATABASE: preonsurl
-      MARIADB_USER: preons
-      MARIADB_PASSWORD: preonspass
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+
     ports:
-      - "3306:3306"
+      # Optional: allows DBeaver/host machine to connect
+      - "4981:3306"
+
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./schema-mariadb.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
     healthcheck:
-      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      test:
+        [
+          "CMD",
+          "mariadb-admin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-prootpass"
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
+
     restart: unless-stopped
+
 
 volumes:
   mariadb_data:
     driver: local
+
   app_logs:
     driver: local
