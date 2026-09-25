@@ -11,15 +11,8 @@ cd "$PROJECT_DIR"
 
 COMPOSE="docker compose"
 
-DOMAINS=(
-    "secure.indexrender.io"
-    "go.indexrender.io"
-    "psecure.indexrender.io"
-)
-
-HTTP_CONFIG="nginx/conf.d/http.conf"
-HTTPS_CONFIG="nginx/conf.d/https.conf"
-ACTIVE_CONFIG="nginx/conf.d/indexrender.conf"
+# Existing reverse proxy container
+NGINX_CONTAINER="reachly-nginx"
 
 # ============================================================
 # Logging
@@ -70,14 +63,6 @@ log "Checking required files..."
 [[ -f "schema-mariadb.sql" ]] \
     || fail "schema-mariadb.sql not found."
 
-[[ -f "$HTTP_CONFIG" ]] \
-    || fail "$HTTP_CONFIG not found."
-
-[[ -f "$HTTPS_CONFIG" ]] \
-    || fail "$HTTPS_CONFIG not found."
-
-mkdir -p nginx/conf.d
-
 echo "Required files OK."
 
 # ============================================================
@@ -116,7 +101,6 @@ REQUIRED_VARS=(
     JWT_SECRET
     SHORTENER_SECRET
     MAILTRAP_API_TOKEN
-    CERTBOT_EMAIL
 )
 
 for VAR in "${REQUIRED_VARS[@]}"; do
@@ -130,7 +114,7 @@ done
 echo "Environment OK."
 
 # ============================================================
-# Validate Compose
+# Validate Docker Compose
 # ============================================================
 
 log "Validating Docker Compose..."
@@ -140,14 +124,16 @@ $COMPOSE config >/dev/null
 echo "Docker Compose configuration OK."
 
 # ============================================================
-# Make sure old conflicting containers don't block deployment
+# Check existing reverse proxy
 # ============================================================
 
-log "Checking existing containers..."
+log "Checking existing Nginx reverse proxy..."
 
-# Do NOT use docker compose down here.
-# This keeps existing containers running until replacements
-# are ready and, importantly, does not touch volumes.
+if ! docker ps --format '{{.Names}}' | grep -qx "$NGINX_CONTAINER"; then
+    fail "Existing $NGINX_CONTAINER container is not running."
+fi
+
+echo "✓ $NGINX_CONTAINER is running."
 
 # ============================================================
 # Start MariaDB
@@ -202,7 +188,7 @@ $COMPOSE up -d --build \
     psecureserve
 
 # ============================================================
-# Wait for containers
+# Wait for application containers
 # ============================================================
 
 log "Waiting for application containers..."
@@ -210,176 +196,85 @@ log "Waiting for application containers..."
 sleep 5
 
 # ============================================================
-# Show application status
-# ============================================================
-
-$COMPOSE ps
-
-# ============================================================
-# Check application containers are running
+# Check application containers
 # ============================================================
 
 for SERVICE in app serve psecureserve; do
 
-    STATUS="$($COMPOSE ps --status running --services | grep -x "$SERVICE" || true)"
+    STATUS="$(
+        $COMPOSE ps --status running --services |
+        grep -x "$SERVICE" || true
+    )"
 
     if [[ -z "$STATUS" ]]; then
+
         echo
         echo "WARNING: $SERVICE is not running."
         echo
-        $COMPOSE logs --tail=80 "$SERVICE" || true
+
+        $COMPOSE logs --tail=100 "$SERVICE" || true
+
         echo
+
         fail "$SERVICE failed to start."
     fi
 
+    echo "✓ $SERVICE is running."
+
 done
 
-echo "All Spring Boot services are running."
-
 # ============================================================
-# Determine SSL state
+# Check Spring Boot logs for obvious startup failure
 # ============================================================
 
-log "Checking SSL certificates..."
+log "Checking application startup..."
 
-CERTS_EXIST=true
+for SERVICE in app serve psecureserve; do
 
-for DOMAIN in "${DOMAINS[@]}"; do
-
-    if ! $COMPOSE exec -T nginx \
-        test -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" \
-        >/dev/null 2>&1
+    if $COMPOSE logs --tail=30 "$SERVICE" 2>&1 |
+        grep -qiE "APPLICATION FAILED TO START|BUILD FAILURE|Exception in thread"
     then
 
-        CERTS_EXIST=false
-        break
+        echo
+        echo "WARNING: Possible startup error detected in $SERVICE."
+        echo
 
+        $COMPOSE logs --tail=100 "$SERVICE" || true
+
+        fail "$SERVICE reported a startup error."
     fi
 
 done
 
-# ============================================================
-# FIRST DEPLOYMENT
-# ============================================================
-
-if [[ "$CERTS_EXIST" == "false" ]]; then
-
-    log "SSL certificates were not found."
-    log "Using HTTP configuration for Let's Encrypt."
-
-    cp "$HTTP_CONFIG" "$ACTIVE_CONFIG"
-
-    # Start Nginx with HTTP configuration.
-    $COMPOSE up -d nginx
-
-    sleep 3
-
-    log "Testing HTTP Nginx configuration..."
-
-    $COMPOSE exec -T nginx nginx -t
-
-    $COMPOSE exec -T nginx nginx -s reload || true
-
-    # ========================================================
-    # Check DNS / HTTP accessibility
-    # ========================================================
-
-    log "Requesting Let's Encrypt certificates..."
-
-    DOMAIN_ARGS=()
-
-    for DOMAIN in "${DOMAINS[@]}"; do
-        DOMAIN_ARGS+=("-d" "$DOMAIN")
-    done
-
-    $COMPOSE run --rm certbot certonly \
-        --webroot \
-        --webroot-path=/var/www/certbot \
-        --email "$CERTBOT_EMAIL" \
-        --agree-tos \
-        --no-eff-email \
-        "${DOMAIN_ARGS[@]}"
-
-    log "Let's Encrypt certificates successfully created."
-
-    # ========================================================
-    # Switch to HTTPS
-    # ========================================================
-
-    log "Switching Nginx to HTTPS configuration..."
-
-    cp "$HTTPS_CONFIG" "$ACTIVE_CONFIG"
-
-    $COMPOSE exec -T nginx nginx -t
-
-    $COMPOSE exec -T nginx nginx -s reload
-
-    log "HTTPS configuration enabled."
-
-else
-
-    # ========================================================
-    # EXISTING DEPLOYMENT
-    # ========================================================
-
-    log "Existing SSL certificates detected."
-
-    log "Using HTTPS configuration."
-
-    cp "$HTTPS_CONFIG" "$ACTIVE_CONFIG"
-
-    # Start Nginx if it isn't running.
-    $COMPOSE up -d nginx
-
-    sleep 3
-
-    log "Testing Nginx configuration..."
-
-    $COMPOSE exec -T nginx nginx -t
-
-    log "Reloading Nginx..."
-
-    $COMPOSE exec -T nginx nginx -s reload
-
-fi
+echo "Spring Boot startup checks passed."
 
 # ============================================================
-# Final certificate verification
+# Reload existing Nginx
 # ============================================================
 
-log "Verifying SSL certificates..."
+log "Testing existing Nginx configuration..."
 
-for DOMAIN in "${DOMAINS[@]}"; do
+docker exec "$NGINX_CONTAINER" nginx -t
 
-    if $COMPOSE exec -T nginx \
-        test -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
-    then
+log "Reloading existing Nginx..."
 
-        echo "✓ $DOMAIN certificate exists"
+docker exec "$NGINX_CONTAINER" nginx -s reload
 
-    else
-
-        echo "WARNING: $DOMAIN certificate not found"
-
-    fi
-
-done
+echo "✓ Nginx configuration reloaded."
 
 # ============================================================
-# Final Nginx test
+# Final container status
 # ============================================================
 
-log "Final Nginx configuration test..."
-
-$COMPOSE exec -T nginx nginx -t
-
-# ============================================================
-# Final status
-# ============================================================
-
-log "Deployment status..."
+log "Final deployment status..."
 
 $COMPOSE ps
+
+echo
+echo "Existing Nginx:"
+docker ps \
+    --filter "name=$NGINX_CONTAINER" \
+    --format "  {{.Names}} -> {{.Status}}"
 
 # ============================================================
 # Final output
@@ -390,6 +285,7 @@ echo "============================================================"
 echo "              PREONSURL DEPLOYMENT COMPLETE"
 echo "============================================================"
 echo
+
 echo "Services:"
 echo
 echo "  App:"
@@ -401,11 +297,15 @@ echo
 echo "  PSecure:"
 echo "    https://psecure.indexrender.io"
 echo
-echo "Nginx:"
+
+echo "Reverse Proxy:"
+echo "    $NGINX_CONTAINER"
 echo "    HTTP  -> HTTPS"
 echo "    Ports -> 80 / 443"
 echo
+
 echo "Database:"
 echo "    MariaDB -> internal Docker network"
 echo
+
 echo "============================================================"
