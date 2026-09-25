@@ -1345,6 +1345,52 @@ class CreateControllerTest {
     }
 
     @Test
+    void listUrls_filterByLikeUrl_returnsMatchingResults() throws Exception {
+        Long userId = userRepository.findAll().get(0).getId();
+
+        NewUrl url1 = new NewUrl("apple1", "https://example.com/apple-pie", null, "http://localhost:8081/apple1",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url1.setUserId(userId);
+        url1.setActive(true);
+        shortUrlRepository.save(url1);
+
+        NewUrl url2 = new NewUrl("banana2", "https://example.com/banana-split", null, "http://localhost:8081/banana2",
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+        url2.setUserId(userId);
+        url2.setActive(true);
+        shortUrlRepository.save(url2);
+
+        // Filter by 'apple'
+        mockMvc.perform(get("/link/list")
+                        .param("likeUrl", "apple")
+                        .param("size", "10")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].shortLink").value("http://localhost:8081/apple1"))
+                .andExpect(jsonPath("$.data.content[0].originalLink").value("https://example.com/apple-pie"));
+
+        // Filter by 'banana'
+        mockMvc.perform(get("/link/list")
+                        .param("likeUrl", "banana")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].shortLink").value("http://localhost:8081/banana2"));
+
+        // Filter by non-existent
+        mockMvc.perform(get("/link/list")
+                        .param("likeUrl", "nonexistent999")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
     void listUrls_expiredReasons_timeAndUsage() throws Exception {
         Long userId = userRepository.findAll().get(0).getId();
 

@@ -39,6 +39,23 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
 
     org.springframework.data.domain.Page<NewUrl> findAllByUserId(Long userId, org.springframework.data.domain.Pageable pageable);
 
+    @Query("""
+            SELECT u FROM NewUrl u
+            WHERE u.userId = :userId
+              AND (
+                  LOWER(u.newUrl) LIKE LOWER(CONCAT('%', :likeUrl, '%'))
+                  OR LOWER(u.originalUrl) LIKE LOWER(CONCAT('%', :likeUrl, '%'))
+                  OR (u.shortCode IS NOT NULL AND LOWER(u.shortCode) LIKE LOWER(CONCAT('%', :likeUrl, '%')))
+                  OR (u.customPath IS NOT NULL AND LOWER(u.customPath) LIKE LOWER(CONCAT('%', :likeUrl, '%')))
+                  OR (u.note IS NOT NULL AND LOWER(u.note) LIKE LOWER(CONCAT('%', :likeUrl, '%')))
+              )
+            """)
+    org.springframework.data.domain.Page<NewUrl> findAllByUserIdAndLikeUrl(
+            @Param("userId") Long userId,
+            @Param("likeUrl") String likeUrl,
+            org.springframework.data.domain.Pageable pageable
+    );
+
     long countByUserId(Long userId);
 
     @Query("SELECT COUNT(u) FROM NewUrl u WHERE u.userId = :userId AND u.isActive = true AND (u.expireAt IS NULL OR u.expireAt > :now) AND (u.usageLimit IS NULL OR u.clickCount < u.usageLimit)")

@@ -339,6 +339,141 @@
             color: var(--text);
         }
 
+        /* Global Search Dropdown */
+        .global-search-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            max-height: 480px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            animation: modalPop 0.15s ease-out;
+        }
+
+        .global-search-dropdown.show {
+            display: flex;
+        }
+
+        .search-results-header {
+            padding: 8px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: var(--surface-soft);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-result-item {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: background 0.12s ease;
+            text-decoration: none;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover,
+        .search-result-item.selected {
+            background: var(--surface-hover);
+        }
+
+        .search-result-main {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .search-result-short {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .search-result-dest {
+            font-size: 11.5px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .search-result-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .search-result-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .search-result-badge.active {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid var(--success-border);
+        }
+
+        .search-result-badge.expired {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid var(--danger-border);
+        }
+
+        .search-result-clicks {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--muted);
+        }
+
+        .search-empty-state {
+            padding: 24px 16px;
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-empty-state svg {
+            width: 22px;
+            height: 22px;
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
         /* User Menu */
         .header-right {
             display: flex;
@@ -1711,6 +1846,7 @@
         .spin-icon {
             animation: spin 0.8s linear infinite;
             color: #000000;
+            top: 30%;
         }
 
         .btn .spin-icon {
@@ -4901,7 +5037,7 @@
                         </svg>
                     </button>
 
-                    <div class="global-search-box">
+                    <div class="global-search-box" id="globalSearchContainer">
                         <svg class="search-icon" id="searchStaticIcon" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8" />
@@ -4914,6 +5050,7 @@
                         <input type="text" id="globalSearchInput" class="global-search-input"
                             placeholder="Search links by destination, short code, or keyword..." autocomplete="off">
                         <span class="search-kbd" id="searchKbd" title="Search links (⌘K)">⌘ K</span>
+                        <div class="global-search-dropdown" id="globalSearchDropdown" style="display:none;"></div>
                     </div>
                 </div>
 
@@ -7439,56 +7576,135 @@
         /*
          * 7. GLOBAL SEARCH & KEYBOARD SHORTCUTS (⌘K / ⌘N)
          */
+        let searchDebounceTimer = null;
+        let searchAbortSeq = 0;
+        let activeSearchIndex = -1;
+
+        function closeGlobalSearchDropdown() {
+            const dropdown = document.getElementById("globalSearchDropdown");
+            if (dropdown) {
+                dropdown.classList.remove("show");
+                dropdown.style.display = "none";
+                dropdown.innerHTML = "";
+            }
+            activeSearchIndex = -1;
+        }
+
         function setupGlobalSearch() {
             const searchInput = document.getElementById("globalSearchInput");
+            const searchDropdown = document.getElementById("globalSearchDropdown");
             const searchKbd = document.getElementById("searchKbd");
             const headerCreateBtn = document.getElementById("headerCreateLinkBtn");
+            const staticIcon = document.getElementById("searchStaticIcon");
+            const loadingIcon = document.getElementById("searchLoadingIcon");
 
-            // Click on ⌘K badge to search or focus
-            if (searchKbd) {
-                searchKbd.addEventListener("click", () => {
-                    const term = searchInput.value.trim();
-                    if (term) {
-                        performGlobalSearch(term);
-                    } else {
-                        searchInput.focus();
-                    }
-                });
-            }
+            // Debounced input listener as user types
+            searchInput.addEventListener("input", (e) => {
+                const term = e.target.value.trim();
+                clearTimeout(searchDebounceTimer);
 
-            // Input keydown: search on Enter or Command+K
+                if (!term) {
+                    closeGlobalSearchDropdown();
+                    if (staticIcon) staticIcon.style.display = "block";
+                    if (loadingIcon) loadingIcon.style.display = "none";
+                    return;
+                }
+
+                if (staticIcon) staticIcon.style.display = "none";
+                if (loadingIcon) loadingIcon.style.display = "block";
+
+                searchDebounceTimer = setTimeout(() => {
+                    fetchAndRenderSearchResults(term);
+                }, 250);
+            });
+
+            // Focus re-opens search results if query is present
+            searchInput.addEventListener("focus", () => {
+                const term = searchInput.value.trim();
+                if (term) {
+                    fetchAndRenderSearchResults(term);
+                }
+            });
+
+            // Keyboard navigation (ArrowDown, ArrowUp, Enter, Escape)
             searchInput.addEventListener("keydown", async (e) => {
                 const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
+                const dropdown = document.getElementById("globalSearchDropdown");
+                const isDropdownOpen = dropdown && dropdown.classList.contains("show");
+
+                if (e.key === "Escape") {
+                    closeGlobalSearchDropdown();
+                    return;
+                }
+
+                if (isDropdownOpen) {
+                    const items = dropdown.querySelectorAll(".search-result-item");
+                    if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        if (items.length > 0) {
+                            activeSearchIndex = (activeSearchIndex + 1) % items.length;
+                            updateActiveSearchItem(items);
+                        }
+                        return;
+                    } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        if (items.length > 0) {
+                            activeSearchIndex = (activeSearchIndex - 1 + items.length) % items.length;
+                            updateActiveSearchItem(items);
+                        }
+                        return;
+                    } else if (e.key === "Enter" && !isCmdK) {
+                        e.preventDefault();
+                        if (items.length > 0) {
+                            const targetItem = (activeSearchIndex >= 0 && activeSearchIndex < items.length)
+                                ? items[activeSearchIndex]
+                                : items[0];
+                            const pubId = targetItem.getAttribute("data-public-id");
+                            const shortLink = targetItem.getAttribute("data-short-link");
+                            closeGlobalSearchDropdown();
+                            await openEditModal(shortLink, pubId);
+                        }
+                        return;
+                    }
+                }
+
                 if (e.key === "Enter" || isCmdK) {
                     e.preventDefault();
                     const term = searchInput.value.trim();
                     if (!term) return;
-                    await performGlobalSearch(term);
+                    await fetchAndRenderSearchResults(term);
                 }
             });
 
-            // Global shortcuts:
-            // - Command+K (Cmd/Ctrl + K): Focus search or execute search if query exists
-            // - Command+N (Cmd/Ctrl + N): Auto-click Create Link button
-            window.addEventListener("keydown", async (e) => {
+            // Close dropdown when clicking outside search container
+            document.addEventListener("click", (e) => {
+                const container = document.getElementById("globalSearchContainer");
+                if (container && !container.contains(e.target)) {
+                    closeGlobalSearchDropdown();
+                }
+            });
+
+            // Click on ⌘K badge to focus
+            if (searchKbd) {
+                searchKbd.addEventListener("click", () => {
+                    searchInput.focus();
+                    searchInput.select();
+                });
+            }
+
+            // Global shortcuts: Command+K (focus), Command+N (create)
+            window.addEventListener("keydown", (e) => {
                 const isCmd = e.metaKey || e.ctrlKey;
                 if (!isCmd) return;
-
                 const key = e.key.toLowerCase();
 
                 if (key === "k") {
                     e.preventDefault();
+                    searchInput.focus();
+                    searchInput.select();
                     const term = searchInput.value.trim();
-                    if (document.activeElement === searchInput) {
-                        if (term) {
-                            await performGlobalSearch(term);
-                        }
-                    } else {
-                        searchInput.focus();
-                        searchInput.select();
-                        if (term) {
-                            await performGlobalSearch(term);
-                        }
+                    if (term) {
+                        fetchAndRenderSearchResults(term);
                     }
                 } else if (key === "n") {
                     e.preventDefault();
@@ -7501,49 +7717,127 @@
             });
         }
 
-        async function performGlobalSearch(term) {
+        function updateActiveSearchItem(items) {
+            items.forEach((item, idx) => {
+                if (idx === activeSearchIndex) {
+                    item.classList.add("selected");
+                    item.scrollIntoView({ block: "nearest" });
+                } else {
+                    item.classList.remove("selected");
+                }
+            });
+        }
+
+        async function fetchAndRenderSearchResults(term) {
+            const currentSeq = ++searchAbortSeq;
             const staticIcon = document.getElementById("searchStaticIcon");
             const loadingIcon = document.getElementById("searchLoadingIcon");
-            const searchKbd = document.getElementById("searchKbd");
-            const searchInput = document.getElementById("globalSearchInput");
 
             if (staticIcon) staticIcon.style.display = "none";
             if (loadingIcon) loadingIcon.style.display = "block";
-            if (searchKbd) searchKbd.style.visibility = "hidden";
-            if (searchInput) searchInput.disabled = true;
 
             try {
-                const localMatch = (appState.currentLinksData || []).find(l =>
-                    l.publicId === term ||
-                    l.shortLink === term ||
-                    (l.originalLink && l.originalLink.toLowerCase().includes(term.toLowerCase())) ||
-                    (l.customPath && l.customPath === term)
-                );
-
-                const targetPublicId = localMatch?.publicId || term;
-                const query = new URLSearchParams({ id: targetPublicId });
-                const response = await authenticatedFetch(`/link?${query.toString()}`);
+                const query = new URLSearchParams({
+                    likeUrl: term,
+                    page: "0",
+                    size: "10",
+                    sort: "createdAt,desc"
+                });
+                const response = await authenticatedFetch(`/link/list?${query.toString()}`);
                 const result = await parseResponse(response);
+                if (currentSeq !== searchAbortSeq) return;
 
-                if (response.ok && result.success && result.data) {
-                    const link = result.data;
-                    openUrlAnalyticsModal(link.newUrl, link.originalUrl, link.publicId);
-                } else if (localMatch) {
-                    openUrlAnalyticsModal(localMatch.shortLink, localMatch.originalLink, localMatch.publicId);
-                } else {
-                    showToast("warning", "No link found", "We couldn't find a PreonsURL link matching your search.");
-                }
+                const links = (result.success && result.data && Array.isArray(result.data.content))
+                    ? result.data.content
+                    : [];
+                renderGlobalSearchResults(links, term);
             } catch (err) {
-                showToast("error", "Search error", err.message || "Failed to search link.");
+                if (currentSeq !== searchAbortSeq) return;
+                const dropdown = document.getElementById("globalSearchDropdown");
+                if (dropdown) {
+                    dropdown.innerHTML = `
+                        <div class="search-empty-state">
+                            <div>Search error: ${escapeHtml(err.message || "Failed to search URLs")}</div>
+                        </div>
+                    `;
+                    dropdown.classList.add("show");
+                    dropdown.style.display = "flex";
+                }
             } finally {
-                if (staticIcon) staticIcon.style.display = "block";
-                if (loadingIcon) loadingIcon.style.display = "none";
-                if (searchKbd) searchKbd.style.visibility = "visible";
-                if (searchInput) {
-                    searchInput.disabled = false;
-                    searchInput.focus();
+                if (currentSeq === searchAbortSeq) {
+                    if (staticIcon) staticIcon.style.display = "block";
+                    if (loadingIcon) loadingIcon.style.display = "none";
                 }
             }
+        }
+
+        function renderGlobalSearchResults(links, term) {
+            const dropdown = document.getElementById("globalSearchDropdown");
+            if (!dropdown) return;
+            activeSearchIndex = -1;
+
+            if (!links || links.length === 0) {
+                dropdown.innerHTML = `
+                    <div class="search-empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <div>No links matching "<strong>${escapeHtml(term)}</strong>"</div>
+                    </div>
+                `;
+                dropdown.classList.add("show");
+                dropdown.style.display = "flex";
+                return;
+            }
+
+            let html = `
+                <div class="search-results-header">
+                    <span>Matching URLs (${links.length})</span>
+                    <span>Click or Enter to Edit</span>
+                </div>
+            `;
+
+            links.slice(0, 10).forEach((link, idx) => {
+                const shortLink = link.shortLink || "";
+                const originalLink = link.originalLink || "";
+                const pubId = link.publicId || "";
+                const clicks = link.timesClicked || 0;
+                const isExpired = link.isExpired;
+                const isEnabled = link.isEnabled;
+
+                const badgeClass = isExpired ? "expired" : (isEnabled ? "active" : "expired");
+                const badgeText = isExpired ? "Expired" : (isEnabled ? "Active" : "Disabled");
+
+                html += `
+                    <div class="search-result-item" data-index="${idx}" data-public-id="${escapeHtml(pubId)}" data-short-link="${escapeHtml(shortLink)}" role="button" tabindex="0">
+                        <div class="search-result-main">
+                            <div class="search-result-short">
+                                <span>${escapeHtml(shortLink)}</span>
+                            </div>
+                            <div class="search-result-dest" title="${escapeHtml(originalLink)}">${escapeHtml(originalLink)}</div>
+                        </div>
+                        <div class="search-result-meta">
+                            <span class="search-result-clicks">${clicks} clicks</span>
+                            <span class="search-result-badge ${badgeClass}">${badgeText}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            dropdown.innerHTML = html;
+            dropdown.classList.add("show");
+            dropdown.style.display = "flex";
+
+            // Attach click handler on each item to open edit modal using URL's info by id API
+            dropdown.querySelectorAll(".search-result-item").forEach(itemEl => {
+                itemEl.addEventListener("click", async () => {
+                    const pId = itemEl.getAttribute("data-public-id");
+                    const sLink = itemEl.getAttribute("data-short-link");
+                    closeGlobalSearchDropdown();
+                    await openEditModal(sLink, pId);
+                });
+            });
         }
 
         /*

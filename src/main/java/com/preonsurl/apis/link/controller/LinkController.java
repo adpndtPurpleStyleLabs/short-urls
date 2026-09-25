@@ -133,6 +133,7 @@ public class LinkController {
     )
     @GetMapping(value = {"/list", "/urls"}, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<Page<UrlListItemResponse>>> listUrls(
+            @RequestParam(value = "likeUrl", required = false) String likeUrl,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
         try {
@@ -142,9 +143,9 @@ public class LinkController {
                         .body(ApiResponse.error("Authentication required: user ID not found"));
             }
 
-            Page<UrlListItemResponse> response = newUrlService.listUrls(user.userId(), pageable);
-            log.info("Listed URLs for userId={}: page={}, size={}, totalElements={}",
-                    user.userId(), response.getNumber(), response.getSize(), response.getTotalElements());
+            Page<UrlListItemResponse> response = newUrlService.listUrls(user.userId(), likeUrl, pageable);
+            log.info("Listed URLs for userId={}: likeUrl='{}', page={}, size={}, totalElements={}",
+                    user.userId(), likeUrl, response.getNumber(), response.getSize(), response.getTotalElements());
             return ResponseEntity.ok(ApiResponse.success(response, "URLs retrieved successfully"));
         } catch (AccessDeniedException e) {
             log.warn("Access denied for list URLs: {}", e.getMessage());

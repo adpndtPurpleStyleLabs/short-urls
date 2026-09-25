@@ -1017,6 +1017,11 @@ public class NewUrlService {
 
     @Transactional(readOnly = true)
     public Page<UrlListItemResponse> listUrls(Long userId, Pageable pageable) {
+        return listUrls(userId, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UrlListItemResponse> listUrls(Long userId, String likeUrl, Pageable pageable) {
         if (userId == null) {
             throw new AccessDeniedException("User ID is required to fetch URL list");
         }
@@ -1029,7 +1034,9 @@ public class NewUrlService {
                   )
                 : pageable;
 
-        Page<NewUrl> page = repository.findAllByUserId(userId, effectivePageable);
+        Page<NewUrl> page = (likeUrl != null && !likeUrl.isBlank())
+                ? repository.findAllByUserIdAndLikeUrl(userId, likeUrl.trim(), effectivePageable)
+                : repository.findAllByUserId(userId, effectivePageable);
         if (page.isEmpty()) {
             return page.map(entity -> null);
         }
