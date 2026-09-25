@@ -56,6 +56,12 @@ public class ServingController {
     private final ProxyService proxyService;
     private final MirrorService mirrorService;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.preonsurl.apis.publiclink.service.PublicLinkService publicLinkService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.preonsurl.apis.publiclink.controller.PsecureServingController psecureServingController;
+
     public ServingController(NewUrlServingCacheService servingCacheService,
                              NewUrlRepository repository,
                              LinkAccessAndUsageService policyService,
@@ -290,6 +296,11 @@ public class ServingController {
                 );
             }
 
+            // Check if this is a psecure URL
+            if (psecureServingController != null && publicLinkService != null && publicLinkService.resolve(path).isPresent()) {
+                return psecureServingController.resolveAndServe(path, path, request);
+            }
+
             log.warn("Full url not found: '{}' [IP={}]", path, ipAddress);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
         }
@@ -438,6 +449,11 @@ public class ServingController {
                         proxyTarget.cookieIdentifier()
                 );
             }
+            // Check if this is a psecure URL
+            if (psecureServingController != null && publicLinkService != null && publicLinkService.resolve(path).isPresent()) {
+                return psecureServingController.processPinVerification(path, path, pin, request);
+            }
+
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
         }
 

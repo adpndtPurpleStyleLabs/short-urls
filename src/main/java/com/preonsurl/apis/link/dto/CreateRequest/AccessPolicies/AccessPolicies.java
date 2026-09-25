@@ -1,9 +1,11 @@
 package com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.preonsurl.apis.link.enums.AccessPolicyMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Controls who can access the shortened URL")
 public record AccessPolicies(
 

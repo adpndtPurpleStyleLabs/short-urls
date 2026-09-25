@@ -1,8 +1,10 @@
 package com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "PIN protection configuration")
 public record PinPolicy(
 

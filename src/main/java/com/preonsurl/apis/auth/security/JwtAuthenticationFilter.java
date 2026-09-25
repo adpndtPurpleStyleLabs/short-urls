@@ -37,13 +37,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        String token = null;
         String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+        if (authorizationHeader != null && authorizationHeader.startsWith(BEARER_PREFIX)) {
+            token = authorizationHeader.substring(BEARER_PREFIX.length()).trim();
+        } else if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie c : request.getCookies()) {
+                if ("preons_jwt".equals(c.getName()) && c.getValue() != null && !c.getValue().isBlank()) {
+                    token = c.getValue().trim();
+                    break;
+                }
+            }
+        }
+
+        if (token == null || token.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authorizationHeader.substring(BEARER_PREFIX.length()).trim();
         try {
             if (jwtService.isTokenValid(token)) {
                 String username = jwtService.extractUsername(token);

@@ -364,12 +364,56 @@
 
             <!-- 6 PIN Digit Input Boxes -->
             <div class="pin-container" role="group" aria-label="PIN Digits">
-                <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="pin-box-1" autocomplete="off" autofocus aria-label="PIN digit 1" />
-                <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="pin-box-2" autocomplete="off" aria-label="PIN digit 2" />
-                <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="pin-box-3" autocomplete="off" aria-label="PIN digit 3" />
-                <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="pin-box-4" autocomplete="off" aria-label="PIN digit 4" />
-                <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="pin-box-5" autocomplete="off" aria-label="PIN digit 5" />
-                <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="pin-box-6" autocomplete="off" aria-label="PIN digit 6" />
+
+                <input type="text"
+                       inputmode="numeric"
+                       maxlength="1"
+                       class="pin-box"
+                       id="pin-box-1"
+                       autocomplete="off"
+                       autofocus
+                       aria-label="PIN digit 1">
+
+                <input type="text"
+                       inputmode="numeric"
+                       maxlength="1"
+                       class="pin-box"
+                       id="pin-box-2"
+                       autocomplete="off"
+                       aria-label="PIN digit 2">
+
+                <input type="text"
+                       inputmode="numeric"
+                       maxlength="1"
+                       class="pin-box"
+                       id="pin-box-3"
+                       autocomplete="off"
+                       aria-label="PIN digit 3">
+
+                <input type="text"
+                       inputmode="numeric"
+                       maxlength="1"
+                       class="pin-box"
+                       id="pin-box-4"
+                       autocomplete="off"
+                       aria-label="PIN digit 4">
+
+                <input type="text"
+                       inputmode="numeric"
+                       maxlength="1"
+                       class="pin-box"
+                       id="pin-box-5"
+                       autocomplete="off"
+                       aria-label="PIN digit 5">
+
+                <input type="text"
+                       inputmode="numeric"
+                       maxlength="1"
+                       class="pin-box"
+                       id="pin-box-6"
+                       autocomplete="off"
+                       aria-label="PIN digit 6">
+
             </div>
 
             <!-- Unlock Button -->
@@ -416,85 +460,204 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
             const boxes = Array.from(document.querySelectorAll('.pin-box'));
             const hiddenInput = document.getElementById('pin-input');
             const form = document.getElementById('pin-form');
 
-            // Auto-focus first input
+            const MASK = '•';
+            const REVEAL_TIME = 500;
+
+            // Keep the actual digit separately from the displayed value.
+            const values = new Array(boxes.length).fill('');
+
+            // One timer per box.
+            const maskTimers = new Array(boxes.length).fill(null);
+
             if (boxes[0]) {
                 boxes[0].focus();
             }
 
             function updateHiddenInput() {
-                const pin = boxes.map(b => b.value).join('');
-                hiddenInput.value = pin;
+                hiddenInput.value = values.join('');
+            }
+
+            function maskDigit(index) {
+                if (!values[index]) {
+                    boxes[index].value = '';
+                    return;
+                }
+
+                boxes[index].value = MASK;
+            }
+
+            function revealDigit(index, digit) {
+
+                values[index] = digit;
+                boxes[index].value = digit;
+
+                // Cancel previous timer.
+                if (maskTimers[index]) {
+                    clearTimeout(maskTimers[index]);
+                }
+
+                // Hide after 500ms.
+                maskTimers[index] = setTimeout(() => {
+                    maskDigit(index);
+                    maskTimers[index] = null;
+                }, REVEAL_TIME);
+
+                updateHiddenInput();
             }
 
             boxes.forEach((box, index) => {
-                // Input handling
-                box.addEventListener('input', (e) => {
-                    const val = box.value.replace(/[^0-9]/g, '');
-                    box.value = val;
 
-                    if (val && index < boxes.length - 1) {
+                box.addEventListener('input', () => {
+
+                    const digit = box.value.replace(/\D/g, '').slice(-1);
+
+                    if (!digit) {
+                        values[index] = '';
+                        box.value = '';
+                        updateHiddenInput();
+                        return;
+                    }
+
+                    revealDigit(index, digit);
+
+                    // Move to next box.
+                    if (index < boxes.length - 1) {
                         boxes[index + 1].focus();
                     }
-                    updateHiddenInput();
                 });
 
-                // Key navigation
                 box.addEventListener('keydown', (e) => {
+
                     if (e.key === 'Backspace') {
-                        if (!box.value && index > 0) {
-                            boxes[index - 1].focus();
-                            boxes[index - 1].value = '';
-                            updateHiddenInput();
-                        } else {
+
+                        e.preventDefault();
+
+                        // If current box has a digit, remove it.
+                        if (values[index]) {
+
+                            values[index] = '';
+
+                            if (maskTimers[index]) {
+                                clearTimeout(maskTimers[index]);
+                                maskTimers[index] = null;
+                            }
+
                             box.value = '';
                             updateHiddenInput();
+
+                            return;
                         }
-                    } else if (e.key === 'ArrowLeft' && index > 0) {
+
+                        // Otherwise move backwards.
+                        if (index > 0) {
+
+                            const previousIndex = index - 1;
+
+                            values[previousIndex] = '';
+
+                            if (maskTimers[previousIndex]) {
+                                clearTimeout(maskTimers[previousIndex]);
+                                maskTimers[previousIndex] = null;
+                            }
+
+                            boxes[previousIndex].value = '';
+                            boxes[previousIndex].focus();
+
+                            updateHiddenInput();
+                        }
+
+                    } else if (
+                        e.key === 'ArrowLeft' &&
+                        index > 0
+                    ) {
+
+                        e.preventDefault();
                         boxes[index - 1].focus();
-                    } else if (e.key === 'ArrowRight' && index < boxes.length - 1) {
+
+                    } else if (
+                        e.key === 'ArrowRight' &&
+                        index < boxes.length - 1
+                    ) {
+
+                        e.preventDefault();
                         boxes[index + 1].focus();
                     }
                 });
 
-                // Paste handling for quick copy-paste of 4-6 digit PIN
+                // Paste support.
                 box.addEventListener('paste', (e) => {
-                    e.preventDefault();
-                    const pasteData = (e.clipboardData || window.clipboardData).getData('text');
-                    const digits = pasteData.replace(/[^0-9]/g, '').split('');
 
-                    if (digits.length > 0) {
-                        let curIndex = index;
-                        digits.forEach(d => {
-                            if (curIndex < boxes.length) {
-                                boxes[curIndex].value = d;
-                                curIndex++;
-                            }
-                        });
-                        updateHiddenInput();
-                        if (curIndex < boxes.length) {
-                            boxes[curIndex].focus();
-                        } else {
-                            boxes[boxes.length - 1].focus();
-                        }
+                    e.preventDefault();
+
+                    const pasteData =
+                        (e.clipboardData || window.clipboardData)
+                            .getData('text');
+
+                    const digits =
+                        pasteData
+                            .replace(/\D/g, '')
+                            .slice(0, boxes.length - index)
+                            .split('');
+
+                    if (!digits.length) {
+                        return;
                     }
+
+                    let currentIndex = index;
+
+                    digits.forEach(digit => {
+
+                        if (currentIndex >= boxes.length) {
+                            return;
+                        }
+
+                        revealDigit(currentIndex, digit);
+
+                        currentIndex++;
+                    });
+
+                    if (currentIndex < boxes.length) {
+                        boxes[currentIndex].focus();
+                    } else {
+                        boxes[boxes.length - 1].focus();
+                    }
+
+                    updateHiddenInput();
                 });
             });
 
-            // On submit
+            // Submit.
             form.addEventListener('submit', (e) => {
+
                 updateHiddenInput();
-                if (!hiddenInput.value || hiddenInput.value.length < 4) {
+
+                if (
+                    !hiddenInput.value ||
+                    hiddenInput.value.length < 4
+                ) {
+
                     e.preventDefault();
-                    // Shake container and focus first empty box
-                    const emptyBox = boxes.find(b => !b.value) || boxes[0];
-                    emptyBox.focus();
-                    const container = document.querySelector('.pin-container');
+
+                    const emptyIndex =
+                        values.findIndex(value => !value);
+
+                    const targetIndex =
+                        emptyIndex >= 0 ? emptyIndex : 0;
+
+                    boxes[targetIndex].focus();
+
+                    const container =
+                        document.querySelector('.pin-container');
+
                     container.classList.remove('error-shake');
-                    void container.offsetWidth; // trigger reflow
+
+                    void container.offsetWidth;
+
                     container.classList.add('error-shake');
                 }
             });

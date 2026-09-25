@@ -51,6 +51,11 @@ public class AuthUiController {
         return "contact";
     }
 
+    @GetMapping("/create")
+    public String createPublicLink(Model model) {
+        return "public-create";
+    }
+
     @GetMapping("/login")
     public String showLoginPage(
             @RequestParam(value = "registered", required = false, defaultValue = "false") boolean registered,
