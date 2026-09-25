@@ -244,6 +244,34 @@ public class LinkController {
     }
 
     @Operation(
+            summary = "Get available tags",
+            description = "Retrieves all distinct tags created by the authenticated user across their short links. Requires authentication.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+    @GetMapping(value = "/tags", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<List<String>>> getUserTags(
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        try {
+            AuthenticatedUser user = resolveUser(currentUser);
+            if (user == null || user.userId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Authentication required: user ID not found"));
+            }
+
+            List<String> tags = newUrlService.getUserTags(user.userId());
+            log.info("Retrieved {} distinct tags for userId={}", tags.size(), user.userId());
+            return ResponseEntity.ok(ApiResponse.success(tags, "Tags retrieved successfully"));
+        } catch (Exception e) {
+            log.error("Failed to retrieve user tags: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal Server Error"));
+        }
+    }
+
+    @Operation(
             summary = "Check CORS configuration",
             description = "Validates CORS headers on the destination target URL for Proxy or Mirror delivery mode. Requires authentication.",
             security = {

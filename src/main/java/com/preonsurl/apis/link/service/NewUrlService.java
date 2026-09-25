@@ -1045,6 +1045,18 @@ public class NewUrlService {
         Map<Long, UsagePolicy> policyMap = usagePolicyRepository.findAllByShortUrlIdIn(ids).stream()
                 .collect(Collectors.toMap(UsagePolicy::getShortUrlId, p -> p, (p1, p2) -> p1));
 
+        Map<Long, List<String>> computedTagsMap = new HashMap<>();
+        if (!ids.isEmpty()) {
+            try {
+                computedTagsMap = tagRepository.findAllByUrlIdIn(ids).stream()
+                        .filter(t -> t.getTag() != null && !t.getTag().isBlank())
+                        .collect(Collectors.groupingBy(NewUrlTag::getUrlId, Collectors.mapping(NewUrlTag::getTag, Collectors.toList())));
+            } catch (Exception e) {
+                log.warn("Failed to retrieve tags for shortUrlIds: {}", e.getMessage());
+            }
+        }
+        final Map<Long, List<String>> tagsMap = computedTagsMap;
+
         Map<Long, LocalDateTime> latestAccessMap = new HashMap<>();
         if (!ids.isEmpty()) {
             try {
@@ -1085,6 +1097,8 @@ public class NewUrlService {
             Instant lastUsedAt = (latestAccess != null) ? latestAccess.atZone(ZoneId.systemDefault()).toInstant() : null;
             String lastUsedAgo = (lastUsedAt != null) ? toTimeAgo(lastUsedAt) : null;
 
+            List<String> tags = tagsMap.getOrDefault(entity.getId(), List.of());
+
             return new UrlListItemResponse(
                     entity.getNewUrl(),
                     entity.getOriginalUrl(),
@@ -1097,9 +1111,18 @@ public class NewUrlService {
                     createdAgo,
                     lastUsedAt,
                     lastUsedAgo,
-                    entity.getPublicId()
+                    entity.getPublicId(),
+                    tags
             );
         });
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getUserTags(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return tagRepository.findDistinctTagsByUserId(userId);
     }
 
     public static String toTimeAgo(Instant instant) {

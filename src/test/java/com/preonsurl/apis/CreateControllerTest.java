@@ -1779,5 +1779,45 @@ class CreateControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message", containsString("does not belong")));
     }
+
+    @Test
+    void getUserTags_success() throws Exception {
+        String createJson1 = """
+                {
+                    "url": "https://example.com/tag-test-1",
+                    "tags": ["spring", "java", "backend"]
+                }
+                """;
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createJson1))
+                .andExpect(status().isOk());
+
+        String createJson2 = """
+                {
+                    "url": "https://example.com/tag-test-2",
+                    "tags": ["java", "cloud"]
+                }
+                """;
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createJson2))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/link/tags")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data", hasItems("spring", "java", "backend", "cloud")));
+
+        // Verify /link/list returns the tags
+        mockMvc.perform(get("/link/list")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content[0].tags").isArray());
+    }
 }
 
