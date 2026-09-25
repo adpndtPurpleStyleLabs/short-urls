@@ -35,7 +35,7 @@ public class MirrorUrlResolver {
      * @param shortCode   The mirror shortCode or prefix to sanitize out of query parameters
      * @return The fully resolved upstream target URI
      */
-    public URI resolveTargetUri(URI originalUri, String mirrorPath, String queryString, String shortCode) {
+    public URI resolveTargetUri(URI originalUri, String mirrorPath, String queryString, String... identifiers) {
         if (originalUri == null) {
             throw new IllegalArgumentException("originalUri cannot be null");
         }
@@ -67,8 +67,8 @@ public class MirrorUrlResolver {
             throw new IllegalArgumentException("Mirror path escapes allowed origin: " + target);
         }
 
-        // Clean mirror shortCode out of query parameters before forwarding to upstream
-        String cleanedQuery = cleanQueryString(queryString, shortCode);
+        // Clean mirror identifiers/shortCode out of query parameters before forwarding to upstream
+        String cleanedQuery = cleanQueryString(queryString, identifiers);
 
         // Preserve / append query string if present and not already part of target
         if (cleanedQuery != null && !cleanedQuery.isBlank()) {
@@ -97,50 +97,75 @@ public class MirrorUrlResolver {
     }
 
     /**
-     * Sanitizes mirror shortCode prefix out of query strings so upstream servers receive
-     * clean query parameters (e.g. {"key":"home"} instead of {"key":"/2QflRxFUHLv"}).
+     * Sanitizes mirror shortCode prefix and identifiers out of query strings so upstream servers receive
+     * clean query parameters (e.g. {"key":"home"} instead of {"key":"/28PDXdIMXrP"}).
      *
      * @param queryString Raw or URL-encoded query string from client request
-     * @param shortCode   The mirror shortCode
+     * @param identifiers Mirror shortCodes, custom paths, or combined prefixes to sanitize
      * @return The cleaned query string ready for upstream transmission
      */
-    public String cleanQueryString(String queryString, String shortCode) {
-        if (queryString == null || queryString.isBlank() || shortCode == null || shortCode.isBlank()) {
+    public String cleanQueryString(String queryString, String... identifiers) {
+        if (queryString == null || queryString.isBlank() || identifiers == null || identifiers.length == 0) {
             return queryString;
         }
 
-        String sc = shortCode.trim();
-        while (sc.startsWith("/")) {
-            sc = sc.substring(1);
+        java.util.Set<String> tokenSet = new java.util.LinkedHashSet<>();
+        for (String id : identifiers) {
+            if (id != null && !id.isBlank()) {
+                String clean = id.trim();
+                while (clean.startsWith("/")) clean = clean.substring(1);
+                while (clean.endsWith("/")) clean = clean.substring(0, clean.length() - 1);
+                if (!clean.isBlank()) {
+                    tokenSet.add(clean);
+                    if (clean.contains("/")) {
+                        for (String part : clean.split("/")) {
+                            String p = part.trim();
+                            if (!p.isBlank()) {
+                                tokenSet.add(p);
+                            }
+                        }
+                    }
+                }
+            }
         }
-        while (sc.endsWith("/")) {
-            sc = sc.substring(0, sc.length() - 1);
-        }
-        if (sc.isBlank()) {
+
+        if (tokenSet.isEmpty()) {
             return queryString;
         }
+
+        java.util.List<String> sortedTokens = tokenSet.stream()
+                .sorted((a, b) -> Integer.compare(b.length(), a.length()))
+                .toList();
 
         String cleaned = queryString;
 
-        // 1. JSON key alone equals shortCode (root page) -> map to "home"
-        // Plain: "key":"/shortCode" or "key":"/shortCode/"
-        cleaned = cleaned.replaceAll("(\"key\"\\s*:\\s*\")/?" + Pattern.quote(sc) + "/?(\")", "$1home$2");
-        // URL-encoded: %22key%22%3A%22%2FshortCode%22
-        cleaned = cleaned.replaceAll("(?i)(%22key%22\\s*(?::|%3A)\\s*(?:%22|\"))(?:/|%2F)?" + Pattern.quote(sc) + "(?:/|%2F)?((?:%22|\"))", "$1home$2");
+        for (String sc : sortedTokens) {
+            String quoted = Pattern.quote(sc);
 
-        // 2. JSON key with subpath: "key":"/shortCode/path" -> "key":"/path"
-        cleaned = cleaned.replaceAll("(\"key\"\\s*:\\s*\")/?" + Pattern.quote(sc) + "/", "$1/");
-        cleaned = cleaned.replaceAll("(?i)(%22key%22\\s*(?::|%3A)\\s*(?:%22|\"))(?:/|%2F)?" + Pattern.quote(sc) + "(%2F|/)", "$1$2");
+            // 1. JSON key alone equals token (root page) -> map to "home"
+            // Plain: "key":"/token" or "key":"token" or "key":"/token/"
+            cleaned = cleaned.replaceAll("(\"key\"\\s*:\\s*\")/?" + quoted + "/?(\")", "$1home$2");
+            // URL-encoded: %22key%22%3A%22%2Ftoken%22
+            cleaned = cleaned.replaceAll("(?i)(%22key%22\\s*(?::|%3A)\\s*(?:%22|\"))(?:/|%2F)?" + quoted + "(?:/|%2F)?((?:%22|\"))", "$1home$2");
 
-        // 3. Any /shortCode/ in query string -> /
-        cleaned = cleaned.replace("/" + sc + "/", "/");
-        cleaned = cleaned.replaceAll("(?i)%2F" + Pattern.quote(sc) + "%2F", "%2F");
-        cleaned = cleaned.replaceAll("(?i)%2F" + Pattern.quote(sc) + "/", "/");
-        cleaned = cleaned.replaceAll("(?i)/" + Pattern.quote(sc) + "%2F", "%2F");
+            // 2. JSON key with subpath: "key":"/token/path" -> "key":"/path"
+            cleaned = cleaned.replaceAll("(\"key\"\\s*:\\s*\")/?" + quoted + "/", "$1/");
+            cleaned = cleaned.replaceAll("(?i)(%22key%22\\s*(?::|%3A)\\s*(?:%22|\"))(?:/|%2F)?" + quoted + "(%2F|/)", "$1$2");
 
-        // 4. Any standalone /shortCode at end of value (before &, ", ', }, %, or end of string)
-        cleaned = cleaned.replaceAll("/" + Pattern.quote(sc) + "(?=[&\"'}\\]]|%22|%27|%7D|$)", "/");
-        cleaned = cleaned.replaceAll("(?i)%2F" + Pattern.quote(sc) + "(?=[&\"'}\\]]|%22|%27|%7D|$)", "%2F");
+            // 3. Any /token/ in query string -> /
+            cleaned = cleaned.replace("/" + sc + "/", "/");
+            cleaned = cleaned.replaceAll("(?i)%2F" + quoted + "%2F", "%2F");
+            cleaned = cleaned.replaceAll("(?i)%2F" + quoted + "/", "/");
+            cleaned = cleaned.replaceAll("(?i)/" + quoted + "%2F", "%2F");
+
+            // 4. Any standalone /token at end of value (before &, ", ', }, %, or end of string)
+            cleaned = cleaned.replaceAll("/" + quoted + "(?=[&\"'}\\]]|%22|%27|%7D|$)", "/");
+            cleaned = cleaned.replaceAll("(?i)%2F" + quoted + "(?=[&\"'}\\]]|%22|%27|%7D|$)", "%2F");
+        }
+
+        // 5. If key was left as root "/" or empty "", map to "home"
+        cleaned = cleaned.replaceAll("(\"key\"\\s*:\\s*\")/+(\")", "$1home$2");
+        cleaned = cleaned.replaceAll("(?i)(%22key%22\\s*(?::|%3A)\\s*(?:%22|\"))(?:/|%2F)+((?:%22|\"))", "$1home$2");
 
         return cleaned;
     }

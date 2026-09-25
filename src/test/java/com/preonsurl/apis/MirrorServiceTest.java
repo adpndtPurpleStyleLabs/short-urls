@@ -225,10 +225,32 @@ class MirrorServiceTest {
     @Test
     void mirror_methodNotAllowed_onUnsupportedMethod() {
         NewUrl entity = createMockEntity(baseUrl + "/sale", "1BiVqa8OZJl");
-        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/1BiVqa8OZJl");
+        MockHttpServletRequest request = new MockHttpServletRequest("TRACE", "/1BiVqa8OZJl");
 
         ResponseEntity<?> response = mirrorService.mirrorRequest("1BiVqa8OZJl", "/", entity, request);
         assertEquals(HttpStatus.METHOD_NOT_ALLOWED, response.getStatusCode());
+    }
+
+    @Test
+    void mirror_postMethod_forwardsRequestBodyAndReturnsResponse() throws Exception {
+        server.createContext("/napi/getUserInfoAPI", exchange -> {
+            byte[] requestBody = exchange.getRequestBody().readAllBytes();
+            String responseStr = "{\"status\":\"ok\",\"received\":" + requestBody.length + "}";
+            byte[] bytes = responseStr.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        });
+
+        NewUrl entity = createMockEntity(baseUrl + "/sale", "1BiVqa8OZJl");
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/1BiVqa8OZJl/napi/getUserInfoAPI");
+        request.setContent("{\"userId\":123}".getBytes(StandardCharsets.UTF_8));
+        request.setContentType("application/json");
+
+        ResponseEntity<?> response = mirrorService.mirrorRequest("1BiVqa8OZJl", "/napi/getUserInfoAPI", entity, request);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test

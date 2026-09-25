@@ -52,6 +52,10 @@ public class MirrorHtmlRewriter {
      * @return The rewritten HTML content
      */
     public String rewrite(String html, String shortCode, URI currentDocUri) {
+        return rewrite(html, shortCode, currentDocUri, new String[0]);
+    }
+
+    public String rewrite(String html, String shortCode, URI currentDocUri, String... additionalTokens) {
         if (html == null || html.isBlank()) {
             return html;
         }
@@ -135,48 +139,93 @@ public class MirrorHtmlRewriter {
             }
 
             // Inject client-side fetch and XMLHttpRequest interceptor to prevent browser CORS violations
-            injectClientInterceptor(doc, shortCode, upstreamOrigin, host, mirrorPrefix);
+            injectClientInterceptor(doc, shortCode, upstreamOrigin, host, mirrorPrefix, additionalTokens);
         }
 
         return doc.outerHtml();
     }
 
-    private void injectClientInterceptor(Document doc, String shortCode, String upstreamOrigin, String upstreamHost, String mirrorPrefix) {
-        String cleanSc = shortCode.trim();
-        while (cleanSc.startsWith("/")) {
-            cleanSc = cleanSc.substring(1);
+    private void injectClientInterceptor(Document doc, String shortCode, String upstreamOrigin, String upstreamHost, String mirrorPrefix, String... additionalTokens) {
+        java.util.Set<String> tokenSet = new java.util.LinkedHashSet<>();
+        if (shortCode != null && !shortCode.isBlank()) {
+            String clean = shortCode.trim();
+            while (clean.startsWith("/")) clean = clean.substring(1);
+            while (clean.endsWith("/")) clean = clean.substring(0, clean.length() - 1);
+            if (!clean.isBlank()) {
+                tokenSet.add(clean);
+                if (clean.contains("/")) {
+                    for (String part : clean.split("/")) {
+                        String p = part.trim();
+                        if (!p.isBlank()) tokenSet.add(p);
+                    }
+                }
+            }
         }
-        while (cleanSc.endsWith("/")) {
-            cleanSc = cleanSc.substring(0, cleanSc.length() - 1);
+        if (additionalTokens != null) {
+            for (String tok : additionalTokens) {
+                if (tok != null && !tok.isBlank()) {
+                    String clean = tok.trim();
+                    while (clean.startsWith("/")) clean = clean.substring(1);
+                    while (clean.endsWith("/")) clean = clean.substring(0, clean.length() - 1);
+                    if (!clean.isBlank()) {
+                        tokenSet.add(clean);
+                        if (clean.contains("/")) {
+                            for (String part : clean.split("/")) {
+                                String p = part.trim();
+                                if (!p.isBlank()) tokenSet.add(p);
+                            }
+                        }
+                    }
+                }
+            }
         }
+
+        java.util.List<String> sortedTokens = tokenSet.stream()
+                .sorted((a, b) -> Integer.compare(b.length(), a.length()))
+                .toList();
+
+        StringBuilder tokensJson = new StringBuilder("[");
+        for (int i = 0; i < sortedTokens.size(); i++) {
+            if (i > 0) tokensJson.append(",");
+            tokensJson.append("\"").append(sortedTokens.get(i).replace("\"", "\\\"")).append("\"");
+        }
+        tokensJson.append("]");
 
         String template = """
                 (function() {
                     var upstreamOrigin = '__UPSTREAM_ORIGIN__';
                     var upstreamHost = '__UPSTREAM_HOST__';
                     var mirrorPrefix = '__MIRROR_PREFIX__';
-                    var shortCode = '__SHORT_CODE__';
+                    var tokens = __TOKENS_JSON__;
 
                     function cleanQuery(qs) {
                         if (!qs || typeof qs !== 'string') return qs;
-                        var sc = shortCode.replace(/[^a-zA-Z0-9]/g, '\\\\$&');
-                        // 1. key equals shortCode alone (root page) -> "home"
-                        qs = qs.replace(new RegExp('("key"\\\\s*:\\\\s*")/?' + sc + '/?(")', 'g'), '$1home$2');
-                        qs = qs.replace(new RegExp('(%22key%22\\\\s*(?::|%3A)\\\\s*(?:%22|"))(?:/|%2F)?' + sc + '(?:/|%2F)?((?:%22|"))', 'gi'), '$1home$2');
+                        for (var i = 0; i < tokens.length; i++) {
+                            var tok = tokens[i];
+                            if (!tok) continue;
+                            var sc = tok.replace(/[^a-zA-Z0-9_\\-]/g, '\\\\$&');
+                            // 1. key equals token alone (root page) -> "home"
+                            qs = qs.replace(new RegExp('("key"\\\\s*:\\\\s*")/?' + sc + '/?(")', 'g'), '$1home$2');
+                            qs = qs.replace(new RegExp('(%22key%22\\\\s*(?::|%3A)\\\\s*(?:%22|"))(?:/|%2F)?' + sc + '(?:/|%2F)?((?:%22|"))', 'gi'), '$1home$2');
 
-                        // 2. key with subpath: "key":"/shortCode/path" -> "key":"/path"
-                        qs = qs.replace(new RegExp('("key"\\\\s*:\\\\s*")/?' + sc + '/', 'g'), '$1/');
-                        qs = qs.replace(new RegExp('(%22key%22\\\\s*(?::|%3A)\\\\s*(?:%22|"))(?:/|%2F)?' + sc + '(%2F|/)', 'gi'), '$1$2');
+                            // 2. key with subpath: "key":"/token/path" -> "key":"/path"
+                            qs = qs.replace(new RegExp('("key"\\\\s*:\\\\s*")/?' + sc + '/', 'g'), '$1/');
+                            qs = qs.replace(new RegExp('(%22key%22\\\\s*(?::|%3A)\\\\s*(?:%22|"))(?:/|%2F)?' + sc + '(%2F|/)', 'gi'), '$1$2');
 
-                        // 3. Any /shortCode/ in query string -> /
-                        qs = qs.replace(new RegExp('/' + sc + '/', 'g'), '/');
-                        qs = qs.replace(new RegExp('%2F' + sc + '%2F', 'gi'), '%2F');
-                        qs = qs.replace(new RegExp('%2F' + sc + '/', 'gi'), '/');
-                        qs = qs.replace(new RegExp('/' + sc + '%2F', 'gi'), '%2F');
+                            // 3. Any /token/ in query string -> /
+                            qs = qs.replace(new RegExp('/' + sc + '/', 'g'), '/');
+                            qs = qs.replace(new RegExp('%2F' + sc + '%2F', 'gi'), '%2F');
+                            qs = qs.replace(new RegExp('%2F' + sc + '/', 'gi'), '/');
+                            qs = qs.replace(new RegExp('/' + sc + '%2F', 'gi'), '%2F');
 
-                        // 4. Any standalone /shortCode at end of value
-                        qs = qs.replace(new RegExp('/' + sc + '(?=[&"\\'\\\\}\\]]|%22|%27|%7D|$)', 'g'), '/');
-                        qs = qs.replace(new RegExp('%2F' + sc + '(?=[&"\\'\\\\}\\]]|%22|%27|%7D|$)', 'gi'), '%2F');
+                            // 4. Any standalone /token at end of value
+                            qs = qs.replace(new RegExp('/' + sc + '(?=[&"\\'\\\\}\\]]|%22|%27|%7D|$)', 'g'), '/');
+                            qs = qs.replace(new RegExp('%2F' + sc + '(?=[&"\\'\\\\}\\]]|%22|%27|%7D|$)', 'gi'), '%2F');
+                        }
+
+                        // 5. If key was left as root "/" or empty "", map to "home"
+                        qs = qs.replace(/("key"\\s*:\\s*")\\/+(")/g, '$1home$2');
+                        qs = qs.replace(/(%22key%22\\s*(?::|%3A)\\s*(?:%22|"))(?:%2F|\\/)+((?:%22|"))/gi, '$1home$2');
 
                         return qs;
                     }
@@ -263,7 +312,7 @@ public class MirrorHtmlRewriter {
                 .replace("__UPSTREAM_ORIGIN__", upstreamOrigin)
                 .replace("__UPSTREAM_HOST__", upstreamHost)
                 .replace("__MIRROR_PREFIX__", mirrorPrefix)
-                .replace("__SHORT_CODE__", cleanSc);
+                .replace("__TOKENS_JSON__", tokensJson.toString());
 
         Element scriptTag = doc.createElement("script");
         scriptTag.attr("id", "__preons_mirror_interceptor");

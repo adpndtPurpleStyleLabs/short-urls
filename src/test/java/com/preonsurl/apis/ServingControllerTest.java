@@ -699,4 +699,94 @@ class ServingControllerTest {
                 .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("GET")))
                 .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsString("X-Requested-With")));
     }
+
+    @Test
+    void servingMirrorMode_customPathAndShortCode_rootAndApiSubrequestsWork() throws Exception {
+        ProxyResourceValidator.allowLoopbackForTesting = true;
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+
+        byte[] rootHtml = "<html><body><h1>Pernias Mirror</h1></body></html>".getBytes(StandardCharsets.UTF_8);
+        byte[] footerJson = "{\"footer\":\"ok\"}".getBytes(StandardCharsets.UTF_8);
+        byte[] userInfoJson = "{\"user\":\"guest\"}".getBytes(StandardCharsets.UTF_8);
+
+        server.createContext("/", exchange -> {
+            String path = exchange.getRequestURI().getPath();
+            if ("/".equals(path) || path.isEmpty()) {
+                exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+                exchange.sendResponseHeaders(200, rootHtml.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(rootHtml);
+                }
+            } else if ("/napi/getFooterData".equals(path)) {
+                String query = exchange.getRequestURI().getQuery();
+                // Upstream requires query to be sanitized to key home
+                if (query != null && query.contains("home")) {
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, footerJson.length);
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(footerJson);
+                    }
+                } else {
+                    byte[] err = "not found footer content".getBytes(StandardCharsets.UTF_8);
+                    exchange.sendResponseHeaders(400, err.length);
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(err);
+                    }
+                }
+            } else if ("/napi/getUserInfoAPI".equals(path)) {
+                if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, userInfoJson.length);
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(userInfoJson);
+                    }
+                } else {
+                    exchange.sendResponseHeaders(405, -1);
+                }
+            } else {
+                exchange.sendResponseHeaders(404, -1);
+            }
+        });
+
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            String upstreamBase = "http://127.0.0.1:" + port + "/";
+            NewUrl mirrorUrl = new NewUrl(
+                    "28PDXdIMXrP",
+                    upstreamBase,
+                    "dscsc",
+                    "http://localhost/dscsc/28PDXdIMXrP",
+                    Instant.now().plus(30, ChronoUnit.DAYS),
+                    null,
+                    LinkMode.MIRROR
+            );
+            shortUrlRepository.save(mirrorUrl);
+
+            // 1. Root mirror request on customPath/shortCode must resolve root page (200 OK, not 410 or 404)
+            mockMvc.perform(get("/dscsc/28PDXdIMXrP")
+                            .header("User-Agent", "Mozilla/5.0"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString("Pernias Mirror")));
+
+            // 2. Subrequest with contaminated query parameter must be cleaned to home and return 200 OK (not 400 Bad Request)
+            mockMvc.perform(get("/dscsc/napi/getFooterData?queryData={\"key\":\"/28PDXdIMXrP\"}")
+                            .header("User-Agent", "Mozilla/5.0"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString("ok")));
+
+            // 3. POST subrequest to napi/getUserInfoAPI must be forwarded as POST and return 200 OK (not 405 Method Not Allowed)
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/dscsc/napi/getUserInfoAPI")
+                            .header("User-Agent", "Mozilla/5.0")
+                            .header("Content-Type", "application/json")
+                            .content("{\"guest\":true}"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString("guest")));
+
+        } finally {
+            ProxyResourceValidator.allowLoopbackForTesting = false;
+            server.stop(0);
+        }
+    }
 }

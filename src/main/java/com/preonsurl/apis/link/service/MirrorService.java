@@ -68,7 +68,11 @@ public class MirrorService {
             "if-range",
             "if-none-match",
             "if-modified-since",
-            "cache-control"
+            "cache-control",
+            "content-type",
+            "origin",
+            "authorization",
+            "x-requested-with"
     );
 
     private static final Set<String> FORWARDED_RESPONSE_HEADERS = Set.of(
@@ -133,24 +137,33 @@ public class MirrorService {
             NewUrl entity,
             HttpServletRequest request
     ) {
-        // Enforce supported HTTP methods in V1
-        String method = request.getMethod();
+        // Enforce supported HTTP methods
+        String method = request.getMethod() != null ? request.getMethod().toUpperCase(Locale.ROOT) : "GET";
         if ("OPTIONS".equalsIgnoreCase(method)) {
             HttpHeaders corsHeaders = new HttpHeaders();
             applyCorsHeaders(corsHeaders, request);
             return ResponseEntity.noContent().headers(corsHeaders).build();
         }
-        if (!"GET".equalsIgnoreCase(method) && !"HEAD".equalsIgnoreCase(method)) {
+        if (!Set.of("GET", "HEAD", "POST", "PUT", "DELETE", "PATCH").contains(method)) {
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
-                    .body(ApiResponse.error("Method '" + method + "' is not supported in MIRROR mode. Only GET and HEAD are supported in V1."));
+                    .body(ApiResponse.error("Method '" + method + "' is not supported in MIRROR mode."));
         }
 
         Instant startTime = Instant.now();
         URI originalUri = URI.create(entity.getOriginalUrl());
         URI targetUri;
 
+        String[] identifiers = entity != null
+                ? new String[]{
+                        shortCode,
+                        entity.getShortCode(),
+                        entity.getCustomPath(),
+                        (entity.getCustomPath() != null && entity.getShortCode() != null ? entity.getCustomPath() + "/" + entity.getShortCode() : null)
+                }
+                : new String[]{shortCode};
+
         try {
-            targetUri = urlResolver.resolveTargetUri(originalUri, mirrorPath, request.getQueryString(), shortCode);
+            targetUri = urlResolver.resolveTargetUri(originalUri, mirrorPath, request.getQueryString(), identifiers);
             targetUri = ProxyResourceValidator.validateAndNormalizeUri(targetUri.toString());
         } catch (IllegalArgumentException e) {
             log.warn("Rejected mirror request for shortCode '{}', path '{}': {}", shortCode, mirrorPath, e.getMessage());
@@ -159,7 +172,7 @@ public class MirrorService {
         }
 
         try {
-            return executeWithRedirects(shortCode, originalUri, targetUri, mirrorPath, request, startTime);
+            return executeWithRedirects(shortCode, originalUri, targetUri, mirrorPath, request, startTime, identifiers);
         } catch (HttpTimeoutException e) {
             log.warn("Upstream mirror request timed out for shortCode '{}', host '{}'", shortCode, targetUri.getHost());
             return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
@@ -185,7 +198,8 @@ public class MirrorService {
             URI initialTargetUri,
             String mirrorPath,
             HttpServletRequest clientRequest,
-            Instant startTime
+            Instant startTime,
+            String[] identifiers
     ) throws Exception {
         URI currentUri = initialTargetUri;
         int redirectCount = 0;
@@ -280,7 +294,7 @@ public class MirrorService {
             // Determine if body should be rewritten
             if ("text/html".equals(mimeType)) {
                 String html = readBodyAsString(upstreamResponse.body(), contentEncoding);
-                String rewrittenHtml = htmlRewriter.rewrite(html, shortCode, currentUri);
+                String rewrittenHtml = htmlRewriter.rewrite(html, shortCode, currentUri, identifiers);
                 byte[] bytes = rewrittenHtml.getBytes(StandardCharsets.UTF_8);
 
                 HttpHeaders headers = rewriteMirrorResponseHeaders(upstreamResponse, shortCode, true, clientRequest);
@@ -314,17 +328,39 @@ public class MirrorService {
     }
 
     private HttpRequest buildUpstreamRequest(URI uri, URI originalUri, HttpServletRequest clientRequest) {
+        String method = clientRequest != null && clientRequest.getMethod() != null
+                ? clientRequest.getMethod().toUpperCase(Locale.ROOT)
+                : "GET";
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
                 .timeout(Duration.ofSeconds(60));
 
-        if ("HEAD".equalsIgnoreCase(clientRequest.getMethod())) {
+        if ("HEAD".equalsIgnoreCase(method)) {
             builder.method("HEAD", HttpRequest.BodyPublishers.noBody());
+        } else if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)
+                || "PATCH".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
+            byte[] bodyBytes = readRequestBody(clientRequest);
+            HttpRequest.BodyPublisher publisher = bodyBytes.length > 0
+                    ? HttpRequest.BodyPublishers.ofByteArray(bodyBytes)
+                    : HttpRequest.BodyPublishers.noBody();
+            builder.method(method, publisher);
         } else {
             builder.GET();
         }
 
         forwardRequestHeaders(builder, clientRequest, originalUri);
         return builder.build();
+    }
+
+    private byte[] readRequestBody(HttpServletRequest request) {
+        if (request == null) {
+            return new byte[0];
+        }
+        try {
+            return request.getInputStream().readAllBytes();
+        } catch (Exception e) {
+            log.warn("Failed to read client request body: {}", e.getMessage());
+            return new byte[0];
+        }
     }
 
     private void forwardRequestHeaders(HttpRequest.Builder builder, HttpServletRequest clientRequest, URI originalUri) {

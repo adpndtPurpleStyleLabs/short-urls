@@ -33,6 +33,8 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
 
     Optional<NewUrl> findByCustomPath(String customPath);
 
+    Optional<NewUrl> findByCustomPathAndShortCode(String customPath, String shortCode);
+
     boolean existsByShortCode(String shortCode);
 
     org.springframework.data.domain.Page<NewUrl> findAllByUserId(Long userId, org.springframework.data.domain.Pageable pageable);

@@ -136,4 +136,46 @@ class MirrorUrlResolverTest {
         URI resolvedSubpath = resolver.resolveTargetUri(base, "/napi/getFooterData", subpathQuery, shortCode);
         assertEquals("https://www.perniaspopupshop.com/napi/getFooterData?queryData=%7B%22key%22%3A%22%2Fdesigners%22%7D", resolvedSubpath.toString());
     }
+
+    @Test
+    void testCleanQueryStringWithCustomPathAndShortCode() {
+        String customPath = "dscsc";
+        String shortCode = "28PDXdIMXrP";
+
+        // Plain JSON root key matching shortCode alone
+        assertEquals(
+                "queryData={\"key\":\"home\"}",
+                resolver.cleanQueryString("queryData={\"key\":\"/28PDXdIMXrP\"}", customPath, shortCode)
+        );
+
+        // Plain JSON root key matching customPath/shortCode
+        assertEquals(
+                "queryData={\"key\":\"home\"}",
+                resolver.cleanQueryString("queryData={\"key\":\"/dscsc/28PDXdIMXrP\"}", customPath, shortCode)
+        );
+
+        // URL-encoded JSON root key matching shortCode
+        assertEquals(
+                "queryData=%7B%22key%22%3A%22home%22%7D",
+                resolver.cleanQueryString("queryData=%7B%22key%22%3A%22%2F28PDXdIMXrP%22%7D", customPath, shortCode)
+        );
+
+        // URL-encoded JSON root key matching customPath/shortCode
+        assertEquals(
+                "queryData=%7B%22key%22%3A%22home%22%7D",
+                resolver.cleanQueryString("queryData=%7B%22key%22%3A%22%2Fdscsc%2F28PDXdIMXrP%22%7D", customPath, shortCode)
+        );
+
+        // Plain JSON subpath stripping with combined prefix
+        assertEquals(
+                "queryData={\"key\":\"/women\"}",
+                resolver.cleanQueryString("queryData={\"key\":\"/dscsc/28PDXdIMXrP/women\"}", customPath, shortCode)
+        );
+
+        // Plain JSON subpath stripping with shortCode
+        assertEquals(
+                "queryData={\"key\":\"/women\"}",
+                resolver.cleanQueryString("queryData={\"key\":\"/28PDXdIMXrP/women\"}", customPath, shortCode)
+        );
+    }
 }

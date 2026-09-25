@@ -125,7 +125,14 @@ public class ServingController {
         String referer = request.getHeader("Referer");
 
         // 1. Check LRU Cache first
-            com.preonsurl.apis.link.cache.CachedNewUrlDto cached = servingCacheService.getLruCache().get(fullUrl);
+        com.preonsurl.apis.link.cache.CachedNewUrlDto cached = servingCacheService.getLruCache().get(fullUrl);
+        if (cached == null && fullUrl != null) {
+            if (fullUrl.startsWith("http://")) {
+                cached = servingCacheService.getLruCache().get("https://" + fullUrl.substring("http://".length()));
+            } else if (fullUrl.startsWith("https://")) {
+                cached = servingCacheService.getLruCache().get("http://" + fullUrl.substring("https://".length()));
+            }
+        }
         if (cached != null) {
             PolicyEvaluationResult evalResult = policyService.evaluatePolicies(
                     cached.getId(),
@@ -166,11 +173,10 @@ public class ServingController {
                     }
                     if (mode == LinkMode.MIRROR) {
                         log.info("Mirroring root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
-                        Optional<NewUrl> entityOpt = repository.findByNewUrl(fullUrl);
-                        if (entityOpt.isEmpty()) entityOpt = repository.findByShortCode(path);
-                        if (entityOpt.isEmpty()) entityOpt = repository.findByCustomPath(path);
+                        Optional<NewUrl> entityOpt = findEntityByUrlOrPath(fullUrl, path);
                         if (entityOpt.isPresent()) {
-                            return mirrorService.mirrorRequest(entityOpt.get().getShortCode() != null ? entityOpt.get().getShortCode() : path, "/", entityOpt.get(), request);
+                            String mirrorPrefix = (path != null && !path.isBlank()) ? path : (entityOpt.get().getShortCode() != null ? entityOpt.get().getShortCode() : "m");
+                            return mirrorService.mirrorRequest(mirrorPrefix, "/", entityOpt.get(), request);
                         }
                     }
                     return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
@@ -210,15 +216,8 @@ public class ServingController {
             }
         }
 
-        // 2. Cache Miss: Locate entity by fullUrl, shortCode, or customPath in DB
-        Optional<NewUrl> entityOpt = repository.findByNewUrl(fullUrl);
-        if (entityOpt.isEmpty()) {
-            entityOpt = repository.findByShortCode(path);
-        }
-        if (entityOpt.isEmpty()) {
-            entityOpt = repository.findByCustomPath(path);
-        }
-
+        // 2. Cache Miss: Locate entity by fullUrl, shortCode, customPath, or customPath/shortCode in DB
+        Optional<NewUrl> entityOpt = findEntityByUrlOrPath(fullUrl, path);
 
         if (entityOpt.isEmpty()) {
             // Check if this is a MIRROR subrequest: /{shortCode}/**
@@ -323,17 +322,17 @@ public class ServingController {
         try {
             Optional<String> originalUrl = servingCacheService.resolveAndServe(entity.getNewUrl(), ipAddress, userAgent, referer);
             LinkMode mode = entity.getLinkMode() != null ? entity.getLinkMode() : LinkMode.REDIRECT;
-            String cookieId = entity.getShortCode() != null ? entity.getShortCode() : path;
+            String mirrorPrefix = (path != null && !path.isBlank()) ? path : (entity.getShortCode() != null ? entity.getShortCode() : "m");
 
             if (originalUrl.isPresent()) {
                 String target = originalUrl.get();
                 if (mode == LinkMode.PROXY) {
                     log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
-                    return attachProxyContextCookie(proxyService.proxyRequest(target, request), cookieId);
+                    return attachProxyContextCookie(proxyService.proxyRequest(target, request), mirrorPrefix);
                 }
                 if (mode == LinkMode.MIRROR) {
                     log.info("Mirroring root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
-                    return mirrorService.mirrorRequest(cookieId, "/", entity, request);
+                    return mirrorService.mirrorRequest(mirrorPrefix, "/", entity, request);
                 }
                 log.info("Redirecting root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
                 return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
@@ -341,11 +340,11 @@ public class ServingController {
 
             if (mode == LinkMode.PROXY) {
                 log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, entity.getOriginalUrl(), ipAddress);
-                return attachProxyContextCookie(proxyService.proxyRequest(entity.getOriginalUrl(), request), cookieId);
+                return attachProxyContextCookie(proxyService.proxyRequest(entity.getOriginalUrl(), request), mirrorPrefix);
             }
             if (mode == LinkMode.MIRROR) {
                 log.info("Mirroring root fullUrl='{}' -> '{}' [IP={}]", fullUrl, entity.getOriginalUrl(), ipAddress);
-                return mirrorService.mirrorRequest(cookieId, "/", entity, request);
+                return mirrorService.mirrorRequest(mirrorPrefix, "/", entity, request);
             }
             return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(entity.getOriginalUrl())).build();
         } catch (UrlExpiredException e) {
@@ -421,13 +420,7 @@ public class ServingController {
         String userAgent = request.getHeader("User-Agent");
         String referer = request.getHeader("Referer");
 
-        Optional<NewUrl> entityOpt = repository.findByNewUrl(fullUrl);
-        if (entityOpt.isEmpty()) {
-            entityOpt = repository.findByShortCode(path);
-        }
-        if (entityOpt.isEmpty()) {
-            entityOpt = repository.findByCustomPath(path);
-        }
+        Optional<NewUrl> entityOpt = findEntityByUrlOrPath(fullUrl, path);
 
         if (entityOpt.isEmpty()) {
             Optional<MirrorRouteMatch> mirrorMatch = matchMirrorRoute(path);
@@ -492,6 +485,41 @@ public class ServingController {
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .location(redirectTarget)
                 .build();
+    }
+
+    @Operation(summary = "Handle generic HTTP requests for mirrored/proxied routes")
+    @RequestMapping(value = "/**", method = {RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH})
+    public ResponseEntity<?> handleGenericSubrequest(HttpServletRequest request) {
+        String path = "";
+        if (request.getRequestURI().startsWith("/")) {
+            path = request.getRequestURI().substring(1);
+        }
+        if (path.isBlank() || path.startsWith("api/") || path.startsWith("link/") || path.startsWith("auth/") || path.startsWith("user/") || path.startsWith("analytics/")) {
+            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
+        }
+
+        Optional<MirrorRouteMatch> mirrorMatch = matchMirrorRoute(path);
+        if (mirrorMatch.isPresent()) {
+            MirrorRouteMatch match = mirrorMatch.get();
+            ResponseEntity<?> policyViolation = validateMirrorSubrequestPolicies(match.entity(), request, match.prefix());
+            if (policyViolation != null) {
+                return policyViolation;
+            }
+            return mirrorService.mirrorRequest(match.prefix(), match.subPath(), match.entity(), request);
+        }
+
+        Optional<ProxySubResourceTarget> proxyTargetOpt = resolveProxySubResource(request, path);
+        if (proxyTargetOpt.isPresent()) {
+            ProxySubResourceTarget proxyTarget = proxyTargetOpt.get();
+            String ipAddress = extractClientIp(request);
+            log.info("Proxying sub-resource {} path='{}' -> '{}' [IP={}]", request.getMethod(), path, proxyTarget.targetUrl(), ipAddress);
+            return attachProxyContextCookie(
+                    proxyService.proxyRequest(proxyTarget.targetUrl(), request, proxyTarget.upstreamReferer()),
+                    proxyTarget.cookieIdentifier()
+            );
+        }
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 
     private ResponseEntity<?> handlePolicyRejection(PolicyEvaluationResult result, HttpServletRequest request) {
@@ -651,13 +679,66 @@ public class ServingController {
         if (path == null || path.isBlank()) {
             return Optional.empty();
         }
+
         int firstSlash = path.indexOf('/');
         if (firstSlash > 0) {
-            String prefix = path.substring(0, firstSlash);
-            Optional<NewUrl> candidate = findMirrorEntity(prefix);
+            String prefix1 = path.substring(0, firstSlash);
+            int secondSlash = path.indexOf('/', firstSlash + 1);
+
+            // Case 1: customPath/shortCode/subPath (e.g. dscsc/28PDXdIMXrP/napi/...)
+            if (secondSlash > 0) {
+                String prefix2 = path.substring(0, secondSlash);
+                String shortCodePart = path.substring(firstSlash + 1, secondSlash);
+                Optional<NewUrl> candidate2 = repository.findByCustomPathAndShortCode(prefix1, shortCodePart);
+                if (candidate2.isPresent() && candidate2.get().isActive() && candidate2.get().getLinkMode() == LinkMode.MIRROR) {
+                    return Optional.of(new MirrorRouteMatch(candidate2.get(), prefix2, path.substring(secondSlash)));
+                }
+            } else {
+                // e.g. "dscsc/28PDXdIMXrP" without trailing slash -> root page
+                String shortCodePart = path.substring(firstSlash + 1);
+                Optional<NewUrl> candidate2 = repository.findByCustomPathAndShortCode(prefix1, shortCodePart);
+                if (candidate2.isPresent() && candidate2.get().isActive() && candidate2.get().getLinkMode() == LinkMode.MIRROR) {
+                    return Optional.of(new MirrorRouteMatch(candidate2.get(), path, "/"));
+                }
+            }
+
+            // Case 2: prefix/subPath (e.g. dscsc/napi/... or 28PDXdIMXrP/napi/...)
+            Optional<NewUrl> candidate = findMirrorEntity(prefix1);
             if (candidate.isPresent()) {
                 String subPath = path.substring(firstSlash);
-                return Optional.of(new MirrorRouteMatch(candidate.get(), prefix, subPath));
+                // If subPath equals "/" + shortCode, this is actually the root link!
+                if (candidate.get().getShortCode() != null && subPath.equals("/" + candidate.get().getShortCode())) {
+                    return Optional.of(new MirrorRouteMatch(candidate.get(), path, "/"));
+                }
+                return Optional.of(new MirrorRouteMatch(candidate.get(), prefix1, subPath));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<NewUrl> findEntityByUrlOrPath(String fullUrl, String path) {
+        if (fullUrl != null && !fullUrl.isBlank()) {
+            Optional<NewUrl> opt = repository.findByNewUrl(fullUrl);
+            if (opt.isPresent()) return opt;
+            if (fullUrl.startsWith("http://")) {
+                opt = repository.findByNewUrl("https://" + fullUrl.substring("http://".length()));
+                if (opt.isPresent()) return opt;
+            } else if (fullUrl.startsWith("https://")) {
+                opt = repository.findByNewUrl("http://" + fullUrl.substring("https://".length()));
+                if (opt.isPresent()) return opt;
+            }
+        }
+        if (path != null && !path.isBlank()) {
+            Optional<NewUrl> opt = repository.findByShortCode(path);
+            if (opt.isPresent()) return opt;
+            opt = repository.findByCustomPath(path);
+            if (opt.isPresent()) return opt;
+            if (path.contains("/")) {
+                int firstSlash = path.indexOf('/');
+                String prefix = path.substring(0, firstSlash);
+                String code = path.substring(firstSlash + 1);
+                opt = repository.findByCustomPathAndShortCode(prefix, code);
+                if (opt.isPresent()) return opt;
             }
         }
         return Optional.empty();
