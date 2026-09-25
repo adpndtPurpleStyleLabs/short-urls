@@ -1,232 +1,203 @@
-services:
+# =========================
+# APP SERVICE
+# =========================
+app:
+  build:
+    context: .
+    dockerfile: Dockerfile
 
-  # =========================
-  # APP SERVICE
-  # =========================
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  container_name: preonsurl-app
 
-    container_name: preonsurl-app
+  ports:
+    - "127.0.0.1:4982:8878"
 
-    expose:
-      - "8878"
+  environment:
+    SPRING_PROFILES_ACTIVE: app
+    SERVER_PORT: 8878
 
-    environment:
-      SPRING_PROFILES_ACTIVE: app
-      SERVER_PORT: 8878
+    LOG_PATH: /app/logs
 
-      LOG_PATH: /app/logs
+    DB_HOST: mariadb
+    DB_PORT: 3306
+    DB_NAME: ${MARIADB_DATABASE}
+    DB_USER: ${MARIADB_USER}
+    DB_PASSWORD: ${MARIADB_PASSWORD}
 
-      DB_HOST: mariadb
-      DB_PORT: 3306
-      DB_NAME: ${MARIADB_DATABASE}
-      DB_USER: ${MARIADB_USER}
-      DB_PASSWORD: ${MARIADB_PASSWORD}
+    MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
 
-      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
+    SHORTENER_DOMAIN: https://secure.indexrender.io
+    APP_DOMAIN: https://go.indexrender.io
+    PSECURE_DOMAIN: https://psecure.indexrender.io
 
-      SHORTENER_DOMAIN: https://secure.indexrender.io
-      APP_DOMAIN: https://go.indexrender.io
-      PSECURE_DOMAIN: https://psecure.indexrender.io
+    JWT_SECRET: ${JWT_SECRET}
+    SHORTENER_SECRET: ${SHORTENER_SECRET}
 
-      JWT_SECRET: ${JWT_SECRET}
-      SHORTENER_SECRET: ${SHORTENER_SECRET}
+    JAVA_OPTS: >-
+      -XX:+UseG1GC
+      -Xms128m
+      -Xmx512m
+      -Xss512k
+      -XX:MaxMetaspaceSize=160m
+      -XX:+ExitOnOutOfMemoryError
 
-      JAVA_OPTS: >-
-        -XX:+UseG1GC
-        -Xms128m
-        -Xmx512m
-        -Xss512k
-        -XX:MaxMetaspaceSize=160m
-        -XX:+ExitOnOutOfMemoryError
+  volumes:
+    - app_logs:/app/logs
 
-    volumes:
-      - app_logs:/app/logs
+  depends_on:
+    mariadb:
+      condition: service_healthy
 
-    depends_on:
-      mariadb:
-        condition: service_healthy
-
-    restart: unless-stopped
+  restart: unless-stopped
 
 
-  # =========================
-  # SERVE SERVICE
-  # =========================
-  serve:
-    build:
-      context: .
-      dockerfile: Dockerfile
+# =========================
+# SERVE SERVICE
+# =========================
+serve:
+  build:
+    context: .
+    dockerfile: Dockerfile
 
-    container_name: preonsurl-serve
+  container_name: preonsurl-serve
 
-    expose:
-      - "8878"
+  ports:
+    - "127.0.0.1:4983:8878"
 
-    environment:
-      SPRING_PROFILES_ACTIVE: serve
-      SERVER_PORT: 8878
+  environment:
+    SPRING_PROFILES_ACTIVE: serve
+    SERVER_PORT: 8878
 
-      LOG_PATH: /app/logs
+    LOG_PATH: /app/logs
 
-      DB_HOST: mariadb
-      DB_PORT: 3306
-      DB_NAME: ${MARIADB_DATABASE}
-      DB_USER: ${MARIADB_USER}
-      DB_PASSWORD: ${MARIADB_PASSWORD}
+    DB_HOST: mariadb
+    DB_PORT: 3306
+    DB_NAME: ${MARIADB_DATABASE}
+    DB_USER: ${MARIADB_USER}
+    DB_PASSWORD: ${MARIADB_PASSWORD}
 
-      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
+    MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
 
-      SHORTENER_DOMAIN: https://secure.indexrender.io
-      APP_DOMAIN: https://go.indexrender.io
-      PSECURE_DOMAIN: https://psecure.indexrender.io
+    SHORTENER_DOMAIN: https://secure.indexrender.io
+    APP_DOMAIN: https://go.indexrender.io
+    PSECURE_DOMAIN: https://psecure.indexrender.io
 
-      JWT_SECRET: ${JWT_SECRET}
-      SHORTENER_SECRET: ${SHORTENER_SECRET}
+    JWT_SECRET: ${JWT_SECRET}
+    SHORTENER_SECRET: ${SHORTENER_SECRET}
 
-      JAVA_OPTS: >-
-        -XX:+UseG1GC
-        -Xms128m
-        -Xmx512m
-        -Xss512k
-        -XX:MaxMetaspaceSize=160m
-        -XX:+ExitOnOutOfMemoryError
+    JAVA_OPTS: >-
+      -XX:+UseG1GC
+      -Xms128m
+      -Xmx512m
+      -Xss512k
+      -XX:MaxMetaspaceSize=160m
+      -XX:+ExitOnOutOfMemoryError
 
-    volumes:
-      - serve_logs:/app/logs
+  volumes:
+    - serve_logs:/app/logs
 
-    depends_on:
-      mariadb:
-        condition: service_healthy
+  depends_on:
+    mariadb:
+      condition: service_healthy
 
-    restart: unless-stopped
-
-
-  # =========================
-  # PSECURE SERVICE
-  # =========================
-  psecureserve:
-    build:
-      context: .
-      dockerfile: Dockerfile
-
-    container_name: preonsurl-psecureserve
-
-    expose:
-      - "8878"
-
-    environment:
-      SPRING_PROFILES_ACTIVE: psecureServe
-      SERVER_PORT: 8878
-
-      LOG_PATH: /app/logs
-
-      DB_HOST: mariadb
-      DB_PORT: 3306
-      DB_NAME: ${MARIADB_DATABASE}
-      DB_USER: ${MARIADB_USER}
-      DB_PASSWORD: ${MARIADB_PASSWORD}
-
-      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
-
-      SHORTENER_DOMAIN: https://secure.indexrender.io
-      APP_DOMAIN: https://go.indexrender.io
-      PSECURE_DOMAIN: https://psecure.indexrender.io
-
-      JWT_SECRET: ${JWT_SECRET}
-      SHORTENER_SECRET: ${SHORTENER_SECRET}
-
-      JAVA_OPTS: >-
-        -XX:+UseG1GC
-        -Xms128m
-        -Xmx512m
-        -Xss512k
-        -XX:MaxMetaspaceSize=160m
-        -XX:+ExitOnOutOfMemoryError
-
-    volumes:
-      - psecure_logs:/app/logs
-
-    depends_on:
-      mariadb:
-        condition: service_healthy
-
-    restart: unless-stopped
+  restart: unless-stopped
 
 
-  # =========================
-  # DATABASE
-  # =========================
-  mariadb:
-    image: mariadb:11.4
+# =========================
+# PSECURE SERVICE
+# =========================
+psecureserve:
+  build:
+    context: .
+    dockerfile: Dockerfile
 
-    container_name: preonsurl-mariadb
+  container_name: preonsurl-psecureserve
 
-    environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MARIADB_DATABASE: ${MARIADB_DATABASE}
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+  ports:
+    - "127.0.0.1:4984:8878"
 
-    ports:
-      - "4981:3306"
+  environment:
+    SPRING_PROFILES_ACTIVE: psecureServe
+    SERVER_PORT: 8878
 
-    volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./schema-mariadb.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    LOG_PATH: /app/logs
 
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mariadb-admin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${MARIADB_ROOT_PASSWORD}"
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
+    DB_HOST: mariadb
+    DB_PORT: 3306
+    DB_NAME: ${MARIADB_DATABASE}
+    DB_USER: ${MARIADB_USER}
+    DB_PASSWORD: ${MARIADB_PASSWORD}
 
-    restart: unless-stopped
+    MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
 
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: preonsurl-nginx
+    SHORTENER_DOMAIN: https://secure.indexrender.io
+    APP_DOMAIN: https://go.indexrender.io
+    PSECURE_DOMAIN: https://psecure.indexrender.io
 
-    ports:
-      - "80:80"
-      - "443:443"
+    JWT_SECRET: ${JWT_SECRET}
+    SHORTENER_SECRET: ${SHORTENER_SECRET}
 
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - certbot_www:/var/www/certbot
-      - letsencrypt:/etc/letsencrypt
+    JAVA_OPTS: >-
+      -XX:+UseG1GC
+      -Xms128m
+      -Xmx512m
+      -Xss512k
+      -XX:MaxMetaspaceSize=160m
+      -XX:+ExitOnOutOfMemoryError
 
-    depends_on:
-      - app
-      - serve
-      - psecureserve
+  volumes:
+    - psecure_logs:/app/logs
 
-    restart: unless-stopped
+  depends_on:
+    mariadb:
+      condition: service_healthy
+
+  restart: unless-stopped
 
 
-  certbot:
-    image: certbot/certbot:latest
-    container_name: preonsurl-certbot
+# =========================
+# DATABASE
+# =========================
+mariadb:
+  image: mariadb:11.4
 
-    volumes:
-      - certbot_www:/var/www/certbot
-      - letsencrypt:/etc/letsencrypt
+  container_name: preonsurl-mariadb
 
-    restart: unless-stopped
+  environment:
+    MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    MARIADB_DATABASE: ${MARIADB_DATABASE}
+    MARIADB_USER: ${MARIADB_USER}
+    MARIADB_PASSWORD: ${MARIADB_PASSWORD}
 
+  ports:
+    - "127.0.0.1:4981:3306"
+
+  volumes:
+    - mariadb_data:/var/lib/mysql
+    - ./schema-mariadb.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
+  healthcheck:
+    test:
+      [
+        "CMD",
+        "mariadb-admin",
+        "ping",
+        "-h",
+        "localhost",
+        "-u",
+        "root",
+        "-p${MARIADB_ROOT_PASSWORD}"
+      ]
+    interval: 5s
+    timeout: 5s
+    retries: 10
+    start_period: 10s
+
+  restart: unless-stopped
+
+
+# =========================
+# VOLUMES
+# =========================
 volumes:
   mariadb_data:
     driver: local
@@ -238,10 +209,4 @@ volumes:
     driver: local
 
   psecure_logs:
-    driver: local
-
-  certbot_www:
-    driver: local
-
-  letsencrypt:
     driver: local
