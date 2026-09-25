@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 @Component
 public class PublicLinkRateLimiter {
 
-    public static final long RATE_LIMIT_WINDOW_MS = 10000L; // 10 seconds
+    public static final long RATE_LIMIT_WINDOW_MS = 5000L; // 5 seconds
     private final ConcurrentMap<String, Long> lastAccessTimePerIp = new ConcurrentHashMap<>();
 
     /**
