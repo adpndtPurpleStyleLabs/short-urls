@@ -11,6 +11,7 @@ import com.preonsurl.apis.link.service.NewUrlService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,14 +64,36 @@ public class LinkController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<ApiResponse<CreateNewUrlResponse>> createNewUrl(
+            HttpServletRequest httpRequest,
             @RequestBody @Valid CreateNewUrlRequest request,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
         try {
             AuthenticatedUser user = resolveUser(currentUser);
             Long userId = user != null ? user.userId() : null;
 
-            CreateNewUrlResponse response = newUrlService.createNewUrl(request, userId);
-            log.info("New-URL processed: code='{}', linkMode='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}", response.newUrl(), response.linkMode(), response.existing(), response.originalUrl(), response.usageLimit(), response.notes(), response.tags());
+            String createdBy = "UI";
+            if (httpRequest != null) {
+                if (Boolean.TRUE.equals(httpRequest.getAttribute("apiKeyAuthenticated"))
+                        || "API".equalsIgnoreCase((String) httpRequest.getAttribute("creationSource"))) {
+                    createdBy = "API";
+                } else {
+                    String apiKey = httpRequest.getHeader("X-API-KEY");
+                    if (apiKey == null || apiKey.isBlank()) {
+                        apiKey = httpRequest.getHeader("X-API-Key");
+                    }
+                    if (apiKey == null || apiKey.isBlank()) {
+                        apiKey = httpRequest.getHeader("x-api-key");
+                    }
+                    if (apiKey != null && !apiKey.isBlank()) {
+                        createdBy = "API";
+                    }
+                }
+            }
+
+            CreateNewUrlResponse response = newUrlService.createNewUrl(request, userId, createdBy);
+            log.info("New-URL processed: code='{}', linkMode='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}, createdBy='{}'",
+                    response.newUrl(), response.linkMode(), response.existing(), response.originalUrl(),
+                    response.usageLimit(), response.notes(), response.tags(), response.createdBy());
             return ResponseEntity.ok(ApiResponse.success(response, "New URL created successfully"));
         } catch (IllegalArgumentException e) {
             log.warn("Invalid URL create request: {}", e.getMessage());

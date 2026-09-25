@@ -47,8 +47,46 @@ public record CreateNewUrlResponse(
         UsagePolicies usagePolicies,
 
         @Schema(description = "Access-control policies for the shortened URL")
-        AccessPolicies accessPolicies
+        AccessPolicies accessPolicies,
+
+        @Schema(description = "Creation source: API or UI", example = "UI")
+        String createdBy
 ) {
+    public CreateNewUrlResponse(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            Boolean isActive,
+            String publicId,
+            UsagePolicies usagePolicies,
+            AccessPolicies accessPolicies
+    ) {
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, publicId, usagePolicies, accessPolicies, "UI");
+    }
+
+    public CreateNewUrlResponse(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            Boolean isActive,
+            String publicId,
+            String createdBy
+    ) {
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, publicId, null, null, createdBy);
+    }
+
     public CreateNewUrlResponse(
             String newUrl,
             String originalUrl,
@@ -62,7 +100,7 @@ public record CreateNewUrlResponse(
             Boolean isActive,
             String publicId
     ) {
-        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, publicId, null, null);
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, publicId, null, null, "UI");
     }
 
     public CreateNewUrlResponse(

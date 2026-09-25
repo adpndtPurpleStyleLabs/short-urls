@@ -82,7 +82,11 @@ class AccessAndUsagePoliciesIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private com.preonsurl.apis.auth.JwtService jwtService;
+
     private static final String API_KEY = "policy-test-api-key";
+    private String jwtToken;
 
     @BeforeEach
     void setUp() {
@@ -106,6 +110,8 @@ class AccessAndUsagePoliciesIntegrationTest {
         apiKey.setApiKeyHash(sha256(API_KEY));
         apiKey.setActive(true);
         apiKeyRepository.save(apiKey);
+
+        jwtToken = jwtService.generateToken(user);
     }
 
     private String sha256(String value) {
@@ -576,7 +582,7 @@ class AccessAndUsagePoliciesIntegrationTest {
         // 2. Fetch all details and conf via GET /link?id={publicId}
         mockMvc.perform(get("/link")
                         .param("id", publicId)
-                        .header("X-API-KEY", API_KEY))
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/initial-destination"))
                 .andExpect(jsonPath("$.data.customPath").value("edit-flow-link"))
@@ -619,7 +625,7 @@ class AccessAndUsagePoliciesIntegrationTest {
                 """, shortUrl, expireTime, startWindow, endWindow);
 
         mockMvc.perform(post("/link/edit")
-                        .header("X-API-KEY", API_KEY)
+                        .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editPayload))
                 .andExpect(status().isOk())
@@ -638,7 +644,7 @@ class AccessAndUsagePoliciesIntegrationTest {
         // 4. Fetch details again via GET /link?id={publicId} to verify retrieval for Edit Modal
         mockMvc.perform(get("/link")
                         .param("id", publicId)
-                        .header("X-API-KEY", API_KEY))
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/updated-destination"))
                 .andExpect(jsonPath("$.data.usagePolicies.type").value("USAGE_LIMIT"))
@@ -666,7 +672,7 @@ class AccessAndUsagePoliciesIntegrationTest {
                 """, shortUrl);
 
         mockMvc.perform(post("/link/edit")
-                        .header("X-API-KEY", API_KEY)
+                        .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editKeepMaskPayload))
                 .andExpect(status().isOk())

@@ -26,6 +26,32 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+        String uri = request.getRequestURI();
+        String servletPath = request.getServletPath();
+        return !isCreateEndpoint(uri, servletPath);
+    }
+
+    private boolean isCreateEndpoint(String uri, String servletPath) {
+        return matchesCreate(uri) || matchesCreate(servletPath);
+    }
+
+    private boolean matchesCreate(String path) {
+        if (path == null) {
+            return false;
+        }
+        String clean = path.trim();
+        while (clean.endsWith("/") && clean.length() > 1) {
+            clean = clean.substring(0, clean.length() - 1);
+        }
+        return clean.equals("/link/create") || clean.equals("/create")
+                || clean.endsWith("/link/create") || clean.endsWith("/create");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String apiKey = request.getHeader(API_KEY_HEADER);
         if (apiKey == null || apiKey.isBlank()) {
@@ -46,6 +72,8 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             if (authenticatedUser != null) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(authenticatedUser, null, List.of());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                request.setAttribute("apiKeyAuthenticated", Boolean.TRUE);
+                request.setAttribute("creationSource", "API");
             } else {
                 request.setAttribute("apiKeyInvalid", Boolean.TRUE);
                 SecurityContextHolder.clearContext();

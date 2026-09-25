@@ -25,7 +25,8 @@ import java.time.temporal.ChronoUnit;
                 @Index(name = "idx_short_urls_link_mode", columnList = "link_mode"),
                 @Index(name = "idx_short_urls_is_active", columnList = "is_active"),
                 @Index(name = "idx_short_urls_expire_at", columnList = "expire_at"),
-                @Index(name = "idx_short_urls_public_id", columnList = "public_id")
+                @Index(name = "idx_short_urls_public_id", columnList = "public_id"),
+                @Index(name = "idx_short_urls_created_by", columnList = "created_by")
         }
 )
 public class NewUrl {
@@ -140,6 +141,13 @@ public class NewUrl {
             length = 1024
     )
     private String note;
+
+
+    @Column(
+            name = "created_by",
+            length = 20
+    )
+    private String createdBy = "UI";
 
 
     @Column(
@@ -327,6 +335,23 @@ public class NewUrl {
     }
 
 
+    public String getCreationSource() {
+        return this.createdBy != null ? this.createdBy : "UI";
+    }
+
+    public void setCreationSource(String creationSource) {
+        this.createdBy = creationSource != null ? creationSource : "UI";
+    }
+
+    public String getCreatedVia() {
+        return this.createdBy != null ? this.createdBy : "UI";
+    }
+
+    public void setCreatedVia(String createdVia) {
+        this.createdBy = createdVia != null ? createdVia : "UI";
+    }
+
+
     // =========================================================
     // JPA LIFECYCLE
     // =========================================================
@@ -344,6 +369,10 @@ public class NewUrl {
                 this.publicId.isBlank()) {
 
             this.publicId = generatePublicId();
+        }
+
+        if (this.createdBy == null || this.createdBy.isBlank()) {
+            this.createdBy = "UI";
         }
 
         this.createdAt = now;

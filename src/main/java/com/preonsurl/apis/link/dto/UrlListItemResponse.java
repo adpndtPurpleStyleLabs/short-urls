@@ -46,8 +46,29 @@ public record UrlListItemResponse(
         String publicId,
 
         @Schema(description = "Tags associated with the short link", example = "[\"marketing\", \"q3\"]")
-        java.util.List<String> tags
+        java.util.List<String> tags,
+
+        @Schema(description = "Creation source: API or UI", example = "UI")
+        String createdBy
 ) {
+    public UrlListItemResponse(
+            String shortLink,
+            String originalLink,
+            boolean isEnabled,
+            boolean isExpired,
+            String expiredReason,
+            String why,
+            long timesClicked,
+            Instant createdAt,
+            String createdAgo,
+            Instant lastUsedAt,
+            String lastUsedAgo,
+            String publicId,
+            java.util.List<String> tags
+    ) {
+        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, why, timesClicked, createdAt, createdAgo, lastUsedAt, lastUsedAgo, publicId, tags, "UI");
+    }
+
     public UrlListItemResponse(
             String shortLink,
             String originalLink,
@@ -55,7 +76,7 @@ public record UrlListItemResponse(
             boolean isExpired,
             String expiredReason
     ) {
-        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, expiredReason, 0L, null, null, null, null, null, java.util.List.of());
+        this(shortLink, originalLink, isEnabled, isExpired, expiredReason, expiredReason, 0L, null, null, null, null, null, java.util.List.of(), "UI");
     }
 
     public UrlListItemResponse(

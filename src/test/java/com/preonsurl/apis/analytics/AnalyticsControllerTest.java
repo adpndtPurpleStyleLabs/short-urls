@@ -298,7 +298,7 @@ public class AnalyticsControllerTest {
     }
 
     @Test
-    void getOverallClicks_withApiKeyAuth_success() throws Exception {
+    void getOverallClicks_withApiKeyAuth_returns401BecauseApiKeyOnlyAllowedOnCreate() throws Exception {
         String rawApiKey = "purl_live_testapikey1234567890abcdef";
         com.preonsurl.apis.apikey.ApiKey apiKey = new com.preonsurl.apis.apikey.ApiKey();
         apiKey.setUserId(user1.getId());
@@ -319,9 +319,7 @@ public class AnalyticsControllerTest {
         mockMvc.perform(get("/analytics/overall")
                         .header("X-API-KEY", rawApiKey)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.totalClicks").value(1));
+                .andExpect(status().isUnauthorized());
     }
 }
 

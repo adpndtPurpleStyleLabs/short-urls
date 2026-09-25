@@ -175,10 +175,17 @@ public class NewUrlService {
 
     @Transactional
     public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId) {
+        return createNewUrl(request, userId, "UI");
+    }
+
+    @Transactional
+    public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId, String createdBy) {
         if (request == null) {
             throw new IllegalArgumentException("Request cannot be null");
         }
         request.validate();
+
+        final String source = (createdBy != null && !createdBy.isBlank()) ? createdBy.trim().toUpperCase() : "UI";
 
         String originalUrl = request.url();
         validateUrl(originalUrl);
@@ -217,6 +224,10 @@ public class NewUrlService {
                         found.setLinkMode(linkMode);
                         repository.save(found);
                     }
+                    if (found.getCreatedBy() == null || found.getCreatedBy().isBlank()) {
+                        found.setCreatedBy(source);
+                        repository.save(found);
+                    }
                     List<String> tags = saveTags(found.getId(), userId, request.tags());
                     if (tags.isEmpty()) {
                         tags = tagRepository.findByUrlId(found.getId()).stream().map(NewUrlTag::getTag).toList();
@@ -233,7 +244,8 @@ public class NewUrlService {
                             tags,
                             found.getLinkMode(),
                             found.isActive(),
-                            found.getPublicId()
+                            found.getPublicId(),
+                            found.getCreatedBy() != null ? found.getCreatedBy() : source
                     );
                 }
 
@@ -245,6 +257,7 @@ public class NewUrlService {
 
                 NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
                 newUrlEntity.setUserId(userId);
+                newUrlEntity.setCreatedBy(source);
                 if (request.notes() != null && !request.notes().isBlank()) {
                     newUrlEntity.setNote(request.notes().trim());
                 }
@@ -265,7 +278,8 @@ public class NewUrlService {
                         savedTags,
                         saved.getLinkMode(),
                         saved.isActive(),
-                        saved.getPublicId()
+                        saved.getPublicId(),
+                        saved.getCreatedBy() != null ? saved.getCreatedBy() : source
                 );
             } else {
                 String fullPath = customPath;
@@ -297,6 +311,10 @@ public class NewUrlService {
                             existing.setLinkMode(linkMode);
                             repository.save(existing);
                         }
+                        if (existing.getCreatedBy() == null || existing.getCreatedBy().isBlank()) {
+                            existing.setCreatedBy(source);
+                            repository.save(existing);
+                        }
                         List<String> tags = saveTags(existing.getId(), userId, request.tags());
                         if (tags.isEmpty()) {
                             tags = tagRepository.findByUrlId(existing.getId()).stream().map(NewUrlTag::getTag).toList();
@@ -313,7 +331,8 @@ public class NewUrlService {
                                 tags,
                                 existing.getLinkMode(),
                                 existing.isActive(),
-                                existing.getPublicId()
+                                existing.getPublicId(),
+                                existing.getCreatedBy() != null ? existing.getCreatedBy() : source
                         );
                     }
 
@@ -324,6 +343,7 @@ public class NewUrlService {
                     existing.setClickCount(0);
                     existing.setDomain(effectiveDomain.domainName());
                     existing.setNewUrl(newUrl);
+                    existing.setCreatedBy(source);
                     if (userId != null) {
                         existing.setUserId(userId);
                     }
@@ -351,13 +371,15 @@ public class NewUrlService {
                             saved.isActive(),
                             saved.getPublicId(),
                             buildUsagePoliciesDto(saved),
-                            buildAccessPoliciesDto(saved.getId())
+                            buildAccessPoliciesDto(saved.getId()),
+                            saved.getCreatedBy() != null ? saved.getCreatedBy() : source
                     );
                 }
 
                 // Save to database
                 NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
                 newUrlEntity.setUserId(userId);
+                newUrlEntity.setCreatedBy(source);
                 if (request.notes() != null && !request.notes().isBlank()) {
                     newUrlEntity.setNote(request.notes().trim());
                 }
@@ -380,7 +402,8 @@ public class NewUrlService {
                         saved.isActive(),
                         saved.getPublicId(),
                         buildUsagePoliciesDto(saved),
-                        buildAccessPoliciesDto(saved.getId())
+                        buildAccessPoliciesDto(saved.getId()),
+                        saved.getCreatedBy() != null ? saved.getCreatedBy() : source
                 );
             }
         } else {
@@ -405,6 +428,10 @@ public class NewUrlService {
                     found.setLinkMode(linkMode);
                     repository.save(found);
                 }
+                if (found.getCreatedBy() == null || found.getCreatedBy().isBlank()) {
+                    found.setCreatedBy(source);
+                    repository.save(found);
+                }
                 List<String> tags = saveTags(found.getId(), userId, request.tags());
                 if (tags.isEmpty()) {
                     tags = tagRepository.findByUrlId(found.getId()).stream().map(NewUrlTag::getTag).toList();
@@ -421,7 +448,8 @@ public class NewUrlService {
                         tags,
                         found.getLinkMode(),
                         found.isActive(),
-                        found.getPublicId()
+                        found.getPublicId(),
+                        found.getCreatedBy() != null ? found.getCreatedBy() : source
                 );
             }
 
@@ -431,6 +459,7 @@ public class NewUrlService {
 
             NewUrl newUrlEntity = new NewUrl(code, originalUrl, null, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
             newUrlEntity.setUserId(userId);
+            newUrlEntity.setCreatedBy(source);
             if (request.notes() != null && !request.notes().isBlank()) {
                 newUrlEntity.setNote(request.notes().trim());
             }
@@ -453,7 +482,8 @@ public class NewUrlService {
                     saved.isActive(),
                     saved.getPublicId(),
                     buildUsagePoliciesDto(saved),
-                    buildAccessPoliciesDto(saved.getId())
+                    buildAccessPoliciesDto(saved.getId()),
+                    saved.getCreatedBy() != null ? saved.getCreatedBy() : source
             );
         }
     }
@@ -569,7 +599,8 @@ public class NewUrlService {
                 newUrl.isActive(),
                 newUrl.getPublicId(),
                 usagePolicies,
-                accessPolicies
+                accessPolicies,
+                newUrl.getCreatedBy() != null ? newUrl.getCreatedBy() : "UI"
         );
     }
 
@@ -863,7 +894,8 @@ public class NewUrlService {
                 entity.isActive(),
                 entity.getPublicId(),
                 finalUsagePolicies,
-                finalAccessPolicies
+                finalAccessPolicies,
+                entity.getCreatedBy() != null ? entity.getCreatedBy() : "UI"
         );
     }
 
@@ -1112,7 +1144,8 @@ public class NewUrlService {
                     lastUsedAt,
                     lastUsedAgo,
                     entity.getPublicId(),
-                    tags
+                    tags,
+                    entity.getCreatedBy() != null ? entity.getCreatedBy() : "UI"
             );
         });
     }

@@ -20,6 +20,7 @@ import com.preonsurl.apis.link.repository.NewUrlAccessLogRepository;
 import com.preonsurl.apis.domain.entity.CustomDomain;
 import com.preonsurl.apis.domain.entity.DomainStatus;
 import com.preonsurl.apis.domain.repository.CustomDomainRepository;
+import com.preonsurl.apis.auth.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,8 +81,12 @@ class CreateControllerTest {
     @Autowired
     private CustomDomainRepository customDomainRepository;
 
+    @Autowired
+    private JwtService jwtService;
+
     private static final String VALID_API_KEY = "test-api-key-12345";
     private static final String INVALID_API_KEY = "wrong-api-key";
+    private String validJwtToken;
 
     @BeforeEach
     void setUp() {
@@ -98,6 +103,8 @@ class CreateControllerTest {
 
         Tenant tenant = tenantRepository.save(new Tenant("Test Tenant"));
         User user = userRepository.save(new User(tenant.getId(), "Test User", "testuser", "hashedpass"));
+
+        validJwtToken = "Bearer " + jwtService.generateToken(user);
 
         ApiKey apiKey = new ApiKey();
         apiKey.setUserId(user.getId());
@@ -684,7 +691,7 @@ class CreateControllerTest {
         String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
 
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("id", publicId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -722,7 +729,7 @@ class CreateControllerTest {
         assertEquals(LinkMode.IFRAME, dbUrl.getLinkMode());
 
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("id", dbUrl.getPublicId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.linkMode").value("IFRAME"));
@@ -790,7 +797,7 @@ class CreateControllerTest {
 
         // Lookup by publicId via id param
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("id", publicId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.publicId").value(publicId))
@@ -802,12 +809,12 @@ class CreateControllerTest {
     void getLinkInfo_missingOrEmptyUrl_returns400BadRequest() throws Exception {
         // Missing param: Spring returns 400 Bad Request
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isBadRequest());
 
         // Empty param
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("id", "   "))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
@@ -824,7 +831,7 @@ class CreateControllerTest {
     @Test
     void getLinkInfo_nonExistentUrl_returns404NotFound() throws Exception {
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("id", "nonexistent-404-link"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
@@ -864,7 +871,7 @@ class CreateControllerTest {
 
         // User 2 attempts to fetch User 1's link -> not found for User 2
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", USER2_API_KEY)
+                        .header("Authorization", "Bearer " + jwtService.generateToken(user2))
                         .param("id", publicId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
@@ -902,7 +909,7 @@ class CreateControllerTest {
 
         // Verify lookup by id parameter
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("id", dbEntity.getPublicId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.newUrl").value(generatedNewUrl))
@@ -936,7 +943,7 @@ class CreateControllerTest {
 
         // Lookup by public id
         mockMvc.perform(get("/link")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("id", dbEntity.getPublicId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/winter-fest"));
@@ -1149,7 +1156,7 @@ class CreateControllerTest {
                 """.formatted(newUrl);
 
         mockMvc.perform(post("/link/edit")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editPayload))
                 .andExpect(status().isOk())
@@ -1231,7 +1238,7 @@ class CreateControllerTest {
                 """.formatted(newUrl);
 
         mockMvc.perform(post("/link/edit")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(notePayload))
                 .andExpect(status().isOk())
@@ -1247,7 +1254,7 @@ class CreateControllerTest {
                 """.formatted(newUrl);
 
         mockMvc.perform(post("/link/edit")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(targetPayload))
                 .andExpect(status().isOk())
@@ -1271,7 +1278,7 @@ class CreateControllerTest {
 
         // With valid key but non-existent link -> 404
         mockMvc.perform(post("/link/edit")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editPayload))
                 .andExpect(status().isNotFound());
@@ -1286,7 +1293,7 @@ class CreateControllerTest {
                 """;
 
         mockMvc.perform(put("/link/edit")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editPayload))
                 .andExpect(status().isMethodNotAllowed());
@@ -1301,7 +1308,7 @@ class CreateControllerTest {
     @Test
     void listUrls_noUrls_returnsEmptyPage() throws Exception {
         mockMvc.perform(get("/link/list")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.content").isEmpty())
@@ -1329,7 +1336,7 @@ class CreateControllerTest {
         shortUrlRepository.save(url2);
 
         mockMvc.perform(get("/link/list")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -1364,7 +1371,7 @@ class CreateControllerTest {
         mockMvc.perform(get("/link/list")
                         .param("likeUrl", "apple")
                         .param("size", "10")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(1))
@@ -1374,7 +1381,7 @@ class CreateControllerTest {
         // Filter by 'banana'
         mockMvc.perform(get("/link/list")
                         .param("likeUrl", "banana")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(1))
@@ -1383,7 +1390,7 @@ class CreateControllerTest {
         // Filter by non-existent
         mockMvc.perform(get("/link/list")
                         .param("likeUrl", "nonexistent999")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -1425,7 +1432,7 @@ class CreateControllerTest {
 
         // Test with /link/urls alias as well
         mockMvc.perform(get("/link/urls")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
@@ -1452,7 +1459,7 @@ class CreateControllerTest {
 
         for (int i = 1; i <= 5; i++) {
             NewUrl url = new NewUrl("code-" + i, "https://example.com/" + i, null, "http://localhost:8081/code-" + i,
-                    Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
+                Instant.now().plus(30, ChronoUnit.DAYS), null, LinkMode.REDIRECT);
             url.setUserId(userId);
             url.setActive(true);
             url.setCreatedAt(Instant.now().plusSeconds(i * 10));
@@ -1462,7 +1469,7 @@ class CreateControllerTest {
 
         // Page 0, Size 2
         mockMvc.perform(get("/link/list")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("page", "0")
                         .param("size", "2"))
                 .andExpect(status().isOk())
@@ -1475,7 +1482,7 @@ class CreateControllerTest {
 
         // Page 1, Size 2
         mockMvc.perform(get("/link/list")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .param("page", "1")
                         .param("size", "2"))
                 .andExpect(status().isOk())
@@ -1575,7 +1582,7 @@ class CreateControllerTest {
                 """;
 
         mockMvc.perform(post("/link/edit")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editPayload))
                 .andExpect(status().isOk())
@@ -1592,7 +1599,7 @@ class CreateControllerTest {
                 """;
 
         mockMvc.perform(post("/link/edit")
-                        .header("X-API-KEY", VALID_API_KEY)
+                        .header("Authorization", validJwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidEditPayload))
                 .andExpect(status().isBadRequest())
@@ -1636,7 +1643,7 @@ class CreateControllerTest {
         accessLogRepository.save(log3);
 
         mockMvc.perform(get("/link/" + url1.getPublicId() + "/accessLog")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -1661,7 +1668,7 @@ class CreateControllerTest {
         accessLogRepository.save(log);
 
         mockMvc.perform(get("/link/" + url.getPublicId() + "/accessLog")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(1))
@@ -1672,7 +1679,7 @@ class CreateControllerTest {
     @Test
     void listAccessLogs_notFound_returns404() throws Exception {
         mockMvc.perform(get("/link/unknownCode123/accessLog")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("URL not found"));
@@ -1699,7 +1706,7 @@ class CreateControllerTest {
         apiKeyRepository.save(apiKey2);
 
         mockMvc.perform(get("/link/" + url.getPublicId() + "/accessLog")
-                        .header("X-API-KEY", USER2_API_KEY))
+                        .header("Authorization", "Bearer " + jwtService.generateToken(user2)))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -1807,17 +1814,84 @@ class CreateControllerTest {
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/link/tags")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data", hasItems("spring", "java", "backend", "cloud")));
 
         // Verify /link/list returns the tags
         mockMvc.perform(get("/link/list")
-                        .header("X-API-KEY", VALID_API_KEY))
+                        .header("Authorization", validJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.content[0].tags").isArray());
+    }
+
+    @Test
+    void create_withApiKey_persistsCreatedByApi() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/created-by-api-test"
+                }
+                """;
+
+        String res = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.createdBy").value("API"))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = res.split("\"newUrl\":\"")[1].split("\"")[0];
+        NewUrl entity = shortUrlRepository.findByNewUrl(newUrl).orElseThrow();
+        assertEquals("API", entity.getCreatedBy());
+        assertEquals("API", entity.getCreationSource());
+    }
+
+    @Test
+    void create_withJwtBearerToken_persistsCreatedByUi() throws Exception {
+        String payload = """
+                {
+                    "url": "https://example.com/created-by-ui-test"
+                }
+                """;
+
+        String res = mockMvc.perform(post("/link/create")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.createdBy").value("UI"))
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = res.split("\"newUrl\":\"")[1].split("\"")[0];
+        NewUrl entity = shortUrlRepository.findByNewUrl(newUrl).orElseThrow();
+        assertEquals("UI", entity.getCreatedBy());
+        assertEquals("UI", entity.getCreationSource());
+    }
+
+    @Test
+    void nonCreateEndpoints_withApiKeyOnly_returns401Unauthorized() throws Exception {
+        // GET /link with API key should NOT be authenticated by ApiKeyAuthenticationFilter
+        mockMvc.perform(get("/link")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .param("id", "any-id"))
+                .andExpect(status().isUnauthorized());
+
+        // GET /link/list with API key should NOT be authenticated by ApiKeyAuthenticationFilter
+        mockMvc.perform(get("/link/list")
+                        .header("X-API-KEY", VALID_API_KEY))
+                .andExpect(status().isUnauthorized());
+
+        // POST /link/edit with API key should NOT be authenticated by ApiKeyAuthenticationFilter
+        mockMvc.perform(post("/link/edit")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"newUrl\":\"http://localhost:8081/test\"}"))
+                .andExpect(status().isUnauthorized());
     }
 }
 
