@@ -62,6 +62,20 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "plan", length = 20, nullable = false)
+    private String plan = "FREE";
+
+    @Column(name = "plan_updated_at")
+    private Instant planUpdatedAt;
+
+    public boolean isPro() {
+        return "PRO".equalsIgnoreCase(this.plan);
+    }
+
+    public String getPlan() {
+        return plan != null ? plan : "FREE";
+    }
+
     public User(
             Long tenantId,
             String fullName,
@@ -107,6 +121,9 @@ public class User {
         Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
+        if (plan == null) {
+            plan = "FREE";
+        }
     }
 
     @PreUpdate

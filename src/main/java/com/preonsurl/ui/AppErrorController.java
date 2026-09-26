@@ -50,12 +50,23 @@ public class AppErrorController implements ErrorController {
         }
 
         if (isApi) {
+            String message = (String) request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
+            if (message == null || message.isBlank()) {
+                Throwable ex = (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                if (ex != null && ex.getMessage() != null && !ex.getMessage().isBlank()) {
+                    message = ex.getMessage();
+                } else if (httpStatus == HttpStatus.NOT_FOUND) {
+                    message = "Endpoint or resource not found: " + (requestUri != null ? requestUri : "");
+                } else {
+                    message = httpStatus.getReasonPhrase();
+                }
+            }
             return ResponseEntity.status(httpStatus)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of(
                             "success", false,
                             "error", httpStatus.getReasonPhrase(),
-                            "message", "Endpoint or resource not found: " + (requestUri != null ? requestUri : ""),
+                            "message", message,
                             "status", status,
                             "path", requestUri != null ? requestUri : ""
                     ));

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Unsuccessful - SecureURL PRO</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background-color: #0d0f17;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #131722;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            padding: 36px 36px 24px;
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.15) 0%, rgba(19, 23, 34, 0) 100%);
+            text-align: center;
+        }
+        .brand-badge {
+            display: inline-block;
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        .title {
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0 0 8px;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            color: #94a3b8;
+            font-size: 15px;
+            margin: 0;
+        }
+        .content {
+            padding: 24px 36px 36px;
+        }
+        .alert-card {
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        .receipt-label {
+            color: #94a3b8;
+        }
+        .receipt-value {
+            color: #f1f5f9;
+            text-align: right;
+        }
+        .badge-failed {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .cta-btn {
+            display: block;
+            text-align: center;
+            background: #000000;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.2px;
+            margin: 28px 0 16px;
+            border: 1px solid #000000;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        }
+        .footer {
+            padding: 24px 36px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+        }
+        .footer a {
+            color: #a855f7;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="brand-badge">PAYMENT ALERT</div>
+            <h1 class="title">Payment Unsuccessful</h1>
+            <p class="subtitle">Hello {{userName}}, we couldn't complete your transaction.</p>
+        </div>
+        <div class="content">
+            <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 20px;">
+                We encountered an issue while processing your payment of <strong style="color:#ffffff;">{{amount}}</strong> for the <strong>SecureURL PRO Plan</strong>.
+            </p>
+
+            <div class="alert-card">
+                <table style="width: 100%;">
+                    <tr class="receipt-row">
+                        <td class="receipt-label">Attempted Plan</td>
+                        <td class="receipt-value">{{plan}}</td>
+                    </tr>
+                    <tr class="receipt-row">
+                        <td class="receipt-label">Amount</td>
+                        <td class="receipt-value">{{amount}}</td>
+                    </tr>
+                    <tr class="receipt-row">
+                        <td class="receipt-label">Status</td>
+                        <td class="receipt-value"><span class="badge-failed">UNSUCCESSFUL</span></td>
+                    </tr>
+                    <tr class="receipt-row">
+                        <td class="receipt-label">Reason / Detail</td>
+                        <td class="receipt-value" style="color: #fca5a5;">{{reason}}</td>
+                    </tr>
+                    <tr class="receipt-row">
+                        <td class="receipt-label">Date</td>
+                        <td class="receipt-value">{{date}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 20px;">
+                No charges were finalized on your account. You can retry your upgrade anytime from your dashboard using a different card or payment method.
+            </p>
+
+            <a href="{{dashboardUrl}}" class="cta-btn">Retry Upgrade Now &rarr;</a>
+        </div>
+        <div class="footer">
+            <p style="margin: 0 0 8px;">Need assistance? Contact our support desk at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+            <p style="margin: 0;">&copy; 2026 SecureURL &bull; PreonsURL Platform. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

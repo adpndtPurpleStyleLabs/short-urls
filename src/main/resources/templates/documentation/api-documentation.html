@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureURL API Documentation</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #0b0b0b;
+            --black-2: #111111;
+            --black-3: #171717;
+            --white: #ffffff;
+            --gray-1: #f5f5f5;
+            --gray-2: #e8e8e8;
+            --gray-3: #b5b5b5;
+            --gray-4: #777777;
+            --gray-5: #3a3a3a;
+            --border: #dedede;
+            --green: #16803c;
+            --red: #b42318;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: #fff;
+            color: var(--black);
+            font-family:
+                    Inter,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .header {
+            height: 68px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 34px;
+            position: sticky;
+            top: 0;
+            background: rgba(255,255,255,.94);
+            backdrop-filter: blur(18px);
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 750;
+            letter-spacing: -0.6px;
+            font-size: 19px;
+        }
+
+        .brand-mark {
+            width: 31px;
+            height: 31px;
+            border: 1.7px solid #111;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .header-link {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .header-link:hover {
+            color: #000;
+        }
+
+        .dashboard-btn {
+            background: #111;
+            color: #fff;
+            border-radius: 7px;
+            padding: 9px 15px;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        /* =========================
+           LAYOUT
+        ========================= */
+
+        .layout {
+            display: grid;
+            grid-template-columns: 245px minmax(0, 1fr);
+            max-width: 1450px;
+        }
+
+        .sidebar {
+            border-right: 1px solid var(--border);
+            min-height: calc(100vh - 68px);
+            padding: 35px 20px;
+            position: sticky;
+            top: 68px;
+            height: calc(100vh - 68px);
+            overflow-y: auto;
+        }
+
+        .sidebar-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #999;
+            font-weight: 700;
+            margin: 0 10px 12px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 9px 10px;
+            border-radius: 7px;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #f4f4f4;
+            color: #111;
+        }
+
+
+        .sidebar .api-parent {
+            font-weight: 650;
+            color: #333;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: #eee;
+            margin: 25px 10px;
+        }
+
+
+        .sidebar-subnav {
+            margin: 2px 0 10px 10px;
+            padding-left: 12px;
+            border-left: 1px solid #e7e7e7;
+        }
+
+        .sidebar-subnav a {
+            padding: 7px 10px;
+            margin-bottom: 1px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .sidebar-subnav a:hover,
+        .sidebar-subnav a.active {
+            background: #f7f7f7;
+            color: #111;
+        }
+
+        /* Nested API content */
+        .api-section {
+            margin-left: 28px;
+            padding-left: 24px;
+            border-left: 1px solid #eeeeee;
+        }
+
+        .api-section:last-child {
+            margin-bottom: 70px;
+        }
+
+        @media(max-width: 900px) {
+            .api-section {
+                margin-left: 0;
+                padding-left: 0;
+                border-left: 0;
+            }
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        main {
+            min-width: 0;
+        }
+
+        .main-inner {
+            max-width: 1060px;
+            padding: 72px 62px 120px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.3px;
+            color: #777;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .eyebrow-dot {
+            width: 6px;
+            height: 6px;
+            background: #111;
+            border-radius: 50%;
+        }
+
+        h1 {
+            font-size: 46px;
+            letter-spacing: -2px;
+            line-height: 1.05;
+            margin: 0 0 20px;
+        }
+
+        .hero-description {
+            max-width: 720px;
+            font-size: 16px;
+            line-height: 1.75;
+            color: #666;
+            margin-bottom: 50px;
+        }
+
+        /* =========================
+           SECTIONS
+        ========================= */
+
+        .section {
+            margin-bottom: 70px;
+            scroll-margin-top: 100px;
+        }
+
+        .section h2 {
+            font-size: 23px;
+            letter-spacing: -.7px;
+            margin: 0 0 12px;
+        }
+
+        .section-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.65;
+            margin: 0 0 25px;
+        }
+
+        /* =========================
+           ENDPOINT
+        ========================= */
+
+        .endpoint {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .endpoint-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 18px;
+            border-bottom: 1px solid #e5e5e5;
+            background: #fafafa;
+        }
+
+        .method {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .5px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            background: #111;
+            color: white;
+        }
+
+        .endpoint-url {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 13px;
+        }
+
+        .endpoint-desc {
+            padding: 18px;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* =========================
+           AUTH
+        ========================= */
+
+        .auth-box {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 22px;
+            background: #fafafa;
+        }
+
+        .auth-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .auth-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .auth-badge {
+            font-size: 10px;
+            background: #111;
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .input {
+            width: 100%;
+            border: 1px solid #d8d8d8;
+            border-radius: 7px;
+            padding: 11px 12px;
+            outline: none;
+            background: #fff;
+            color: #111;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 12px;
+        }
+
+        .input:focus {
+            border-color: #111;
+        }
+
+        .auth-help {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        /* =========================
+           TRY IT
+        ========================= */
+
+        .try-box {
+            border: 1px solid #d9d9d9;
+            border-radius: 13px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 12px 40px rgba(0,0,0,.04);
+        }
+
+        .try-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e4e4e4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .try-title {
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+        .try-status {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .try-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .request-panel,
+        .response-panel {
+            min-width: 0;
+        }
+
+        .request-panel {
+            border-right: 1px solid #e4e4e4;
+        }
+
+        .panel-title {
+            padding: 12px 16px;
+            background: #fafafa;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 750;
+            color: #777;
+        }
+
+        .code-editor {
+            width: 100%;
+            min-height: 420px;
+            resize: vertical;
+            border: 0;
+            outline: 0;
+            padding: 18px;
+            background: #0d0d0d;
+            color: #f1f1f1;
+            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .response-code {
+            min-height: 420px;
+            padding: 18px;
+            margin: 0;
+            background: #0d0d0d;
+            color: #f1f1f1;
+            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .try-footer {
+            border-top: 1px solid #e4e4e4;
+            padding: 14px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #fafafa;
+        }
+
+        .secondary-btn {
+            border: 1px solid #ddd;
+            background: white;
+            color: #222;
+            border-radius: 7px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .primary-btn {
+            border: 0;
+            background: #111;
+            color: white;
+            border-radius: 7px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .primary-btn:hover {
+            background: #252525;
+        }
+
+        .primary-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* =========================
+           PARAMETERS
+        ========================= */
+
+        .table-wrap {
+            border: 1px solid #ddd;
+            border-radius: 11px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            background: #fafafa;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            color: #777;
+            padding: 12px 14px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .param-name {
+            font-family: "JetBrains Mono", monospace;
+            font-weight: 650;
+            color: #111;
+        }
+
+        .required {
+            display: inline-block;
+            margin-left: 5px;
+            font-size: 9px;
+            background: #111;
+            color: #fff;
+            padding: 2px 5px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .type {
+            font-family: "JetBrains Mono", monospace;
+            color: #666;
+        }
+
+        /* =========================
+           CODE
+        ========================= */
+
+        .code-block {
+            border-radius: 11px;
+            background: #0d0d0d;
+            color: #eee;
+            padding: 20px;
+            overflow-x: auto;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .copy-wrap {
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            border: 1px solid #444;
+            background: #1c1c1c;
+            color: #ddd;
+            border-radius: 6px;
+            padding: 6px 9px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        /* =========================
+           RESPONSE
+        ========================= */
+
+        .response-card {
+            border: 1px solid #ddd;
+            border-radius: 11px;
+            overflow: hidden;
+        }
+
+        .response-header {
+            padding: 13px 16px;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .status-code {
+            background: #111;
+            color: #fff;
+            border-radius: 5px;
+            padding: 5px 7px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .status-text {
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        /* =========================
+           CALLOUT
+        ========================= */
+
+        .note {
+            padding: 16px 18px;
+            border: 1px solid #ddd;
+            border-left: 3px solid #111;
+            border-radius: 8px;
+            background: #fafafa;
+            font-size: 13px;
+            line-height: 1.65;
+            color: #555;
+        }
+
+        .note strong {
+            color: #111;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            border-top: 1px solid #eee;
+            padding: 30px 0;
+            color: #888;
+            font-size: 11px;
+        }
+
+        /* =========================
+           TOAST
+        ========================= */
+
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            background: #111;
+            color: #fff;
+            padding: 11px 15px;
+            border-radius: 7px;
+            font-size: 12px;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: .25s ease;
+            z-index: 999;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media(max-width: 900px) {
+
+            .layout {
+                display: block;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .main-inner {
+                padding: 45px 22px 80px;
+            }
+
+            h1 {
+                font-size: 36px;
+            }
+
+            .try-content {
+                grid-template-columns: 1fr;
+            }
+
+            .request-panel {
+                border-right: 0;
+                border-bottom: 1px solid #e4e4e4;
+            }
+
+            .header {
+                padding: 0 18px;
+            }
+
+            .header-link {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <a href="/" class="brand">
+        <span class="brand-mark">S</span>
+        <span> SecureURLs.me</span>
+    </a>
+
+    <div class="header-right">
+        <a href="#authentication" class="header-link">Authentication</a>
+        <a href="#create-link" class="header-link">API Reference</a>
+        <a href="/Console" class="dashboard-btn">Console</a>
+    </div>
+
+</header>
+
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-label">
+            Getting Started
+        </div>
+
+        <a href="#overview" class="active">
+            Overview
+        </a>
+
+        <a href="#authentication">
+            Authentication
+        </a>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-label">
+            API Reference
+        </div>
+
+        <a href="#create-link" class="api-parent">
+            Create URL
+        </a>
+
+        <div class="sidebar-subnav">
+            <a href="#parameters">
+                Parameters
+            </a>
+
+            <a href="#response">
+                Response
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-label">
+            Resources
+        </div>
+
+        <a href="#examples">
+            Examples
+        </a>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main>
+
+        <div class="main-inner">
+
+            <!-- OVERVIEW -->
+
+            <section class="section" id="overview">
+
+                <div class="eyebrow">
+                    <span class="eyebrow-dot"></span>
+                    SecureURL API
+                </div>
+
+                <h1>
+                    Build links<br>
+                    with control.
+                </h1>
+
+                <p class="hero-description">
+                    SecureURL's API lets you create controlled, branded and
+                    trackable links programmatically. Authenticate your
+                    requests with an API key and create links directly from
+                    your application or from this documentation.
+                </p>
+
+                <div class="note">
+                    <strong>Base URL</strong><br>
+                    Replace the URL below with your SecureURL API host.
+                    The endpoint shown in this documentation is
+                    <code>/link/create</code>.
+                </div>
+
+            </section>
+
+
+            <!-- AUTHENTICATION -->
+
+            <section class="section" id="authentication">
+
+                <h2>
+                    Authentication
+                </h2>
+
+                <p class="section-description">
+                    SecureURL accepts an API key through the
+                    <code>X-API-Key</code> HTTP header when creating links
+                    through the API.
+                </p>
+
+                <div class="auth-box">
+
+                    <div class="auth-header">
+
+                        <div class="auth-title">
+                            API Key
+                        </div>
+
+                        <div class="auth-badge">
+                            X-API-Key
+                        </div>
+
+                    </div>
+
+                    <label class="field-label">
+                        Your API key
+                    </label>
+
+                    <input
+                            id="apiKey"
+                            class="input"
+                            type="password"
+                            placeholder="su_live_••••••••••••••••"
+                            autocomplete="off"
+                    >
+
+                    <div class="auth-help">
+                        Your API key is used only by the browser to make
+                        the request when you click <strong>Send Request</strong>.
+                        It is not stored by this page.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- CREATE LINK -->
+
+            <section class="section" id="create-link">
+
+                <h2>
+                    Create a URL
+                </h2>
+
+                <p class="section-description">
+                    Create or retrieve a SecureURL link using the
+                    <code>POST</code> endpoint.
+                </p>
+
+                <div class="endpoint">
+
+                    <div class="endpoint-top">
+
+                        <span class="method">
+                            POST
+                        </span>
+
+                        <span class="endpoint-url">
+                            /link/create
+                        </span>
+
+                    </div>
+
+                    <div class="endpoint-desc">
+                        Creates a new URL with optional grouping,
+                        expiration, usage policies, access policies,
+                        notes, tags, link delivery mode and custom domain.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- TRY IT -->
+
+            <section class="section">
+
+                <h2>
+                    Try it
+                </h2>
+
+                <p class="section-description">
+                    Enter your API key, modify the JSON payload and execute
+                    the request directly from your browser.
+                </p>
+
+                <div class="try-box">
+
+                    <div class="try-header">
+
+                        <div class="try-title">
+                            POST /link/create
+                        </div>
+
+                        <div class="try-status" id="requestStatus">
+                            Ready
+                        </div>
+
+                    </div>
+
+                    <div class="try-content">
+
+                        <!-- REQUEST -->
+
+                        <div class="request-panel">
+
+                            <div class="panel-title">
+                                Request Body
+                            </div>
+
+                            <textarea id="requestBody" class="code-editor">{
+  "url": "https://example.com/products/item1",
+  "customPath": "invoice/diwali-sale",
+  "linkMode": "REDIRECT",
+  "addShortCode": true,
+  "usagePolicies": {
+    "type": "UNLIMITED"
+  },
+  "accessPolicies": {
+    "type": "PUBLIC"
+  },
+  "notes": "Diwali campaign landing page",
+  "tags": [
+    "marketing",
+    "diwali",
+    "campaign"
+  ]
+}</textarea>
+
+                        </div>
+
+
+                        <!-- RESPONSE -->
+
+                        <div class="response-panel">
+
+                            <div class="panel-title">
+                                Response
+                            </div>
+
+                            <pre id="responseBody" class="response-code">{
+  "status": "Ready",
+  "message": "Execute the request to see the API response."
+}</pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="try-footer">
+
+                        <button
+                                class="secondary-btn"
+                                onclick="resetRequest()"
+                        >
+                            Reset
+                        </button>
+
+                        <button
+                                id="sendButton"
+                                class="primary-btn"
+                                onclick="executeRequest()"
+                        >
+                            Send Request
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- PARAMETERS -->
+
+            <section class="section api-section" id="parameters">
+
+                <h2>
+                    Request parameters
+                </h2>
+
+                <p class="section-description">
+                    Parameters available for creating a SecureURL.
+                </p>
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">url</span>
+                                <span class="required">required</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Original destination URL.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">customPath</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Optional custom path such as
+                                <code>invoice/diwali-sale</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">usagePolicies</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Controls lifetime and usage behavior.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">accessPolicies</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Controls who can access the link.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">notes</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Optional internal note.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">tags</span>
+                            </td>
+
+                            <td class="type">
+                                string[]
+                            </td>
+
+                            <td>
+                                Tags for organization and filtering.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">linkMode</span>
+                            </td>
+
+                            <td class="type">
+                                enum
+                            </td>
+
+                            <td>
+                                REDIRECT, IFRAME, PROXY or MIRROR.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">addShortCode</span>
+                            </td>
+
+                            <td class="type">
+                                boolean
+                            </td>
+
+                            <td>
+                                Whether SecureURL should generate a short code.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">expireAt</span>
+                            </td>
+
+                            <td class="type">
+                                ISO-8601
+                            </td>
+
+                            <td>
+                                Legacy expiration timestamp.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">usageLimit</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Legacy usage limit. Supports
+                                <code>once</code>, <code>unlimited</code>
+                                or a positive integer.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">domain</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Optional custom domain.
+                            </td>
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- LINK MODES -->
+
+            <section class="section">
+
+                <h2>
+                    Link modes
+                </h2>
+
+                <p class="section-description">
+                    The <code>linkMode</code> determines how SecureURL
+                    delivers the destination.
+                </p>
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+                        <tr>
+                            <th>Mode</th>
+                            <th>Behavior</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">REDIRECT</span>
+                            </td>
+
+                            <td>
+                                Navigates the visitor to the destination.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">IFRAME</span>
+                            </td>
+
+                            <td>
+                                Embeds the destination inside SecureURL.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">PROXY</span>
+                            </td>
+
+                            <td>
+                                Serves the destination through SecureURL.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">MIRROR</span>
+                            </td>
+
+                            <td>
+                                Serves a rewritten copy of the destination.
+                            </td>
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- RESPONSE -->
+
+            <section class="section api-section" id="response">
+
+                <h2>
+                    Response
+                </h2>
+
+                <p class="section-description">
+                    A successful request returns the created or resolved
+                    SecureURL together with its configuration.
+                </p>
+
+                <div class="response-card">
+
+                    <div class="response-header">
+
+                        <span class="status-code">
+                            200
+                        </span>
+
+                        <span class="status-text">
+                            URL created successfully
+                        </span>
+
+                    </div>
+
+                    <div class="copy-wrap">
+
+                        <button
+                                class="copy-btn"
+                                onclick="copyCode('responseExample')"
+                        >
+                            Copy
+                        </button>
+
+                        <pre id="responseExample" class="code-block">{
+  "data": {
+    "newUrl": "https://secure.indexrender.io/invoice/diwali-sale",
+    "originalUrl": "https://example.com/products/item1",
+    "customPath": "invoice/diwali-sale",
+    "existing": false,
+    "expireAt": null,
+    "usageLimit": null,
+    "notes": "Diwali campaign landing page",
+    "tags": [
+      "marketing",
+      "diwali",
+      "campaign"
+    ],
+    "linkMode": "REDIRECT",
+    "isActive": true,
+    "publicId": "f8K2mP9xQ7La3VnR6Tc1Zw",
+    "usagePolicies": {},
+    "accessPolicies": {},
+    "createdBy": "API"
+  },
+  "message": "New URL created successfully"
+}</pre>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- EXAMPLES -->
+
+            <section class="section" id="examples">
+
+                <h2>
+                    cURL
+                </h2>
+
+                <p class="section-description">
+                    The same request can be executed from your backend,
+                    terminal or CI/CD pipeline.
+                </p>
+
+                <div class="copy-wrap">
+
+                    <button
+                            class="copy-btn"
+                            onclick="copyCode('curlExample')"
+                    >
+                        Copy
+                    </button>
+
+                    <pre id="curlExample" class="code-block">curl -X POST "https://secure.indexrender.io/link/create" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "url": "https://example.com/products/item1",
+    "customPath": "invoice/diwali-sale",
+    "linkMode": "REDIRECT",
+    "addShortCode": true,
+    "notes": "Diwali campaign landing page",
+    "tags": [
+      "marketing",
+      "diwali"
+    ]
+  }'</pre>
+
+                </div>
+
+            </section>
+
+
+            <footer>
+                SecureURL API · Links with control built in.
+            </footer>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<div id="toast" class="toast">
+    Copied
+</div>
+
+
+<script>
+
+    /*
+     * Change this if your API lives on another origin.
+     *
+     * Example:
+     * https://api.secureurls.me
+     */
+    const API_BASE_URL = window.location.origin;
+
+
+    const defaultRequest = {
+        url: "https://example.com/products/item1",
+        customPath: "invoice/diwali-sale",
+        linkMode: "REDIRECT",
+        addShortCode: true,
+        usagePolicies: {
+            type: "UNLIMITED"
+        },
+        accessPolicies: {
+            type: "PUBLIC"
+        },
+        notes: "Diwali campaign landing page",
+        tags: [
+            "marketing",
+            "diwali",
+            "campaign"
+        ]
+    };
+
+
+    async function executeRequest() {
+
+        const apiKey =
+            document.getElementById("apiKey").value.trim();
+
+        const bodyText =
+            document.getElementById("requestBody").value;
+
+        const responseBox =
+            document.getElementById("responseBody");
+
+        const statusBox =
+            document.getElementById("requestStatus");
+
+        const button =
+            document.getElementById("sendButton");
+
+
+        if (!apiKey) {
+
+            showToast("Enter your API key first.");
+
+            document
+                .getElementById("apiKey")
+                .focus();
+
+            return;
+        }
+
+
+        let payload;
+
+        try {
+
+            payload = JSON.parse(bodyText);
+
+        } catch (error) {
+
+            responseBox.textContent =
+                "Invalid JSON:\n\n" + error.message;
+
+            statusBox.textContent = "Invalid JSON";
+
+            return;
+        }
+
+
+        button.disabled = true;
+
+        button.textContent = "Sending...";
+
+        statusBox.textContent = "Requesting...";
+
+        responseBox.textContent =
+            "Sending request...";
+
+
+        try {
+
+            const response =
+                await fetch(
+                    API_BASE_URL + "/link/create",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            "X-API-Key":
+                            apiKey
+                        },
+
+                        body:
+                            JSON.stringify(payload)
+                    }
+                );
+
+
+            const text =
+                await response.text();
+
+
+            let formatted;
+
+            try {
+
+                formatted =
+                    JSON.stringify(
+                        JSON.parse(text),
+                        null,
+                        2
+                    );
+
+            } catch {
+
+                formatted = text;
+            }
+
+
+            responseBox.textContent =
+                formatted || "(empty response)";
+
+
+            statusBox.textContent =
+                response.status +
+                " " +
+                response.statusText;
+
+
+        } catch (error) {
+
+            responseBox.textContent =
+                "Request failed:\n\n" +
+                error.message +
+                "\n\nPossible causes:\n" +
+                "- Incorrect API URL\n" +
+                "- CORS configuration\n" +
+                "- Network error\n" +
+                "- API server unavailable";
+
+            statusBox.textContent =
+                "Request failed";
+
+        } finally {
+
+            button.disabled = false;
+
+            button.textContent =
+                "Send Request";
+        }
+    }
+
+
+    function resetRequest() {
+
+        document.getElementById(
+            "requestBody"
+        ).value =
+            JSON.stringify(
+                defaultRequest,
+                null,
+                2
+            );
+
+        document.getElementById(
+            "responseBody"
+        ).textContent =
+            JSON.stringify(
+                {
+                    status: "Ready",
+                    message:
+                        "Execute the request to see the API response."
+                },
+                null,
+                2
+            );
+
+        document.getElementById(
+            "requestStatus"
+        ).textContent =
+            "Ready";
+    }
+
+
+    async function copyCode(id) {
+
+        const element =
+            document.getElementById(id);
+
+        const text =
+            element.innerText;
+
+        try {
+
+            await navigator.clipboard.writeText(text);
+
+            showToast("Copied to clipboard");
+
+        } catch {
+
+            showToast("Copy failed");
+
+        }
+    }
+
+
+    function showToast(message) {
+
+        const toast =
+            document.getElementById("toast");
+
+        toast.textContent = message;
+
+        toast.classList.add("show");
+
+        setTimeout(() => {
+
+            toast.classList.remove("show");
+
+        }, 1800);
+    }
+
+
+    /*
+     * Highlight current sidebar item.
+     */
+
+    const links =
+        document.querySelectorAll(
+            ".sidebar a"
+        );
+
+    const sections =
+        document.querySelectorAll(
+            ".section"
+        );
+
+
+    window.addEventListener(
+        "scroll",
+        () => {
+
+            let current = "";
+
+            sections.forEach(section => {
+
+                const top =
+                    section.offsetTop - 140;
+
+                if (
+                    window.scrollY >= top
+                ) {
+                    current =
+                        section.id;
+                }
+
+            });
+
+
+            links.forEach(link => {
+
+                link.classList.remove(
+                    "active"
+                );
+
+                if (
+                    link.getAttribute(
+                        "href"
+                    ) === "#" + current
+                ) {
+                    link.classList.add(
+                        "active"
+                    );
+                }
+
+            });
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

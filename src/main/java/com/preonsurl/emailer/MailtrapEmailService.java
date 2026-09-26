@@ -393,4 +393,187 @@ public class MailtrapEmailService implements EmailService {
             The SecureURL Team
             """.formatted(userName, dashboardUrl, helpCenterUrl, supportEmail, docsUrl);
     }
+
+    @Override
+    public void sendPaymentSuccessEmail(String toEmail, String userName, String invoiceNumber, String amount, String plan, String date, String paymentId) {
+        if (toEmail == null || toEmail.isBlank()) {
+            log.warn("PREONS-EMAILER: Cannot send payment success email because recipient email is blank.");
+            return;
+        }
+
+        String safeName = (userName != null && !userName.isBlank()) ? userName.trim() : "Member";
+        String subject = "Payment Confirmed - Welcome to SecureURL PRO! (Invoice #" + invoiceNumber + ")";
+        String dashboardUrl = (welcomeDashboardUrl != null && !welcomeDashboardUrl.isBlank())
+                ? welcomeDashboardUrl : "https://secure.indexrender.io/console";
+        String supportEmail = (welcomeSupportEmail != null && !welcomeSupportEmail.isBlank())
+                ? welcomeSupportEmail : "support@indexrender.io";
+
+        String htmlContent = buildPaymentSuccessHtml(safeName, invoiceNumber, amount, plan, date, paymentId, dashboardUrl, supportEmail);
+        String textContent = """
+            Hello %s,
+
+            Thank you for upgrading to SecureURL PRO!
+            Your payment of %s has been confirmed.
+
+            Transaction Details:
+            - Invoice Number: %s
+            - Payment ID: %s
+            - Plan: %s (Lifetime License)
+            - Date: %s
+            - Status: PAID
+
+            Access your console: %s
+            Support: %s
+
+            Best regards,
+            The SecureURL Team
+            """.formatted(safeName, amount, invoiceNumber, paymentId, plan, date, dashboardUrl, supportEmail);
+
+        log.info("PREONS-EMAILER: Dispatching payment success email to '{}' for invoice '{}'", toEmail, invoiceNumber);
+
+        if (apiToken == null || apiToken.isBlank()) {
+            log.info("PREONS-EMAILER: Mailtrap API token not configured. Payment success email logged for '{}'.", toEmail);
+            return;
+        }
+
+        try {
+            MailtrapClient client = getClient();
+            if (client == null) {
+                log.info("PREONS-EMAILER: MailtrapClient unavailable. Payment success email logged for '{}'.", toEmail);
+                return;
+            }
+
+            Address from = new Address(senderEmail, senderName);
+            Address to = new Address(toEmail, safeName);
+
+            MailtrapMail mail = MailtrapMail.builder()
+                    .from(from)
+                    .to(List.of(to))
+                    .subject(subject)
+                    .html(htmlContent)
+                    .text(textContent)
+                    .category("Payment Receipt")
+                    .build();
+
+            SendResponse response = client.send(mail);
+            log.info("PREONS-EMAILER: Payment success email dispatched to '{}' (response: {})", toEmail, response);
+        } catch (Exception e) {
+            log.warn("PREONS-EMAILER: Mailtrap API payment success email dispatch to '{}' encountered: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendPaymentFailedEmail(String toEmail, String userName, String amount, String plan, String date, String reason) {
+        if (toEmail == null || toEmail.isBlank()) {
+            log.warn("PREONS-EMAILER: Cannot send payment failure email because recipient email is blank.");
+            return;
+        }
+
+        String safeName = (userName != null && !userName.isBlank()) ? userName.trim() : "Member";
+        String subject = "Payment Unsuccessful - SecureURL PRO Plan";
+        String dashboardUrl = (welcomeDashboardUrl != null && !welcomeDashboardUrl.isBlank())
+                ? welcomeDashboardUrl : "https://secure.indexrender.io/console";
+        String supportEmail = (welcomeSupportEmail != null && !welcomeSupportEmail.isBlank())
+                ? welcomeSupportEmail : "support@indexrender.io";
+
+        String htmlContent = buildPaymentFailedHtml(safeName, amount, plan, date, reason, dashboardUrl, supportEmail);
+        String textContent = """
+            Hello %s,
+
+            We were unable to complete your payment of %s for the %s.
+            Reason: %s
+            Date: %s
+
+            You can retry the transaction anytime from your dashboard: %s
+            Support: %s
+
+            Best regards,
+            The SecureURL Team
+            """.formatted(safeName, amount, plan, reason, date, dashboardUrl, supportEmail);
+
+        log.info("PREONS-EMAILER: Dispatching payment failed email to '{}'", toEmail);
+
+        if (apiToken == null || apiToken.isBlank()) {
+            log.info("PREONS-EMAILER: Mailtrap API token not configured. Payment failed email logged for '{}'.", toEmail);
+            return;
+        }
+
+        try {
+            MailtrapClient client = getClient();
+            if (client == null) {
+                log.info("PREONS-EMAILER: MailtrapClient unavailable. Payment failed email logged for '{}'.", toEmail);
+                return;
+            }
+
+            Address from = new Address(senderEmail, senderName);
+            Address to = new Address(toEmail, safeName);
+
+            MailtrapMail mail = MailtrapMail.builder()
+                    .from(from)
+                    .to(List.of(to))
+                    .subject(subject)
+                    .html(htmlContent)
+                    .text(textContent)
+                    .category("Payment Alert")
+                    .build();
+
+            SendResponse response = client.send(mail);
+            log.info("PREONS-EMAILER: Payment failed email dispatched to '{}' (response: {})", toEmail, response);
+        } catch (Exception e) {
+            log.warn("PREONS-EMAILER: Mailtrap API payment failed email dispatch to '{}' encountered: {}", toEmail, e.getMessage());
+        }
+    }
+
+    private String buildPaymentSuccessHtml(String userName, String invoiceNumber, String amount, String plan, String date, String paymentId, String dashboardUrl, String supportEmail) {
+        if (templateEngine != null) {
+            try {
+                Context context = new Context();
+                context.setVariable("userName", userName);
+                context.setVariable("invoiceNumber", invoiceNumber);
+                context.setVariable("amount", amount);
+                context.setVariable("plan", plan);
+                context.setVariable("date", date);
+                context.setVariable("paymentId", paymentId);
+                context.setVariable("dashboardUrl", dashboardUrl);
+                context.setVariable("supportEmail", supportEmail);
+                return templateEngine.process("email/payment-success", context);
+            } catch (Exception e) {
+                log.warn("Thymeleaf payment-success template failed: {}, using fallback", e.getMessage());
+            }
+        }
+        return """
+            <!DOCTYPE html><html><body>
+            <h2>Payment Confirmed</h2>
+            <p>Hello %s, your payment of <strong>%s</strong> for SecureURL PRO has been processed.</p>
+            <p>Invoice: %s | Payment ID: %s | Date: %s</p>
+            <p><a href="%s">Open Dashboard</a></p>
+            </body></html>
+            """.formatted(userName, amount, invoiceNumber, paymentId, date, dashboardUrl);
+    }
+
+    private String buildPaymentFailedHtml(String userName, String amount, String plan, String date, String reason, String dashboardUrl, String supportEmail) {
+        if (templateEngine != null) {
+            try {
+                Context context = new Context();
+                context.setVariable("userName", userName);
+                context.setVariable("amount", amount);
+                context.setVariable("plan", plan);
+                context.setVariable("date", date);
+                context.setVariable("reason", reason != null ? reason : "Payment provider declined the transaction.");
+                context.setVariable("dashboardUrl", dashboardUrl);
+                context.setVariable("supportEmail", supportEmail);
+                return templateEngine.process("email/payment-failed", context);
+            } catch (Exception e) {
+                log.warn("Thymeleaf payment-failed template failed: {}, using fallback", e.getMessage());
+            }
+        }
+        return """
+            <!DOCTYPE html><html><body>
+            <h2>Payment Unsuccessful</h2>
+            <p>Hello %s, we could not process your payment of <strong>%s</strong>.</p>
+            <p>Reason: %s</p>
+            <p><a href="%s">Retry Payment</a></p>
+            </body></html>
+            """.formatted(userName, amount, reason, dashboardUrl);
+    }
 }

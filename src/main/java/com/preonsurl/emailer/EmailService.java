@@ -21,4 +21,29 @@ public interface EmailService {
      * @param userName  recipient name (full name or username)
      */
     void sendWelcomeEmail(String toEmail, String userName);
+
+    /**
+     * Dispatches a payment success and PRO plan activation email with invoice receipt.
+     *
+     * @param toEmail       recipient email address
+     * @param userName      recipient name
+     * @param invoiceNumber invoice number
+     * @param amount        formatted amount (e.g. $50.00)
+     * @param plan          plan name (e.g. PRO)
+     * @param date          formatted transaction date
+     * @param paymentId     Razorpay payment ID
+     */
+    void sendPaymentSuccessEmail(String toEmail, String userName, String invoiceNumber, String amount, String plan, String date, String paymentId);
+
+    /**
+     * Dispatches a payment failure alert notification.
+     *
+     * @param toEmail   recipient email address
+     * @param userName  recipient name
+     * @param amount    formatted amount (e.g. $50.00)
+     * @param plan      plan name
+     * @param date      formatted transaction date
+     * @param reason    failure reason or description
+     */
+    void sendPaymentFailedEmail(String toEmail, String userName, String amount, String plan, String date, String reason);
 }

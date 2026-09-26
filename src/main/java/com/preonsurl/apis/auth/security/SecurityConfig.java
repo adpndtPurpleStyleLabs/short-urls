@@ -61,7 +61,7 @@ public class SecurityConfig {
                         // =========================
                         // Authentication & Verification & Console UI & Link QR Codes & Public Links
                         // =========================
-                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**", "/console", "/console/**","/", "/api/contact/**", "/create", "/api/public-links", "/api/public-links/**", "/psecure", "/psecure/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**", "/console", "/console/**","/", "/api/contact/**", "/create", "/api/public-links", "/api/public-links/**", "/psecure", "/psecure/**","/api-documentation").permitAll()
                         // =========================
                         // Swagger / OpenAPI
                         // =========================

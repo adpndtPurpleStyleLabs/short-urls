@@ -133,6 +133,26 @@
       gap: 10px;
     }
 
+    .btn.to-console-btn {
+      border-radius: 10px;
+      padding: 0 18px;
+      background: #111;
+      color: #fff;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn.to-console-btn:hover {
+      background: #252525;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -1463,16 +1483,90 @@
 
       <a href="#pricing">Pricing</a>
 
-      <a href="#developers">Developers</a>
+      <a href="/api-documentation">Developers</a>
     </nav>
 
-    <div class="nav-actions">
+    <div class="nav-actions" id="navActions">
       <a class="btn" href="/login">Sign in</a>
 
       <a class="btn primary" href="/register">Get started</a>
 
       <button class="btn mobile-menu" aria-label="Menu">☰</button>
     </div>
+    <script>
+      (function checkAuthAndReplaceNav() {
+        function parseJwt(token) {
+          if (!token || typeof token !== 'string') return null;
+          const parts = token.trim().split('.');
+          if (parts.length !== 3) return null;
+          try {
+            let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            while (base64.length % 4 !== 0) base64 += '=';
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return JSON.parse(new TextDecoder().decode(bytes));
+          } catch (e) {
+            return null;
+          }
+        }
+
+        function isValid(token) {
+          const payload = parseJwt(token);
+          if (!payload) return false;
+          if (payload.exp && typeof payload.exp === 'number') {
+            if (payload.exp <= Math.floor(Date.now() / 1000)) return false;
+          }
+          return true;
+        }
+
+        function updateNavIfLoggedIn() {
+          try {
+            const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
+            let hasJwt = false;
+            if (token && isValid(token)) {
+              hasJwt = true;
+            } else {
+              const match = document.cookie.match(/(?:^|;\s*)preons_jwt=([^;]+)/);
+              if (match && match[1] && isValid(decodeURIComponent(match[1]))) {
+                hasJwt = true;
+              }
+            }
+
+            if (hasJwt) {
+              const nav = document.getElementById('navActions') || document.querySelector('.nav-actions');
+              if (nav) {
+                const signIn = nav.querySelector('a[href="/login"]');
+                const getStarted = nav.querySelector('a[href="/register"]');
+                if (signIn) signIn.remove();
+                if (getStarted) getStarted.remove();
+
+                if (!nav.querySelector('.to-console-btn')) {
+                  const toConsole = document.createElement('a');
+                  toConsole.className = 'btn primary to-console-btn';
+                  toConsole.href = '/console';
+                  toConsole.textContent = 'To Console →';
+
+                  const mobileBtn = nav.querySelector('.mobile-menu');
+                  if (mobileBtn) {
+                    nav.insertBefore(toConsole, mobileBtn);
+                  } else {
+                    nav.appendChild(toConsole);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Auth check error:', e);
+          }
+        }
+
+        updateNavIfLoggedIn();
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', updateNavIfLoggedIn);
+        }
+      })();
+    </script>
   </div>
 </header>
 

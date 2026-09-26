@@ -111,7 +111,7 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
         userCache.put(user);
-        return new LoginResponse(token, "Bearer", jwtService.getExpirationSeconds(), true, user.getEmail());
+        return new LoginResponse(token, "Bearer", jwtService.getExpirationSeconds(), true, user.getEmail(), user.getPlan(), user.getFullName());
     }
 
     @Transactional
