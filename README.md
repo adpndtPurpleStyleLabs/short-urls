@@ -2,10 +2,10 @@
 
 [![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Database](https://img.shields.io/badge/Database-MariaDB-blue.svg)](https://mariadb.org/)
+[![Database](https://img.shields.io/badge/Database-MySQL-blue.svg)](https://www.mysql.com/)
 [![Build](https://img.shields.io/badge/Build-Maven-C71A36.svg)](https://maven.apache.org/)
 
-**PreonsURL** is a high-performance URL shortening and business link infrastructure engine. It combines a lock-free/spin-wait buffered short code generator with MariaDB persistence, directory-type categorization (e.g. `/invoice/{code}`), link access analytics logging, and API-key protected creation endpoints.
+**PreonsURL** is a high-performance URL shortening and business link infrastructure engine. It combines a lock-free/spin-wait buffered short code generator with MySQL persistence, directory-type categorization (e.g. `/invoice/{code}`), link access analytics logging, and API-key protected creation endpoints.
 
 ---
 
@@ -48,7 +48,7 @@
                        v                      v              v
             +-------------------+   +------------------+   +------------------------+
             |   ShortCodePool   |   |    short_urls    |   | short_urls_access_log  |
-            | (Pre-buffered ID) |   |  (MariaDB Table) |   |    (MariaDB Table)     |
+            | (Pre-buffered ID) |   |   (MySQL Table)  |   |     (MySQL Table)      |
             +-------------------+   +------------------+   +------------------------+
 ```
 
@@ -58,8 +58,8 @@
 
 ```
 preonsurl/
-├── pom.xml                                  # Project dependencies (Spring Boot, JPA, MariaDB, H2)
-├── schema-mariadb.sql                       # MariaDB DDL for database and tables
+├── pom.xml                                  # Project dependencies (Spring Boot, JPA, MySQL, H2)
+├── schema-mysql.sql                         # MySQL DDL for database and tables
 ├── src/
 │   ├── main/
 │   │   ├── java/com/preonsurl/
@@ -92,7 +92,7 @@ preonsurl/
 │   │   │   │       ├── CreateController.java
 │   │   │   │       └── ServingController.java
 │   │   └── resources/
-│   │       └── application.properties       # Default & MariaDB configuration
+│   │       └── application.properties       # Default & MySQL configuration
 │   └── test/
 │       ├── java/com/preonsurl/              # Integration and Unit tests
 │       │   ├── apis/CreateControllerTest.java
@@ -103,13 +103,13 @@ preonsurl/
 
 ---
 
-## Database Setup (MariaDB)
+## Database Setup (MySQL)
 
-### 1. Apply MariaDB DDL Schema
-Execute the provided [schema-mariadb.sql](schema-mariadb.sql) script against your MariaDB server:
+### 1. Apply MySQL DDL Schema
+Execute the provided [schema-mysql.sql](schema-mysql.sql) script against your MySQL server:
 
 ```bash
-mariadb -h <HOST> -P <PORT> -u <USER> -p < schema-mariadb.sql
+mysql -h <HOST> -P <PORT> -u <USER> -p < schema-mysql.sql
 ```
 
 The script sets up:
@@ -126,9 +126,9 @@ Settings can be customized in `src/main/resources/application.properties` or ove
 | Property | Environment Variable | Default Value | Description |
 | :--- | :--- | :--- | :--- |
 | `server.port` | `SERVER_PORT` | `8081` | Web server port |
-| `spring.datasource.url` | `DB_HOST`, `DB_PORT`, `DB_NAME` | `jdbc:mariadb://localhost:3306/preonsurl` | MariaDB JDBC URL |
-| `spring.datasource.username` | `DB_USER` | `root` | MariaDB username |
-| `spring.datasource.password` | `DB_PASSWORD` | *(empty)* | MariaDB password |
+| `spring.datasource.url` | `DB_HOST`, `DB_PORT`, `DB_NAME` | `jdbc:mysql://localhost:3306/preonsurl` | MySQL JDBC URL |
+| `spring.datasource.username` | `DB_USER` | `root` | MySQL username |
+| `spring.datasource.password` | `DB_PASSWORD` | *(empty)* | MySQL password |
 | `preonsurl.api.key` | `API_KEY` | `preons-secret-api-key-2026` | API authentication key for `/create` |
 | `preonsurl.shortener.domain` | `SHORTENER_DOMAIN` | `http://localhost:8081` | Public domain prefix for generated short URLs |
 | `preonsurl.shortener.worker-count` | — | `4` | Number of background worker threads generating codes |
@@ -230,7 +230,7 @@ Location: https://billing.example.com/statements/2026/invoice-84820
 
 ### Prerequisites
 - **JDK 25** (or compatible modern OpenJDK)
-- **MariaDB 10.5+** or **11.x**
+- **MySQL 8.0+** or **8.4 LTS**
 
 ### Compile & Build
 ```bash
@@ -241,7 +241,7 @@ Location: https://billing.example.com/statements/2026/invoice-84820
 ```bash
 ./mvnw clean test
 ```
-*Automated tests run against an in-memory H2 database with MySQL compatibility mode, requiring no live MariaDB connection.*
+*Automated tests run against an in-memory H2 database with MySQL compatibility mode, requiring no live MySQL connection.*
 
 ### Run 100 Million Stress & Collision Benchmark
 PreonsURL includes a high-throughput test runner [CoreStressAndBenchmarkRunner.java](src/test/java/com/preonsurl/core/CoreStressAndBenchmarkRunner.java) to test code generation speed and verify zero collisions across millions of codes:
@@ -266,7 +266,7 @@ PreonsURL includes a high-throughput test runner [CoreStressAndBenchmarkRunner.j
 # Using default configuration
 ./mvnw spring-boot:run
 
-# Or with custom MariaDB connection
+# Or with custom MySQL connection
 DB_HOST=192.168.1.50 DB_USER=preons DB_PASSWORD=secret ./mvnw spring-boot:run
 ```
 
@@ -293,15 +293,15 @@ The container has been tuned specifically for low-overhead microservice deployme
 
 ## Running with Docker & Docker Compose
 
-PreonsURL includes complete Docker and Docker Compose configurations that launch both the application and MariaDB (with automated schema execution on first startup).
+PreonsURL includes complete Docker and Docker Compose configurations that launch both the application and MySQL (with automated schema execution on first startup).
 
-### 1. Start Application & MariaDB with Docker Compose
+### 1. Start Application & MySQL with Docker Compose
 ```bash
 docker compose up -d --build
 ```
 This will:
-- Spin up `mariadb:11.4` on port `3306`.
-- Automatically initialize the database and tables using [schema-mariadb.sql](schema-mariadb.sql).
+- Spin up `mysql:8.4` on port `3306`.
+- Automatically initialize the database and tables using [schema-mysql.sql](schema-mysql.sql).
 - Build and start the `preonsurl-app` container on port `8081` once the database healthcheck passes.
 
 ### 2. View Logs
@@ -323,7 +323,7 @@ If you want to build and run the standalone Docker container:
 # Build Docker image
 docker build -t preonsurl:latest .
 
-# Run container connected to an existing MariaDB
+# Run container connected to an existing MySQL
 docker run -d \
   --name preonsurl \
   -p 8081:8081 \

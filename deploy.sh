@@ -60,8 +60,8 @@ log "Checking required files..."
 [[ -f "docker-compose.yml" ]] \
     || fail "docker-compose.yml not found."
 
-[[ -f "schema-mariadb.sql" ]] \
-    || fail "schema-mariadb.sql not found."
+[[ -f "schema-mysql.sql" || -f "schema-mariadb.sql" ]] \
+    || fail "schema-mysql.sql not found."
 
 echo "Required files OK."
 
@@ -89,15 +89,17 @@ set -a
 source .env
 set +a
 
-# ============================================================
-# Required environment variables
-# ============================================================
+# Normalize database environment variables (support MYSQL_* and legacy MARIADB_*)
+export MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD:-}}"
+export MYSQL_DATABASE="${MYSQL_DATABASE:-${MARIADB_DATABASE:-}}"
+export MYSQL_USER="${MYSQL_USER:-${MARIADB_USER:-}}"
+export MYSQL_PASSWORD="${MYSQL_PASSWORD:-${MARIADB_PASSWORD:-}}"
 
 REQUIRED_VARS=(
-    MARIADB_ROOT_PASSWORD
-    MARIADB_DATABASE
-    MARIADB_USER
-    MARIADB_PASSWORD
+    MYSQL_ROOT_PASSWORD
+    MYSQL_DATABASE
+    MYSQL_USER
+    MYSQL_PASSWORD
     JWT_SECRET
     SHORTENER_SECRET
     MAILTRAP_API_TOKEN
@@ -136,44 +138,44 @@ fi
 echo "✓ $NGINX_CONTAINER is running."
 
 # ============================================================
-# Start MariaDB
+# Start MySQL
 # ============================================================
 
-log "Starting MariaDB..."
+log "Starting MySQL..."
 
-$COMPOSE up -d mariadb
+$COMPOSE up -d mysql
 
 # ============================================================
-# Wait for MariaDB
+# Wait for MySQL
 # ============================================================
 
-log "Waiting for MariaDB..."
+log "Waiting for MySQL..."
 
 DB_READY=false
 
 for i in {1..60}; do
 
-    if $COMPOSE exec -T mariadb \
-        mariadb-admin ping \
+    if $COMPOSE exec -T mysql \
+        mysqladmin ping \
         -h localhost \
         -u root \
-        "-p${MARIADB_ROOT_PASSWORD}" \
+        "-p${MYSQL_ROOT_PASSWORD}" \
         >/dev/null 2>&1
     then
 
         DB_READY=true
-        echo "MariaDB is ready."
+        echo "MySQL is ready."
         break
 
     fi
 
-    echo "Waiting for MariaDB... ($i/60)"
+    echo "Waiting for MySQL... ($i/60)"
     sleep 2
 
 done
 
 if [[ "$DB_READY" != "true" ]]; then
-    fail "MariaDB did not become ready."
+    fail "MySQL did not become ready."
 fi
 
 # ============================================================
@@ -310,7 +312,7 @@ echo "    Ports -> 80 / 443"
 echo
 
 echo "Database:"
-echo "    MariaDB -> internal Docker network"
+echo "    MySQL -> internal Docker network"
 echo
 
 echo "============================================================"
