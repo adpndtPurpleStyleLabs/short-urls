@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Profile("app")
 @Service
 public class UptimeService {
 
@@ -97,7 +99,7 @@ public class UptimeService {
         monitoredServices.put("PUBLIC SECURE LINKS SERVER", new MonitoredServiceConfig(
                 "PUBLIC SECURE LINKS SERVER",
                 "PUBLIC_SECURE_LINKS_SERVER",
-                "https://go.indexrender.io/api/public-links/h",
+                "http://127.0.0.1:8081/api/public-links/h",
                 "Public link generation and resolution server",
                 "Global"
         ));
@@ -105,7 +107,7 @@ public class UptimeService {
         monitoredServices.put("PRIVATE SECURE LINKS SERVER", new MonitoredServiceConfig(
                 "PRIVATE SECURE LINKS SERVER",
                 "PRIVATE_SECURE_LINKS_SERVER",
-                "https://secure.indexrender.io/health",
+                "http://127.0.0.1:8081/api/public-links/h",
                 "Private secure link redirection and policy enforcement",
                 "Global"
         ));
@@ -113,7 +115,7 @@ public class UptimeService {
         monitoredServices.put("CONSOLE", new MonitoredServiceConfig(
                 "CONSOLE",
                 "CONSOLE",
-                "https://go.indexrender.io/api/public-links/h",
+                "http://127.0.0.1:8081/api/public-links/h",
                 "Console management dashboard and analytics engine",
                 "Global"
         ));

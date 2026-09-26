@@ -2,10 +2,12 @@ package com.preonsurl.apis.uptime.controller;
 
 import com.preonsurl.apis.uptime.dto.UptimeDashboardDto;
 import com.preonsurl.apis.uptime.service.UptimeService;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+@Profile("app")
 @Controller
 public class UptimeUiController {
 

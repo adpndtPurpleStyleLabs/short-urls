@@ -8,11 +8,13 @@ import com.preonsurl.apis.uptime.service.UptimeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Profile("app")
 @RestController
 @RequestMapping({"/api/public/uptime", "/api/uptime"})
 @Tag(name = "Uptime & System Status", description = "Public system status, SLA, incidents and deployment information")
