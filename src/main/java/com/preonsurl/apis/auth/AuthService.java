@@ -93,13 +93,19 @@ public class AuthService {
         if (request.username() == null || request.username().isBlank() || request.password() == null) {
             throw new BadCredentialsException("Username and password cannot be empty");
         }
-        String identifier = request.username().trim();
-
-        User user = userCache.getByEmail(identifier.toLowerCase());
-        if(user == null){
-            user = userRepository.findByUsernameOrEmail(identifier, identifier.toLowerCase())
+        String identifier = request.username().trim().toLowerCase();
+        User user;
+        if (identifier.indexOf('@') >= 0) {
+            user = userCache.getByEmail(identifier);
+        } else {
+            user = userCache.getByUsername(identifier);
+        }
+        if (user == null) {
+            user = userRepository
+                    .findByUsernameOrEmail(identifier, identifier)
                     .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
         }
+
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid username or password");

@@ -9608,6 +9608,7 @@
         function setupUserInterface() {
             // Set username in header and dropdown
             const displayName = appState.username || "User";
+            const userFullName = appState.fullName || "User";
             const headerUser = document.getElementById("headerUsername");
             if (headerUser) headerUser.textContent = displayName;
             const dropUser = document.getElementById("dropdownUsername");
@@ -9621,7 +9622,7 @@
             if (hour >= 12 && hour < 17) greeting = "Good afternoon";
             else if (hour >= 17) greeting = "Good evening";
             const homeGreet = document.getElementById("homeGreeting");
-            if (homeGreet) homeGreet.textContent = `${greeting}, ${displayName}`;
+            if (homeGreet) homeGreet.textContent = `${greeting}, ${userFullName}`;
 
             // Only bind event listeners once to prevent multiple toggle listeners
             if (window._userInterfaceListenersBound) {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-
     <style>
         :root {
             --bg: #ffffff;
@@ -31,7 +31,8 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        html, body {
+        html,
+        body {
             min-height: 100%;
         }
 
@@ -48,22 +49,18 @@
             position: fixed;
             inset: 0;
             pointer-events: none;
-            background-image:
-                    linear-gradient(rgba(9, 9, 11, 0.028) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(9, 9, 11, 0.028) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(9, 9, 11, 0.028) 1px, transparent 1px), linear-gradient(90deg, rgba(9, 9, 11, 0.028) 1px, transparent 1px);
             background-size: 48px 48px;
             mask-image: linear-gradient(to bottom, black, transparent 78%);
             -webkit-mask-image: linear-gradient(to bottom, black, transparent 78%);
         }
-
         /* Ambient Geometric Grid */
+
         .ambient-grid {
             position: fixed;
             inset: 0;
             pointer-events: none;
-            background-image:
-                    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
             background-size: 56px 56px;
             -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
             mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
@@ -78,43 +75,56 @@
             flex-direction: column;
             position: relative;
         }
-
         /* Shared SecureURLs top bar + navigation */
-        .free-banner{
-            background:#111;
-            color:#fff;
-            font-size:12px;
-            letter-spacing:.005em;
-            position:relative;
-            z-index:30;
-        }
-        .free-banner-inner{
-            width:min(calc(100% - 40px),1180px);
-            margin:auto;
-            min-height:38px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            gap:14px;
-        }
-        .free-banner-inner > span{
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-        }
-        .free-banner strong{font-weight:750}
-        .free-banner-copy{color:#a7a7a7}
-        .free-banner a{
-            color:#fff;
-            font-weight:700;
-            display:inline-flex;
-            align-items:center;
-            gap:5px;
-            text-decoration:none;
-        }
-        .free-banner a:hover{text-decoration:underline;text-underline-offset:3px}
 
+        .free-banner {
+            background: #111;
+            color: #fff;
+            font-size: 12px;
+            letter-spacing: .005em;
+            position: relative;
+            z-index: 30;
+        }
+
+        .free-banner-inner {
+            width: min(calc(100% - 40px), 1180px);
+            margin: auto;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .free-banner-inner > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .free-banner strong {
+            font-weight: 750
+        }
+
+        .free-banner-copy {
+            color: #a7a7a7
+        }
+
+        .free-banner a {
+            color: #fff;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+
+        .free-banner a:hover {
+            text-decoration: underline;
+            text-underline-offset: 3px
+        }
         /* Main */
+
         .error-page {
             flex: 1;
             display: grid;
@@ -227,12 +237,7 @@
             font-weight: 650;
             text-decoration: none;
             cursor: pointer;
-            transition:
-                    background .15s ease,
-                    border-color .15s ease,
-                    color .15s ease,
-                    transform .15s ease,
-                    box-shadow .15s ease;
+            transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
         }
 
         .btn svg {
@@ -260,13 +265,13 @@
             color: #fff;
             background: var(--dark);
             border: 1px solid var(--dark);
-            box-shadow: 0 1px 2px rgba(0,0,0,.08);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
         }
 
         .btn-primary:hover {
             background: var(--dark-hover);
             border-color: var(--dark-hover);
-            box-shadow: 0 7px 20px rgba(0,0,0,.12);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, .12);
         }
 
         .btn-primary svg {
@@ -315,64 +320,60 @@
         }
 
         @media (max-width: 900px) {
-            .navlinks{display:none}
-            .nav-mobile-menu{display:inline-flex}
+            .navlinks {
+                display: none
+            }
+            .nav-mobile-menu {
+                display: inline-flex
+            }
         }
 
         @media (max-width: 640px) {
-            .free-banner-copy{display:none}
-            .free-banner-inner{
-                width:min(calc(100% - 28px),1180px);
-                justify-content:space-between;
-                min-height:36px;
+            .free-banner-copy {
+                display: none
             }
-
-            .nav{
-                height:64px;
+            .free-banner-inner {
+                width: min(calc(100% - 28px), 1180px);
+                justify-content: space-between;
+                min-height: 36px;
             }
-
-            .nav-inner{
-                width:min(calc(100% - 28px),1180px);
+            .nav {
+                height: 64px;
             }
-
-            .nav-actions .nav-btn:not(.nav-btn-primary){display:none}
-
+            .nav-inner {
+                width: min(calc(100% - 28px), 1180px);
+            }
+            .nav-actions .nav-btn:not(.nav-btn-primary) {
+                display: none
+            }
             .site-header {
                 height: 64px;
                 padding: 0 20px;
             }
-
             .header-link {
                 display: none;
             }
-
             .error-page {
                 padding: 52px 20px 72px;
             }
-
             .error-code {
                 margin-top: 24px;
             }
-
             .headline {
                 margin-top: 24px;
             }
-
             .description {
                 font-size: 14px;
             }
-
             .actions {
                 flex-direction: column;
                 max-width: 320px;
                 margin-left: auto;
                 margin-right: auto;
             }
-
             .btn {
                 width: 100%;
             }
-
             .site-footer {
                 padding: 0 20px 22px;
             }
@@ -394,122 +395,63 @@
 <body>
 <div class="ambient-grid" aria-hidden="true"></div>
 <div class="page">
-
     <div class="free-banner" role="note">
-        <div class="free-banner-inner">
-            <span>
+        <div class="free-banner-inner"> <span>
                 <strong>Always Free</strong>
-                <span class="free-banner-copy">10 million URLs / month included.</span>
-            </span>
-            <a href="/register">Sign up now <span aria-hidden="true">→</span></a>
-        </div>
+                <span class="free-banner-copy">10 million URLs / month included.</span> </span> <a href="/register">Sign up now <span aria-hidden="true">→</span></a> </div>
     </div>
-
     <header th:replace="~{fragment/header :: header}"></header>
-
     <main class="error-page">
         <section class="error-shell" id="errorCard" aria-labelledby="errorTitle">
             <div class="error-code" aria-hidden="true">404</div>
-
             <h1 class="headline" id="errorTitle">Page not found.</h1>
-
-            <p class="description" id="errorDescription">
-                The page you are looking for doesn't exist, has moved,
-                or the link may no longer be available.
-            </p>
-
-            <div class="path"
-                 id="pathBanner"
-                 th:if="${path != null and !path.isEmpty()}">
-                <span id="pathText" th:text="${path}">/unknown-route</span>
-            </div>
-
+            <p class="description" id="errorDescription"> The page you are looking for doesn't exist, has moved, or the link may no longer be available. </p>
+            <div class="path" id="pathBanner" th:if="${path != null and !path.isEmpty()}"> <span id="pathText" th:text="${path}">/unknown-route</span> </div>
             <div class="actions">
-                <button
-                        type="button"
-                        class="btn btn-secondary"
-                        id="btnBack"
-                        onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         aria-hidden="true">
+                <button type="button" class="btn btn-secondary" id="btnBack" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                    <span>Go back</span>
-                </button>
-
-                <a
-                        id="primaryActionBtn"
-                        th:href="${isLoggedIn ? '/console' : '/login'}"
-                        class="btn btn-primary">
-                    <span id="primaryActionText"
-                          th:text="${isLoggedIn ? 'Go to Console' : 'Login'}">Login</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         aria-hidden="true">
+                    </svg> <span>Go back</span> </button>
+                <a id="primaryActionBtn" th:href="${isLoggedIn ? '/console' : '/login'}" class="btn btn-primary"> <span id="primaryActionText" th:text="${isLoggedIn ? 'Go to Console' : 'Login'}">Login</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                         <polyline points="12 5 19 12 12 19"></polyline>
                     </svg>
                 </a>
             </div>
-
-            <div class="hint">
-                Press <kbd>Esc</kbd> to go back
-            </div>
+            <div class="hint"> Press <kbd>Esc</kbd> to go back </div>
         </section>
     </main>
-
-    <footer class="site-footer">
-        <span class="footer-copy">SecureURLs · Secure links with control built in.</span>
-    </footer>
+    <footer class="site-footer"> <span class="footer-copy">SecureURLs · Secure links with control built in.</span> </footer>
 </div>
-
 <script>
     (function checkAuth() {
         function parseJwt(token) {
-            if (!token) return null;
-
+            if(!token) return null;
             try {
-                const base64 = token
-                    .split('.')[1]
-                    .replace(/-/g, '+')
-                    .replace(/_/g, '/');
-
+                const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
                 return JSON.parse(atob(base64));
-            } catch (e) {
+            } catch(e) {
                 return null;
             }
         }
-
         try {
-            const token =
-                localStorage.getItem('preonsurl_token') ||
-                localStorage.getItem('preons_token');
-
+            const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
             let loggedIn = false;
-
-            if (token) {
+            if(token) {
                 const payload = parseJwt(token);
-
-                if (
-                    payload &&
-                    payload.exp &&
-                    payload.exp > Math.floor(Date.now() / 1000)
-                ) {
+                if(payload && payload.exp && payload.exp > Math.floor(Date.now() / 1000)) {
                     loggedIn = true;
                 }
             }
-
-            if (document.cookie && document.cookie.includes('preons_jwt=')) {
+            if(document.cookie && document.cookie.includes('preons_jwt=')) {
                 loggedIn = true;
             }
-
             const primaryBtn = document.getElementById('primaryActionBtn');
             const primaryText = document.getElementById('primaryActionText');
-
-            if (primaryBtn && primaryText) {
-                if (loggedIn) {
+            if(primaryBtn && primaryText) {
+                if(loggedIn) {
                     primaryBtn.href = '/console';
                     primaryText.textContent = 'Go to Console';
                 } else {
@@ -517,21 +459,15 @@
                     primaryText.textContent = 'Login';
                 }
             }
-        } catch (e) {
+        } catch(e) {
             // Keep the server-rendered Thymeleaf state as fallback.
         }
-
-        window.addEventListener('keydown', function (e) {
-            if (
-                e.target &&
-                (e.target.tagName === 'INPUT' ||
-                    e.target.tagName === 'TEXTAREA')
-            ) {
+        window.addEventListener('keydown', function(e) {
+            if(e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
                 return;
             }
-
-            if (e.key === 'Escape') {
-                if (window.history.length > 1) {
+            if(e.key === 'Escape') {
+                if(window.history.length > 1) {
                     window.history.back();
                 } else {
                     window.location.href = '/';
@@ -541,4 +477,5 @@
     })();
 </script>
 </body>
+
 </html>

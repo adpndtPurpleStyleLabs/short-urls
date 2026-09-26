@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,14 +15,20 @@
     </noscript>
     <![endif]-->
     <style>
-        body, table, td, a {
+        body,
+        table,
+        td,
+        a {
             -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
         }
-        table, td {
+
+        table,
+        td {
             mso-table-lspace: 0pt;
             mso-table-rspace: 0pt;
         }
+
         img {
             -ms-interpolation-mode: bicubic;
             border: 0;
@@ -29,10 +36,13 @@
             line-height: 100%;
             outline: none;
             text-decoration: none;
+            display: block;
         }
+
         table {
             border-collapse: collapse !important;
         }
+
         body {
             height: 100% !important;
             margin: 0 !important;
@@ -42,75 +52,178 @@
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             color: #000000;
         }
+
         a {
             color: #2563eb;
             text-decoration: none;
         }
+
         a:hover {
             text-decoration: underline;
         }
+
+        .brand-logo {
+            width: 190px;
+            max-width: 190px;
+            height: auto;
+            margin: 0 auto;
+        }
+
+        .brand-name {
+            margin-top: 12px;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            color: #000000;
+            line-height: 1;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .brand-logo {
+                width: 160px !important;
+                max-width: 160px !important;
+            }
+            .brand-name {
+                font-size: 16px !important;
+            }
+        }
     </style>
 </head>
+
 <body style="margin: 0; padding: 0; background-color: #ffffff;">
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff;">
-        <tr>
-            <td align="center" style="padding: 60px 20px 40px 20px;">
-                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; text-align: center;">
-                    <!-- Brand / Logo Header -->
-                    <tr>
-                        <td align="center" style="padding-bottom: 52px;">
-                            <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 44px; font-weight: 800; letter-spacing: 0.18em; color: #000000; line-height: 1; text-transform: uppercase;">
-                                <span th:text="${brandName != null ? brandName : 'LUDIC'}">LUDIC</span><span style="font-size: 22px; vertical-align: top; margin-left: 2px; font-weight: 700;">&reg;</span>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Instruction Text -->
-                    <tr>
-                        <td align="center" style="padding-bottom: 22px;">
-                            <p style="margin: 0; font-size: 17px; line-height: 24px; color: #222222; font-weight: 400; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-                                Your verification code:
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- 6-Digit Verification Code -->
-                    <tr>
-                        <td align="center" style="padding-bottom: 24px;">
-                            <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 34px; font-weight: 800; letter-spacing: 0.35em; color: #000000; line-height: 1.2; margin-left: 0.35em;">
-                                <span th:text="${code != null ? code : '329263'}">3 2 9 2 6 3</span>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Expiration Notice -->
-                    <tr>
-                        <td align="center" style="padding-bottom: 72px;">
-                            <p style="margin: 0; font-size: 15px; line-height: 22px; color: #374151;">
-                                This code can only be used once. It expires in <span th:text="${expiryMinutes != null ? expiryMinutes : '15'}">15</span> minutes.
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Footer: Copyright -->
-                    <tr>
-                        <td align="center" style="padding-bottom: 16px;">
-                            <p style="margin: 0; font-size: 13px; color: #4b5563; font-weight: 400;">
-                                &copy; <span th:text="${copyrightName != null ? copyrightName : 'Ludic'}">Ludic</span>
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Footer: Links -->
-                    <tr>
-                        <td align="center" style="font-size: 13px; color: #2563eb;">
-                            <a href="https://preonsurl.com/privacy" th:href="${privacyUrl != null ? privacyUrl : '#'}" style="color: #2563eb; text-decoration: none; margin: 0 10px;">Privacy policy</a>
-                            <a href="https://preonsurl.com/terms" th:href="${termsUrl != null ? termsUrl : '#'}" style="color: #2563eb; text-decoration: none; margin: 0 10px;">Terms of service</a>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff;">
+    <tr>
+        <td align="center" style="padding: 60px 20px 40px 20px;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; text-align: center;">
+                <!-- ========================================= -->
+                <!-- Brand / Logo Header -->
+                <!-- ========================================= -->
+                <tr>
+                    <td align="center" style="padding-bottom: 52px;">
+                        <!-- Logo --><img src="https://adpndt.sirv.com/Images/logo_black_3.png" alt="SURLS.me" width="190" class="brand-logo" style="
+                                    width: 190px;
+                                    max-width: 190px;
+                                    height: auto;
+                                    margin: 0 auto;
+                                    display: block;
+                                ">
+                        <!-- Brand Name -->
+                        <!-- <div
+                            class="brand-name"
+                            style="
+                                margin-top: 12px;
+                                font-family: 'Inter',
+                                    -apple-system,
+                                    BlinkMacSystemFont,
+                                    'Segoe UI',
+                                    sans-serif;
+                                font-size: 18px;
+                                font-weight: 700;
+                                letter-spacing: 0.18em;
+                                color: #000000;
+                                line-height: 1;
+                            "
+                    >
+                        SURLS<span style="letter-spacing: 0;">.me</span>
+                    </div> -->
+                    </td>
+                </tr>
+                <!-- ========================================= -->
+                <!-- Instruction Text -->
+                <!-- ========================================= -->
+                <tr>
+                    <td align="center" style="padding-bottom: 22px;">
+                        <p style="
+                                    margin: 0;
+                                    font-size: 17px;
+                                    line-height: 24px;
+                                    color: #222222;
+                                    font-weight: 400;
+                                    font-family: 'Inter',
+                                        -apple-system,
+                                        BlinkMacSystemFont,
+                                        'Segoe UI',
+                                        sans-serif;
+                                "> Your verification code: </p>
+                    </td>
+                </tr>
+                <!-- ========================================= -->
+                <!-- Verification Code -->
+                <!-- ========================================= -->
+                <tr>
+                    <td align="center" style="padding-bottom: 24px;">
+                        <div style="
+                                    font-family: 'Inter',
+                                        -apple-system,
+                                        BlinkMacSystemFont,
+                                        'Segoe UI',
+                                        sans-serif;
+                                    font-size: 34px;
+                                    font-weight: 800;
+                                    letter-spacing: 0.35em;
+                                    color: #000000;
+                                    line-height: 1.2;
+                                    margin-left: 0.35em;
+                                "> <span th:text="${code != null ? code : '329263'}">
+                                329263
+                            </span> </div>
+                    </td>
+                </tr>
+                <!-- ========================================= -->
+                <!-- Expiration Notice -->
+                <!-- ========================================= -->
+                <tr>
+                    <td align="center" style="padding-bottom: 72px;">
+                        <p style="
+                                    margin: 0;
+                                    font-size: 15px;
+                                    line-height: 22px;
+                                    color: #374151;
+                                "> This code can only be used once. It expires in <span th:text="${expiryMinutes != null ? expiryMinutes : '15'}">
+                                15
+                            </span> minutes. </p>
+                    </td>
+                </tr>
+                <!-- ========================================= -->
+                <!-- Footer: Copyright -->
+                <!-- ========================================= -->
+                <tr>
+                    <td align="center" style="padding-bottom: 16px;">
+                        <p style="
+                                    margin: 0;
+                                    font-size: 13px;
+                                    color: #4b5563;
+                                    font-weight: 400;
+                                "> &copy; <span th:text="${copyrightName != null ? copyrightName : 'SURLS.me'}">
+                                SURLS.me
+                            </span> </p>
+                    </td>
+                </tr>
+                <!-- ========================================= -->
+                <!-- Footer: Links -->
+                <!-- ========================================= -->
+                <tr>
+                    <td align="center" style="
+                                font-size: 13px;
+                                color: #2563eb;
+                            "> <a href="https://preonsurl.com/privacy" th:href="${privacyUrl != null ? privacyUrl : '#'}" style="
+                                    color: #2563eb;
+                                    text-decoration: none;
+                                    margin: 0 10px;
+                                ">
+                        Privacy policy
+                    </a> <a href="https://preonsurl.com/terms" th:href="${termsUrl != null ? termsUrl : '#'}" style="
+                                    color: #2563eb;
+                                    text-decoration: none;
+                                    margin: 0 10px;
+                                ">
+                        Terms of service
+                    </a> </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 </body>
 </html>
