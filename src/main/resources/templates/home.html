@@ -1,7 +1,5 @@
-
 <!doctype html>
-
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
 
@@ -9,10 +7,14 @@
 
   <meta
           name="description"
-          content="PreonsURL — secure, programmable link infrastructure for modern products and teams."
+          content="SecureURLs — secure, programmable link infrastructure for modern products and teams."
   />
 
-  <title>PreonsURL — Secure Link Infrastructure</title>
+  <link
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+  >
+  <title>SecureURLs — Secure Link Infrastructure</title>
 
   <style>
     :root {
@@ -49,19 +51,11 @@
 
     body {
       margin: 0;
-
       background: var(--bg);
-
       color: var(--text);
 
-      font-family:
-              Inter,
-              ui-sans-serif,
-              system-ui,
-              -apple-system,
-              BlinkMacSystemFont,
-              "Segoe UI",
-              sans-serif;
+      font-family: "Manrope", sans-serif;
+      font-weight: 500;
 
       -webkit-font-smoothing: antialiased;
     }
@@ -80,13 +74,22 @@
       margin: auto;
     }
 
+    .nav-inner {
+      width: 100%;
+      height: 100%;
+      padding: 0 60px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: 24px;
+    }
+
     .nav {
       height: 72px;
       border-bottom: 1px solid var(--line);
 
       display: flex;
       align-items: center;
-      justify-content: space-between;
 
       position: sticky;
       top: 0;
@@ -97,11 +100,19 @@
     }
 
     .brand {
+      justify-self: start;
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-weight: 750;
-      letter-spacing: -0.03em;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .brand-logo {
+      display: block;
+      width: 145px;
+      height: auto;
+      max-height: 50px;
+      object-fit: contain;
     }
 
     .logo {
@@ -117,10 +128,13 @@
     }
 
     .navlinks {
+      justify-self: center;
       display: flex;
+      align-items: center;
       gap: 28px;
       color: #555;
       font-size: 14px;
+      white-space: nowrap;
     }
 
     .navlinks a:hover {
@@ -128,6 +142,7 @@
     }
 
     .nav-actions {
+      justify-self: end;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -1378,6 +1393,16 @@
       .nav {
         height: 64px;
       }
+
+      .nav-inner {
+        padding: 0 14px;
+        gap: 12px;
+      }
+
+      .brand-logo {
+        width: 125px;
+        max-height: 34px;
+      }
       .nav-actions .btn:not(.primary) {
         display: none;
       }
@@ -1457,124 +1482,12 @@
   </div>
 </div>
 
-<header class="nav">
-  <div
-          class="container"
-          style="
-                    padding: 0px 60px 0px 60px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    width: 100%;
-                "
-  >
-    <a class="brand" href="#top"><span class="logo">P</span> SecureURLs.me</a>
-
-    <nav class="navlinks">
-      <a href="/features">Features</a>
-
-      <a href="#usecases">Use cases</a>
-
-      <a href="#security">Security</a>
-
-      <a href="#domains">Domains</a>
-
-      <a href="#compare">Compare</a>
-
-      <a href="#pricing">Pricing</a>
-
-      <a href="/api-documentation">Developers</a>
-      <a href="/status">Status</a>
-    </nav>
-
-    <div class="nav-actions" id="navActions">
-      <a class="btn" href="/login">Sign in</a>
-
-      <a class="btn primary" href="/register">Get started</a>
-
-      <button class="btn mobile-menu" aria-label="Menu">☰</button>
-    </div>
-    <script>
-      (function checkAuthAndReplaceNav() {
-        function parseJwt(token) {
-          if (!token || typeof token !== 'string') return null;
-          const parts = token.trim().split('.');
-          if (parts.length !== 3) return null;
-          try {
-            let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-            while (base64.length % 4 !== 0) base64 += '=';
-            const binary = atob(base64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-            return JSON.parse(new TextDecoder().decode(bytes));
-          } catch (e) {
-            return null;
-          }
-        }
-
-        function isValid(token) {
-          const payload = parseJwt(token);
-          if (!payload) return false;
-          if (payload.exp && typeof payload.exp === 'number') {
-            if (payload.exp <= Math.floor(Date.now() / 1000)) return false;
-          }
-          return true;
-        }
-
-        function updateNavIfLoggedIn() {
-          try {
-            const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
-            let hasJwt = false;
-            if (token && isValid(token)) {
-              hasJwt = true;
-            } else {
-              const match = document.cookie.match(/(?:^|;\s*)preons_jwt=([^;]+)/);
-              if (match && match[1] && isValid(decodeURIComponent(match[1]))) {
-                hasJwt = true;
-              }
-            }
-
-            if (hasJwt) {
-              const nav = document.getElementById('navActions') || document.querySelector('.nav-actions');
-              if (nav) {
-                const signIn = nav.querySelector('a[href="/login"]');
-                const getStarted = nav.querySelector('a[href="/register"]');
-                if (signIn) signIn.remove();
-                if (getStarted) getStarted.remove();
-
-                if (!nav.querySelector('.to-console-btn')) {
-                  const toConsole = document.createElement('a');
-                  toConsole.className = 'btn primary to-console-btn';
-                  toConsole.href = '/console';
-                  toConsole.textContent = 'To Console →';
-
-                  const mobileBtn = nav.querySelector('.mobile-menu');
-                  if (mobileBtn) {
-                    nav.insertBefore(toConsole, mobileBtn);
-                  } else {
-                    nav.appendChild(toConsole);
-                  }
-                }
-              }
-            }
-          } catch (e) {
-            console.warn('Auth check error:', e);
-          }
-        }
-
-        updateNavIfLoggedIn();
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', updateNavIfLoggedIn);
-        }
-      })();
-    </script>
-  </div>
-</header>
+<header th:replace="~{fragment/header :: header}"></header>
 
 <main id="top">
   <section class="hero">
     <div class="container">
-      <div class="eyebrow"><span class="dot"></span> Secure link infrastructure</div>
+<!--      <div class="eyebrow"><span class="dot"></span> Secure link infrastructure</div>-->
 
       <h1 class="hero-title" aria-label="Secure gateway to your URL. Secure short links with control built in.">
         <span class="hero-animated-text" aria-hidden="true">
@@ -1626,7 +1539,7 @@
         <h2>A URL shortener that behaves like infrastructure.</h2>
 
         <p>
-          PreonsURL brings link creation, lifecycle controls, access protection, branded domains and
+          SecureURLs brings link creation, lifecycle controls, access protection, branded domains and
           delivery modes into one focused system.
         </p>
       </div>
@@ -1709,7 +1622,7 @@
         <h2>From everyday short links to controlled delivery.</h2>
 
         <p>
-          PreonsURL can cover straightforward link sharing, branded campaigns, operational workflows
+          SecureURLs can cover straightforward link sharing, branded campaigns, operational workflows
           and advanced access-controlled delivery from the same link layer.
         </p>
       </div>
@@ -2281,7 +2194,7 @@
 
         <div class="mock">
           <aside class="mock-side">
-            <div class="mock-brand">PreonsURL</div>
+            <div class="mock-brand">SecureURLs</div>
 
             <div class="mock-item active">Links</div>
 
@@ -2361,7 +2274,7 @@
 
         <p style="color: #707070; line-height: 1.7">
           Keep link creation inside your own application. Protect API operations with an API key and
-          let PreonsURL handle code generation, persistence and delivery.
+          let SecureURLs handle code generation, persistence and delivery.
         </p>
 
         <div class="checks">
@@ -2412,7 +2325,7 @@
 
         <p>
           Feature availability changes by provider and plan. This comparison reflects publicly
-          documented capabilities and PreonsURL's current feature set.
+          documented capabilities and SecureURLs's current feature set.
         </p>
       </div>
 
@@ -2421,7 +2334,7 @@
           <thead>
           <tr>
             <th>Capability</th>
-            <th>PreonsURL</th>
+            <th>SecureURLs</th>
             <th>Short.io</th>
             <th>Rebrandly</th>
             <th>Dub</th>
@@ -2580,7 +2493,7 @@
 
             <p class="pricing-copy">
               The essentials for creating simple short links on the default
-              PreonsURL domain.
+              SecureURLs domain.
             </p>
           </div>
 
@@ -2591,7 +2504,7 @@
             </div>
             <div class="pricing-feature">
               <span class="pricing-check">✓</span>
-              <span><strong>Default PreonsURL domain</strong></span>
+              <span><strong>Default SecureURLs domain</strong></span>
             </div>
             <div class="pricing-feature">
               <span class="pricing-check">✓</span>
@@ -2769,7 +2682,7 @@
           infrastructure.
         </p>
 
-        <a class="btn" href="/register">Get started with PreonsURL →</a>
+        <a class="btn" href="/register">Get started with SecureURLs →</a>
       </div>
     </div>
   </section>
@@ -2777,7 +2690,7 @@
 
 <footer class="footer">
   <div class="container footer-inner">
-    <div>© 2026 PreonsURL. Secure link infrastructure.</div>
+    <div>© 2026 SecureURLs. Secure link infrastructure.</div>
 
     <div class="footer-links">
       <a href="/docs">API docs</a>

@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureURL API Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
@@ -33,12 +36,9 @@
             background: #fff;
             color: var(--black);
             font-family:
-                    Inter,
-                    -apple-system,
-                    BlinkMacSystemFont,
-                    "Segoe UI",
-                    Arial,
+                    "Manrope",
                     sans-serif;
+            font-weight: 500;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -127,11 +127,11 @@
 
         .sidebar {
             border-right: 1px solid var(--border);
-            min-height: calc(100vh - 68px);
+            min-height: calc(100vh - 72px);
             padding: 35px 20px;
             position: sticky;
-            top: 68px;
-            height: calc(100vh - 68px);
+            top: 72px;
+            height: calc(100vh - 72px);
             overflow-y: auto;
         }
 
@@ -732,20 +732,7 @@
 
 <body>
 
-<header class="header">
-
-    <a href="/" class="brand">
-        <span class="brand-mark">S</span>
-        <span> SecureURLs.me</span>
-    </a>
-
-    <div class="header-right">
-        <a href="#authentication" class="header-link">Authentication</a>
-        <a href="#create-link" class="header-link">API Reference</a>
-        <a href="/Console" class="dashboard-btn">Console</a>
-    </div>
-
-</header>
+<header th:replace="~{fragment/header :: header}"></header>
 
 
 <div class="layout">

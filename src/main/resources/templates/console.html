@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PreonsURL — Console</title>
+    <title>SecureURLs — Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <meta name="default-serve-domain" th:content="${defaultServeDomain}">
@@ -97,7 +97,8 @@
         }
 
         body {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-weight: 500;
             background-color: var(--bg);
             color: var(--text);
             min-height: 100vh;
@@ -163,6 +164,15 @@
             opacity: 0.85;
         }
 
+        .brand-logo-img {
+            display: block;
+            height: 48px;
+            max-height: 48px;
+            width: auto;
+            max-width: 160px;
+            object-fit: contain;
+        }
+
         .brand-logo {
             width: 28px;
             height: 28px;
@@ -182,6 +192,29 @@
             font-weight: 700;
             letter-spacing: -0.02em;
             color: var(--text);
+        }
+
+        .mobile-header-brand {
+            display: none;
+            align-items: center;
+            text-decoration: none;
+            flex-shrink: 0;
+            margin-right: 6px;
+        }
+
+        .mobile-brand-logo-img {
+            display: block;
+            height: 26px;
+            max-height: 28px;
+            width: auto;
+            max-width: 125px;
+            object-fit: contain;
+        }
+
+        @media (max-width: 900px) {
+            .mobile-header-brand {
+                display: flex;
+            }
         }
 
         .sidebar-nav {
@@ -6294,9 +6327,8 @@
          SIDEBAR
     ========================= -->
         <aside class="sidebar" id="sidebar">
-            <a href="/" class="sidebar-brand">
-                <div class="brand-logo">S</div>
-                <span class="brand-title">SecureURLs</span>
+            <a href="/" class="sidebar-brand" aria-label="SecureURLs Home">
+                <img src="/images/logo_black_3.png" alt="SecureURLs.me" class="brand-logo-img">
             </a>
 
             <nav class="sidebar-nav">
@@ -6375,7 +6407,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span>PreonsURL Platform &bull; v1.0</span>
+                <span>SecureURLs Platform &bull; v1.0</span>
             </div>
         </aside>
 
@@ -6394,6 +6426,10 @@
                             <line x1="3" y1="18" x2="21" y2="18" />
                         </svg>
                     </button>
+
+                    <a href="/" class="mobile-header-brand" aria-label="SecureURLs Home">
+                        <img src="/images/logo_black_3.png" alt="SecureURLs.me" class="mobile-brand-logo-img">
+                    </a>
 
                     <div class="global-search-box" id="globalSearchContainer">
                         <svg class="search-icon" id="searchStaticIcon" viewBox="0 0 24 24" fill="none"
@@ -6840,7 +6876,7 @@
                     <div class="page-header">
                         <div>
                             <h1 class="page-title">API Keys</h1>
-                            <p class="page-subtitle">Use API keys to access PreonsURL programmatically.</p>
+                            <p class="page-subtitle">Use API keys to access SecureURLs programmatically.</p>
                         </div>
                     </div>
 
@@ -7775,7 +7811,7 @@
 
                             <h3>Link Delivery Mode</h3>
                             <br>
-<!--                            <p class="desc">Choose how PreonsURL resolves and serves the destination content to your visitors.</p>-->
+<!--                            <p class="desc">Choose how SecureURLs resolves and serves the destination content to your visitors.</p>-->
 
                             <div class="mode-cards-grid">
                                 <label class="mode-card-option selected" id="modeOptionRedirect">

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="nav" th:fragment="header" id="siteHeader">
+  <style>
+    .nav {
+      height: 72px;
+      border-bottom: 1px solid var(--line, #e8e8e8);
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      z-index: 100;
+      width: 100%;
+      font-family: "Manrope", sans-serif;
+    }
+
+    .nav * {
+      box-sizing: border-box;
+    }
+
+    .nav-inner {
+      width: 100%;
+      height: 100%;
+      padding: 0 60px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: 24px;
+      margin: 0 auto;
+    }
+
+    .nav .brand {
+      justify-self: start;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav .brand-logo {
+      display: block;
+      width: 145px;
+      height: auto;
+      max-height: 50px;
+      object-fit: contain;
+    }
+
+    .nav .navlinks {
+      justify-self: center;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      color: #555;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .nav .navlinks a {
+      color: #555;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav .navlinks a:hover {
+      color: #111;
+    }
+
+    .nav .nav-actions {
+      justify-self: end;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav .btn.to-console-btn {
+      border-radius: 10px;
+      padding: 0 18px;
+      background: #111;
+      color: #fff;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .nav .btn.to-console-btn:hover {
+      background: #252525;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+    }
+
+    .nav .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 17px;
+      border: 1px solid #d7d7d7;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: 0.2s ease;
+      background: #fff;
+      color: #111;
+      text-decoration: none;
+      font-family: inherit;
+      line-height: 1;
+    }
+
+    .nav .btn:hover {
+      transform: translateY(-1px);
+      border-color: #aaa;
+    }
+
+    .nav .btn.primary {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
+    .nav .btn.primary:hover {
+      background: #252525;
+    }
+
+    .nav .mobile-menu {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .nav .navlinks {
+        display: none;
+      }
+      .nav .navlinks.mobile-open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 72px;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        padding: 20px 24px;
+        border-bottom: 1px solid #e8e8e8;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+        gap: 16px;
+        z-index: 99;
+      }
+      .nav .mobile-menu {
+        display: inline-flex;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .nav {
+        height: 64px;
+      }
+      .nav-inner {
+        padding: 0 14px;
+        gap: 12px;
+      }
+      .nav .brand-logo {
+        width: 125px;
+        max-height: 34px;
+      }
+      .nav .nav-actions .btn:not(.primary):not(.mobile-menu) {
+        display: none;
+      }
+    }
+  </style>
+
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="SecureURLs Home">
+      <img src="/images/logo_black_3.png" alt="SecureURLs.me" class="brand-logo">
+    </a>
+
+    <nav class="navlinks" aria-label="Primary navigation">
+      <a href="/features">Features</a>
+      <a href="/#usecases">Use cases</a>
+      <a href="/#security">Security</a>
+      <a href="/#domains">Domains</a>
+      <a href="/#compare">Compare</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/api-documentation">Developers</a>
+      <a href="/status">Status</a>
+    </nav>
+
+    <div class="nav-actions" id="navActions">
+      <a class="btn" href="/login">Sign in</a>
+      <a class="btn primary" href="/register">Get started</a>
+      <button class="btn mobile-menu" aria-label="Menu" type="button">☰</button>
+    </div>
+
+    <script>
+      (function checkAuthAndReplaceNav() {
+        function parseJwt(token) {
+          if (!token || typeof token !== 'string') return null;
+          const parts = token.trim().split('.');
+          if (parts.length !== 3) return null;
+          try {
+            let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            while (base64.length % 4 !== 0) base64 += '=';
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return JSON.parse(new TextDecoder().decode(bytes));
+          } catch (e) {
+            return null;
+          }
+        }
+
+        function isValid(token) {
+          const payload = parseJwt(token);
+          if (!payload) return false;
+          if (payload.exp && typeof payload.exp === 'number') {
+            if (payload.exp <= Math.floor(Date.now() / 1000)) return false;
+          }
+          return true;
+        }
+
+        function updateNavIfLoggedIn() {
+          try {
+            const token = localStorage.getItem('preonsurl_token') || localStorage.getItem('preons_token');
+            let hasJwt = false;
+            if (token && isValid(token)) {
+              hasJwt = true;
+            } else {
+              const match = document.cookie.match(/(?:^|;\s*)preons_jwt=([^;]+)/);
+              if (match && match[1] && isValid(decodeURIComponent(match[1]))) {
+                hasJwt = true;
+              }
+            }
+
+            if (hasJwt) {
+              const nav = document.getElementById('navActions') || document.querySelector('.nav-actions');
+              if (nav) {
+                const signIn = nav.querySelector('a[href="/login"]');
+                const getStarted = nav.querySelector('a[href="/register"]');
+                if (signIn) signIn.remove();
+                if (getStarted) getStarted.remove();
+
+                if (!nav.querySelector('.to-console-btn')) {
+                  const toConsole = document.createElement('a');
+                  toConsole.className = 'btn primary to-console-btn';
+                  toConsole.href = '/console';
+                  toConsole.textContent = 'To Console →';
+
+                  const mobileBtn = nav.querySelector('.mobile-menu');
+                  if (mobileBtn) {
+                    nav.insertBefore(toConsole, mobileBtn);
+                  } else {
+                    nav.appendChild(toConsole);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Auth check error:', e);
+          }
+        }
+
+        updateNavIfLoggedIn();
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', updateNavIfLoggedIn);
+        }
+      })();
+
+      (function initMobileMenuToggle() {
+        function setup() {
+          const mobileBtn = document.querySelector('.nav .mobile-menu');
+          const navlinks = document.querySelector('.nav .navlinks');
+          if (mobileBtn && navlinks && !mobileBtn.dataset.bound) {
+            mobileBtn.dataset.bound = 'true';
+            mobileBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              navlinks.classList.toggle('mobile-open');
+            });
+            document.addEventListener('click', function(e) {
+              if (!e.target.closest('.nav')) {
+                navlinks.classList.remove('mobile-open');
+              }
+            });
+          }
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', setup);
+        } else {
+          setup();
+        }
+      })();
+    </script>
+  </div>
+</header>
+
+</body>
+</html>

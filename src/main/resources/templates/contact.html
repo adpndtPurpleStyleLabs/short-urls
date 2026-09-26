@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Contact PreonsURL for product, enterprise, integration and support enquiries.">
-    <title>Contact — PreonsURL</title>
+    <meta name="description" content="Contact SecureURLs for product, enterprise, integration and support enquiries.">
+    <title>Contact — SecureURLs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root{
             --bg:#fff;
@@ -24,7 +27,8 @@
             margin:0;
             background:var(--bg);
             color:var(--text);
-            font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            font-family:"Manrope",sans-serif;
+            font-weight:500;
             -webkit-font-smoothing:antialiased;
         }
         a{color:inherit;text-decoration:none}
@@ -212,25 +216,7 @@
     </div>
 </div>
 
-<header class="nav">
-    <div class="container" style="padding:0 60px;display:flex;align-items:center;justify-content:space-between;width:100%">
-        <a class="brand" href="/"><span class="logo">P</span> PreonsURL</a>
-        <nav class="navlinks" aria-label="Primary navigation">
-            <a href="/#features">Features</a>
-            <a href="/#usecases">Use cases</a>
-            <a href="/#security">Security</a>
-            <a href="/#domains">Domains</a>
-            <a href="/#compare">Compare</a>
-            <a href="/#pricing">Pricing</a>
-            <a href="/api-documentation">Developers</a>
-        </nav>
-        <div class="nav-actions">
-            <a class="btn" href="/login">Sign in</a>
-            <a class="btn primary" href="/register">Get started</a>
-            <button class="btn mobile-menu" type="button" aria-label="Menu">☰</button>
-        </div>
-    </div>
-</header>
+<header th:replace="~{fragment/header :: header}"></header>
 
 <main>
     <section class="page-hero">
@@ -238,7 +224,7 @@
             <div class="eyebrow"><span class="dot"></span> Get in touch</div>
             <h1>Let’s talk about your links.</h1>
             <p>
-                Tell us what you are building, what you need from PreonsURL, or where you are getting stuck.
+                Tell us what you are building, what you need from SecureURLs, or where you are getting stuck.
                 We’ll use the details below to route your enquiry to the right place.
             </p>
         </div>
@@ -247,10 +233,10 @@
     <section class="contact-wrap">
         <div class="container contact-grid">
             <aside class="panel contact-info">
-                <div class="kicker">Contact PreonsURL</div>
+                <div class="kicker">Contact SecureURLs</div>
                 <h2>Built for real link infrastructure.</h2>
                 <p>
-                    Whether you are evaluating PreonsURL for a product, campaign, internal workflow or higher-volume deployment,
+                    Whether you are evaluating SecureURLs for a product, campaign, internal workflow or higher-volume deployment,
                     send us the context and we can take it from there.
                 </p>
 
@@ -329,7 +315,7 @@
 
                     <div class="form-bottom">
                         <div class="form-legal">
-                            By submitting this form, you are asking PreonsURL to contact you about your enquiry.
+                            By submitting this form, you are asking SecureURLs to contact you about your enquiry.
                             Do not include sensitive credentials or secrets.
                         </div>
                         <button id="submitButton" class="btn primary submit-btn" type="submit">
@@ -345,7 +331,7 @@
 
 <footer class="footer">
     <div class="container footer-inner">
-        <div>© 2026 PreonsURL. Secure link infrastructure.</div>
+        <div>© 2026 SecureURLs. Secure link infrastructure.</div>
         <div class="footer-links">
             <a href="/docs">API docs</a>
             <a href="/status">Status</a>
