@@ -15,6 +15,8 @@ public interface UptimeRepository extends JpaRepository<UptimeRecord, Long> {
 
     Optional<UptimeRecord> findTopByServiceNameOrderByRecordedAtDesc(String serviceName);
 
+    Optional<UptimeRecord> findTopByTypeOrderByRecordedAtDesc(String type);
+
     List<UptimeRecord> findTop100ByOrderByRecordedAtDesc();
 
     List<UptimeRecord> findByRecordedAtAfterOrderByRecordedAtAsc(Instant after);

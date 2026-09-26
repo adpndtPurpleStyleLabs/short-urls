@@ -7,6 +7,7 @@ import com.preonsurl.apis.uptime.entity.UptimeRecord;
 import com.preonsurl.apis.uptime.repository.DeploymentRepository;
 import com.preonsurl.apis.uptime.repository.IncidentRepository;
 import com.preonsurl.apis.uptime.repository.UptimeRepository;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +31,7 @@ import java.nio.file.Paths;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -48,19 +50,38 @@ public class UptimeService {
     @Value("${server.port:8081}")
     private int serverPort;
 
+    @Value("${preonsurl.build.commit-ref:}")
+    private String configuredCommitRef;
+
     @Value("${preonsurl.build.version:v1.0.0}")
     private String appVersion;
 
     @Value("${preonsurl.build.environment:Production}")
     private String environment;
 
+    // Service Configuration record
+    public record MonitoredServiceConfig(
+            String name,
+            String type,
+            String url,
+            String description,
+            String region
+    ) {}
+
+    // Configured map of monitored services
+    private final Map<String, MonitoredServiceConfig> monitoredServices = new LinkedHashMap<>();
+
+    // State tracking per service
+    private final Map<String, String> lastKnownStatusMap = new ConcurrentHashMap<>();
+    private final Map<String, Long> lastLatencyMap = new ConcurrentHashMap<>();
+
     // In-memory cache holding cached response and timestamp
     private record CachedDashboard(UptimeDashboardDto data, long createdAtMillis) {}
     private final AtomicReference<CachedDashboard> cachedDashboardRef = new AtomicReference<>(null);
 
-    // Track last known status
-    private volatile String lastKnownStatus = null;
-    private volatile Long lastLatencyMs = 42L;
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofMillis(900))
+            .build();
 
     public UptimeService(UptimeRepository uptimeRepository,
                          DeploymentRepository deploymentRepository,
@@ -68,6 +89,42 @@ public class UptimeService {
         this.uptimeRepository = uptimeRepository;
         this.deploymentRepository = deploymentRepository;
         this.incidentRepository = incidentRepository;
+        initMonitoredServices();
+    }
+
+    @PostConstruct
+    public void initMonitoredServices() {
+        monitoredServices.put("PUBLIC SECURE LINKS SERVER", new MonitoredServiceConfig(
+                "PUBLIC SECURE LINKS SERVER",
+                "PUBLIC_SECURE_LINKS_SERVER",
+                "https://go.indexrender.io/api/public-links/h",
+                "Public link generation and resolution server",
+                "Global"
+        ));
+
+        monitoredServices.put("PRIVATE SECURE LINKS SERVER", new MonitoredServiceConfig(
+                "PRIVATE SECURE LINKS SERVER",
+                "PRIVATE_SECURE_LINKS_SERVER",
+                "https://secure.indexrender.io/8081/api/public-links/h",
+                "Private secure link redirection and policy enforcement",
+                "Global"
+        ));
+
+        monitoredServices.put("CONSOLE", new MonitoredServiceConfig(
+                "CONSOLE",
+                "CONSOLE",
+                "https://go.indexrender.io/api/public-links/h",
+                "Console management dashboard and analytics engine",
+                "Global"
+        ));
+    }
+
+    public Map<String, MonitoredServiceConfig> getMonitoredServices() {
+        return Collections.unmodifiableMap(monitoredServices);
+    }
+
+    public void registerMonitoredService(MonitoredServiceConfig config) {
+        monitoredServices.put(config.name(), config);
     }
 
     // ==========================================
@@ -75,22 +132,25 @@ public class UptimeService {
     // ==========================================
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
-        log.info("Initializing Uptime service...");
+        log.info("Initializing Uptime service with {} monitored services...", monitoredServices.size());
 
-        // 1. Initialize last known status from DB
-        uptimeRepository.findTopByOrderByRecordedAtDesc()
-                .ifPresent(record -> {
-                    this.lastKnownStatus = record.getStatus();
-                    if (record.getResponseTimeMs() != null) {
-                        this.lastLatencyMs = record.getResponseTimeMs();
-                    }
-                });
+        // 1. Initialize last known status for each service from DB
+        for (MonitoredServiceConfig svc : monitoredServices.values()) {
+            uptimeRepository.findTopByTypeOrderByRecordedAtDesc(svc.type())
+                    .or(() -> uptimeRepository.findTopByServiceNameOrderByRecordedAtDesc(svc.name()))
+                    .ifPresent(record -> {
+                        lastKnownStatusMap.put(svc.name(), record.getStatus());
+                        if (record.getResponseTimeMs() != null) {
+                            lastLatencyMap.put(svc.name(), record.getResponseTimeMs());
+                        }
+                    });
+        }
 
         // 2. Deployment check and entry on startup if commit ref differs
         checkAndRecordDeploymentOnStartup();
 
-        // 3. Initial health check
-        checkHealthAndRecordIfChanged();
+        // 3. Initial health check across all services
+        checkAllServicesHealth();
     }
 
     // ==========================================
@@ -119,7 +179,7 @@ public class UptimeService {
             if (shouldInsert) {
                 DeploymentRecord newDeployment = new DeploymentRecord(
                         currentCommitRef,
-                        appVersion != null && !appVersion.isBlank() ? appVersion : "v1.8.4",
+                        appVersion != null && !appVersion.isBlank() ? appVersion : "v1.0.0",
                         environment != null && !environment.isBlank() ? environment : "Production",
                         "Successful",
                         "Production release"
@@ -143,6 +203,11 @@ public class UptimeService {
         String envCommit = System.getenv("GIT_COMMIT");
         if (envCommit != null && !envCommit.isBlank()) {
             return envCommit.trim();
+        }
+
+        // 2. Explicitly configured Spring property
+        if (configuredCommitRef != null && !configuredCommitRef.isBlank()) {
+            return configuredCommitRef.trim();
         }
 
         // 3. Classpath resource (/commit-ref.txt) written during Dockerfile build
@@ -202,33 +267,53 @@ public class UptimeService {
     }
 
     // ==========================================
-    // 3. HEALTH CHECK & UPTIME_TABLE LOGGING
+    // 3. HEALTH CHECK & UPTIME_TABLE LOGGING (CHECK EVERY SECOND)
     // ==========================================
-    @Scheduled(fixedDelay = 30000, initialDelay = 10000)
+    @Scheduled(fixedRate = 1000, initialDelay = 1000)
     public void scheduledHealthCheck() {
-        checkHealthAndRecordIfChanged();
+        checkAllServicesHealth();
+    }
+
+    public synchronized boolean checkHealthAndRecordIfChanged() {
+        return checkAllServicesHealth();
     }
 
     @Transactional
-    public synchronized boolean checkHealthAndRecordIfChanged() {
+    public synchronized boolean checkAllServicesHealth() {
+        boolean anyChanged = false;
+
+        for (MonitoredServiceConfig service : monitoredServices.values()) {
+            boolean changed = checkServiceHealthAndRecordIfChanged(service);
+            if (changed) {
+                anyChanged = true;
+            }
+        }
+
+        if (anyChanged) {
+            invalidateCache();
+        }
+
+        return anyChanged;
+    }
+
+    @Transactional
+    public boolean checkServiceHealthAndRecordIfChanged(MonitoredServiceConfig service) {
         long startTime = System.currentTimeMillis();
         String currentStatus = "UP";
         int statusCode = 200;
         String details = "Service is operational";
         long latency = 0;
 
-        try {
-            HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(3))
-                    .build();
+        String targetUrl = resolveTargetUrl(service.url());
 
+        try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://127.0.0.1:" + serverPort + "/health"))
-                    .timeout(Duration.ofSeconds(4))
+                    .uri(URI.create(targetUrl))
+                    .timeout(Duration.ofMillis(950))
                     .GET()
                     .build();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             latency = System.currentTimeMillis() - startTime;
             statusCode = response.statusCode();
 
@@ -238,7 +323,7 @@ public class UptimeService {
                     details = "Health endpoint returned DOWN status";
                 } else if (latency > 2500) {
                     currentStatus = "DEGRADED";
-                    details = "Health endpoint response latency high: " + latency + "ms";
+                    details = "Response latency high: " + latency + "ms";
                 } else {
                     currentStatus = "UP";
                     details = "Health check successful (" + latency + "ms)";
@@ -251,33 +336,42 @@ public class UptimeService {
             latency = System.currentTimeMillis() - startTime;
             statusCode = 503;
             currentStatus = "DOWN";
-            details = "Health check connection failed: " + ex.getMessage();
+            details = "Health check failed: " + ex.getMessage();
         }
 
-        this.lastLatencyMs = Math.max(latency, 12L);
+        lastLatencyMap.put(service.name(), Math.max(latency, 8L));
 
-        // Check if status changed
-        boolean statusChanged = (lastKnownStatus == null || !currentStatus.equalsIgnoreCase(lastKnownStatus));
+        String previousStatus = lastKnownStatusMap.get(service.name());
+        boolean statusChanged = (previousStatus == null || !currentStatus.equalsIgnoreCase(previousStatus));
 
         if (statusChanged) {
-            log.info("Health status change detected! Previous: '{}', New: '{}'. Logging to uptime_table.",
-                    lastKnownStatus, currentStatus);
+            log.info("Service '{}' ({}) status changed from '{}' to '{}'. Logging to uptime_table.",
+                    service.name(), service.type(), previousStatus, currentStatus);
 
             UptimeRecord record = new UptimeRecord(
-                    "System Health API",
+                    service.name(),
+                    service.type(),
                     currentStatus,
-                    lastKnownStatus,
+                    previousStatus,
                     latency,
                     statusCode,
                     details
             );
             uptimeRepository.save(record);
-            this.lastKnownStatus = currentStatus;
-            invalidateCache();
+            lastKnownStatusMap.put(service.name(), currentStatus);
             return true;
         }
 
         return false;
+    }
+
+    private String resolveTargetUrl(String url) {
+        if (url == null) return "http://127.0.0.1:8081/api/public-links/h";
+        // If testing on a non-standard port or dynamically assigned port
+        if (serverPort > 0 && serverPort != 8081 && url.contains("127.0.0.1:8081")) {
+            return url.replace("127.0.0.1:8081", "127.0.0.1:" + serverPort);
+        }
+        return url;
     }
 
     // ==========================================
@@ -351,23 +445,50 @@ public class UptimeService {
     }
 
     // ==========================================
-    // 6. COMPUTE DASHBOARD DATA
+    // 6. COMPUTE DASHBOARD DATA (3 MONITORED SERVICES)
     // ==========================================
     private UptimeDashboardDto computeFreshDashboardData() {
-        // Status determination
-        String status = lastKnownStatus != null ? lastKnownStatus : "UP";
+        // Build the 3 services list from configured monitored services map
+        List<ServiceStatusDto> services = monitoredServices.values().stream()
+                .map(config -> {
+                    String rawStatus = lastKnownStatusMap.getOrDefault(config.name(), "UP");
+                    String displayStatus = "Operational";
+                    String dotClass = "operational";
+
+                    if ("DOWN".equalsIgnoreCase(rawStatus)) {
+                        displayStatus = "Outage";
+                        dotClass = "down";
+                    } else if ("DEGRADED".equalsIgnoreCase(rawStatus)) {
+                        displayStatus = "Degraded";
+                        dotClass = "partial";
+                    }
+
+                    return new ServiceStatusDto(
+                            config.name(),
+                            config.description(),
+                            config.region(),
+                            displayStatus,
+                            dotClass
+                    );
+                })
+                .toList();
+
+        // Overall status determination based on the 3 services
+        boolean anyDown = services.stream().anyMatch(s -> "Outage".equalsIgnoreCase(s.status()));
+        boolean anyDegraded = services.stream().anyMatch(s -> "Degraded".equalsIgnoreCase(s.status()));
+
         String overallStatus = "operational";
         String overallTitle = "All systems operational";
-        String overallDesc = "No active incidents or service disruptions.";
+        String overallDesc = "All core server endpoints are operational and healthy.";
 
-        if ("DOWN".equalsIgnoreCase(status)) {
+        if (anyDown) {
             overallStatus = "outage";
             overallTitle = "System Outage Detected";
-            overallDesc = "Our engineers are actively investigating service disruptions.";
-        } else if ("DEGRADED".equalsIgnoreCase(status)) {
+            overallDesc = "One or more core services are experiencing an outage.";
+        } else if (anyDegraded) {
             overallStatus = "degraded";
             overallTitle = "Partial System Degradation";
-            overallDesc = "Some services may experience elevated latency.";
+            overallDesc = "Elevated latency or partial degradation detected on core services.";
         }
 
         // Check if there are any active unresolved incidents
@@ -385,26 +506,19 @@ public class UptimeService {
         Instant thirtyDaysAgo = Instant.now().minus(Duration.ofDays(30));
         long incidentCount30d = incidentRepository.countByCreatedAtAfter(thirtyDaysAgo);
 
+        long avgLatency = (long) lastLatencyMap.values().stream()
+                .mapToLong(Long::longValue)
+                .average()
+                .orElse(38.0);
+
         Map<String, String> metrics = new LinkedHashMap<>();
-        metrics.put("currentUptime", "99.99%");
+        metrics.put("currentUptime", anyDown ? "98.50%" : (anyDegraded ? "99.80%" : "99.99%"));
         metrics.put("targetSla", "99.95%");
-        metrics.put("responseLatency", lastLatencyMs + "ms");
+        metrics.put("responseLatency", Math.max(1, avgLatency) + "ms");
         metrics.put("incidentCount", String.valueOf(incidentCount30d));
 
         // 90-day history bars from actual database records (no synthetic seeding)
         List<DailyUptimeDto> history90Days = build90DaysHistory(allIncidents);
-
-        // Services
-        String apiStatus = "UP".equalsIgnoreCase(status) ? "Operational" : ("DEGRADED".equalsIgnoreCase(status) ? "Degraded" : "Outage");
-        String apiDot = "UP".equalsIgnoreCase(status) ? "operational" : ("DEGRADED".equalsIgnoreCase(status) ? "partial" : "down");
-
-        List<ServiceStatusDto> services = List.of(
-                new ServiceStatusDto("Link Redirects", "Short URL resolution and delivery", "Global", "Operational", "operational"),
-                new ServiceStatusDto("API", "REST API and authentication", "Global", apiStatus, apiDot),
-                new ServiceStatusDto("Dashboard", "Console and management interface", "Global", "Operational", "operational"),
-                new ServiceStatusDto("Custom Domains", "DNS verification and branded links", "Global", "Operational", "operational"),
-                new ServiceStatusDto("Analytics", "Click tracking and access events", "Global", "Operational", "operational")
-        );
 
         // Latest Deployment from database
         DeploymentDto deploymentDto = deploymentRepository.findTopByOrderByDeployedAtDesc()
@@ -413,7 +527,7 @@ public class UptimeService {
                     String ref = resolveCommitRef();
                     return new DeploymentDto(
                             ref,
-                            appVersion != null && !appVersion.isBlank() ? appVersion : "v1.8.4",
+                            appVersion != null && !appVersion.isBlank() ? appVersion : "v1.0.0",
                             environment != null && !environment.isBlank() ? environment : "Production",
                             "Successful",
                             "Production release",
@@ -506,7 +620,7 @@ public class UptimeService {
         String formatted = "Deployed " + fmt.format(record.getDeployedAt());
         return new DeploymentDto(
                 record.getCommitRef(),
-                record.getVersion() != null ? record.getVersion() : "v1.8.4",
+                record.getVersion() != null ? record.getVersion() : "v1.0.0",
                 record.getEnvironment() != null ? record.getEnvironment() : "Production",
                 record.getStatus() != null ? record.getStatus() : "Successful",
                 record.getSummary() != null ? record.getSummary() : "Production release",

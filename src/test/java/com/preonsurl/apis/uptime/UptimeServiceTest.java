@@ -5,6 +5,7 @@ import com.preonsurl.apis.uptime.dto.IncidentDto;
 import com.preonsurl.apis.uptime.dto.UptimeDashboardDto;
 import com.preonsurl.apis.uptime.entity.DeploymentRecord;
 import com.preonsurl.apis.uptime.entity.IncidentRecord;
+import com.preonsurl.apis.uptime.entity.UptimeRecord;
 import com.preonsurl.apis.uptime.repository.DeploymentRepository;
 import com.preonsurl.apis.uptime.repository.IncidentRepository;
 import com.preonsurl.apis.uptime.repository.UptimeRepository;
@@ -19,6 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,6 +48,24 @@ class UptimeServiceTest {
         ReflectionTestUtils.setField(uptimeService, "configuredCommitRef", "test1234");
         ReflectionTestUtils.setField(uptimeService, "appVersion", "v1.8.4");
         ReflectionTestUtils.setField(uptimeService, "environment", "Production");
+    }
+
+    @Test
+    void monitoredServicesMap_contains3ConfiguredServicesWithHealthCheckUrls() {
+        Map<String, UptimeService.MonitoredServiceConfig> map = uptimeService.getMonitoredServices();
+        assertEquals(3, map.size());
+
+        assertTrue(map.containsKey("PUBLIC SECURE LINKS SERVER"));
+        assertEquals("PUBLIC_SECURE_LINKS_SERVER", map.get("PUBLIC SECURE LINKS SERVER").type());
+        assertEquals("http://127.0.0.1:8081/api/public-links/h", map.get("PUBLIC SECURE LINKS SERVER").url());
+
+        assertTrue(map.containsKey("PRIVATE SECURE LINKS SERVER"));
+        assertEquals("PRIVATE_SECURE_LINKS_SERVER", map.get("PRIVATE SECURE LINKS SERVER").type());
+        assertEquals("http://127.0.0.1:8081/api/public-links/h", map.get("PRIVATE SECURE LINKS SERVER").url());
+
+        assertTrue(map.containsKey("CONSOLE"));
+        assertEquals("CONSOLE", map.get("CONSOLE").type());
+        assertEquals("http://127.0.0.1:8081/api/public-links/h", map.get("CONSOLE").url());
     }
 
     @Test
@@ -125,7 +145,7 @@ class UptimeServiceTest {
     }
 
     @Test
-    void getDashboardData_cachesResponseFor1Hour() {
+    void getDashboardData_cachesResponseFor1HourAndRepresents3Services() {
         when(incidentRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of());
         when(incidentRepository.countByCreatedAtAfter(any())).thenReturn(0L);
         when(deploymentRepository.findTopByOrderByDeployedAtDesc()).thenReturn(Optional.of(
@@ -139,7 +159,13 @@ class UptimeServiceTest {
         assertEquals("operational", first.overallStatus());
         assertEquals("99.99%", first.currentSla());
         assertEquals(90, first.history90Days().size());
-        assertEquals(5, first.services().size());
+
+        // Must represent exactly the 3 configured services on the UI
+        assertEquals(3, first.services().size());
+        assertEquals("PUBLIC SECURE LINKS SERVER", first.services().get(0).name());
+        assertEquals("PRIVATE SECURE LINKS SERVER", first.services().get(1).name());
+        assertEquals("CONSOLE", first.services().get(2).name());
+
         assertTrue(first.incidents().isEmpty(), "No seeded incidents should exist");
 
         // Second call should return from cache without re-querying deployment

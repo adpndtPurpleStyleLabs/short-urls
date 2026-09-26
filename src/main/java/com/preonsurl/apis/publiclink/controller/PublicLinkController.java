@@ -17,10 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Profile("app")
 @Tag(name = "Public Link", description = "Endpoints for creating publicly accessible shortened URLs with psecure subdomain")
@@ -76,4 +75,12 @@ public class PublicLinkController {
                     .body(ApiResponse.error("Internal Server Error"));
         }
     }
+
+    @Operation(summary = "Service Health Check", description = "Returns service health status")
+    @GetMapping("/h")
+    @ResponseBody
+    public ResponseEntity<?> root() {
+        return ResponseEntity.ok(Map.of("service", "007", "status", "UP"));
+    }
+
 }

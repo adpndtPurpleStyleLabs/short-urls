@@ -16,6 +16,7 @@ import java.time.Instant;
         indexes = {
                 @Index(name = "idx_uptime_recorded_at", columnList = "recorded_at"),
                 @Index(name = "idx_uptime_service_name", columnList = "service_name"),
+                @Index(name = "idx_uptime_type", columnList = "type"),
                 @Index(name = "idx_uptime_status", columnList = "status")
         }
 )
@@ -27,6 +28,9 @@ public class UptimeRecord {
 
     @Column(name = "service_name", nullable = false, length = 100)
     private String serviceName;
+
+    @Column(name = "type", length = 64)
+    private String type;
 
     @Column(name = "status", nullable = false, length = 32)
     private String status;
@@ -46,13 +50,18 @@ public class UptimeRecord {
     @Column(name = "recorded_at", nullable = false)
     private Instant recordedAt = Instant.now();
 
-    public UptimeRecord(String serviceName, String status, String previousStatus, Long responseTimeMs, Integer statusCode, String details) {
+    public UptimeRecord(String serviceName, String type, String status, String previousStatus, Long responseTimeMs, Integer statusCode, String details) {
         this.serviceName = serviceName;
+        this.type = type;
         this.status = status;
         this.previousStatus = previousStatus;
         this.responseTimeMs = responseTimeMs;
         this.statusCode = statusCode;
         this.details = details;
         this.recordedAt = Instant.now();
+    }
+
+    public UptimeRecord(String serviceName, String status, String previousStatus, Long responseTimeMs, Integer statusCode, String details) {
+        this(serviceName, serviceName, status, previousStatus, responseTimeMs, statusCode, details);
     }
 }
