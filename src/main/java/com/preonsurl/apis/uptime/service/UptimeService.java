@@ -105,7 +105,7 @@ public class UptimeService {
         monitoredServices.put("PRIVATE SECURE LINKS SERVER", new MonitoredServiceConfig(
                 "PRIVATE SECURE LINKS SERVER",
                 "PRIVATE_SECURE_LINKS_SERVER",
-                "https://secure.indexrender.io/8081/api/public-links/h",
+                "https://secure.indexrender.io/health",
                 "Private secure link redirection and policy enforcement",
                 "Global"
         ));
@@ -269,7 +269,7 @@ public class UptimeService {
     // ==========================================
     // 3. HEALTH CHECK & UPTIME_TABLE LOGGING (CHECK EVERY SECOND)
     // ==========================================
-    @Scheduled(fixedRate = 1000, initialDelay = 1000)
+    @Scheduled(fixedRate = 60000, initialDelay = 60000)
     public void scheduledHealthCheck() {
         checkAllServicesHealth();
     }
