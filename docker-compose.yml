@@ -50,9 +50,8 @@ services:
     volumes:
       - app_logs:/app/logs
 
-    depends_on:
-      mysql:
-        condition: service_healthy
+    networks:
+      - shared-app-network
 
     restart: unless-stopped
 
@@ -107,9 +106,8 @@ services:
     volumes:
       - serve_logs:/app/logs
 
-    depends_on:
-      mysql:
-        condition: service_healthy
+    networks:
+      - shared-app-network
 
     restart: unless-stopped
 
@@ -164,62 +162,15 @@ services:
     volumes:
       - psecure_logs:/app/logs
 
-    depends_on:
-      mysql:
-        condition: service_healthy
+    networks:
+      - shared-app-network
 
     restart: unless-stopped
-
-
-  # =========================
-  # DATABASE
-  # =========================
-  mysql:
-    image: mysql:8.4
-
-    container_name: preonsurl-mysql
-
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-${MARIADB_DATABASE:-preonsurl}}
-      MYSQL_USER: ${MYSQL_USER:-${MARIADB_USER:-preons}}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-${MARIADB_PASSWORD:-preonspass}}
-
-    ports:
-      - "127.0.0.1:4981:3306"
-
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./schema-mysql.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}"
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
-
-    restart: unless-stopped
-
 
 # =========================
 # VOLUMES
 # =========================
 volumes:
-
-  mysql_data:
-    driver: local
-
   app_logs:
     driver: local
 
@@ -228,3 +179,7 @@ volumes:
 
   psecure_logs:
     driver: local
+
+networks:
+  shared-app-network:
+    external: true
