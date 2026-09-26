@@ -44,6 +44,10 @@ public class AuthUiController {
     @GetMapping("/features")
     public String showfeaturesPage(Model model) {return "feature";}
 
+    @GetMapping("/status")
+    public String showstatusPage(Model model) {return "uptime";}
+
+
     @GetMapping("/api-documentation")
     public String showcreateLinkPage(Model model) {return "documentation/api-documentation";}
 

@@ -180,7 +180,12 @@ fi
 # Start application services
 # ============================================================
 
-log "Building and starting Spring Boot services..."
+# Dynamically resolve git commit ref for docker build and runtime
+COMMIT_REF="$(git rev-parse --short HEAD 2>/dev/null || echo '')"
+export COMMIT_REF
+export GIT_COMMIT="$COMMIT_REF"
+
+log "Building and starting Spring Boot services (Commit Ref: ${COMMIT_REF:-unknown})..."
 
 $COMPOSE up -d --build \
     app \
