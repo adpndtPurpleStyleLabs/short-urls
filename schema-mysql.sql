@@ -95,12 +95,38 @@ CREATE TABLE IF NOT EXISTS access_policies (
     countries VARCHAR(512) NULL,
     device_types VARCHAR(512) NULL,
     referrers TEXT NULL,
+    otp_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    otp_emails TEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_access_policies_short_url FOREIGN KEY (short_url_id) REFERENCES short_urls (id) ON DELETE CASCADE,
     CONSTRAINT uq_access_policies_short_url UNIQUE (short_url_id),
     INDEX idx_access_policies_short_url_id (short_url_id),
     INDEX idx_access_policies_mode (mode)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5b. Table for storing link recipients and tracking lifecycle (email sent, opened via 1px beacon, OTP requested, page opened)
+CREATE TABLE IF NOT EXISTS link_recipients (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    short_url_id BIGINT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    tracking_token VARCHAR(64) NOT NULL,
+    email_sent BOOLEAN NOT NULL DEFAULT FALSE,
+    email_sent_at TIMESTAMP NULL,
+    email_opened BOOLEAN NOT NULL DEFAULT FALSE,
+    email_opened_at TIMESTAMP NULL,
+    otp_requested BOOLEAN NOT NULL DEFAULT FALSE,
+    otp_requested_at TIMESTAMP NULL,
+    otp_code_hash VARCHAR(255) NULL,
+    otp_expires_at TIMESTAMP NULL,
+    page_opened BOOLEAN NOT NULL DEFAULT FALSE,
+    page_opened_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_link_recipients_short_url FOREIGN KEY (short_url_id) REFERENCES short_urls (id) ON DELETE CASCADE,
+    CONSTRAINT uq_link_recipients_url_email UNIQUE (short_url_id, email),
+    INDEX idx_link_recipients_tracking_token (tracking_token),
+    INDEX idx_link_recipients_short_url_id (short_url_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 6. Table for storing usage control policies and tracking usage associated with shortened URLs

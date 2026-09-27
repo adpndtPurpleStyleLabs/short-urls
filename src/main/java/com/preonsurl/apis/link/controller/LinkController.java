@@ -30,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import com.preonsurl.apis.link.dto.UrlListItemResponse;
 import com.preonsurl.apis.link.dto.LinkAccessLogResponse;
+import com.preonsurl.apis.link.dto.LinkRecipientDto;
 import com.preonsurl.apis.link.dto.CorsCheckRequest;
 import com.preonsurl.apis.link.dto.CorsCheckResult;
 import com.preonsurl.apis.link.service.CorsCheckerService;
@@ -261,6 +262,49 @@ public class LinkController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("Failed to list access logs: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal Server Error"));
+        }
+    }
+
+    @Operation(
+            summary = "List OTP recipients and delivery tracking",
+            description = "Retrieves all configured OTP recipients and their real-time delivery, open, and verification tracking status for a link.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+    @GetMapping(value = "/{id}/recipients", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<List<LinkRecipientDto>>> getLinkRecipients(
+            @PathVariable("id") String publicId,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        try {
+            AuthenticatedUser user = resolveUser(currentUser);
+            if (user == null || user.userId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Authentication required: user ID not found"));
+            }
+            if (publicId == null || publicId.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("ID parameter 'id' cannot be empty"));
+            }
+
+            List<LinkRecipientDto> response = newUrlService.getLinkRecipients(user.userId(), publicId);
+            log.info("Retrieved OTP recipients for userId={}, publicId='{}': count={}",
+                    user.userId(), publicId, response.size());
+            return ResponseEntity.ok(ApiResponse.success(response, "Link recipients retrieved successfully"));
+        } catch (UrlNotFoundException e) {
+            log.warn("Link not found for recipients: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for recipients: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid recipients request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to get link recipients: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Internal Server Error"));
         }

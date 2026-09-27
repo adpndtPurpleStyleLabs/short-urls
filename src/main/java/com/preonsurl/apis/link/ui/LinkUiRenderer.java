@@ -14,7 +14,7 @@ public class LinkUiRenderer {
     }
 
     /**
-     * Renders the PIN/Password Security Challenge page using Thymeleaf.
+     * Renders the PIN/Password/OTP Security Challenge page using Thymeleaf.
      */
     public String renderSecurityChallenge(
             String targetPath,
@@ -22,15 +22,31 @@ public class LinkUiRenderer {
             boolean requiresPassword,
             String errorMessage
     ) {
+        return renderSecurityChallenge(targetPath, requiresPin, requiresPassword, false, errorMessage);
+    }
+
+    /**
+     * Renders the PIN/Password/OTP Security Challenge page with OTP support using Thymeleaf.
+     */
+    public String renderSecurityChallenge(
+            String targetPath,
+            boolean requiresPin,
+            boolean requiresPassword,
+            boolean requiresOtp,
+            String errorMessage
+    ) {
         Context context = new Context();
         context.setVariable("targetPath", targetPath);
         context.setVariable("errorMessage", errorMessage);
         context.setVariable("requiresPin", requiresPin);
         context.setVariable("requiresPassword", requiresPassword);
+        context.setVariable("requiresOtp", requiresOtp);
 
-        if (requiresPin && !requiresPassword) {
+        if (requiresOtp && !requiresPin && !requiresPassword) {
+            return templateEngine.process("challenge-otp", context);
+        } else if (requiresPin && !requiresPassword && !requiresOtp) {
             return templateEngine.process("challenge-pin", context);
-        } else if (requiresPassword && !requiresPin) {
+        } else if (requiresPassword && !requiresPin && !requiresOtp) {
             return templateEngine.process("challenge-password", context);
         } else {
             return templateEngine.process("challenge-combined", context);

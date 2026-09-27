@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><span th:text="${title}">Link Inaccessible</span> - PreonsURL</title>
+    <title> SecureURLs</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -36,17 +38,34 @@
             align-items: center;
             justify-content: center;
             padding: 24px 16px;
-            background-image: 
-                radial-gradient(circle at 10% 15%, rgba(226, 232, 240, 0.5) 0%, transparent 40%),
-                radial-gradient(circle at 90% 85%, rgba(226, 232, 240, 0.5) 0%, transparent 40%);
+            background-image: radial-gradient( circle at 10% 15%, rgba(226, 232, 240, 0.5) 0%, transparent 40%), radial-gradient( circle at 90% 85%, rgba(226, 232, 240, 0.5) 0%, transparent 40%);
         }
+        /* --------------------------------------------------
+               AMBIENT BACKGROUND GRID
+            -------------------------------------------------- */
+
+        .ambient-grid {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient( to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px), linear-gradient( to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 56px 56px;
+            -webkit-mask-image: radial-gradient( circle at center, black 40%, transparent 80%);
+            mask-image: radial-gradient( circle at center, black 40%, transparent 80%);
+            z-index: 0;
+        }
+        /* --------------------------------------------------
+               CARD
+            -------------------------------------------------- */
 
         .card {
+            position: relative;
+            z-index: 1;
             width: 100%;
             max-width: 480px;
             background: var(--card-bg);
             border-radius: 24px;
-            padding: 44px 36px 32px;
+            padding: 32px 36px 32px;
             box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.07), 0 0 1px 1px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(0, 0, 0, 0.05);
             text-align: center;
@@ -54,12 +73,46 @@
         }
 
         @keyframes cardAppear {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* --------------------------------------------------
+               BRANDING
+            -------------------------------------------------- */
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+            text-decoration: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
+        .brand:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+
+        .brand img {
+            display: block;
+            width: 148px;
+            height: auto;
+            max-height: 44px;
+            object-fit: contain;
+        }
+        /* --------------------------------------------------
+               STATUS BADGE
+            -------------------------------------------------- */
+
         .status-badge {
-            display: inline-flex;
+            display: none;
             align-items: center;
             gap: 6px;
             padding: 5px 12px;
@@ -78,6 +131,9 @@
             border-radius: 50%;
             background: #ef4444;
         }
+        /* --------------------------------------------------
+               ICON
+            -------------------------------------------------- */
 
         .icon-aura-wrapper {
             display: inline-flex;
@@ -86,7 +142,7 @@
             width: 88px;
             height: 88px;
             border-radius: 50%;
-            background: radial-gradient(circle, #f1f5f9 0%, #f8fafc 65%, transparent 72%);
+            background: radial-gradient( circle, #f1f5f9 0%, #f8fafc 65%, transparent 72%);
             margin-bottom: 20px;
         }
 
@@ -94,7 +150,7 @@
             width: 52px;
             height: 52px;
             border-radius: 14px;
-            background: linear-gradient(135deg, #334155 0%, #0f172a 100%);
+            background: linear-gradient( 135deg, #334155 0%, #0f172a 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -106,6 +162,9 @@
             width: 24px;
             height: 24px;
         }
+        /* --------------------------------------------------
+               TYPOGRAPHY
+            -------------------------------------------------- */
 
         h1 {
             font-size: 22px;
@@ -121,6 +180,9 @@
             line-height: 1.5;
             margin-bottom: 20px;
         }
+        /* --------------------------------------------------
+               DIAGNOSTIC CARD
+            -------------------------------------------------- */
 
         .diagnostic-card {
             background: #f8fafc;
@@ -158,6 +220,9 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        /* --------------------------------------------------
+               INFORMATION BOX
+            -------------------------------------------------- */
 
         .info-box {
             background: #f8fafc;
@@ -170,6 +235,9 @@
             margin-bottom: 28px;
             text-align: left;
         }
+        /* --------------------------------------------------
+               ACTION BUTTON
+            -------------------------------------------------- */
 
         .action-btn {
             display: inline-flex;
@@ -196,73 +264,119 @@
             width: 16px;
             height: 16px;
         }
+        /* --------------------------------------------------
+               FOOTER
+            -------------------------------------------------- */
 
         .footer {
             margin-top: 24px;
             font-size: 12px;
             color: var(--text-muted);
         }
+        /* --------------------------------------------------
+               RESPONSIVE
+            -------------------------------------------------- */
+
+        @media (max-width: 520px) {
+            body {
+                padding: 16px;
+            }
+            .card {
+                padding: 28px 22px 26px;
+                border-radius: 20px;
+            }
+            .brand {
+                margin-bottom: 24px;
+            }
+            .brand img {
+                width: 136px;
+                max-height: 40px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
+
 <body>
-    <main class="card" id="exhausted-container">
-        <div class="status-badge" id="exhausted-status-badge">
-            <span class="status-badge-dot"></span>
-            <span th:text="${badge}">Limit Reached</span>
-        </div>
-
-        <div>
-            <div class="icon-aura-wrapper">
-                <div class="icon-badge">
-                    <!-- Security / Shield icon -->
-                    <svg th:if="${iconType == 'security'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    </svg>
-                    <!-- Clock / Time icon -->
-                    <svg th:if="${iconType == 'clock'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <!-- Limit / Gauge icon -->
-                    <svg th:if="${iconType == 'limit'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
-                    </svg>
-                    <!-- Default Alert icon -->
-                    <svg th:if="${iconType != 'security' && iconType != 'clock' && iconType != 'limit'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                </div>
+<!-- Ambient Background Grid -->
+<div class="ambient-grid"></div>
+<main class="card" id="exhausted-container">
+    <!-- PreonsURL Branding -->
+    <a href="/" class="brand" aria-label="PreonsURL Homepage"> <img src="https://adpndt.sirv.com/Images/logo_black_3.png" alt="PreonsURL"> </a>
+    <!-- Status -->
+    <div class="status-badge" id="exhausted-status-badge"> <span class="status-badge-dot"></span> <span th:text="${badge}">
+            Limit Reached
+        </span> </div>
+    <!-- Status Icon -->
+    <div>
+        <div class="icon-aura-wrapper">
+            <div class="icon-badge">
+                <!-- Security / Shield icon -->
+                <svg th:if="${iconType == 'security'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <!-- Clock / Time icon -->
+                <svg th:if="${iconType == 'clock'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <!-- Limit / Gauge icon -->
+                <svg th:if="${iconType == 'limit'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+                <!-- Default Alert icon -->
+                <svg th:if="${iconType != 'security' && iconType != 'clock' && iconType != 'limit'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
             </div>
         </div>
-
-        <h1 id="exhausted-title" th:text="${title}">Link Inaccessible</h1>
-        <p class="description" id="exhausted-description" th:text="${description}">This link is no longer accessible.</p>
-
-        <!-- Diagnostic Table if details are present -->
-        <div class="diagnostic-card" th:if="${details != null && !details.isEmpty()}">
-            <div class="diagnostic-row" th:each="entry : ${details}">
-                <span class="diagnostic-key" th:text="${entry.key}">Detail</span>
-                <span class="diagnostic-value" th:text="${entry.value}">Value</span>
-            </div>
-        </div>
-
-        <div class="info-box" th:text="${infoMessage != null && !infoMessage.isBlank() ? infoMessage : 'This URL has reached the end of its active lifecycle. If you believe this is an error, please contact the individual or organization who shared this link with you.'}">
-            This URL has reached the end of its active lifecycle. If you believe this is an error, please contact the individual or organization who shared this link with you.
-        </div>
-
-        <a href="/" class="action-btn" id="home-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 12 15 12 15 22"></polyline>
-            </svg>
-            <span>Return to Homepage</span>
-        </a>
-
-        <footer class="footer">
-            SecureURLs Gateway Service
-        </footer>
-    </main>
+    </div>
+    <!-- Title -->
+    <h1 id="exhausted-title" th:text="${title}">
+        Link Inaccessible
+    </h1>
+    <!-- Description -->
+    <p class="description" id="exhausted-description" th:text="${description}"> This link is no longer accessible. </p>
+    <!-- Diagnostic Table if details are present -->
+    <div class="diagnostic-card" th:if="${details != null && !details.isEmpty()}">
+        <div class="diagnostic-row" th:each="entry : ${details}"> <span class="diagnostic-key" th:text="${entry.key}">
+                Detail
+            </span> <span class="diagnostic-value" th:text="${entry.value}">
+                Value
+            </span> </div>
+    </div>
+    <!-- Information -->
+    <div class="info-box" th:text="${infoMessage != null && !infoMessage.isBlank() ? infoMessage : 'This URL has reached the end of its active lifecycle. If you believe this is an error, please contact the individual or organization who shared this link with you.'}"> This URL has reached the end of its active lifecycle. If you believe this is an error, please contact the individual or organization who shared this link with you. </div>
+    <!-- Homepage Button -->
+    <!--    <a-->
+    <!--            href="/"-->
+    <!--            class="action-btn"-->
+    <!--            id="home-link"-->
+    <!--    >-->
+    <!--        <svg-->
+    <!--                viewBox="0 0 24 24"-->
+    <!--                fill="none"-->
+    <!--                stroke="currentColor"-->
+    <!--                stroke-width="2"-->
+    <!--        >-->
+    <!--            <path-->
+    <!--                    d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"-->
+    <!--            ></path>-->
+    <!--            <polyline-->
+    <!--                    points="9 12 15 12 15 22"-->
+    <!--            ></polyline>-->
+    <!--        </svg>-->
+    <!--        <span>-->
+    <!--            Return to Homepage-->
+    <!--        </span>-->
+    <!--    </a>-->
+    <!-- Footer -->
+    <footer class="footer"> SecureURLs Gateway Service </footer>
+</main>
 </body>
+
 </html>

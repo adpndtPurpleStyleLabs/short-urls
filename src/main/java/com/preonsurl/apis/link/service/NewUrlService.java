@@ -48,10 +48,17 @@ import java.util.regex.Pattern;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.CountryPolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.DevicePolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.IpAllowlistPolicy;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.OtpPolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.PasswordPolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.PinPolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.ReferrerPolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.UsagePolicies.AccessSchedule;
+import com.preonsurl.apis.link.dto.LinkRecipientDto;
+import com.preonsurl.apis.link.entity.LinkRecipient;
+import com.preonsurl.apis.link.repository.LinkRecipientRepository;
+import com.preonsurl.emailer.EmailService;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.util.UUID;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -89,6 +96,8 @@ public class NewUrlService {
     private final UsagePolicyRepository usagePolicyRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomDomainRepository customDomainRepository;
+    private final LinkRecipientRepository linkRecipientRepository;
+    private final EmailService emailService;
 
     public NewUrlService(NewUrlRepository repository,
                          NewUrlAccessLogRepository accessLogRepository,
@@ -100,7 +109,9 @@ public class NewUrlService {
                          AccessPolicyRepository accessPolicyRepository,
                          UsagePolicyRepository usagePolicyRepository,
                          PasswordEncoder passwordEncoder,
-                         CustomDomainRepository customDomainRepository) {
+                         CustomDomainRepository customDomainRepository,
+                         LinkRecipientRepository linkRecipientRepository,
+                         @Autowired(required = false) EmailService emailService) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
         this.tagRepository = tagRepository;
@@ -112,6 +123,8 @@ public class NewUrlService {
         this.usagePolicyRepository = usagePolicyRepository;
         this.passwordEncoder = passwordEncoder;
         this.customDomainRepository = customDomainRepository;
+        this.linkRecipientRepository = linkRecipientRepository;
+        this.emailService = emailService;
     }
 
     private record EffectiveDomain(String domainName, String baseUrl) {}
@@ -180,9 +193,7 @@ public class NewUrlService {
 
     @Transactional
     public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId, String createdBy) {
-        if (request == null) {
-            throw new IllegalArgumentException("Request cannot be null");
-        }
+        if (request == null) {throw new IllegalArgumentException("Request cannot be null");}
         request.validate();
 
         final String source = (createdBy != null && !createdBy.isBlank()) ? createdBy.trim().toUpperCase() : "UI";
@@ -557,6 +568,11 @@ public class NewUrlService {
                                 : null,
                         (ap.getReferrers() != null && !ap.getReferrers().isBlank())
                                 ? new ReferrerPolicy(Arrays.stream(ap.getReferrers().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList())
+                                : null,
+                        ap.hasOtp()
+                                ? new OtpPolicy(true, (ap.getOtpEmails() != null && !ap.getOtpEmails().isBlank())
+                                ? Arrays.stream(ap.getOtpEmails().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList()
+                                : List.of(), false)
                                 : null
                 ))
                 .orElseGet(AccessPolicies::publicAccess);
@@ -1036,7 +1052,88 @@ public class NewUrlService {
             accessPolicy.setReferrers(null);
         }
 
+        if (accessPolicies.otp() != null && accessPolicies.otp().isEnabled()) {
+            accessPolicy.setOtpEnabled(true);
+            List<String> emails = accessPolicies.otp().emails() != null
+                    ? accessPolicies.otp().emails().stream().map(String::trim).map(String::toLowerCase).filter(s -> !s.isEmpty()).distinct().toList()
+                    : List.of();
+            accessPolicy.setOtpEmails(String.join(",", emails));
+
+            linkRecipientRepository.deleteByShortUrlId(shortUrlId);
+
+            String linkUrl = repository.findById(shortUrlId).map(NewUrl::getNewUrl).orElse("");
+            boolean shouldSend = accessPolicies.otp().shouldSendEmails();
+
+            for (String email : emails) {
+                String token = UUID.randomUUID().toString().replace("-", "");
+                LinkRecipient recipient = new LinkRecipient(shortUrlId, email, token);
+                if (shouldSend && !linkUrl.isBlank() && emailService != null) {
+                    try {
+                        String trackingPixelUrl = this.domain + "/api/track/email-open/" + token;
+                        emailService.sendSecuredLinkInvitation(email, linkUrl, trackingPixelUrl);
+                        recipient.setEmailSent(true);
+                        recipient.setEmailSentAt(Instant.now());
+                    } catch (Exception e) {
+                        log.warn("Failed to dispatch invitation email to '{}': {}", email, e.getMessage());
+                    }
+                }
+                linkRecipientRepository.save(recipient);
+            }
+        } else if (accessPolicies.isPublic()) {
+            accessPolicy.setOtpEnabled(false);
+            accessPolicy.setOtpEmails(null);
+            linkRecipientRepository.deleteByShortUrlId(shortUrlId);
+        }
+
         accessPolicyRepository.save(accessPolicy);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LinkRecipientDto> getLinkRecipients(Long userId, String publicId) {
+        String trimmedPublicId = publicId.trim();
+        Optional<NewUrl> found = repository.findByPublicIdAndUserId(trimmedPublicId, userId);
+        if (found.isEmpty()) {
+            found = repository.findByShortCodeAndUserId(trimmedPublicId, userId);
+        }
+        if (found.isEmpty()) {
+            if (repository.findByPublicId(trimmedPublicId).isPresent() || repository.findByShortCode(trimmedPublicId).isPresent()) {
+                throw new AccessDeniedException("Access denied: You do not own this link");
+            }
+            throw new UrlNotFoundException("Link not found: " + publicId);
+        }
+
+        NewUrl entity = found.get();
+        List<LinkRecipient> recipients = linkRecipientRepository.findByShortUrlIdOrderByIdAsc(entity.getId());
+        return recipients.stream().map(r -> {
+            String status;
+            if (r.isPageOpened()) {
+                status = "Page Verified";
+            } else if (r.isOtpRequested()) {
+                status = "OTP Requested";
+            } else if (r.isEmailOpened()) {
+                status = "Email Opened";
+            } else if (r.isEmailSent()) {
+                status = "Email Delivered";
+            } else {
+                status = "Pending";
+            }
+            return new LinkRecipientDto(
+                    r.getId(),
+                    r.getShortUrlId(),
+                    r.getEmail(),
+                    r.getTrackingToken(),
+                    r.isEmailSent(),
+                    r.getEmailSentAt(),
+                    r.isEmailOpened(),
+                    r.getEmailOpenedAt(),
+                    r.isOtpRequested(),
+                    r.getOtpRequestedAt(),
+                    r.isPageOpened(),
+                    r.getPageOpenedAt(),
+                    status,
+                    r.getCreatedAt()
+            );
+        }).toList();
     }
 
     public Optional<AccessPolicy> getAccessPolicy(Long shortUrlId) {

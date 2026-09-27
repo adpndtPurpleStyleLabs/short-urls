@@ -53,8 +53,7 @@ public class LinkPolicyEngine {
             PolicyEvaluationResult result = rule.evaluate(context);
             if (result != null) {
                 if (result.isRejected() || result.isChallengeRequired() || result.isNotFound()) {
-                    log.debug("Policy rule {} triggered decision: status={}, violation={}",
-                            rule.getClass().getSimpleName(), result.status(), result.violationType());
+                    log.debug("Policy rule {} triggered decision: status={}, violation={}", rule.getClass().getSimpleName(), result.status(), result.violationType());
                     return result;
                 }
             }

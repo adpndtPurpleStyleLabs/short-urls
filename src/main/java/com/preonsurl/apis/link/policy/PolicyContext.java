@@ -46,4 +46,12 @@ public record PolicyContext(
     public boolean isPinOrPasswordProtected() {
         return accessPolicy != null && accessPolicy.isPinOrPasswordProtected();
     }
+
+    public boolean isOtpProtected() {
+        return accessPolicy != null && accessPolicy.isOtpProtected();
+    }
+
+    public boolean isChallengeProtected() {
+        return accessPolicy != null && accessPolicy.hasCredentialsOrOtp();
+    }
 }

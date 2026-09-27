@@ -46,4 +46,22 @@ public interface EmailService {
      * @param reason    failure reason or description
      */
     void sendPaymentFailedEmail(String toEmail, String userName, String amount, String plan, String date, String reason);
+
+    /**
+     * Dispatches an invitation email for a secured link with an embedded 1px open-tracking pixel.
+     *
+     * @param toEmail           recipient email address
+     * @param linkUrl           the created shortened URL
+     * @param trackingPixelUrl  the tracking pixel URL for open detection
+     */
+    void sendSecuredLinkInvitation(String toEmail, String linkUrl, String trackingPixelUrl);
+
+    /**
+     * Dispatches an OTP verification code email to authorize access to a secured link.
+     *
+     * @param toEmail   recipient email address
+     * @param otpCode   6-digit numeric OTP code
+     * @param linkUrl   the target link being accessed
+     */
+    void sendLinkAccessOtp(String toEmail, String otpCode, String linkUrl);
 }

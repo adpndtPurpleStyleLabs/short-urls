@@ -44,13 +44,20 @@ public record AccessPolicies(
         @Schema(
                 description = "Referrer restriction configuration"
         )
-        ReferrerPolicy referrer
+        ReferrerPolicy referrer,
+
+        @Valid
+        @Schema(
+                description = "Email OTP restriction configuration"
+        )
+        OtpPolicy otp
 
 ) {
 
     public static AccessPolicies publicAccess() {
         return new AccessPolicies(
                 AccessPolicyMode.PUBLIC,
+                null,
                 null,
                 null,
                 null,
@@ -75,13 +82,14 @@ public record AccessPolicies(
                 || ipAllowlist != null
                 || country != null
                 || device != null
-                || referrer != null;
+                || referrer != null
+                || (otp != null && otp.isEnabled());
     }
 
     public AccessPolicies validate() {
         if (isSecured() && !hasPolicies()) {
             throw new IllegalArgumentException(
-                    "Secured access policy requires at least one restriction configured (pin, password, ipAllowlist, country, device, or referrer)"
+                    "Secured access policy requires at least one restriction configured (pin, password, otp, ipAllowlist, country, device, or referrer)"
             );
         }
         return this;

@@ -30,31 +30,33 @@ public class CredentialAccessRule implements LinkPolicyRule {
 
     @Override
     public boolean isApplicable(PolicyContext context) {
-        return context != null && context.isPinOrPasswordProtected();
+        return context != null && context.isChallengeProtected();
     }
 
     @Override
     public PolicyEvaluationResult evaluate(PolicyContext context) {
         // 1. If this is a credential submission verification flow (POST)
         if (context.isVerificationFlow()) {
-            CredentialVerifier.Outcome outcome = credentialVerifier.verify(
-                    context.accessPolicy(),
-                    context.submittedPin(),
-                    context.submittedPassword()
-            );
-
-            if (!outcome.valid()) {
-                log.warn("Security challenge authentication rejected for shortUrlId={}, url='{}'",
-                        context.shortUrlId(), context.newUrl());
-
-                return resultFactory.invalidCredentials(
-                        context.shortUrlId(),
-                        context.newUrl(),
-                        context.clientIp(),
-                        outcome.errorMessage(),
+            if (context.submittedPin() != null || context.submittedPassword() != null) {
+                CredentialVerifier.Outcome outcome = credentialVerifier.verify(
                         context.accessPolicy(),
-                        context.usagePolicy()
+                        context.submittedPin(),
+                        context.submittedPassword()
                 );
+
+                if (!outcome.valid()) {
+                    log.warn("Security challenge authentication rejected for shortUrlId={}, url='{}'",
+                            context.shortUrlId(), context.newUrl());
+
+                    return resultFactory.invalidCredentials(
+                            context.shortUrlId(),
+                            context.newUrl(),
+                            context.clientIp(),
+                            outcome.errorMessage(),
+                            context.accessPolicy(),
+                            context.usagePolicy()
+                    );
+                }
             }
 
             // Credentials successfully matched
@@ -67,7 +69,7 @@ public class CredentialAccessRule implements LinkPolicyRule {
         }
 
         // Prompt security challenge
-        log.info("Prompting PIN/Password challenge for shortUrlId={}, url='{}'",
+        log.info("Prompting security challenge for shortUrlId={}, url='{}'",
                 context.shortUrlId(), context.newUrl());
 
         return resultFactory.challengeRequired(context.accessPolicy(), context.usagePolicy());

@@ -47,6 +47,12 @@ public class AccessPolicy {
     @Column(name = "referrers", columnDefinition = "TEXT")
     private String referrers;
 
+    @Column(name = "otp_enabled", nullable = false)
+    private boolean otpEnabled = false;
+
+    @Column(name = "otp_emails", columnDefinition = "TEXT")
+    private String otpEmails;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -70,8 +76,20 @@ public class AccessPolicy {
         return passwordHash != null && !passwordHash.isBlank();
     }
 
+    public boolean hasOtp() {
+        return otpEnabled || (otpEmails != null && !otpEmails.isBlank());
+    }
+
+    public boolean isOtpProtected() {
+        return isSecured() && hasOtp();
+    }
+
     public boolean isPinOrPasswordProtected() {
         return isSecured() && (hasPin() || hasPassword());
+    }
+
+    public boolean hasCredentialsOrOtp() {
+        return isSecured() && (hasPin() || hasPassword() || hasOtp());
     }
 
     @PrePersist

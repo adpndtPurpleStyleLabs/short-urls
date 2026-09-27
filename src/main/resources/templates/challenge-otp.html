@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email OTP Verification - SecureURLs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #ffffff;
+            --surface-card: #ffffff;
+            --border-subtle: #e4e4e7;
+            --border-medium: #d4d4d8;
+            --border-focus: #000000;
+            --text-pure: #000000;
+            --text-high: #09090b;
+            --text-muted: #52525b;
+            --text-subtle: #71717a;
+            --accent-glow: rgba(0, 0, 0, 0.08);
+            --accent-glow-strong: rgba(0, 0, 0, 0.18);
+            --error-bg: #fef2f2;
+            --error-border: #fca5a5;
+            --error-text: #991b1b;
+            --success-bg: #f0fdf4;
+            --success-border: #86efac;
+            --success-text: #166534;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Manrope", sans-serif;
+            font-weight: 500;
+            background-color: var(--bg-canvas);
+            color: var(--text-pure);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+            position: relative;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(ellipse 70% 40% at 50% -10%, rgba(0, 0, 0, 0.03) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 50% 110%, rgba(0, 0, 0, 0.02) 0%, transparent 60%);
+        }
+
+        .ambient-grid {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            z-index: 0;
+        }
+
+        .card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 410px;
+            background: var(--surface-card);
+            border-radius: 16px;
+            padding: 42px 28px 30px;
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.03),
+                0 16px 36px -10px rgba(0, 0, 0, 0.08),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-medium);
+            text-align: center;
+            animation: cardAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(12px) scale(0.99); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .icon-aura-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #f4f4f5 0%, #fafafa 70%, transparent 72%);
+            margin-bottom: 20px;
+        }
+
+        .lock-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.18);
+        }
+
+        .lock-badge svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-pure);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .alert {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            margin-bottom: 18px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-error {
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: var(--error-text);
+        }
+
+        .alert-success {
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success-text);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-high);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .input-with-icon {
+            display: flex;
+            align-items: center;
+            height: 44px;
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            padding: 0 12px;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .input-with-icon:focus-within {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 1px #000000, 0 0 12px var(--accent-glow);
+        }
+
+        .input-icon-prefix {
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            margin-right: 10px;
+        }
+
+        .text-input {
+            flex: 1;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-pure);
+            background: transparent;
+        }
+
+        .text-input::placeholder {
+            color: #a1a1aa;
+        }
+
+        /* 6-box PIN container */
+        .pin-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 22px;
+        }
+
+        .pin-box {
+            width: 44px;
+            height: 50px;
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-pure);
+            background: #ffffff;
+            outline: none;
+            font-family: monospace;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+        }
+
+        .pin-box:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 1px #000000, 0 0 12px var(--accent-glow);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #000000;
+            border-radius: 8px;
+            height: 42px;
+            padding: 0 16px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: #18181b;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px var(--accent-glow-strong);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .submit-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .resend-box {
+            margin-top: 18px;
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #2563eb;
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .resend-btn:disabled {
+            color: #a1a1aa;
+            text-decoration: none;
+            cursor: not-allowed;
+        }
+
+        .change-email-btn {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-subtle);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .change-email-btn:hover {
+            color: var(--text-pure);
+            text-decoration: underline;
+        }
+
+        .badges-footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--text-subtle);
+        }
+
+        .badge-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-item svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .badge-divider {
+            width: 1px;
+            height: 12px;
+            background: var(--border-subtle);
+        }
+
+        .shake {
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .spin-icon {
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-grid" aria-hidden="true"></div>
+
+    <main class="card" id="challenge-card">
+        <div class="icon-aura-wrapper">
+            <div class="lock-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                </svg>
+            </div>
+        </div>
+
+        <h1 id="screen-title">Email OTP Verification</h1>
+        <p class="subtitle" id="screen-subtitle">This link is protected. Enter your authorized email address to receive a one-time verification passcode.</p>
+
+        <!-- Dynamic alert box -->
+        <div id="alert-box" style="display:none;" class="alert alert-error">
+            <span id="alert-message"></span>
+        </div>
+
+        <!-- PHASE 1: Enter Email -->
+        <div id="phase-email">
+            <div class="input-group">
+                <label class="field-label" for="email-input">Authorized Email</label>
+                <div class="input-with-icon">
+                    <div class="input-icon-prefix">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                        </svg>
+                    </div>
+                    <input type="email" id="email-input" class="text-input" placeholder="e.g. name@company.com" required autocomplete="email" autofocus>
+                </div>
+            </div>
+
+            <button type="button" id="request-otp-btn" class="submit-btn">
+                <span>Send Code</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <!-- PHASE 2: Enter 6-digit OTP -->
+        <div id="phase-otp" style="display:none;">
+            <div style="background:#f4f4f5; border-radius:8px; padding:10px 14px; margin-bottom:20px; font-size:12.5px; color:#52525b; text-align:center;">
+                Code sent to <strong id="sent-to-email" style="color:#09090b;"></strong>
+            </div>
+
+            <div class="pin-container" id="otp-boxes">
+                <input type="text" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" autofocus>
+                <input type="text" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off">
+                <input type="text" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off">
+                <input type="text" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off">
+                <input type="text" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off">
+                <input type="text" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off">
+            </div>
+
+            <button type="button" id="verify-otp-btn" class="submit-btn">
+                <span>Verify &amp; Unlock</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </button>
+
+            <div class="resend-box">
+                Didn't receive code? <button type="button" class="resend-btn" id="resend-btn" disabled>Resend in <span id="timer-count">60</span>s</button>
+            </div>
+            <div>
+                <a href="javascript:void(0)" class="change-email-btn" id="change-email-btn">&larr; Change email address</a>
+            </div>
+        </div>
+
+        <footer class="badges-footer">
+            <div class="badge-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <polyline points="9 12 11 14 15 10"></polyline>
+                </svg>
+                <span>Zero-Trust Security</span>
+            </div>
+            <div class="badge-divider"></div>
+            <div class="badge-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Protected by SecureURLs</span>
+            </div>
+        </footer>
+    </main>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const TARGET_PATH = /*[[${targetPath}]]*/ "";
+        /*]]>*/
+
+        const emailInput = document.getElementById("email-input");
+        const requestBtn = document.getElementById("request-otp-btn");
+        const verifyBtn = document.getElementById("verify-otp-btn");
+        const phaseEmail = document.getElementById("phase-email");
+        const phaseOtp = document.getElementById("phase-otp");
+        const sentToEmailEl = document.getElementById("sent-to-email");
+        const alertBox = document.getElementById("alert-box");
+        const alertMsg = document.getElementById("alert-message");
+        const card = document.getElementById("challenge-card");
+        const screenTitle = document.getElementById("screen-title");
+        const screenSubtitle = document.getElementById("screen-subtitle");
+        const resendBtn = document.getElementById("resend-btn");
+        const timerCount = document.getElementById("timer-count");
+        const changeEmailBtn = document.getElementById("change-email-btn");
+        const pinBoxes = Array.from(document.querySelectorAll("#otp-boxes .pin-box"));
+
+        let userEmail = "";
+        let countdownTimer = null;
+        let timeLeft = 60;
+
+        function showAlert(msg, isSuccess = false) {
+            alertBox.className = "alert " + (isSuccess ? "alert-success" : "alert-error");
+            alertMsg.textContent = msg;
+            alertBox.style.display = "flex";
+            if (!isSuccess) {
+                card.classList.remove("shake");
+                void card.offsetWidth;
+                card.classList.add("shake");
+            }
+        }
+
+        function clearAlert() {
+            alertBox.style.display = "none";
+            alertMsg.textContent = "";
+        }
+
+        function startResendCountdown() {
+            if (countdownTimer) clearInterval(countdownTimer);
+            timeLeft = 60;
+            resendBtn.disabled = true;
+            resendBtn.innerHTML = `Resend in <span id="timer-count">${timeLeft}</span>s`;
+
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                const countSpan = document.getElementById("timer-count");
+                if (countSpan) countSpan.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = "Resend Code";
+                }
+            }, 1000);
+        }
+
+        // Phase 1 -> Request OTP
+        async function handleRequestOtp() {
+            clearAlert();
+            const email = emailInput.value.trim();
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showAlert("Please enter a valid email address.");
+                emailInput.focus();
+                return;
+            }
+
+            userEmail = email;
+            requestBtn.disabled = true;
+            requestBtn.innerHTML = `
+                <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+                <span>Sending...</span>
+            `;
+
+            try {
+                const response = await fetch("/api/link-otp/request", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: TARGET_PATH, email })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    showAlert(data.message || "Failed to send verification code.");
+                    return;
+                }
+
+                // Transition to Phase 2
+                phaseEmail.style.display = "none";
+                phaseOtp.style.display = "block";
+                sentToEmailEl.textContent = email;
+                screenTitle.textContent = "Enter Verification Code";
+                screenSubtitle.textContent = "We sent a 6-digit one-time passcode to your email. Enter it below to unlock the link.";
+
+                showAlert("Verification code sent! Please check your inbox.", true);
+                startResendCountdown();
+
+                pinBoxes.forEach(b => b.value = "");
+                if (pinBoxes[0]) pinBoxes[0].focus();
+
+            } catch (err) {
+                showAlert("Network error. Please try again.");
+            } finally {
+                requestBtn.disabled = false;
+                requestBtn.innerHTML = `
+                    <span>Send Code</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                `;
+            }
+        }
+
+        requestBtn.addEventListener("click", handleRequestOtp);
+        emailInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleRequestOtp();
+            }
+        });
+
+        resendBtn.addEventListener("click", () => {
+            if (!resendBtn.disabled && userEmail) {
+                emailInput.value = userEmail;
+                handleRequestOtp();
+            }
+        });
+
+        changeEmailBtn.addEventListener("click", () => {
+            if (countdownTimer) clearInterval(countdownTimer);
+            clearAlert();
+            phaseOtp.style.display = "none";
+            phaseEmail.style.display = "block";
+            screenTitle.textContent = "Email OTP Verification";
+            screenSubtitle.textContent = "This link is protected. Enter your authorized email address to receive a one-time verification passcode.";
+            emailInput.focus();
+        });
+
+        // 6-box OTP inputs handling
+        pinBoxes.forEach((box, idx) => {
+            box.addEventListener("input", (e) => {
+                const val = box.value.replace(/\D/g, "");
+                box.value = val ? val[val.length - 1] : "";
+                if (val && idx < pinBoxes.length - 1) {
+                    pinBoxes[idx + 1].focus();
+                }
+                checkAutoSubmit();
+            });
+
+            box.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && !box.value && idx > 0) {
+                    pinBoxes[idx - 1].focus();
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleVerifyOtp();
+                }
+            });
+
+            box.addEventListener("paste", (e) => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "");
+                if (!paste) return;
+                const digits = paste.slice(0, 6).split("");
+                digits.forEach((d, i) => {
+                    if (pinBoxes[i]) pinBoxes[i].value = d;
+                });
+                const nextFocus = Math.min(digits.length, pinBoxes.length - 1);
+                if (pinBoxes[nextFocus]) pinBoxes[nextFocus].focus();
+                checkAutoSubmit();
+            });
+        });
+
+        function checkAutoSubmit() {
+            const code = pinBoxes.map(b => b.value.trim()).join("");
+            if (code.length === 6) {
+                handleVerifyOtp();
+            }
+        }
+
+        // Phase 2 -> Verify OTP
+        async function handleVerifyOtp() {
+            clearAlert();
+            const otp = pinBoxes.map(b => b.value.trim()).join("");
+            if (otp.length !== 6) {
+                showAlert("Please enter all 6 digits of the code.");
+                return;
+            }
+
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = `
+                <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+                <span>Verifying...</span>
+            `;
+
+            try {
+                const response = await fetch("/api/link-otp/verify", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: TARGET_PATH, email: userEmail, otp })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    showAlert(data.message || "Invalid or expired verification code.");
+                    pinBoxes.forEach(b => b.value = "");
+                    if (pinBoxes[0]) pinBoxes[0].focus();
+                    return;
+                }
+
+                showAlert("Verification successful! Unlocking destination...", true);
+                verifyBtn.innerHTML = `<span>Redirecting...</span>`;
+
+                const redirectUrl = (data.data && data.data.redirectUrl) ? data.data.redirectUrl : ("/" + TARGET_PATH);
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 400);
+
+            } catch (err) {
+                showAlert("Network error during verification. Please try again.");
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = `
+                    <span>Verify &amp; Unlock</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                `;
+            }
+        }
+
+        verifyBtn.addEventListener("click", handleVerifyOtp);
+    </script>
+</body>
+</html>

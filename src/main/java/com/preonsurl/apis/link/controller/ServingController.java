@@ -158,7 +158,7 @@ public class ServingController {
                 AccessPolicy policy = evalResult.accessPolicy();
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
+                        .body(linkUiRenderer.renderSecurityChallenge(path, policy != null && policy.hasPin(), policy != null && policy.hasPassword(), policy != null && policy.hasOtp(), null));
             }
 
             // Serve from cache
@@ -235,7 +235,7 @@ public class ServingController {
                         AccessPolicy policy = mirrorEval.accessPolicy();
                         return ResponseEntity.ok()
                                 .contentType(MediaType.TEXT_HTML)
-                                .body(linkUiRenderer.renderSecurityChallenge(match.prefix(), policy.hasPin(), policy.hasPassword(), null));
+                                .body(linkUiRenderer.renderSecurityChallenge(match.prefix(), policy != null && policy.hasPin(), policy != null && policy.hasPassword(), policy != null && policy.hasOtp(), null));
                     }
 
                     try {
@@ -311,11 +311,11 @@ public class ServingController {
         }
 
         if (evalResult.isChallengeRequired()) {
-            log.info("Prompting PIN/Password for url='{}' [IP={}]", fullUrl, ipAddress);
+            log.info("Prompting PIN/Password/OTP for url='{}' [IP={}]", fullUrl, ipAddress);
             AccessPolicy policy = evalResult.accessPolicy();
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_HTML)
-                    .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
+                    .body(linkUiRenderer.renderSecurityChallenge(path, policy != null && policy.hasPin(), policy != null && policy.hasPassword(), policy != null && policy.hasOtp(), null));
         }
 
         // Serve using cache service
@@ -459,9 +459,10 @@ public class ServingController {
                 AccessPolicy policy = verification.accessPolicy();
                 boolean reqPin = policy != null && policy.hasPin();
                 boolean reqPass = policy != null && policy.hasPassword();
+                boolean reqOtp = policy != null && policy.hasOtp();
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderSecurityChallenge(path, reqPin, reqPass, verification.description()));
+                        .body(linkUiRenderer.renderSecurityChallenge(path, reqPin, reqPass, reqOtp, verification.description()));
             }
             return handlePolicyRejection(verification, request);
         }
@@ -772,9 +773,9 @@ public class ServingController {
             if (isBrowserHtmlRequest(request)) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_HTML)
-                        .body(linkUiRenderer.renderSecurityChallenge(path, policy.hasPin(), policy.hasPassword(), null));
+                        .body(linkUiRenderer.renderSecurityChallenge(path, policy != null && policy.hasPin(), policy != null && policy.hasPassword(), policy != null && policy.hasOtp(), null));
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("PIN or password verification required"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("PIN, password, or OTP verification required"));
             }
         }
 

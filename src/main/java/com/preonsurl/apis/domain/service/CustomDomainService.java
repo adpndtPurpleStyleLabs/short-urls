@@ -144,7 +144,7 @@ public class CustomDomainService {
                 .toList();
 
         List<CustomDomainResponse> result = new java.util.ArrayList<>();
-        result.add(getDefaultDomain());
+//        result.add(getDefaultDomain());
         result.addAll(customVerified);
         return result;
     }
