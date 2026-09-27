@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+
+import java.util.Arrays;
 
 @Configuration
 public class ShortenerBeanConfig {
@@ -25,9 +28,21 @@ public class ShortenerBeanConfig {
     @Value("${preonsurl.shortener.domain:http://localhost:8081}")
     private String domain;
 
+    private final Environment environment;
+
+    public ShortenerBeanConfig(Environment environment) {
+        this.environment = environment;
+    }
+
     @Bean(destroyMethod = "close")
     public ShortCodePool shortCodePool() throws InterruptedException {
-        log.info("Starting ShortCodePool with {} workers, capacity {} per worker, domain={}",
+        if (!isAppProfileActive()) {
+            log.info("ShortCodePool is disabled because active profiles {} do not include 'app'. Initializing empty pool.",
+                    Arrays.toString(environment.getActiveProfiles()));
+            return ShortCodePool.empty();
+        }
+
+        log.info("Starting ShortCodePool for 'app' profile with {} workers, capacity {} per worker, domain={}",
                 workerCount, bucketCapacity, domain);
         ShortCodePool pool = new ShortCodePool(workerCount, bucketCapacity, secret);
         pool.start();
@@ -38,5 +53,19 @@ public class ShortenerBeanConfig {
     @Bean
     public UrlShortenerCore urlShortenerCore(ShortCodePool pool) {
         return new UrlShortenerCore(pool, domain);
+    }
+
+    private boolean isAppProfileActive() {
+        if (environment == null) {
+            return false;
+        }
+        for (String profile : environment.getActiveProfiles()) {
+            if (profile != null && (profile.equalsIgnoreCase("app")
+                    || profile.toLowerCase().startsWith("app-")
+                    || profile.toLowerCase().startsWith("app_"))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

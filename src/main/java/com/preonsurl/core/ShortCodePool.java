@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
@@ -29,6 +30,18 @@ public final class ShortCodePool implements AutoCloseable {
     private final Semaphore availableCodes = new Semaphore(0);
     private final AtomicBoolean running = new AtomicBoolean(true);
     private final AtomicBoolean started = new AtomicBoolean(false);
+
+    /**
+     * Creates an empty ShortCodePool with no worker threads or memory buffers.
+     * Useful when running on non-app profiles (e.g. serve, psecureServe).
+     */
+    public static ShortCodePool empty() {
+        return new ShortCodePool();
+    }
+
+    private ShortCodePool() {
+        this.buckets = Collections.emptyList();
+    }
 
     /**
      * Initializes the short code pool with specified worker count and capacity.
@@ -58,6 +71,10 @@ public final class ShortCodePool implements AutoCloseable {
      * @throws InterruptedException if thread is interrupted while waiting
      */
     public void start() throws InterruptedException {
+        if (buckets.isEmpty()) {
+            log.info("ShortCodePool is empty (inactive on this profile). Workers will not be started.");
+            return;
+        }
         if (started.compareAndSet(false, true)) {
             log.info("Starting ShortCodePool with {} worker buckets...", buckets.size());
             for (ShortCodeBucket bucket : buckets) {
@@ -94,6 +111,9 @@ public final class ShortCodePool implements AutoCloseable {
      * @throws TimeoutException     if code is not available within the timeout
      */
     public String nextCode(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        if (buckets.isEmpty()) {
+            throw new IllegalStateException("ShortCodePool is empty. Code generation is only enabled for the 'app' profile.");
+        }
         checkRunning();
 
         long deadlineNanos = (timeout == Long.MAX_VALUE) ? Long.MAX_VALUE : (System.nanoTime() + unit.toNanos(timeout));
@@ -179,6 +199,9 @@ public final class ShortCodePool implements AutoCloseable {
     }
 
     public boolean isAllWorkersAlive() {
+        if (buckets.isEmpty()) {
+            return false;
+        }
         for (ShortCodeBucket bucket : buckets) {
             if (!bucket.isWorkerAlive()) {
                 return false;
@@ -194,9 +217,11 @@ public final class ShortCodePool implements AutoCloseable {
     @Override
     public void close() {
         if (running.compareAndSet(true, false)) {
-            log.info("Shutting down ShortCodePool and stopping worker threads...");
-            for (ShortCodeBucket bucket : buckets) {
-                bucket.close();
+            if (!buckets.isEmpty()) {
+                log.info("Shutting down ShortCodePool and stopping worker threads...");
+                for (ShortCodeBucket bucket : buckets) {
+                    bucket.close();
+                }
             }
         }
     }

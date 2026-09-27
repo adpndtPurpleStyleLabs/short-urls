@@ -62,4 +62,16 @@ class ShortCodePoolTest {
         assertThrows(IllegalArgumentException.class, () -> new ShortCodePool(1025, 10, SECRET));
         assertThrows(IllegalArgumentException.class, () -> new ShortCodePool(2, 0, SECRET));
     }
+
+    @Test
+    void emptyPoolBehavior() throws Exception {
+        try (ShortCodePool emptyPool = ShortCodePool.empty()) {
+            emptyPool.start(); // Should safely do nothing
+            assertEquals(0, emptyPool.workerCount());
+            assertEquals(0, emptyPool.totalAvailableCodes());
+            assertFalse(emptyPool.isAllWorkersAlive());
+            assertThrows(IllegalStateException.class, () -> emptyPool.nextCode(1, TimeUnit.SECONDS));
+        }
+    }
 }
+
