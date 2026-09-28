@@ -74,9 +74,7 @@ public class LinkController {
 
             String createdBy =Boolean.TRUE.equals(httpRequest.getAttribute("apiKeyAuthenticated")) && "API".equalsIgnoreCase((String) httpRequest.getAttribute("creationSource")) ? "API": "UI";
             CreateNewUrlResponse response = newUrlService.createNewUrl(request, userId, createdBy);
-            log.info("New-URL processed: code='{}', linkMode='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}, createdBy='{}'",
-                    response.newUrl(), response.linkMode(), response.existing(), response.originalUrl(),
-                    response.usageLimit(), response.notes(), response.tags(), response.createdBy());
+            log.info("New-URL processed: code='{}', linkMode='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}, createdBy='{}'", response.newUrl(), response.linkMode(), response.existing(), response.originalUrl(), response.usageLimit(), response.notes(), response.tags(), response.createdBy());
             return ResponseEntity.ok(ApiResponse.success(response, "New URL created successfully"));
         } catch (IllegalArgumentException e) {
             log.warn("Invalid URL create request: {}", e.getMessage());

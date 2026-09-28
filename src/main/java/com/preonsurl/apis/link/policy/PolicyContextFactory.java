@@ -22,7 +22,6 @@ import java.util.Optional;
  */
 @Component
 public class PolicyContextFactory {
-
     private final AccessPolicyRepository accessPolicyRepository;
     private final UsagePolicyRepository usagePolicyRepository;
     private final ClientIpResolver clientIpResolver;

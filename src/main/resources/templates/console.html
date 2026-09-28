@@ -4777,6 +4777,342 @@
             animation: chipPulse 0.4s ease-in-out;
         }
 
+        /* Country Multi-Select Dropdown & Chips */
+        .country-select-field-group {
+            position: relative;
+        }
+
+        .country-selection-summary {
+            font-size: 11px;
+            font-weight: 600;
+            color: #2563eb;
+            background: #eff6ff;
+            padding: 2px 7px;
+            border-radius: 10px;
+        }
+
+        .country-chip-input-box {
+            padding-right: 32px !important;
+            cursor: pointer;
+        }
+
+        .country-chip-input-box.is-open {
+            border-color: #0f172a;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+        }
+
+        .country-chip-input-box.is-disabled {
+            background-color: #f9fafb !important;
+            cursor: not-allowed !important;
+            opacity: 0.65;
+        }
+
+        .country-dropdown-chevron {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            color: #9ca3af;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s ease, color 0.15s ease, background-color 0.15s ease;
+            user-select: none;
+            z-index: 2;
+        }
+
+        .country-dropdown-chevron:hover {
+            color: #0f172a;
+            background-color: #f1f5f9;
+        }
+
+        .country-chip-input-box.is-open .country-dropdown-chevron {
+            transform: translateY(-50%) rotate(180deg);
+            color: #0f172a;
+        }
+
+        .chip-item.country-chip-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 6px 2px 7px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #0f172a;
+            max-width: 100%;
+        }
+
+        .country-flag-icon {
+            font-size: 14px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .country-code-pill {
+            font-size: 10px;
+            font-weight: 700;
+            font-family: var(--font-mono, monospace);
+            color: #475569;
+            background: #e2e8f0;
+            padding: 1px 4px;
+            border-radius: 4px;
+            letter-spacing: 0.03em;
+            flex-shrink: 0;
+        }
+
+        /* Dropdown Popover */
+        .country-dropdown-popover {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            width: 100%;
+            min-width: 290px;
+            max-width: 100%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.15), 0 4px 10px -2px rgba(15, 23, 42, 0.08);
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: countryDropdownSlide 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes countryDropdownSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-6px) scale(0.99);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .country-dropdown-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .country-dropdown-header-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .country-dropdown-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+        }
+
+        .country-dropdown-count {
+            font-weight: 600;
+            color: #1e40af;
+            background: #dbeafe;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10.5px;
+        }
+
+        .country-dropdown-btn-clear {
+            font-size: 11px;
+            font-weight: 600;
+            color: #ef4444;
+            background: none;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+
+        .country-dropdown-btn-clear:hover {
+            background: #fee2e2;
+        }
+
+        .country-dropdown-list {
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 4px 0;
+            background: #ffffff;
+            overscroll-behavior: contain;
+        }
+
+        .country-dropdown-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .country-dropdown-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .country-dropdown-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .country-option-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s ease;
+        }
+
+        .country-option-item:hover,
+        .country-option-item.is-highlighted {
+            background-color: #f1f5f9;
+        }
+
+        .country-option-item.is-selected {
+            background-color: #f0f7ff;
+        }
+
+        .country-option-item.is-selected:hover,
+        .country-option-item.is-selected.is-highlighted {
+            background-color: #e0f0fe;
+        }
+
+        .country-option-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #ffffff;
+            color: transparent;
+            transition: all 0.12s ease;
+        }
+
+        .country-option-checkbox.checked {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .country-option-flag {
+            font-size: 16px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .country-option-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .country-option-name {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+
+        .country-option-region {
+            font-size: 10.5px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .country-option-code {
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-mono, monospace);
+            color: #475569;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 1px 5px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            letter-spacing: 0.04em;
+        }
+
+        .country-option-item.is-selected .country-option-code {
+            background: #dbeafe;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .country-highlight {
+            background-color: #fef08a;
+            color: #854d0e;
+            padding: 0 1px;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+
+        .country-dropdown-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 24px 16px;
+            color: #94a3b8;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .country-dropdown-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .country-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        .country-dropdown-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 10.5px;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+
         .modal-footer {
             display: flex;
             align-items: center;
@@ -8320,20 +8656,46 @@
 
                                     <div class="visitor-boundaries-body" id="visitorBoundariesBody">
                                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                                            <div class="field-group" style="margin-bottom: 0;">
-                                                <label for="modalCountriesInput">Allowed Countries <span class="optional">(ISO-2)</span></label>
-                                                <div class="chip-input-box" id="modalCountriesBox">
+                                            <div class="field-group country-select-field-group" style="margin-bottom: 0;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                                    <label for="modalCountriesInput" style="margin-bottom: 0;">Allowed Countries <span class="optional">(Multi-select)</span></label>
+                                                    <span class="country-selection-summary" id="modalCountriesSelectionSummary" style="display: none;"></span>
+                                                </div>
+                                                <div class="chip-input-box country-chip-input-box" id="modalCountriesBox">
                                                     <div class="input-icon-prefix">
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-                                                            <line x1="4" y1="22" x2="4" y2="15"></line>
+                                                            <circle cx="12" cy="12" r="10"></circle>
+                                                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                                                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                                                         </svg>
                                                     </div>
                                                     <div class="chip-items-list" id="modalCountriesChips"></div>
-                                                    <input type="text" class="chip-inline-input" id="modalCountriesInput" placeholder="e.g. US, IN, GB" autocomplete="off">
+                                                    <input type="text" class="chip-inline-input" id="modalCountriesInput" placeholder="Search countries..." autocomplete="off">
+                                                    <div class="country-dropdown-chevron" id="modalCountriesChevron" title="Toggle country list">
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                                        </svg>
+                                                    </div>
                                                 </div>
+
+                                                <!-- Searchable Multi-select Dropdown Popover -->
+                                                <div class="country-dropdown-popover" id="modalCountriesDropdown" style="display: none;">
+                                                    <div class="country-dropdown-header">
+                                                        <div class="country-dropdown-header-info">
+                                                            <span class="country-dropdown-title">Select Countries</span>
+                                                            <span class="country-dropdown-count" id="modalCountriesSelectedCount">0 selected</span>
+                                                        </div>
+                                                        <div class="country-dropdown-header-actions">
+                                                            <button type="button" class="country-dropdown-btn-clear" id="modalCountriesClearBtn" style="display: none;">Clear all</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="country-dropdown-list" id="modalCountriesList" role="listbox" aria-multiselectable="true"></div>
+                                                    <div class="country-dropdown-footer">
+                                                        <span class="country-dropdown-footer-hint" id="modalCountriesFooterHint">Loading countries...</span>
+                                                    </div>
+                                                </div>
+
                                                 <input type="hidden" id="modalCountries" value="">
-    <!--                                            <span class="field-help" style="margin-top: 4px;">Type ISO code &amp; press Enter to add.</span>-->
                                             </div>
 
                                             <div class="field-group" style="margin-bottom: 0;">
@@ -10631,6 +10993,7 @@
             const visitorCard = document.getElementById("visitorBoundariesCard");
             const visitorBadge = document.getElementById("visitorBoundariesProBadge");
             const countriesInput = document.getElementById("modalCountriesInput");
+            const countriesBox = document.getElementById("modalCountriesBox");
             const devicesSelect = document.getElementById("modalDevicesSelect");
             const ipInput = document.getElementById("modalIpAllowlistInput");
             const referrersInput = document.getElementById("modalReferrersInput");
@@ -10642,6 +11005,10 @@
                 visitorBadge.style.display = isPro ? "none" : "inline-flex";
             }
             if (countriesInput) countriesInput.disabled = !isPro;
+            if (countriesBox) countriesBox.classList.toggle("is-disabled", !isPro);
+            if (!isPro && typeof CountrySelectManager !== "undefined" && CountrySelectManager.isOpen) {
+                CountrySelectManager.close();
+            }
             if (devicesSelect) devicesSelect.disabled = !isPro;
             if (ipInput) ipInput.disabled = !isPro;
             if (referrersInput) referrersInput.disabled = !isPro;
@@ -12744,6 +13111,442 @@
             OTHER: "Other"
         };
 
+        const CountrySelectManager = {
+            countries: [],
+            byAlpha2: new Map(),
+            byAlpha3: new Map(),
+            isLoading: false,
+            isLoaded: false,
+            isOpen: false,
+            isInitialized: false,
+            highlightedIndex: -1,
+            currentMatches: [],
+
+            async fetchCountries() {
+                if (this.isLoaded || this.isLoading) return;
+                this.isLoading = true;
+                try {
+                    const resp = await fetch("/data/countries.json");
+                    if (!resp.ok) throw new Error("HTTP error " + resp.status);
+                    const data = await resp.json();
+                    if (Array.isArray(data)) {
+                        this.countries = data.slice().sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+                        this.byAlpha2.clear();
+                        this.byAlpha3.clear();
+                        this.countries.forEach(c => {
+                            if (c["alpha-2"]) this.byAlpha2.set(c["alpha-2"].toUpperCase(), c);
+                            if (c["alpha-3"]) this.byAlpha3.set(c["alpha-3"].toUpperCase(), c);
+                        });
+                        this.isLoaded = true;
+                        this.refreshRenderedChips();
+                        if (this.isOpen) {
+                            this.renderList();
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to load /data/countries.json:", err);
+                    const hint = document.getElementById("modalCountriesFooterHint");
+                    if (hint) hint.textContent = "Failed to load countries list";
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            getCountryByCode(code) {
+                if (!code) return null;
+                const upper = String(code).trim().toUpperCase();
+                return this.byAlpha2.get(upper) || this.byAlpha3.get(upper) || null;
+            },
+
+            getFlagEmoji(alpha2) {
+                if (!alpha2 || typeof alpha2 !== "string" || alpha2.length !== 2) return "🌐";
+                const upper = alpha2.toUpperCase();
+                const first = upper.codePointAt(0);
+                const second = upper.codePointAt(1);
+                if (first < 65 || first > 90 || second < 65 || second > 90) return "🌐";
+                return String.fromCodePoint(first + 127397, second + 127397);
+            },
+
+            refreshRenderedChips() {
+                const container = document.getElementById("modalCountriesChips");
+                if (!container) return;
+                Array.from(container.children).forEach(chip => {
+                    const code = chip.dataset.value;
+                    if (!code) return;
+                    const country = this.getCountryByCode(code);
+                    if (country) {
+                        const flag = this.getFlagEmoji(country["alpha-2"]);
+                        const flagEl = chip.querySelector(".country-flag-icon");
+                        const textEl = chip.querySelector(".chip-item-text");
+                        const codeEl = chip.querySelector(".country-code-pill");
+                        const removeBtn = chip.querySelector(".chip-remove-btn");
+                        if (flagEl) flagEl.textContent = flag;
+                        if (textEl) {
+                            textEl.textContent = country.name;
+                            textEl.title = `${country.name} (${country['alpha-2']})`;
+                        }
+                        if (codeEl) codeEl.textContent = country["alpha-2"];
+                        if (removeBtn) {
+                            removeBtn.title = `Remove ${country.name}`;
+                            removeBtn.setAttribute("aria-label", `Remove ${country.name}`);
+                        }
+                    }
+                });
+            },
+
+            filterCountries(query) {
+                if (!query || !query.trim()) {
+                    return this.countries;
+                }
+                const q = query.trim().toLowerCase();
+                const matches = [];
+
+                for (const c of this.countries) {
+                    const name = (c.name || "").toLowerCase();
+                    const a2 = (c["alpha-2"] || "").toLowerCase();
+                    const a3 = (c["alpha-3"] || "").toLowerCase();
+                    const reg = (c.region || "").toLowerCase();
+                    const sub = (c["sub-region"] || "").toLowerCase();
+
+                    let score = 0;
+                    if (a2 === q || a3 === q) {
+                        score = 100;
+                    } else if (name.startsWith(q)) {
+                        score = 80;
+                    } else if (name.split(/\s+/).some(w => w.startsWith(q))) {
+                        score = 60;
+                    } else if (name.includes(q)) {
+                        score = 40;
+                    } else if (a2.includes(q) || a3.includes(q)) {
+                        score = 30;
+                    } else if (reg.includes(q) || sub.includes(q)) {
+                        score = 20;
+                    }
+
+                    if (score > 0) {
+                        matches.push({ country: c, score });
+                    }
+                }
+
+                matches.sort((a, b) => b.score - a.score || (a.country.name || "").localeCompare(b.country.name || ""));
+                return matches.map(m => m.country);
+            },
+
+            highlightMatch(text, query) {
+                if (!query || !query.trim()) return escapeHtml(text || "");
+                const q = query.trim();
+                const idx = (text || "").toLowerCase().indexOf(q.toLowerCase());
+                if (idx === -1) return escapeHtml(text || "");
+                const before = text.slice(0, idx);
+                const matched = text.slice(idx, idx + q.length);
+                const after = text.slice(idx + q.length);
+                return `${escapeHtml(before)}<mark class="country-highlight">${escapeHtml(matched)}</mark>${escapeHtml(after)}`;
+            },
+
+            renderList(query = "") {
+                const list = document.getElementById("modalCountriesList");
+                const hint = document.getElementById("modalCountriesFooterHint");
+                if (!list) return;
+
+                if (this.isLoading && !this.isLoaded) {
+                    list.innerHTML = `
+                        <div class="country-dropdown-loading">
+                            <span class="country-spinner"></span>
+                            <span>Loading countries...</span>
+                        </div>
+                    `;
+                    if (hint) hint.textContent = "Loading...";
+                    return;
+                }
+
+                const matches = this.filterCountries(query);
+                this.currentMatches = matches;
+                this.highlightedIndex = -1;
+
+                if (matches.length === 0) {
+                    list.innerHTML = `
+                        <div class="country-dropdown-empty">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <span>No countries matching "<strong>${escapeHtml(query)}</strong>"</span>
+                        </div>
+                    `;
+                    if (hint) hint.textContent = "No matches found";
+                    return;
+                }
+
+                const selectedSet = new Set((SecurityChipManager.state.countries || []).map(c => c.toUpperCase()));
+                let html = "";
+                for (let i = 0; i < matches.length; i++) {
+                    const c = matches[i];
+                    const code = (c["alpha-2"] || "").toUpperCase();
+                    const isSelected = selectedSet.has(code);
+                    const flag = this.getFlagEmoji(code);
+                    const regionText = [c.region, c["sub-region"]].filter(Boolean).join(" • ");
+
+                    html += `
+                        <div class="country-option-item ${isSelected ? 'is-selected' : ''}" data-code="${code}" data-index="${i}" role="option" aria-selected="${isSelected}">
+                            <div class="country-option-checkbox ${isSelected ? 'checked' : ''}">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <span class="country-option-flag">${flag}</span>
+                            <div class="country-option-info">
+                                <span class="country-option-name">${this.highlightMatch(c.name, query)}</span>
+                                ${regionText ? `<span class="country-option-region">${escapeHtml(regionText)}</span>` : ''}
+                            </div>
+                            <span class="country-option-code">${code}</span>
+                        </div>
+                    `;
+                }
+
+                list.innerHTML = html;
+                if (hint) {
+                    hint.textContent = matches.length === this.countries.length
+                        ? `Showing all ${matches.length} countries`
+                        : `Showing ${matches.length} matching countries`;
+                }
+            },
+
+            open() {
+                if (typeof appState !== "undefined" && appState.plan !== "PRO") return;
+                const dropdown = document.getElementById("modalCountriesDropdown");
+                const box = document.getElementById("modalCountriesBox");
+                const input = document.getElementById("modalCountriesInput");
+                if (!dropdown || !box) return;
+
+                if (!this.isLoaded && !this.isLoading) {
+                    this.fetchCountries();
+                }
+
+                this.isOpen = true;
+                dropdown.style.display = "flex";
+                box.classList.add("is-open");
+                this.renderList(input ? input.value : "");
+                this.updateSelectionUi();
+            },
+
+            close() {
+                const dropdown = document.getElementById("modalCountriesDropdown");
+                const box = document.getElementById("modalCountriesBox");
+                const input = document.getElementById("modalCountriesInput");
+                if (!dropdown || !box) return;
+
+                this.isOpen = false;
+                dropdown.style.display = "none";
+                box.classList.remove("is-open");
+                this.highlightedIndex = -1;
+                if (input && input.value) {
+                    input.value = "";
+                }
+                SecurityChipManager.updatePlaceholder("countries");
+            },
+
+            toggle() {
+                if (this.isOpen) {
+                    this.close();
+                } else {
+                    this.open();
+                    const input = document.getElementById("modalCountriesInput");
+                    if (input) input.focus();
+                }
+            },
+
+            toggleCountry(alpha2) {
+                if (!alpha2) return;
+                const upper = alpha2.toUpperCase();
+                const isSelected = (SecurityChipManager.state.countries || []).some(c => c.toUpperCase() === upper);
+                if (isSelected) {
+                    SecurityChipManager.remove("countries", upper);
+                } else {
+                    SecurityChipManager.add("countries", upper);
+                }
+                const input = document.getElementById("modalCountriesInput");
+                if (input) {
+                    input.value = "";
+                    this.renderList("");
+                    input.focus();
+                }
+            },
+
+            updateSelectionUi() {
+                const selected = SecurityChipManager.state.countries || [];
+                const count = selected.length;
+
+                const countEl = document.getElementById("modalCountriesSelectedCount");
+                if (countEl) countEl.textContent = `${count} selected`;
+
+                const clearBtn = document.getElementById("modalCountriesClearBtn");
+                if (clearBtn) clearBtn.style.display = count > 0 ? "inline-block" : "none";
+
+                const summaryEl = document.getElementById("modalCountriesSelectionSummary");
+                if (summaryEl) {
+                    if (count > 0) {
+                        summaryEl.textContent = `${count} selected`;
+                        summaryEl.style.display = "inline";
+                    } else {
+                        summaryEl.style.display = "none";
+                    }
+                }
+
+                const list = document.getElementById("modalCountriesList");
+                if (list) {
+                    const selectedSet = new Set(selected.map(c => c.toUpperCase()));
+                    list.querySelectorAll(".country-option-item").forEach(item => {
+                        const code = (item.dataset.code || "").toUpperCase();
+                        const isSelected = selectedSet.has(code);
+                        item.classList.toggle("is-selected", isSelected);
+                        item.setAttribute("aria-selected", isSelected ? "true" : "false");
+                        const checkbox = item.querySelector(".country-option-checkbox");
+                        if (checkbox) checkbox.classList.toggle("checked", isSelected);
+                    });
+                }
+            },
+
+            setHighlight(index) {
+                const list = document.getElementById("modalCountriesList");
+                if (!list || !this.currentMatches.length) return;
+                const items = list.querySelectorAll(".country-option-item");
+                if (!items.length) return;
+
+                if (index < 0) index = items.length - 1;
+                if (index >= items.length) index = 0;
+                this.highlightedIndex = index;
+
+                items.forEach((it, idx) => {
+                    const isHi = idx === index;
+                    it.classList.toggle("is-highlighted", isHi);
+                    if (isHi) {
+                        it.scrollIntoView({ block: "nearest" });
+                    }
+                });
+            },
+
+            bindEvents() {
+                const box = document.getElementById("modalCountriesBox");
+                const input = document.getElementById("modalCountriesInput");
+                const list = document.getElementById("modalCountriesList");
+                const chevron = document.getElementById("modalCountriesChevron");
+                const clearBtn = document.getElementById("modalCountriesClearBtn");
+
+                if (!box || !input) return;
+
+                // Box click focuses input & opens dropdown
+                box.addEventListener("click", (e) => {
+                    if (typeof appState !== "undefined" && appState.plan !== "PRO") return;
+                    if (e.target.closest(".chip-remove-btn")) return;
+                    if (e.target.closest("#modalCountriesChevron")) {
+                        e.stopPropagation();
+                        this.toggle();
+                        return;
+                    }
+                    if (!this.isOpen) {
+                        this.open();
+                    }
+                    input.focus();
+                });
+
+                // Input focus
+                input.addEventListener("focus", () => {
+                    if (typeof appState !== "undefined" && appState.plan !== "PRO") return;
+                    if (!this.isOpen) {
+                        this.open();
+                    }
+                });
+
+                // Input filtering
+                input.addEventListener("input", () => {
+                    if (!this.isOpen) this.open();
+                    this.renderList(input.value);
+                });
+
+                // Keyboard navigation
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        if (!this.isOpen) {
+                            this.open();
+                        } else {
+                            this.setHighlight(this.highlightedIndex + 1);
+                        }
+                    } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        if (!this.isOpen) {
+                            this.open();
+                        } else {
+                            this.setHighlight(this.highlightedIndex - 1);
+                        }
+                    } else if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (this.isOpen) {
+                            if (this.highlightedIndex >= 0 && this.currentMatches[this.highlightedIndex]) {
+                                const target = this.currentMatches[this.highlightedIndex];
+                                this.toggleCountry(target["alpha-2"]);
+                            } else if (this.currentMatches.length > 0) {
+                                const target = this.currentMatches[0];
+                                this.toggleCountry(target["alpha-2"]);
+                            }
+                        }
+                    } else if (e.key === "Escape") {
+                        if (this.isOpen) {
+                            e.preventDefault();
+                            this.close();
+                        }
+                    } else if (e.key === "Backspace" && !input.value) {
+                        SecurityChipManager.removeLast("countries");
+                    }
+                });
+
+                // Option item click
+                if (list) {
+                    list.addEventListener("click", (e) => {
+                        const item = e.target.closest(".country-option-item");
+                        if (!item) return;
+                        const code = item.dataset.code;
+                        if (code) {
+                            this.toggleCountry(code);
+                        }
+                    });
+                }
+
+                // Clear all button click
+                if (clearBtn) {
+                    clearBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        SecurityChipManager.clear("countries");
+                        if (input) {
+                            input.value = "";
+                            this.renderList("");
+                            input.focus();
+                        }
+                    });
+                }
+
+                // Global click outside listener
+                document.addEventListener("pointerdown", (e) => {
+                    if (!this.isOpen) return;
+                    const group = e.target.closest(".country-select-field-group");
+                    if (!group) {
+                        this.close();
+                    }
+                });
+            },
+
+            init() {
+                this.fetchCountries();
+                if (!this.isInitialized) {
+                    this.bindEvents();
+                    this.isInitialized = true;
+                }
+            }
+        };
+
+        // Pre-fetch countries list early
+        CountrySelectManager.fetchCountries();
+
         const SecurityChipManager = {
             state: {
                 countries: [],
@@ -12790,10 +13593,7 @@
             },
 
             init() {
-                this.setupTextInput("countries", "modalCountriesBox", "modalCountriesInput", "modalCountriesChips", "modalCountries", {
-                    transform: v => v.toUpperCase(),
-                    delimiters: /,|\s+/
-                });
+                CountrySelectManager.init();
 
                 this.setupTextInput("ipAllowlist", "modalIpAllowlistBox", "modalIpAllowlistInput", "modalIpAllowlistChips", "modalIpAllowlist", {
                     delimiters: /,|\r?\n|\s+/
@@ -12873,7 +13673,17 @@
 
             commitPendingInputs() {
                 const cInput = document.getElementById("modalCountriesInput");
-                if (cInput && cInput.value.trim()) this.commitInput("countries", cInput, { transform: v => v.toUpperCase(), delimiters: /,|\s+/ });
+                if (cInput && cInput.value.trim()) {
+                    const raw = cInput.value.trim();
+                    const found = CountrySelectManager.getCountryByCode(raw) ||
+                        CountrySelectManager.countries.find(c => c.name.toLowerCase() === raw.toLowerCase());
+                    if (found) {
+                        this.add("countries", found["alpha-2"]);
+                    } else if (raw.length === 2) {
+                        this.add("countries", raw.toUpperCase());
+                    }
+                    cInput.value = "";
+                }
 
                 const ipInput = document.getElementById("modalIpAllowlistInput");
                 if (ipInput && ipInput.value.trim()) this.commitInput("ipAllowlist", ipInput, { delimiters: /,|\r?\n|\s+/ });
@@ -12913,6 +13723,7 @@
                 this.renderChip(field, val);
                 this.sync(field);
                 this.updatePlaceholder(field);
+                if (field === "countries") CountrySelectManager.updateSelectionUi();
             },
 
             remove(field, val) {
@@ -12926,6 +13737,7 @@
                 }
                 this.sync(field);
                 this.updatePlaceholder(field);
+                if (field === "countries") CountrySelectManager.updateSelectionUi();
             },
 
             removeLast(field) {
@@ -12943,17 +13755,36 @@
                 chip.className = "chip-item";
                 chip.dataset.value = val;
 
-                const labelText = field === "devices" ? (DEVICE_LABELS[val] || val) : val;
+                if (field === "countries") {
+                    chip.classList.add("country-chip-item");
+                    const country = CountrySelectManager.getCountryByCode(val);
+                    const flag = CountrySelectManager.getFlagEmoji(country ? country["alpha-2"] : val);
+                    const countryName = country ? country.name : val;
+                    const code = country ? country["alpha-2"] : val;
+                    chip.innerHTML = `
+                        <span class="country-flag-icon">${flag}</span>
+                        <span class="chip-item-text" title="${escapeHtml(countryName)} (${escapeHtml(code)})">${escapeHtml(countryName)}</span>
+                        <span class="country-code-pill">${escapeHtml(code)}</span>
+                        <button type="button" class="chip-remove-btn" title="Remove ${escapeHtml(countryName)}" aria-label="Remove ${escapeHtml(countryName)}">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    `;
+                } else {
+                    const labelText = field === "devices" ? (DEVICE_LABELS[val] || val) : val;
 
-                chip.innerHTML = `
-                    <span class="chip-item-text">${escapeHtml(labelText)}</span>
-                    <button type="button" class="chip-remove-btn" title="Remove" aria-label="Remove ${escapeHtml(labelText)}">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                `;
+                    chip.innerHTML = `
+                        <span class="chip-item-text">${escapeHtml(labelText)}</span>
+                        <button type="button" class="chip-remove-btn" title="Remove" aria-label="Remove ${escapeHtml(labelText)}">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    `;
+                }
 
                 const btn = chip.querySelector(".chip-remove-btn");
                 btn.addEventListener("click", (e) => {
@@ -12983,7 +13814,7 @@
                 if (!input) return;
                 const count = this.state[field].length;
                 if (field === "countries") {
-                    input.placeholder = count > 0 ? "Add more..." : "e.g. US, IN, GB";
+                    input.placeholder = count > 0 ? "Search more countries..." : "Search countries (e.g. US, India)...";
                 } else if (field === "ipAllowlist") {
                     input.placeholder = count > 0 ? "Add more..." : "e.g. 192.168.1.1 or 10.0.0.0/24";
                 } else if (field === "referrers") {
@@ -13005,6 +13836,7 @@
                     const opts = field === "countries" || field === "devices" ? { transform: v => v.toUpperCase() } : (field === "otpEmails" ? { transform: v => v.toLowerCase() } : {});
                     values.forEach(v => this.add(field, v, opts));
                 }
+                if (field === "countries") CountrySelectManager.updateSelectionUi();
             },
 
             clear(field) {
@@ -13021,6 +13853,9 @@
                 if (field === "devices") {
                     const sel = document.getElementById("modalDevicesSelect");
                     if (sel) sel.value = "";
+                }
+                if (field === "countries") {
+                    CountrySelectManager.updateSelectionUi();
                 }
                 this.sync(field);
                 this.updatePlaceholder(field);
@@ -13862,6 +14697,7 @@
 
         function closeLinkModal() {
             resetModalCorsUI();
+            if (typeof CountrySelectManager !== "undefined") CountrySelectManager.close();
             SecurityChipManager.clearAll();
             const modal = document.getElementById("linkModal");
             const dialog = document.querySelector(".link-modal-dialog");

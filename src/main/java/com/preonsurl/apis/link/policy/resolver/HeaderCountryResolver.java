@@ -1,8 +1,12 @@
 package com.preonsurl.apis.link.policy.resolver;
 
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.AddressNotFoundException;
+import com.maxmind.geoip2.model.CountryResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
+import java.net.InetAddress;
 import java.util.Locale;
 
 /**
@@ -10,6 +14,12 @@ import java.util.Locale;
  */
 @Component
 public class HeaderCountryResolver implements CountryResolver {
+    private final DatabaseReader databaseReader;
+
+    public HeaderCountryResolver(DatabaseReader databaseReader){
+        this.databaseReader = databaseReader;
+
+    }
 
     private static final String[] COUNTRY_HEADERS = {
             "CF-IPCountry",                 // Cloudflare
@@ -22,6 +32,28 @@ public class HeaderCountryResolver implements CountryResolver {
 
     @Override
     public String resolveCountry(HttpServletRequest request) {
+        String ip = resolveClientIp(request);
+
+        if (ip == null || ip.isBlank()) {
+            return null;
+        }
+
+        try {
+            InetAddress address = InetAddress.getByName(ip);
+
+            CountryResponse response = databaseReader.country(address);
+            if (response.country() == null) {
+                return null;
+            }
+
+            return response.country().isoCode();
+
+        } catch (AddressNotFoundException e) {
+            return null;
+        } catch (Exception e) {
+
+        }
+
         if (request == null) {
             return null;
         }
@@ -48,5 +80,40 @@ public class HeaderCountryResolver implements CountryResolver {
             return false;
         }
         return code.chars().allMatch(Character::isLetter);
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+
+        // Cloudflare
+        String ip = request.getHeader("CF-Connecting-IP");
+
+        if (isValidIpHeader(ip)) {
+            return ip.trim();
+        }
+
+        // Standard proxy header
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+
+        if (isValidIpHeader(forwardedFor)) {
+            // X-Forwarded-For can contain:
+            // client, proxy1, proxy2
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        // Nginx
+        String realIp = request.getHeader("X-Real-IP");
+
+        if (isValidIpHeader(realIp)) {
+            return realIp.trim();
+        }
+
+        // Direct connection
+        return request.getRemoteAddr();
+    }
+
+    private boolean isValidIpHeader(String value) {
+        return value != null
+                && !value.isBlank()
+                && !"unknown".equalsIgnoreCase(value);
     }
 }
