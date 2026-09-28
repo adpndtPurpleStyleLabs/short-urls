@@ -6,8 +6,9 @@ import com.preonsurl.apis.domain.dto.DomainVerificationResponse;
 import com.preonsurl.apis.domain.entity.CustomDomain;
 import com.preonsurl.apis.domain.entity.DomainStatus;
 import com.preonsurl.apis.domain.repository.CustomDomainRepository;
+import com.preonsurl.coreconfig.constants.CoreConfigKeys;
+import com.preonsurl.coreconfig.service.CoreConfigService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,7 @@ import java.util.regex.Pattern;
 @Slf4j
 @Service
 public class CustomDomainService {
-
-    private static final Pattern DOMAIN_PATTERN = Pattern.compile(
-            "^(?!-)[a-z0-9-]{1,63}(?<!-)(\\.(?!-)[a-z0-9-]{1,63}(?<!-))*\\.[a-z]{2,63}$"
-    );
-
+    private static final Pattern DOMAIN_PATTERN = Pattern.compile("^(?!-)[a-z0-9-]{1,63}(?<!-)(\\.(?!-)[a-z0-9-]{1,63}(?<!-))*\\.[a-z]{2,63}$");
     private final CustomDomainRepository customDomainRepository;
     private final DnsVerificationService dnsVerificationService;
     private final String defaultServeDomain;
@@ -34,10 +31,10 @@ public class CustomDomainService {
     public CustomDomainService(
             CustomDomainRepository customDomainRepository,
             DnsVerificationService dnsVerificationService,
-            @Value("${preonsurl.serve.domain:go.domain.com}") String defaultServeDomain) {
+            CoreConfigService coreConfigService) {
         this.customDomainRepository = customDomainRepository;
         this.dnsVerificationService = dnsVerificationService;
-        this.defaultServeDomain = defaultServeDomain.trim().toLowerCase();
+        this.defaultServeDomain = coreConfigService.get(CoreConfigKeys.App.SECURE_DOMAIN);
     }
 
     public String getDefaultServeDomain() {
@@ -56,7 +53,7 @@ public class CustomDomainService {
         }
 
         if (normalizedDomain.equalsIgnoreCase(defaultServeDomain)) {
-            throw new IllegalArgumentException("Cannot register the system's default domain '" + defaultServeDomain + "'.");
+            throw new IllegalArgumentException("Cannot register the system's default domain '" + normalizedDomain + "'.");
         }
 
         if (customDomainRepository.existsByDomain(normalizedDomain)) {

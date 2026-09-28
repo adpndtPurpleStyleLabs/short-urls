@@ -14,10 +14,11 @@ import com.preonsurl.apis.publiclink.event.PublicSecureUrlServedEvent;
 import com.preonsurl.apis.publiclink.ratelimit.PublicLinkRateLimiter;
 import com.preonsurl.apis.publiclink.repository.PublicSecureUrlRepository;
 import com.preonsurl.core.ShortCodePool;
+import com.preonsurl.coreconfig.constants.CoreConfigKeys;
+import com.preonsurl.coreconfig.service.CoreConfigService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -40,28 +41,30 @@ public class PublicLinkService {
     private final PublicLinkRateLimiter rateLimiter;
     private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
+    public final CoreConfigService coreConfigService;
 
-    @Value("${preonsurl.psecure.domain:http://psecure.domain.com:8081}")
-    private String psecureDomain;
-
-    public PublicLinkService(ShortCodePool codePool, PublicSecureUrlRepository repository, PublicSecureUrlLruCache lruCache, PublicLinkRateLimiter rateLimiter, ApplicationEventPublisher eventPublisher) {
+    public PublicLinkService(ShortCodePool codePool,
+                             PublicSecureUrlRepository repository,
+                             PublicSecureUrlLruCache lruCache,
+                             PublicLinkRateLimiter rateLimiter,
+                             ApplicationEventPublisher eventPublisher,
+                             CoreConfigService coreConfigService) {
         this.codePool = codePool;
         this.repository = repository;
         this.lruCache = lruCache;
         this.rateLimiter = rateLimiter;
         this.eventPublisher = eventPublisher;
         this.objectMapper = new ObjectMapper().findAndRegisterModules();
+        this.coreConfigService = coreConfigService;
     }
 
-    // ============================================================
     // CREATE PUBLIC LINK
-    // ============================================================
-
     public PublicLinkResponse createPublicLink(CreatePublicLinkRequest request, Long userId, HttpServletRequest httpRequest) {
         validateRequest(request);
+        String psecureBaseUrl = coreConfigService.get(CoreConfigKeys.App.PSECURE_URL);
         final String originalUrl = request.url().trim();
         final String shortCode = generateFastShortCode();
-        final String psecureUrl = psecureDomain + "/" + shortCode;
+        final String psecureUrl = psecureBaseUrl + "/" + shortCode;
         final String linkMode = request.resolvedLinkMode();
         final Instant createdAt = Instant.now();
         final AccessData access = resolveAccessPolicies(request.accessPolicies());

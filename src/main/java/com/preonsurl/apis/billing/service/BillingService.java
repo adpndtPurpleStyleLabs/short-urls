@@ -10,10 +10,11 @@ import com.preonsurl.apis.billing.entity.BillingInvoice;
 import com.preonsurl.apis.billing.entity.UserBillingAddress;
 import com.preonsurl.apis.billing.repository.BillingAddressRepository;
 import com.preonsurl.apis.billing.repository.BillingInvoiceRepository;
+import com.preonsurl.coreconfig.constants.CoreConfigKeys;
+import com.preonsurl.coreconfig.service.CoreConfigService;
 import com.preonsurl.emailer.EmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,11 +38,9 @@ import java.util.Optional;
 
 @Service
 public class BillingService {
-
     private static final Logger log = LoggerFactory.getLogger(BillingService.class);
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
-            .withZone(ZoneId.of("UTC"));
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm").withZone(ZoneId.of("UTC"));
 
     private final UserRepository userRepository;
     private final BillingAddressRepository addressRepository;
@@ -50,30 +49,29 @@ public class BillingService {
     private final EmailService emailService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${razorpay.key.id:rzp_test_placeholder}")
-    private String razorpayKeyId;
-
-    @Value("${razorpay.key.secret:secret_placeholder}")
-    private String razorpayKeySecret;
-
-    @Value("${razorpay.currency:USD}")
-    private String razorpayCurrency;
-
-    @Value("${razorpay.pro-plan-amount:5000}")
-    private Long proPlanAmount; // 5000 cents = $50.00 USD
+    private final String razorpayKeyId;
+    private final String razorpayKeySecret;
+    private final String razorpayCurrency;
+    private final Long proPlanAmount; // 5000 cents = $50.00 USD
 
     public BillingService(
             UserRepository userRepository,
             BillingAddressRepository addressRepository,
             BillingInvoiceRepository invoiceRepository,
             UserCache userCache,
-            EmailService emailService
+            EmailService emailService,
+            CoreConfigService coreConfigService
     ) {
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.invoiceRepository = invoiceRepository;
         this.userCache = userCache;
         this.emailService = emailService;
+
+        this.razorpayKeyId = coreConfigService.get(CoreConfigKeys.Razorpay.ID);
+        this.razorpayKeySecret = coreConfigService.get(CoreConfigKeys.Razorpay.SECRET);
+        this.razorpayCurrency = coreConfigService.get(CoreConfigKeys.Razorpay.CURRENCY);
+        this.proPlanAmount = coreConfigService.getLong(CoreConfigKeys.Razorpay.PRO_PLAN_AMOUNT);
     }
 
     public BillingProfileResponse getBillingProfile(Long userId) {
@@ -442,13 +440,13 @@ public class BillingService {
         );
 
         String jsonPayload = String.format("""
-            {
-                "amount": %d,
-                "currency": "%s",
-                "receipt": "%s",
-                "payment_capture": 1
-            }
-        """, amountInCents, currency, receipt);
+                    {
+                        "amount": %d,
+                        "currency": "%s",
+                        "receipt": "%s",
+                        "payment_capture": 1
+                    }
+                """, amountInCents, currency, receipt);
 
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
@@ -510,301 +508,301 @@ public class BillingService {
                 : "<span style='display:inline-block;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:1px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);text-transform:uppercase;'>" + status + "</span>";
 
         return """
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Invoice {{titleInvoiceNumber}} - SecureURL</title>
-                <style>
-                    body {
-                        margin: 0;
-                        padding: 40px 20px;
-                        background: #0f111a;
-                        color: #e2e8f0;
-                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                    }
-                    .invoice-wrapper {
-                        max-width: 800px;
-                        margin: 0 auto;
-                        background: #141724;
-                        border: 1px solid rgba(255, 255, 255, 0.08);
-                        border-radius: 16px;
-                        padding: 48px;
-                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-                    }
-                    .header-grid {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-start;
-                        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-                        padding-bottom: 32px;
-                        margin-bottom: 32px;
-                    }
-                    .brand-title {
-                        font-size: 26px;
-                        font-weight: 800;
-                        color: #ffffff;
-                        letter-spacing: -0.5px;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                    }
-                    .brand-logo {
-                        width: 36px;
-                        height: 36px;
-                        background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-                        color: white;
-                        border-radius: 8px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-weight: 900;
-                        font-size: 18px;
-                    }
-                    .company-meta {
-                        color: #94a3b8;
-                        font-size: 13px;
-                        margin-top: 8px;
-                        line-height: 1.5;
-                    }
-                    .invoice-meta {
-                        text-align: right;
-                    }
-                    .invoice-num {
-                        font-family: monospace;
-                        font-size: 20px;
-                        font-weight: 700;
-                        color: #ffffff;
-                        margin-bottom: 8px;
-                    }
-                    .invoice-date {
-                        color: #94a3b8;
-                        font-size: 13px;
-                        margin-bottom: 12px;
-                    }
-                    .billing-details-grid {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-bottom: 40px;
-                    }
-                    .detail-col {
-                        flex: 1;
-                    }
-                    .detail-title {
-                        font-size: 11px;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                        color: #a855f7;
-                        font-weight: 700;
-                        margin-bottom: 10px;
-                    }
-                    .detail-val {
-                        color: #f8fafc;
-                        font-size: 14px;
-                        line-height: 1.6;
-                    }
-                    .detail-val.muted {
-                        color: #94a3b8;
-                    }
-                    .items-table {
-                        width: 100%%;
-                        border-collapse: collapse;
-                        margin-bottom: 32px;
-                    }
-                    .items-table th {
-                        text-align: left;
-                        padding: 12px 16px;
-                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                        color: #94a3b8;
-                        font-size: 12px;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                    }
-                    .items-table td {
-                        padding: 18px 16px;
-                        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                        font-size: 14px;
-                    }
-                    .item-title {
-                        color: #ffffff;
-                        font-weight: 600;
-                        margin-bottom: 4px;
-                    }
-                    .item-desc {
-                        color: #94a3b8;
-                        font-size: 12px;
-                        line-height: 1.4;
-                    }
-                    .summary-box {
-                        width: 320px;
-                        margin-left: auto;
-                        background: rgba(255, 255, 255, 0.02);
-                        border: 1px solid rgba(255, 255, 255, 0.06);
-                        border-radius: 12px;
-                        padding: 20px;
-                        margin-bottom: 36px;
-                    }
-                    .summary-row {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 8px 0;
-                        font-size: 14px;
-                        color: #94a3b8;
-                    }
-                    .summary-row.total {
-                        border-top: 1px solid rgba(255, 255, 255, 0.1);
-                        padding-top: 14px;
-                        margin-top: 6px;
-                        color: #ffffff;
-                        font-size: 18px;
-                        font-weight: 700;
-                    }
-                    .actions-bar {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        border-top: 1px solid rgba(255, 255, 255, 0.08);
-                        padding-top: 24px;
-                    }
-                    .print-btn {
-                        background: #000000;
-                        color: white;
-                        border: 1px solid #000000;
-                        padding: 10px 24px;
-                        border-radius: 8px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-                    .print-btn:hover {
-                        background: #262626;
-                        border-color: #262626;
-                    }
-                    @media print {
-                        body { background: #ffffff; color: #000000; padding: 0; }
-                        .invoice-wrapper { border: none; box-shadow: none; padding: 0; background: #ffffff; color: #000000; }
-                        .actions-bar { display: none; }
-                        .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; color: #000; }
-                        .brand-title, .invoice-num, .summary-row.total, .item-title, .detail-val { color: #000000 !important; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="invoice-wrapper">
-                    <div class="header-grid">
-                        <div>
-                            <div class="brand-title">
-                                <div class="brand-logo">P</div>
-                                <span>PreonsURL Platform</span>
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Invoice {{titleInvoiceNumber}} - SecureURL</title>
+                    <style>
+                        body {
+                            margin: 0;
+                            padding: 40px 20px;
+                            background: #0f111a;
+                            color: #e2e8f0;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                        }
+                        .invoice-wrapper {
+                            max-width: 800px;
+                            margin: 0 auto;
+                            background: #141724;
+                            border: 1px solid rgba(255, 255, 255, 0.08);
+                            border-radius: 16px;
+                            padding: 48px;
+                            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                        }
+                        .header-grid {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                            padding-bottom: 32px;
+                            margin-bottom: 32px;
+                        }
+                        .brand-title {
+                            font-size: 26px;
+                            font-weight: 800;
+                            color: #ffffff;
+                            letter-spacing: -0.5px;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                        }
+                        .brand-logo {
+                            width: 36px;
+                            height: 36px;
+                            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+                            color: white;
+                            border-radius: 8px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: 900;
+                            font-size: 18px;
+                        }
+                        .company-meta {
+                            color: #94a3b8;
+                            font-size: 13px;
+                            margin-top: 8px;
+                            line-height: 1.5;
+                        }
+                        .invoice-meta {
+                            text-align: right;
+                        }
+                        .invoice-num {
+                            font-family: monospace;
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: #ffffff;
+                            margin-bottom: 8px;
+                        }
+                        .invoice-date {
+                            color: #94a3b8;
+                            font-size: 13px;
+                            margin-bottom: 12px;
+                        }
+                        .billing-details-grid {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 40px;
+                        }
+                        .detail-col {
+                            flex: 1;
+                        }
+                        .detail-title {
+                            font-size: 11px;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            color: #a855f7;
+                            font-weight: 700;
+                            margin-bottom: 10px;
+                        }
+                        .detail-val {
+                            color: #f8fafc;
+                            font-size: 14px;
+                            line-height: 1.6;
+                        }
+                        .detail-val.muted {
+                            color: #94a3b8;
+                        }
+                        .items-table {
+                            width: 100%%;
+                            border-collapse: collapse;
+                            margin-bottom: 32px;
+                        }
+                        .items-table th {
+                            text-align: left;
+                            padding: 12px 16px;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                            color: #94a3b8;
+                            font-size: 12px;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        }
+                        .items-table td {
+                            padding: 18px 16px;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                            font-size: 14px;
+                        }
+                        .item-title {
+                            color: #ffffff;
+                            font-weight: 600;
+                            margin-bottom: 4px;
+                        }
+                        .item-desc {
+                            color: #94a3b8;
+                            font-size: 12px;
+                            line-height: 1.4;
+                        }
+                        .summary-box {
+                            width: 320px;
+                            margin-left: auto;
+                            background: rgba(255, 255, 255, 0.02);
+                            border: 1px solid rgba(255, 255, 255, 0.06);
+                            border-radius: 12px;
+                            padding: 20px;
+                            margin-bottom: 36px;
+                        }
+                        .summary-row {
+                            display: flex;
+                            justify-content: space-between;
+                            padding: 8px 0;
+                            font-size: 14px;
+                            color: #94a3b8;
+                        }
+                        .summary-row.total {
+                            border-top: 1px solid rgba(255, 255, 255, 0.1);
+                            padding-top: 14px;
+                            margin-top: 6px;
+                            color: #ffffff;
+                            font-size: 18px;
+                            font-weight: 700;
+                        }
+                        .actions-bar {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            border-top: 1px solid rgba(255, 255, 255, 0.08);
+                            padding-top: 24px;
+                        }
+                        .print-btn {
+                            background: #000000;
+                            color: white;
+                            border: 1px solid #000000;
+                            padding: 10px 24px;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        .print-btn:hover {
+                            background: #262626;
+                            border-color: #262626;
+                        }
+                        @media print {
+                            body { background: #ffffff; color: #000000; padding: 0; }
+                            .invoice-wrapper { border: none; box-shadow: none; padding: 0; background: #ffffff; color: #000000; }
+                            .actions-bar { display: none; }
+                            .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; color: #000; }
+                            .brand-title, .invoice-num, .summary-row.total, .item-title, .detail-val { color: #000000 !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="invoice-wrapper">
+                        <div class="header-grid">
+                            <div>
+                                <div class="brand-title">
+                                    <div class="brand-logo">P</div>
+                                    <span>PreonsURL Platform</span>
+                                </div>
+                                <div class="company-meta">
+                                    Preons Digital Infrastructure Inc.<br>
+                                    Cloud Routing &amp; Link Security Engine<br>
+                                    support@indexrender.io
+                                </div>
                             </div>
-                            <div class="company-meta">
-                                Preons Digital Infrastructure Inc.<br>
-                                Cloud Routing &amp; Link Security Engine<br>
-                                support@indexrender.io
+                            <div class="invoice-meta">
+                                <div class="invoice-num">{{invoiceNumber}}</div>
+                                <div class="invoice-date">{{invoiceDate}}</div>
+                                <div>{{statusBadge}}</div>
                             </div>
                         </div>
-                        <div class="invoice-meta">
-                            <div class="invoice-num">{{invoiceNumber}}</div>
-                            <div class="invoice-date">{{invoiceDate}}</div>
-                            <div>{{statusBadge}}</div>
+                
+                        <div class="billing-details-grid">
+                            <div class="detail-col">
+                                <div class="detail-title">BILLED TO</div>
+                                <div class="detail-val" style="font-weight:600;">{{customerName}}</div>
+                                <div class="detail-val muted">{{customerCompany}}</div>
+                                <div class="detail-val muted">{{customerEmail}}</div>
+                                <div class="detail-val muted">{{customerAddress}}</div>
+                                <div class="detail-val muted">{{cityStateCountry}}</div>
+                                {{taxIdHtml}}
+                            </div>
+                            <div class="detail-col" style="text-align: right;">
+                                <div class="detail-title">PAYMENT DETAILS</div>
+                                <div class="detail-val">Provider: <strong>Razorpay</strong></div>
+                                <div class="detail-val muted">Payment ID: <code style="color:#c4b5fd;">{{paymentId}}</code></div>
+                                <div class="detail-val muted">Plan License: <strong>{{plan}} (Lifetime)</strong></div>
+                                <div class="detail-val muted">Status: <strong style="color:#10b981;">PAID IN FULL</strong></div>
+                            </div>
+                        </div>
+                
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Description</th>
+                                    <th style="text-align:center;">Qty</th>
+                                    <th style="text-align:right;">Rate</th>
+                                    <th style="text-align:right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="item-title">SecureURL PRO Plan — Lifetime License</div>
+                                        <div class="item-desc">
+                                            Full suite unlocked: Unlimited URL shortening, Custom Domains with automated SSL, REST API key access, Reverse Proxy and Asset Rewrite Mirroring, Custom Slugs, and priority security policies.
+                                        </div>
+                                    </td>
+                                    <td style="text-align:center;">1</td>
+                                    <td style="text-align:right;">{{rateAmount}}</td>
+                                    <td style="text-align:right; font-weight:700; color:#ffffff;">{{itemAmount}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                
+                        <div class="summary-box">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span>{{subtotalAmount}}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax (0%)</span>
+                                <span>$0.00</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total Paid</span>
+                                <span style="color:#a855f7;">{{totalAmount}}</span>
+                            </div>
+                        </div>
+                
+                        <div class="actions-bar">
+                            <span style="font-size:12px; color:#64748b;">
+                                Thank you for partnering with PreonsURL. This document serves as official proof of payment.
+                            </span>
+                            <button class="print-btn" onclick="window.print()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                    <rect x="6" y="14" width="12" height="8"></rect>
+                                </svg>
+                                Print Invoice
+                            </button>
                         </div>
                     </div>
-
-                    <div class="billing-details-grid">
-                        <div class="detail-col">
-                            <div class="detail-title">BILLED TO</div>
-                            <div class="detail-val" style="font-weight:600;">{{customerName}}</div>
-                            <div class="detail-val muted">{{customerCompany}}</div>
-                            <div class="detail-val muted">{{customerEmail}}</div>
-                            <div class="detail-val muted">{{customerAddress}}</div>
-                            <div class="detail-val muted">{{cityStateCountry}}</div>
-                            {{taxIdHtml}}
-                        </div>
-                        <div class="detail-col" style="text-align: right;">
-                            <div class="detail-title">PAYMENT DETAILS</div>
-                            <div class="detail-val">Provider: <strong>Razorpay</strong></div>
-                            <div class="detail-val muted">Payment ID: <code style="color:#c4b5fd;">{{paymentId}}</code></div>
-                            <div class="detail-val muted">Plan License: <strong>{{plan}} (Lifetime)</strong></div>
-                            <div class="detail-val muted">Status: <strong style="color:#10b981;">PAID IN FULL</strong></div>
-                        </div>
-                    </div>
-
-                    <table class="items-table">
-                        <thead>
-                            <tr>
-                                <th>Item Description</th>
-                                <th style="text-align:center;">Qty</th>
-                                <th style="text-align:right;">Rate</th>
-                                <th style="text-align:right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <div class="item-title">SecureURL PRO Plan — Lifetime License</div>
-                                    <div class="item-desc">
-                                        Full suite unlocked: Unlimited URL shortening, Custom Domains with automated SSL, REST API key access, Reverse Proxy and Asset Rewrite Mirroring, Custom Slugs, and priority security policies.
-                                    </div>
-                                </td>
-                                <td style="text-align:center;">1</td>
-                                <td style="text-align:right;">{{rateAmount}}</td>
-                                <td style="text-align:right; font-weight:700; color:#ffffff;">{{itemAmount}}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="summary-box">
-                        <div class="summary-row">
-                            <span>Subtotal</span>
-                            <span>{{subtotalAmount}}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Tax (0%)</span>
-                            <span>$0.00</span>
-                        </div>
-                        <div class="summary-row total">
-                            <span>Total Paid</span>
-                            <span style="color:#a855f7;">{{totalAmount}}</span>
-                        </div>
-                    </div>
-
-                    <div class="actions-bar">
-                        <span style="font-size:12px; color:#64748b;">
-                            Thank you for partnering with PreonsURL. This document serves as official proof of payment.
-                        </span>
-                        <button class="print-btn" onclick="window.print()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                                <rect x="6" y="14" width="12" height="8"></rect>
-                            </svg>
-                            Print Invoice
-                        </button>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
-            .replace("{{titleInvoiceNumber}}", invoiceNumber)
-            .replace("{{invoiceNumber}}", invoiceNumber)
-            .replace("{{invoiceDate}}", date)
-            .replace("{{statusBadge}}", statusBadge)
-            .replace("{{customerName}}", name != null ? name : "Valued Customer")
-            .replace("{{customerCompany}}", company != null && !company.isBlank() ? company + "<br>" : "")
-            .replace("{{customerEmail}}", email != null ? email : "")
-            .replace("{{customerAddress}}", address != null && !address.isBlank() ? address + "<br>" : "")
-            .replace("{{cityStateCountry}}", cityState.isBlank() ? country : cityState + ", " + country)
-            .replace("{{taxIdHtml}}", taxId.isBlank() ? "" : "<div class='detail-val muted'>Tax ID: " + taxId + "</div>")
-            .replace("{{paymentId}}", paymentId != null ? paymentId : "N/A")
-            .replace("{{plan}}", plan != null ? plan : "PRO")
-            .replace("{{rateAmount}}", amountFormatted)
-            .replace("{{itemAmount}}", amountFormatted)
-            .replace("{{subtotalAmount}}", amountFormatted)
-            .replace("{{totalAmount}}", amountFormatted);
+                </body>
+                </html>
+                """
+                .replace("{{titleInvoiceNumber}}", invoiceNumber)
+                .replace("{{invoiceNumber}}", invoiceNumber)
+                .replace("{{invoiceDate}}", date)
+                .replace("{{statusBadge}}", statusBadge)
+                .replace("{{customerName}}", name != null ? name : "Valued Customer")
+                .replace("{{customerCompany}}", company != null && !company.isBlank() ? company + "<br>" : "")
+                .replace("{{customerEmail}}", email != null ? email : "")
+                .replace("{{customerAddress}}", address != null && !address.isBlank() ? address + "<br>" : "")
+                .replace("{{cityStateCountry}}", cityState.isBlank() ? country : cityState + ", " + country)
+                .replace("{{taxIdHtml}}", taxId.isBlank() ? "" : "<div class='detail-val muted'>Tax ID: " + taxId + "</div>")
+                .replace("{{paymentId}}", paymentId != null ? paymentId : "N/A")
+                .replace("{{plan}}", plan != null ? plan : "PRO")
+                .replace("{{rateAmount}}", amountFormatted)
+                .replace("{{itemAmount}}", amountFormatted)
+                .replace("{{subtotalAmount}}", amountFormatted)
+                .replace("{{totalAmount}}", amountFormatted);
     }
 
     public record BillingVerificationResult(

@@ -1,5 +1,7 @@
 package com.preonsurl.emailer;
 
+import com.preonsurl.coreconfig.constants.CoreConfigKeys;
+import com.preonsurl.coreconfig.service.CoreConfigService;
 import io.mailtrap.client.MailtrapClient;
 import io.mailtrap.config.MailtrapConfig;
 import io.mailtrap.factory.MailtrapClientFactory;
@@ -9,7 +11,6 @@ import io.mailtrap.model.response.emails.SendResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -23,29 +24,15 @@ import java.util.List;
  */
 @Service
 public class MailtrapEmailService implements EmailService {
-
     private static final Logger log = LoggerFactory.getLogger(MailtrapEmailService.class);
 
-    @Value("${mailtrap.api-token:laudalasan}")
-    private String apiToken;
-
-    @Value("${mailtrap.sender-email:hello@madxglobaltech.com}")
-    private String senderEmail;
-
-    @Value("${mailtrap.sender-name:PruneUrl}")
-    private String senderName;
-
-    @Value("${preonsurl.email.welcome.dashboard-url:https://secure.indexrender.io/console}")
-    private String welcomeDashboardUrl;
-
-    @Value("${preonsurl.email.welcome.help-center-url:https://secure.indexrender.io/help}")
-    private String welcomeHelpCenterUrl;
-
-    @Value("${preonsurl.email.welcome.support-email:support@indexrender.io}")
-    private String welcomeSupportEmail;
-
-    @Value("${preonsurl.email.welcome.docs-url:https://secure.indexrender.io/docs}")
-    private String welcomeDocsUrl;
+    private final String apiToken;
+    private final String senderEmail;
+    private final String senderName;
+    private final String welcomeDashboardUrl;
+    private final String welcomeHelpCenterUrl;
+    private final String welcomeSupportEmail;
+    private final String welcomeDocsUrl;
 
     private MailtrapClient mailtrapClient;
     private final TemplateEngine templateEngine;
@@ -53,17 +40,19 @@ public class MailtrapEmailService implements EmailService {
     @Autowired
     public MailtrapEmailService(
             @Autowired(required = false) MailtrapClient mailtrapClient,
-            @Autowired(required = false) TemplateEngine templateEngine) {
+            @Autowired(required = false) TemplateEngine templateEngine,
+            CoreConfigService coreConfigService) {
+        String appUrl = coreConfigService.get(CoreConfigKeys.App.APP_URL);
+
         this.mailtrapClient = mailtrapClient;
         this.templateEngine = templateEngine;
-    }
-
-    public MailtrapEmailService() {
-        this(null, null);
-    }
-
-    public MailtrapEmailService(MailtrapClient mailtrapClient) {
-        this(mailtrapClient, null);
+        this.apiToken = coreConfigService.get(CoreConfigKeys.Email.API_KEY);
+        this.senderEmail = coreConfigService.get(CoreConfigKeys.Email.EMAIL);
+        this.senderName = coreConfigService.get(CoreConfigKeys.Email.NAME);
+        this.welcomeDashboardUrl = appUrl + coreConfigService.get(CoreConfigKeys.Endpoint.CONSOLE);
+        this.welcomeHelpCenterUrl = appUrl + coreConfigService.get(CoreConfigKeys.Endpoint.HELP);
+        this.welcomeDocsUrl = appUrl + coreConfigService.get(CoreConfigKeys.Endpoint.DOC);
+        this.welcomeSupportEmail = coreConfigService.get(CoreConfigKeys.Email.SUPPORT_EMAIL);
     }
 
     private synchronized MailtrapClient getClient() {

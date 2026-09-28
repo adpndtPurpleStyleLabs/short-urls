@@ -29,10 +29,11 @@ import com.preonsurl.apis.link.exception.UrlExpiredException;
 import com.preonsurl.apis.link.exception.UrlNotFoundException;
 import com.preonsurl.apis.link.exception.UrlUsageLimitExceededException;
 import com.preonsurl.core.ShortCodePool;
+import com.preonsurl.coreconfig.constants.CoreConfigKeys;
+import com.preonsurl.coreconfig.service.CoreConfigService;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,9 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.CountryPolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.DevicePolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.IpAllowlistPolicy;
@@ -67,10 +65,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -91,13 +85,13 @@ public class NewUrlService {
     private final NewUrlChangeLogRepository changeLogRepository;
     private final NewUrlLruCache lruCache;
     private final ShortCodePool codePool;
-    private final String domain;
     private final AccessPolicyRepository accessPolicyRepository;
     private final UsagePolicyRepository usagePolicyRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomDomainRepository customDomainRepository;
     private final LinkRecipientRepository linkRecipientRepository;
     private final EmailService emailService;
+    public String domain = "";
 
     public NewUrlService(NewUrlRepository repository,
                          NewUrlAccessLogRepository accessLogRepository,
@@ -105,26 +99,26 @@ public class NewUrlService {
                          NewUrlChangeLogRepository changeLogRepository,
                          NewUrlLruCache lruCache,
                          ShortCodePool codePool,
-                         @Value("${preonsurl.shortener.domain:http://localhost:8081}") String domain,
                          AccessPolicyRepository accessPolicyRepository,
                          UsagePolicyRepository usagePolicyRepository,
                          PasswordEncoder passwordEncoder,
                          CustomDomainRepository customDomainRepository,
                          LinkRecipientRepository linkRecipientRepository,
-                         @Autowired(required = false) EmailService emailService) {
+                         @Autowired(required = false) EmailService emailService,
+                         CoreConfigService coreConfigService) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
         this.tagRepository = tagRepository;
         this.changeLogRepository = changeLogRepository;
         this.lruCache = lruCache;
         this.codePool = codePool;
-        this.domain = domain.endsWith("/") ? domain.substring(0, domain.length() - 1) : domain;
         this.accessPolicyRepository = accessPolicyRepository;
         this.usagePolicyRepository = usagePolicyRepository;
         this.passwordEncoder = passwordEncoder;
         this.customDomainRepository = customDomainRepository;
         this.linkRecipientRepository = linkRecipientRepository;
         this.emailService = emailService;
+        this.domain = coreConfigService.get(CoreConfigKeys.App.SECURE_URL);
     }
 
     private record EffectiveDomain(String domainName, String baseUrl) {}

@@ -8,7 +8,8 @@ import com.preonsurl.apis.analytics.repository.AnalyticsRepository;
 import com.preonsurl.apis.link.entity.NewUrl;
 import com.preonsurl.apis.link.exception.UrlNotFoundException;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
-import org.springframework.beans.factory.annotation.Value;
+import com.preonsurl.coreconfig.constants.CoreConfigKeys;
+import com.preonsurl.coreconfig.service.CoreConfigService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,10 +34,10 @@ public class AnalyticsService {
     public AnalyticsService(
             AnalyticsRepository analyticsRepository,
             NewUrlRepository newUrlRepository,
-            @Value("${preonsurl.shortener.domain:}") String domain) {
+            CoreConfigService coreConfigService) {
         this.analyticsRepository = analyticsRepository;
         this.newUrlRepository = newUrlRepository;
-        this.domain = (domain != null && !domain.isBlank()) ? domain.trim() : "";
+        this.domain = coreConfigService.get(CoreConfigKeys.App.SECURE_DOMAIN);
     }
 
     public AnalyticsResponse getOverallClicks(Long userId, LocalDate startDate, LocalDate endDate) {

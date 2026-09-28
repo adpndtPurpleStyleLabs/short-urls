@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -17,23 +20,75 @@ import java.time.temporal.ChronoUnit;
 @Table(
         name = "short_urls",
         indexes = {
-                @Index(name = "idx_short_urls_user_id", columnList = "user_id"),
-                @Index(name = "idx_short_urls_original_url", columnList = "original_url"),
-                @Index(name = "idx_short_urls_custom_path", columnList = "custom_path"),
-                @Index(name = "idx_short_urls_domain", columnList = "domain"),
-                @Index(name = "idx_short_urls_new_url", columnList = "new_url"),
-                @Index(name = "idx_short_urls_link_mode", columnList = "link_mode"),
-                @Index(name = "idx_short_urls_is_active", columnList = "is_active"),
-                @Index(name = "idx_short_urls_expire_at", columnList = "expire_at"),
-                @Index(name = "idx_short_urls_public_id", columnList = "public_id"),
-                @Index(name = "idx_short_urls_created_by", columnList = "created_by")
+                @Index(
+                        name = "idx_short_urls_user_id",
+                        columnList = "user_id"
+                ),
+
+                /*
+                 * Do NOT index original_url directly.
+                 *
+                 * original_url is VARCHAR(2048), which can exceed
+                 * MySQL/InnoDB's maximum index key length with utf8mb4.
+                 *
+                 * Use original_url_hash instead.
+                 */
+                @Index(
+                        name = "idx_short_urls_original_url_hash",
+                        columnList = "original_url_hash"
+                ),
+
+                @Index(
+                        name = "idx_short_urls_custom_path",
+                        columnList = "custom_path"
+                ),
+
+                @Index(
+                        name = "idx_short_urls_domain",
+                        columnList = "domain"
+                ),
+
+                @Index(
+                        name = "idx_short_urls_new_url",
+                        columnList = "new_url"
+                ),
+
+                @Index(
+                        name = "idx_short_urls_link_mode",
+                        columnList = "link_mode"
+                ),
+
+                @Index(
+                        name = "idx_short_urls_is_active",
+                        columnList = "is_active"
+                ),
+
+                @Index(
+                        name = "idx_short_urls_expire_at",
+                        columnList = "expire_at"
+                ),
+
+                @Index(
+                        name = "idx_short_urls_public_id",
+                        columnList = "public_id"
+                ),
+
+                @Index(
+                        name = "idx_short_urls_created_by",
+                        columnList = "created_by"
+                )
         }
 )
 public class NewUrl {
 
-    private static final String PUBLIC_ID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    private static final String PUBLIC_ID_ALPHABET =
+            "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
     private static final int PUBLIC_ID_LENGTH = 22;
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    private static final SecureRandom SECURE_RANDOM =
+            new SecureRandom();
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,9 +100,6 @@ public class NewUrl {
      *
      * This must be used in public APIs instead of the
      * auto-increment database ID.
-     *
-     * Example:
-     * f8K2mP9xQ7La3VnR6Tc1Zw
      */
     @Column(
             name = "public_id",
@@ -78,6 +130,22 @@ public class NewUrl {
             length = 2048
     )
     private String originalUrl;
+
+
+    /**
+     * SHA-256 hash of originalUrl.
+     *
+     * 64 hexadecimal characters.
+     *
+     * Used for fast exact URL lookup without indexing
+     * the 2048-character original_url column.
+     */
+    @Column(
+            name = "original_url_hash",
+            nullable = false,
+            length = 64
+    )
+    private String originalUrlHash;
 
 
     @Column(
@@ -181,6 +249,7 @@ public class NewUrl {
         this.publicId = generatePublicId();
         this.shortCode = shortCode;
         this.originalUrl = originalUrl;
+        this.originalUrlHash = hashUrl(originalUrl);
         this.customPath = customPath;
         this.newUrl = newUrl;
         this.expireAt = expireAt;
@@ -205,6 +274,7 @@ public class NewUrl {
         this.publicId = generatePublicId();
         this.shortCode = shortCode;
         this.originalUrl = originalUrl;
+        this.originalUrlHash = hashUrl(originalUrl);
         this.customPath = customPath;
         this.domain = domain;
         this.newUrl = newUrl;
@@ -318,37 +388,116 @@ public class NewUrl {
     // =========================================================
 
     public static String generatePublicId() {
-        StringBuilder value = new StringBuilder(PUBLIC_ID_LENGTH);
+
+        StringBuilder value =
+                new StringBuilder(PUBLIC_ID_LENGTH);
+
         for (int i = 0; i < PUBLIC_ID_LENGTH; i++) {
-            int index = SECURE_RANDOM.nextInt(PUBLIC_ID_ALPHABET.length());
-            value.append(PUBLIC_ID_ALPHABET.charAt(index));
+
+            int index =
+                    SECURE_RANDOM.nextInt(
+                            PUBLIC_ID_ALPHABET.length()
+                    );
+
+            value.append(
+                    PUBLIC_ID_ALPHABET.charAt(index)
+            );
         }
 
         return value.toString();
     }
 
+
     public String getPublicId() {
-        if (this.publicId == null || this.publicId.isBlank()) {
+
+        if (this.publicId == null ||
+                this.publicId.isBlank()) {
+
             this.publicId = generatePublicId();
         }
+
         return this.publicId;
     }
 
 
-    public String getCreationSource() {
-        return this.createdBy != null ? this.createdBy : "UI";
+    // =========================================================
+    // URL HASH
+    // =========================================================
+
+    public static String hashUrl(String url) {
+
+        if (url == null) {
+            return null;
+        }
+
+        try {
+
+            MessageDigest digest =
+                    MessageDigest.getInstance("SHA-256");
+
+            byte[] hash =
+                    digest.digest(
+                            url.getBytes(
+                                    StandardCharsets.UTF_8
+                            )
+                    );
+
+            StringBuilder hex =
+                    new StringBuilder(64);
+
+            for (byte b : hash) {
+
+                hex.append(
+                        String.format(
+                                "%02x",
+                                b
+                        )
+                );
+            }
+
+            return hex.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+
+            throw new IllegalStateException(
+                    "SHA-256 algorithm is not available",
+                    e
+            );
+        }
     }
 
-    public void setCreationSource(String creationSource) {
-        this.createdBy = creationSource != null ? creationSource : "UI";
+
+    public String getCreationSource() {
+        return this.createdBy != null
+                ? this.createdBy
+                : "UI";
     }
+
+
+    public void setCreationSource(
+            String creationSource
+    ) {
+        this.createdBy =
+                creationSource != null
+                        ? creationSource
+                        : "UI";
+    }
+
 
     public String getCreatedVia() {
-        return this.createdBy != null ? this.createdBy : "UI";
+        return this.createdBy != null
+                ? this.createdBy
+                : "UI";
     }
 
-    public void setCreatedVia(String createdVia) {
-        this.createdBy = createdVia != null ? createdVia : "UI";
+
+    public void setCreatedVia(
+            String createdVia
+    ) {
+        this.createdBy =
+                createdVia != null
+                        ? createdVia
+                        : "UI";
     }
 
 
@@ -361,17 +510,22 @@ public class NewUrl {
 
         Instant now = Instant.now();
 
-        /*
-         * Generate the public ID only when creating
-         * a new database record.
-         */
         if (this.publicId == null ||
                 this.publicId.isBlank()) {
 
             this.publicId = generatePublicId();
         }
 
-        if (this.createdBy == null || this.createdBy.isBlank()) {
+        if (this.originalUrlHash == null &&
+                this.originalUrl != null) {
+
+            this.originalUrlHash =
+                    hashUrl(this.originalUrl);
+        }
+
+        if (this.createdBy == null ||
+                this.createdBy.isBlank()) {
+
             this.createdBy = "UI";
         }
 
@@ -379,8 +533,16 @@ public class NewUrl {
         this.updatedAt = now;
     }
 
+
     @PreUpdate
     protected void onUpdate() {
+
+        if (this.originalUrl != null) {
+
+            this.originalUrlHash =
+                    hashUrl(this.originalUrl);
+        }
+
         this.updatedAt = Instant.now();
     }
 }

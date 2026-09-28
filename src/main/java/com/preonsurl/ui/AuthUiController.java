@@ -3,13 +3,14 @@ package com.preonsurl.ui;
 import com.preonsurl.apis.auth.AuthController;
 import com.preonsurl.apis.auth.dto.*;
 import com.preonsurl.apis.link.dto.ApiResponse;
+import com.preonsurl.coreconfig.constants.CoreConfigKeys;
+import com.preonsurl.coreconfig.service.CoreConfigService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,18 +25,16 @@ import java.util.Set;
 @Profile("app")
 @Controller
 public class AuthUiController {
-
     private static final Logger log = LoggerFactory.getLogger(AuthUiController.class);
 
     private final AuthController authController;
     private final Validator validator;
+    private final CoreConfigService coreConfigService;
 
-    @Value("${preonsurl.serve.domain:go.domain.com}")
-    private String defaultServeDomain;
-
-    public AuthUiController(AuthController authController, Validator validator) {
+    public AuthUiController(AuthController authController, Validator validator, CoreConfigService coreConfigService) {
         this.authController = authController;
         this.validator = validator;
+        this.coreConfigService = coreConfigService;
     }
 
     @GetMapping("/register")
@@ -82,7 +81,8 @@ public class AuthUiController {
 
     @GetMapping({"/console", "/console/**"})
     public String showConsolePage(Model model) {
-        model.addAttribute("defaultServeDomain", defaultServeDomain != null ? defaultServeDomain.trim().toLowerCase() : "go.domain.com");
+        String serveDomain = coreConfigService.get(CoreConfigKeys.App.SECURE_DOMAIN);
+        model.addAttribute("defaultServeDomain", serveDomain);
         return "console";
     }
 
