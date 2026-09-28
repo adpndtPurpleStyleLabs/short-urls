@@ -11,6 +11,7 @@ public final class CoreConfigKeys {
         public static final String APP_URL = "app.url";
         public static final String SECURE_URL = "secure.url";
         public static final String PSECURE_URL = "psecure.url";
+        public static final String PSECURE_URL_EXPIRY_DAYS = "psecure.url.expire.days";
     }
 
 

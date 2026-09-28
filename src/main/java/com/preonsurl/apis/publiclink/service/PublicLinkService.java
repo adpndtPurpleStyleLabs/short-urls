@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class PublicLinkService {
-
     private static final Logger log = LoggerFactory.getLogger(PublicLinkService.class);
     private static final String BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -86,9 +85,7 @@ public class PublicLinkService {
         return PublicLinkResponse.of(psecureUrl, linkMode, createdAt, -1);
     }
 
-    // ============================================================
     // VALIDATION
-    // ============================================================
 
     private void validateRequest(CreatePublicLinkRequest request) {
 
@@ -115,10 +112,7 @@ public class PublicLinkService {
         }
     }
 
-    // ============================================================
     // ACCESS POLICY
-    // ============================================================
-
     private AccessData resolveAccessPolicies(AccessPolicies policies) {
         if (policies == null) {
             return new AccessData(null, null, "PUBLIC");
@@ -135,10 +129,7 @@ public class PublicLinkService {
         return new AccessData(pin, null, mode);
     }
 
-    // ============================================================
     // ASYNC PERSISTENCE
-    // ============================================================
-
     private void publishAsync(
             String shortCode,
             String originalUrl,
@@ -152,18 +143,13 @@ public class PublicLinkService {
             Long userId) {
 
         Thread.ofVirtual().start(() -> {
-
             try {
-
                 String policiesJson = null;
-
                 if (policies != null) {
-                    policiesJson =
-                            objectMapper.writeValueAsString(policies);
+                    policiesJson = objectMapper.writeValueAsString(policies);
                 }
 
-                PublicSecureUrlCreatedEvent event =
-                        new PublicSecureUrlCreatedEvent(
+                PublicSecureUrlCreatedEvent event = new PublicSecureUrlCreatedEvent(
                                 shortCode,
                                 originalUrl,
                                 psecureUrl,
@@ -181,24 +167,13 @@ public class PublicLinkService {
                 eventPublisher.publishEvent(event);
 
             } catch (Exception e) {
-
-                log.error(
-                        "Failed to publish public link creation event " +
-                                "for shortCode='{}'",
-                        shortCode,
-                        e
-                );
+                log.error("Failed to publish public link creation event " + "for shortCode='{}'", shortCode, e);
             }
         });
     }
 
-    // ============================================================
     // RESOLVE
-    // ============================================================
-
-    public Optional<CachedPublicSecureUrlDto> resolve(
-            String shortKey) {
-
+    public Optional<CachedPublicSecureUrlDto> resolve(String shortKey) {
         if (shortKey == null || shortKey.isBlank()) {
             return Optional.empty();
         }
@@ -210,31 +185,23 @@ public class PublicLinkService {
         }
 
         // 1. Cache
-        CachedPublicSecureUrlDto cached =
-                lruCache.get(key);
-
+        CachedPublicSecureUrlDto cached = lruCache.get(key);
         if (cached != null) {
             return Optional.of(cached);
         }
 
         // 2. Database
-        Optional<PublicSecureUrl> dbOptional =
-                repository.findByShortKey(key);
-
+        Optional<PublicSecureUrl> dbOptional = repository.findByShortKeyAndIsActiveTrue(key);
         if (dbOptional.isEmpty()) {
-            dbOptional =
-                    repository.findByPsecureUrl(key);
+            dbOptional = repository.findByPsecureUrlAndIsActiveTrue(key);
         }
 
         if (dbOptional.isEmpty()) {
             return Optional.empty();
         }
 
-        PublicSecureUrl entity =
-                dbOptional.get();
-
-        CachedPublicSecureUrlDto loaded =
-                new CachedPublicSecureUrlDto(
+        PublicSecureUrl entity = dbOptional.get();
+        CachedPublicSecureUrlDto loaded = new CachedPublicSecureUrlDto(
                         entity.getId(),
                         entity.getShortKey(),
                         entity.getOriginalUrl(),
@@ -257,11 +224,7 @@ public class PublicLinkService {
     // ============================================================
     // SERVE EVENT
     // ============================================================
-    public void recordServeEvent(
-            CachedPublicSecureUrlDto cached,
-            HttpServletRequest request,
-            String status) {
-
+    public void recordServeEvent(CachedPublicSecureUrlDto cached, HttpServletRequest request, String status) {
         if (cached == null) {
             return;
         }
@@ -280,10 +243,7 @@ public class PublicLinkService {
         );
     }
 
-    // ============================================================
     // IP
-    // ============================================================
-
     public String extractClientIp(HttpServletRequest request) {
         if (request == null) {
             return "127.0.0.1";
@@ -321,103 +281,53 @@ public class PublicLinkService {
         return request != null ? request.getHeader(header) : null;
     }
 
-    // ============================================================
     // SHORT CODE GENERATION
-    // ============================================================
 
     private String generateFastShortCode() {
         try {
-
             if (codePool != null) {
-
-                String code =
-                        codePool.nextCode(
-                                2,
-                                TimeUnit.MILLISECONDS
-                        );
-
+                String code = codePool.nextCode(2, TimeUnit.MILLISECONDS);
                 if (code != null) {
                     return code;
                 }
-
-                log.warn(
-                        "Short code pool returned no code, " +
-                                "falling back to random generation"
-                );
+                log.warn("Short code pool returned no code, falling back to random generation");
             }
 
             // 7-character fallback
             for (int i = 0; i < 3; i++) {
-
-                String candidate =
-                        generateRandomCode(7);
-
+                String candidate = generateRandomCode(7);
                 if (lruCache.get(candidate) == null) {
                     return candidate;
                 }
             }
 
             // 8-character fallback
-            String candidate =
-                    generateRandomCode(8);
-
+            String candidate = generateRandomCode(8);
             if (lruCache.get(candidate) == null) {
                 return candidate;
             }
-
-            log.error(
-                    "Unable to generate unique short code"
-            );
-
-            throw new IllegalStateException(
-                    "Unable to generate a unique short code"
-            );
+            log.error("Unable to generate unique short code");
+            throw new IllegalStateException("Unable to generate a unique short code");
 
         } catch (IllegalStateException e) {
-
             throw e;
-
         } catch (Exception e) {
-
-            log.error(
-                    "Failed to generate short code",
-                    e
-            );
-
-            throw new IllegalStateException(
-                    "Unable to generate short code",
-                    e
-            );
+            log.error("Failed to generate short code", e);
+            throw new IllegalStateException("Unable to generate short code", e);
         }
     }
 
-    // ============================================================
     // RANDOM FALLBACK
-    // ============================================================
-
     private String generateRandomCode(int length) {
-
-        StringBuilder sb =
-                new StringBuilder(length);
-
+        StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-
-            sb.append(
-                    BASE62_CHARS.charAt(
-                            RANDOM.nextInt(
-                                    BASE62_CHARS.length()
-                            )
-                    )
-            );
+            sb.append(BASE62_CHARS.charAt(RANDOM.nextInt(BASE62_CHARS.length())));
         }
 
         return sb.toString();
     }
 
-    // ============================================================
     // RATE LIMITER
-    // ============================================================
-
     public PublicLinkRateLimiter getRateLimiter() {
         return rateLimiter;
     }

@@ -295,11 +295,6 @@ public class ServingController {
                 );
             }
 
-            // Check if this is a psecure URL
-            if (psecureServingController != null && publicLinkService != null && publicLinkService.resolve(path).isPresent()) {
-                return psecureServingController.resolveAndServe(path, path, request);
-            }
-
             log.warn("Full url not found: '{}' [IP={}]", path, ipAddress);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));
         }
@@ -441,10 +436,6 @@ public class ServingController {
                         proxyService.proxyRequest(proxyTarget.targetUrl(), request, proxyTarget.upstreamReferer()),
                         proxyTarget.cookieIdentifier()
                 );
-            }
-            // Check if this is a psecure URL
-            if (psecureServingController != null && publicLinkService != null && publicLinkService.resolve(path).isPresent()) {
-                return psecureServingController.processPinVerification(path, path, pin, request);
             }
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("New URL not found"));

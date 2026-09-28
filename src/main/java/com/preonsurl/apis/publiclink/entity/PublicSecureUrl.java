@@ -7,15 +7,30 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+
 import java.time.Instant;
 
 @Entity
 @Table(
         name = "public_secure_urls",
         indexes = {
-                @Index(name = "idx_psec_short_key", columnList = "short_key", unique = true),
-                @Index(name = "idx_psec_created_at", columnList = "created_at"),
-                @Index(name = "idx_psec_user_id", columnList = "user_id")
+                @Index(
+                        name = "idx_psec_short_key",
+                        columnList = "short_key",
+                        unique = true
+                ),
+                @Index(
+                        name = "idx_psec_created_at",
+                        columnList = "created_at"
+                ),
+                @Index(
+                        name = "idx_psec_user_id",
+                        columnList = "user_id"
+                ),
+                @Index(
+                        name = "idx_psec_is_active",
+                        columnList = "is_active"
+                )
         }
 )
 public class PublicSecureUrl {
@@ -58,7 +73,7 @@ public class PublicSecureUrl {
     private Instant createdAt;
 
     @Column(name = "is_active", nullable = false)
-    private boolean active = true;
+    private boolean isActive = true;
 
     @Column(name = "click_count", nullable = false)
     private long clickCount = 0L;
@@ -67,11 +82,24 @@ public class PublicSecureUrl {
     private Long userId;
 
     public PublicSecureUrl() {
+        this.isActive = true;
+        this.clickCount = 0L;
     }
 
-    public PublicSecureUrl(String shortKey, String originalUrl, String psecureUrl, String linkMode,
-                           String pin, String password, String mode, String accessPoliciesJson,
-                           String ipAddress, String userAgent, Instant createdAt, Long userId) {
+    public PublicSecureUrl(
+            String shortKey,
+            String originalUrl,
+            String psecureUrl,
+            String linkMode,
+            String pin,
+            String password,
+            String mode,
+            String accessPoliciesJson,
+            String ipAddress,
+            String userAgent,
+            Instant createdAt,
+            Long userId
+    ) {
         this.shortKey = shortKey;
         this.originalUrl = originalUrl;
         this.psecureUrl = psecureUrl;
@@ -83,7 +111,7 @@ public class PublicSecureUrl {
         this.ipAddress = ipAddress;
         this.userAgent = userAgent;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
-        this.active = true;
+        this.isActive = true;
         this.clickCount = 0L;
         this.userId = userId;
     }
@@ -185,11 +213,11 @@ public class PublicSecureUrl {
     }
 
     public boolean isActive() {
-        return active;
+        return isActive;
     }
 
     public void setActive(boolean active) {
-        this.active = active;
+        this.isActive = active;
     }
 
     public long getClickCount() {
