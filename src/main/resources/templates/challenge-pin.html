@@ -460,7 +460,57 @@
     </main>
 
     <script>
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error("Geolocation is not supported by this browser."));
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        });
+                    },
+                    error => {
+                        reject(new Error(getLocationErrorMessage(error)));
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+
+        function getLocationErrorMessage(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    return "Location permission was denied.";
+                case error.POSITION_UNAVAILABLE:
+                    return "Location information is unavailable.";
+                case error.TIMEOUT:
+                    return "Location request timed out.";
+                default:
+                    return "Unable to determine location.";
+            }
+        }
         document.addEventListener('DOMContentLoaded', () => {
+
+            getCurrentLocation()
+                .then(location => {
+                    console.log("Latitude:", location.latitude);
+                    console.log("Longitude:", location.longitude);
+                    console.log("Accuracy:", location.accuracy);
+                })
+                .catch(error => {
+                    console.error(error.message);
+                });
+
 
             const boxes = Array.from(document.querySelectorAll('.pin-box'));
             const hiddenInput = document.getElementById('pin-input');
