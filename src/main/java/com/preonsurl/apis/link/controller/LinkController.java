@@ -72,25 +72,7 @@ public class LinkController {
             AuthenticatedUser user = resolveUser(currentUser);
             Long userId = user != null ? user.userId() : null;
 
-            String createdBy = "UI";
-            if (httpRequest != null) {
-                if (Boolean.TRUE.equals(httpRequest.getAttribute("apiKeyAuthenticated"))
-                        || "API".equalsIgnoreCase((String) httpRequest.getAttribute("creationSource"))) {
-                    createdBy = "API";
-                } else {
-                    String apiKey = httpRequest.getHeader("X-API-KEY");
-                    if (apiKey == null || apiKey.isBlank()) {
-                        apiKey = httpRequest.getHeader("X-API-Key");
-                    }
-                    if (apiKey == null || apiKey.isBlank()) {
-                        apiKey = httpRequest.getHeader("x-api-key");
-                    }
-                    if (apiKey != null && !apiKey.isBlank()) {
-                        createdBy = "API";
-                    }
-                }
-            }
-
+            String createdBy =Boolean.TRUE.equals(httpRequest.getAttribute("apiKeyAuthenticated")) && "API".equalsIgnoreCase((String) httpRequest.getAttribute("creationSource")) ? "API": "UI";
             CreateNewUrlResponse response = newUrlService.createNewUrl(request, userId, createdBy);
             log.info("New-URL processed: code='{}', linkMode='{}', existing={}, url='{}', usageLimit={}, note='{}', tags={}, createdBy='{}'",
                     response.newUrl(), response.linkMode(), response.existing(), response.originalUrl(),

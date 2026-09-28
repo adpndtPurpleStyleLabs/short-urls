@@ -47,20 +47,12 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         while (clean.endsWith("/") && clean.length() > 1) {
             clean = clean.substring(0, clean.length() - 1);
         }
-        return clean.equals("/link/create") || clean.equals("/create")
-                || clean.endsWith("/link/create") || clean.endsWith("/create");
+        return clean.equals("/link/create");
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String apiKey = request.getHeader(API_KEY_HEADER);
-        if (apiKey == null || apiKey.isBlank()) {
-            apiKey = request.getHeader("X-API-KEY");
-        }
-        if (apiKey == null || apiKey.isBlank()) {
-            apiKey = request.getHeader("x-api-key");
-        }
-
         if (apiKey == null || apiKey.isBlank()) {
             filterChain.doFilter(request, response);
             return;

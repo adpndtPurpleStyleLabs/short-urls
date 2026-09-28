@@ -187,16 +187,9 @@ public class NewUrlService {
     }
 
     @Transactional
-    public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId) {
-        return createNewUrl(request, userId, "UI");
-    }
-
-    @Transactional
-    public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId, String createdBy) {
+    public CreateNewUrlResponse createNewUrl(CreateNewUrlRequest request, Long userId, String source) {
         if (request == null) {throw new IllegalArgumentException("Request cannot be null");}
         request.validate();
-
-        final String source = (createdBy != null && !createdBy.isBlank()) ? createdBy.trim().toUpperCase() : "UI";
 
         String originalUrl = request.url();
         validateUrl(originalUrl);
@@ -974,7 +967,7 @@ public class NewUrlService {
 
     private void validateUrl(String url) {
         if (url == null || url.isBlank()) {
-            throw new IllegalArgumentException("URL cannot be empty");
+            throw new IllegalArgumentException("Destination URL cannot be empty");
         }
         String trimmed = url.trim();
         if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
