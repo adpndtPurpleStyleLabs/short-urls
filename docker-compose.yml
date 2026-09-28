@@ -30,15 +30,6 @@ services:
       DB_USER: ${MYSQL_USER:-${MARIADB_USER:-preons}}
       DB_PASSWORD: ${MYSQL_PASSWORD:-${MARIADB_PASSWORD:-preonspass}}
 
-      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
-
-      SHORTENER_DOMAIN: https://secure.indexrender.io
-      APP_DOMAIN: https://go.indexrender.io
-      PSECURE_DOMAIN: https://psecure.indexrender.io
-
-      JWT_SECRET: ${JWT_SECRET}
-      SHORTENER_SECRET: ${SHORTENER_SECRET}
-
       JAVA_OPTS: >-
         -XX:+UseG1GC
         -Xms128m
@@ -86,15 +77,6 @@ services:
       DB_USER: ${MYSQL_USER:-${MARIADB_USER:-preons}}
       DB_PASSWORD: ${MYSQL_PASSWORD:-${MARIADB_PASSWORD:-preonspass}}
 
-      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
-
-      SHORTENER_DOMAIN: https://secure.indexrender.io
-      APP_DOMAIN: https://go.indexrender.io
-      PSECURE_DOMAIN: https://psecure.indexrender.io
-
-      JWT_SECRET: ${JWT_SECRET}
-      SHORTENER_SECRET: ${SHORTENER_SECRET}
-
       JAVA_OPTS: >-
         -XX:+UseG1GC
         -Xms128m
@@ -141,15 +123,6 @@ services:
       DB_NAME: ${MYSQL_DATABASE:-${MARIADB_DATABASE:-preonsurl}}
       DB_USER: ${MYSQL_USER:-${MARIADB_USER:-preons}}
       DB_PASSWORD: ${MYSQL_PASSWORD:-${MARIADB_PASSWORD:-preonspass}}
-
-      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
-
-      SHORTENER_DOMAIN: https://secure.indexrender.io
-      APP_DOMAIN: https://go.indexrender.io
-      PSECURE_DOMAIN: https://psecure.indexrender.io
-
-      JWT_SECRET: ${JWT_SECRET}
-      SHORTENER_SECRET: ${SHORTENER_SECRET}
 
       JAVA_OPTS: >-
         -XX:+UseG1GC
