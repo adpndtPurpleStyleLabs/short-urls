@@ -1,5 +1,7 @@
 package com.preonsurl.emailer;
 
+import com.preonsurl.coreconfig.constants.CoreConfigKeys;
+import com.preonsurl.coreconfig.service.CoreConfigService;
 import io.mailtrap.client.MailtrapClient;
 import io.mailtrap.model.request.emails.MailtrapMail;
 import io.mailtrap.model.response.emails.SendResponse;
@@ -16,15 +18,23 @@ import static org.mockito.Mockito.*;
 public class MailtrapEmailServiceTest {
 
     private MailtrapClient mailtrapClient;
+    private CoreConfigService coreConfigService;
     private MailtrapEmailService emailService;
 
     @BeforeEach
     void setUp() {
         mailtrapClient = mock(MailtrapClient.class);
-        emailService = new MailtrapEmailService(mailtrapClient);
-        ReflectionTestUtils.setField(emailService, "apiToken", "laudalasan");
-        ReflectionTestUtils.setField(emailService, "senderEmail", "hello@madxglobaltech.com");
-        ReflectionTestUtils.setField(emailService, "senderName", "PruneUrl");
+        coreConfigService = mock(CoreConfigService.class);
+        when(coreConfigService.get(CoreConfigKeys.App.APP_URL)).thenReturn("https://secure.indexrender.io");
+        when(coreConfigService.get(CoreConfigKeys.Email.API_KEY)).thenReturn("laudalasan");
+        when(coreConfigService.get(CoreConfigKeys.Email.EMAIL)).thenReturn("hello@madxglobaltech.com");
+        when(coreConfigService.get(CoreConfigKeys.Email.NAME)).thenReturn("PruneUrl");
+        when(coreConfigService.get(CoreConfigKeys.Endpoint.CONSOLE)).thenReturn("/console");
+        when(coreConfigService.get(CoreConfigKeys.Endpoint.HELP)).thenReturn("/help");
+        when(coreConfigService.get(CoreConfigKeys.Endpoint.DOC)).thenReturn("/docs");
+        when(coreConfigService.get(CoreConfigKeys.Email.SUPPORT_EMAIL)).thenReturn("support@indexrender.io");
+
+        emailService = new MailtrapEmailService(mailtrapClient, null, coreConfigService);
     }
 
     @Test

@@ -306,12 +306,10 @@ public class CustomDomainControllerTest {
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data", hasSize(2)))
-                .andExpect(jsonPath("$.data[0].domain").value("go.domain.com"))
-                .andExpect(jsonPath("$.data[0].isDefault").value(true))
-                .andExpect(jsonPath("$.data[1].domain").value("verified.brand.com"))
-                .andExpect(jsonPath("$.data[1].status").value("ACTIVE"))
-                .andExpect(jsonPath("$.data[1].isDefault").value(false));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].domain").value("verified.brand.com"))
+                .andExpect(jsonPath("$.data[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data[0].isDefault").value(false));
     }
 }
 
