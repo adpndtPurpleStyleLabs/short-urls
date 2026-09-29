@@ -28,6 +28,10 @@ RUN groupadd -r preons && useradd -r -g preons -d /app preons \
 
 # Copy application jar from builder
 COPY --from=builder /app/target/preonsurl-0.0.1-SNAPSHOT.jar app.jar
+
+# Copy MaxMind GeoLite2 database
+COPY GeoLite2-Country.mmdb /app/GeoLite2-Country.mmdb
+
 # Save commit ref file in runtime app folder
 RUN if [ -n "$COMMIT_REF" ]; then echo "$COMMIT_REF" > /app/commit-ref.txt; fi
 RUN chown -R preons:preons /app
