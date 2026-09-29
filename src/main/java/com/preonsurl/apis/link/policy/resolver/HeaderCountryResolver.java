@@ -18,7 +18,10 @@ public class HeaderCountryResolver implements CountryResolver {
 
     public HeaderCountryResolver(DatabaseReader databaseReader){
         this.databaseReader = databaseReader;
+    }
 
+    public HeaderCountryResolver() {
+        this.databaseReader = null;
     }
 
     private static final String[] COUNTRY_HEADERS = {
@@ -38,20 +41,17 @@ public class HeaderCountryResolver implements CountryResolver {
             return null;
         }
 
-        try {
-            InetAddress address = InetAddress.getByName(ip);
+        if (databaseReader != null) {
+            try {
+                InetAddress address = InetAddress.getByName(ip);
 
-            CountryResponse response = databaseReader.country(address);
-            if (response.country() == null) {
-                return null;
+                CountryResponse response = databaseReader.country(address);
+                if (response.country() != null) {
+                    return response.country().isoCode();
+                }
+            } catch (AddressNotFoundException ignored) {
+            } catch (Exception ignored) {
             }
-
-            return response.country().isoCode();
-
-        } catch (AddressNotFoundException e) {
-            return null;
-        } catch (Exception e) {
-
         }
 
         if (request == null) {

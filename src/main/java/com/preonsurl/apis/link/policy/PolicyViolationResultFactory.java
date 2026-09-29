@@ -138,6 +138,35 @@ public class PolicyViolationResultFactory {
         );
     }
 
+    public PolicyEvaluationResult geofenceRestricted(Long id, String url, Double clientLat, Double clientLng, String fenceName,
+                                                     String action, AccessPolicy accessPolicy, UsagePolicy usagePolicy) {
+        Map<String, String> details = new LinkedHashMap<>();
+        details.put("Access Policy", "BLOCK".equalsIgnoreCase(action) ? "Geographic Perimeter Blocked" : "Restricted to Geographic Perimeter");
+        if (fenceName != null && !fenceName.isBlank()) {
+            details.put("Boundary Zone", fenceName);
+        }
+        if (clientLat != null && clientLng != null) {
+            details.put("Detected Location", String.format(java.util.Locale.ROOT, "Lat: %.4f, Lng: %.4f", clientLat, clientLng));
+        }
+
+        String msg = "BLOCK".equalsIgnoreCase(action)
+                ? "Access to this link is blocked for visitors within this physical boundary zone."
+                : "This link is restricted to visitors physically located within the designated geographic boundary.";
+
+        return PolicyEvaluationResult.rejected(
+                ViolationType.GEOFENCE_RESTRICTED,
+                HttpStatus.FORBIDDEN,
+                "Access Restricted: GeoFence Perimeter",
+                msg,
+                "GeoFence Boundary",
+                "The link creator has defined geographic boundary rules (GeoFence). Access is not permitted from your physical location.",
+                "security",
+                details,
+                accessPolicy,
+                usagePolicy
+        );
+    }
+
     public PolicyEvaluationResult deviceRestricted(Long id, String url, DeviceInfo device, String allowedDevices,
                                                   AccessPolicy accessPolicy, UsagePolicy usagePolicy) {
         String detected = device != null ? device.humanReadable() : "Unknown Device";

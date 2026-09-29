@@ -24,6 +24,7 @@ public record PolicyContext(
         HttpServletRequest request,
         String clientIp,
         String clientCountry,
+        com.preonsurl.apis.link.policy.model.GeoCoordinates clientCoordinates,
         DeviceInfo deviceInfo,
         String referer,
         boolean verifiedByCookie,

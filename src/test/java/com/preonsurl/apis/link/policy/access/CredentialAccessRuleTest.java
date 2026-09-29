@@ -60,6 +60,7 @@ class CredentialAccessRuleTest {
                 null,
                 null,
                 null,
+                null,
                 verifiedByCookie,
                 submittedPin,
                 submittedPassword,

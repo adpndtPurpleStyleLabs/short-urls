@@ -48,6 +48,7 @@ class LifecycleRulesTest {
                 null,
                 null,
                 null,
+                null,
                 false,
                 null,
                 null,

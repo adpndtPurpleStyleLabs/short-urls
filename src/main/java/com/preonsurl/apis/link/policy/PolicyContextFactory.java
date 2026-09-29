@@ -7,6 +7,7 @@ import com.preonsurl.apis.link.policy.model.DeviceInfo;
 import com.preonsurl.apis.link.policy.resolver.ClientIpResolver;
 import com.preonsurl.apis.link.policy.resolver.CountryResolver;
 import com.preonsurl.apis.link.policy.resolver.DeviceResolver;
+import com.preonsurl.apis.link.policy.resolver.GeoCoordinatesResolver;
 import com.preonsurl.apis.link.policy.security.SecurityVerificationService;
 import com.preonsurl.apis.link.repository.AccessPolicyRepository;
 import com.preonsurl.apis.link.repository.UsagePolicyRepository;
@@ -27,6 +28,7 @@ public class PolicyContextFactory {
     private final ClientIpResolver clientIpResolver;
     private final CountryResolver countryResolver;
     private final DeviceResolver deviceResolver;
+    private final GeoCoordinatesResolver geoCoordinatesResolver;
     private final SecurityVerificationService securityVerificationService;
 
     public PolicyContextFactory(
@@ -35,6 +37,7 @@ public class PolicyContextFactory {
             ClientIpResolver clientIpResolver,
             CountryResolver countryResolver,
             DeviceResolver deviceResolver,
+            GeoCoordinatesResolver geoCoordinatesResolver,
             SecurityVerificationService securityVerificationService
     ) {
         this.accessPolicyRepository = accessPolicyRepository;
@@ -42,6 +45,7 @@ public class PolicyContextFactory {
         this.clientIpResolver = clientIpResolver;
         this.countryResolver = countryResolver;
         this.deviceResolver = deviceResolver;
+        this.geoCoordinatesResolver = geoCoordinatesResolver;
         this.securityVerificationService = securityVerificationService;
     }
 
@@ -88,6 +92,7 @@ public class PolicyContextFactory {
 
         String clientIp = clientIpResolver.resolveClientIp(request);
         String clientCountry = countryResolver.resolveCountry(request);
+        com.preonsurl.apis.link.policy.model.GeoCoordinates clientCoordinates = geoCoordinatesResolver.resolveCoordinates(request);
         DeviceInfo deviceInfo = deviceResolver.resolveDevice(request);
         String referer = request != null ? request.getHeader("Referer") : null;
         boolean verified = securityVerificationService.isVerifiedByCookie(request, shortUrlId);
@@ -105,6 +110,7 @@ public class PolicyContextFactory {
                 request,
                 clientIp,
                 clientCountry,
+                clientCoordinates,
                 deviceInfo,
                 referer,
                 verified,
@@ -132,6 +138,7 @@ public class PolicyContextFactory {
 
         String clientIp = clientIpResolver.resolveClientIp(request);
         String clientCountry = countryResolver.resolveCountry(request);
+        com.preonsurl.apis.link.policy.model.GeoCoordinates clientCoordinates = geoCoordinatesResolver.resolveCoordinates(request);
         DeviceInfo deviceInfo = deviceResolver.resolveDevice(request);
         String referer = request != null ? request.getHeader("Referer") : null;
         boolean verified = securityVerificationService.isVerifiedByCookie(request, entity.getId());
@@ -149,6 +156,7 @@ public class PolicyContextFactory {
                 request,
                 clientIp,
                 clientCountry,
+                clientCoordinates,
                 deviceInfo,
                 referer,
                 verified,

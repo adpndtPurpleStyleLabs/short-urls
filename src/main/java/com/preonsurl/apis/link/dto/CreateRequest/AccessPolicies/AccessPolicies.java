@@ -50,13 +50,20 @@ public record AccessPolicies(
         @Schema(
                 description = "Email OTP restriction configuration"
         )
-        OtpPolicy otp
+        OtpPolicy otp,
+
+        @Valid
+        @Schema(
+                description = "Geographic boundary perimeter geofence configuration"
+        )
+        GeoFencePolicy geofence
 
 ) {
 
     public static AccessPolicies publicAccess() {
         return new AccessPolicies(
                 AccessPolicyMode.PUBLIC,
+                null,
                 null,
                 null,
                 null,
@@ -83,13 +90,14 @@ public record AccessPolicies(
                 || country != null
                 || device != null
                 || referrer != null
-                || (otp != null && otp.isEnabled());
+                || (otp != null && otp.isEnabled())
+                || (geofence != null && geofence.isValid());
     }
 
     public AccessPolicies validate() {
         if (isSecured() && !hasPolicies()) {
             throw new IllegalArgumentException(
-                    "Secured access policy requires at least one restriction configured (pin, password, otp, ipAllowlist, country, device, or referrer)"
+                    "Secured access policy requires at least one restriction configured (pin, password, otp, ipAllowlist, country, device, referrer, or geofence)"
             );
         }
         return this;

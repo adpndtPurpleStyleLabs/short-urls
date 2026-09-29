@@ -39,6 +39,7 @@ public record PolicyEvaluationResult(
         COUNTRY_RESTRICTED,
         DEVICE_RESTRICTED,
         REFERRER_RESTRICTED,
+        GEOFENCE_RESTRICTED,
         INVALID_CREDENTIALS
     }
 

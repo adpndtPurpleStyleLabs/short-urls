@@ -64,6 +64,7 @@ class LinkAccessAndUsageServiceTest {
         ClientIpResolver ipResolver = new TrustedProxyClientIpResolver(cidrMatcher, "127.0.0.1, ::1", false);
         CountryResolver countryResolver = new HeaderCountryResolver();
         DeviceResolver deviceResolver = new UserAgentDeviceResolver();
+        GeoCoordinatesResolver geoCoordinatesResolver = new HeaderGeoCoordinatesResolver();
         SecurityVerificationService securityService = new SecurityVerificationService();
 
         // Evaluators
@@ -95,6 +96,7 @@ class LinkAccessAndUsageServiceTest {
                 ipResolver,
                 countryResolver,
                 deviceResolver,
+                geoCoordinatesResolver,
                 securityService
         );
 

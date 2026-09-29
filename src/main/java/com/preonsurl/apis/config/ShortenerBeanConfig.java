@@ -50,6 +50,11 @@ public class ShortenerBeanConfig {
         return new UrlShortenerCore(pool, domain);
     }
 
+    @Bean
+    public com.fasterxml.jackson.databind.ObjectMapper objectMapper() {
+        return new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+    }
+
     private boolean isAppProfileActive() {
         if (environment == null) {
             return false;

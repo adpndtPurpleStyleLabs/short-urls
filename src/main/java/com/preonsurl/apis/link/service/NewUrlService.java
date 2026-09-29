@@ -91,6 +91,7 @@ public class NewUrlService {
     private final CustomDomainRepository customDomainRepository;
     private final LinkRecipientRepository linkRecipientRepository;
     private final EmailService emailService;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     public String domain = "";
 
     public NewUrlService(NewUrlRepository repository,
@@ -103,8 +104,9 @@ public class NewUrlService {
                          UsagePolicyRepository usagePolicyRepository,
                          PasswordEncoder passwordEncoder,
                          CustomDomainRepository customDomainRepository,
-                         LinkRecipientRepository linkRecipientRepository,
+                          LinkRecipientRepository linkRecipientRepository,
                          @Autowired(required = false) EmailService emailService,
+                         @Autowired(required = false) com.fasterxml.jackson.databind.ObjectMapper objectMapper,
                          CoreConfigService coreConfigService) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
@@ -118,6 +120,7 @@ public class NewUrlService {
         this.customDomainRepository = customDomainRepository;
         this.linkRecipientRepository = linkRecipientRepository;
         this.emailService = emailService;
+        this.objectMapper = objectMapper != null ? objectMapper : new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
         this.domain = coreConfigService.get(CoreConfigKeys.App.SECURE_URL);
     }
 
@@ -560,9 +563,20 @@ public class NewUrlService {
                                 ? new OtpPolicy(true, (ap.getOtpEmails() != null && !ap.getOtpEmails().isBlank())
                                 ? Arrays.stream(ap.getOtpEmails().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList()
                                 : List.of(), false)
-                                : null
+                                : null,
+                        parseGeoFencePolicy(ap.getGeofence())
                 ))
                 .orElseGet(AccessPolicies::publicAccess);
+    }
+
+    private com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.GeoFencePolicy parseGeoFencePolicy(String json) {
+        if (json == null || json.isBlank()) return null;
+        try {
+            return objectMapper.readValue(json, com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.GeoFencePolicy.class);
+        } catch (Exception e) {
+            log.debug("Failed to deserialize geofence policy JSON: {}", e.getMessage());
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -1070,6 +1084,16 @@ public class NewUrlService {
             accessPolicy.setOtpEnabled(false);
             accessPolicy.setOtpEmails(null);
             linkRecipientRepository.deleteByShortUrlId(shortUrlId);
+        }
+
+        if (accessPolicies.geofence() != null && accessPolicies.geofence().isValid()) {
+            try {
+                accessPolicy.setGeofence(objectMapper.writeValueAsString(accessPolicies.geofence()));
+            } catch (Exception e) {
+                log.warn("Failed to serialize geofence policy: {}", e.getMessage());
+            }
+        } else if (accessPolicies.isPublic()) {
+            accessPolicy.setGeofence(null);
         }
 
         accessPolicyRepository.save(accessPolicy);

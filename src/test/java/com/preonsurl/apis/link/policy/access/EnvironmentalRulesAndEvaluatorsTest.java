@@ -57,6 +57,7 @@ class EnvironmentalRulesAndEvaluatorsTest {
                 null,
                 clientIp,
                 clientCountry,
+                null,
                 deviceInfo,
                 referer,
                 false,

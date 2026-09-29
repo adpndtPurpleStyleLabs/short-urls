@@ -47,6 +47,9 @@ public class AccessPolicy {
     @Column(name = "referrers", columnDefinition = "TEXT")
     private String referrers;
 
+    @Column(name = "geofence", columnDefinition = "LONGTEXT")
+    private String geofence;
+
     @Column(name = "otp_enabled", nullable = false)
     private boolean otpEnabled = false;
 
@@ -90,6 +93,10 @@ public class AccessPolicy {
 
     public boolean hasCredentialsOrOtp() {
         return isSecured() && (hasPin() || hasPassword() || hasOtp());
+    }
+
+    public boolean hasGeofence() {
+        return geofence != null && !geofence.isBlank();
     }
 
     @PrePersist
