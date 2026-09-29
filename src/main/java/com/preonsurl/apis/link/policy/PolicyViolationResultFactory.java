@@ -229,6 +229,33 @@ public class PolicyViolationResultFactory {
         return PolicyEvaluationResult.challengeRequired(accessPolicy, usagePolicy);
     }
 
+    public PolicyEvaluationResult geofenceChallengeRequired(
+            AccessPolicy accessPolicy,
+            UsagePolicy usagePolicy,
+            String fenceName,
+            String action
+    ) {
+        Map<String, String> details = new LinkedHashMap<>();
+        if (fenceName != null && !fenceName.isBlank()) {
+            details.put("Boundary Zone", fenceName);
+        }
+        details.put("Perimeter Rule", "BLOCK".equalsIgnoreCase(action) ? "Excluded Boundary" : "Designated Perimeter");
+
+        return new PolicyEvaluationResult(
+                PolicyEvaluationResult.Status.GEOFENCE_CHALLENGE_REQUIRED,
+                null,
+                HttpStatus.OK,
+                "Location Verification Required",
+                "This link requires physical geographic location verification before access is permitted.",
+                "GeoFence",
+                "Please permit browser location access to verify compliance with geographic boundary policies.",
+                "map-pin",
+                details,
+                accessPolicy,
+                usagePolicy
+        );
+    }
+
     public PolicyEvaluationResult allowed(AccessPolicy accessPolicy, UsagePolicy usagePolicy) {
         return PolicyEvaluationResult.allowed(accessPolicy, usagePolicy);
     }

@@ -28,10 +28,55 @@ public record PolicyContext(
         DeviceInfo deviceInfo,
         String referer,
         boolean verifiedByCookie,
+        boolean geofenceVerifiedByCookie,
         String submittedPin,
         String submittedPassword,
         boolean isVerificationFlow
 ) {
+    public PolicyContext(
+            Long shortUrlId,
+            String newUrl,
+            String originalUrl,
+            boolean active,
+            Instant expireAt,
+            Long usageLimit,
+            long clickCount,
+            AccessPolicy accessPolicy,
+            UsagePolicy usagePolicy,
+            HttpServletRequest request,
+            String clientIp,
+            String clientCountry,
+            com.preonsurl.apis.link.policy.model.GeoCoordinates clientCoordinates,
+            DeviceInfo deviceInfo,
+            String referer,
+            boolean verifiedByCookie,
+            String submittedPin,
+            String submittedPassword,
+            boolean isVerificationFlow
+    ) {
+        this(
+                shortUrlId,
+                newUrl,
+                originalUrl,
+                active,
+                expireAt,
+                usageLimit,
+                clickCount,
+                accessPolicy,
+                usagePolicy,
+                request,
+                clientIp,
+                clientCountry,
+                clientCoordinates,
+                deviceInfo,
+                referer,
+                verifiedByCookie,
+                verifiedByCookie,
+                submittedPin,
+                submittedPassword,
+                isVerificationFlow
+        );
+    }
     public boolean hasAccessPolicy() {
         return accessPolicy != null;
     }

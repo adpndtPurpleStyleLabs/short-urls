@@ -169,4 +169,74 @@ class GeoFenceAccessRuleTest {
         PolicyContext devContext = createContext(accessPolicy, null, "127.0.0.1");
         assertNull(rule.evaluate(devContext), "Localhost dev connection should bypass geofence");
     }
+
+    @Test
+    @DisplayName("Missing coordinates for remote client returns GEOFENCE_CHALLENGE_REQUIRED")
+    void testMissingCoordinatesPromptsGeoFenceChallenge() throws Exception {
+        GeoFencePolicy policyDto = new GeoFencePolicy(
+                "CIRCLE",
+                "ALLOW",
+                "Office Perimeter",
+                new GeoFencePolicy.CircleParams(12.9716, 77.5946, 500),
+                null
+        );
+        String json = objectMapper.writeValueAsString(policyDto);
+
+        AccessPolicy accessPolicy = new AccessPolicy();
+        accessPolicy.setMode(AccessPolicyMode.SECURED);
+        accessPolicy.setGeofence(json);
+
+        // Remote visitor with null coordinates (e.g. initial direct link click in Chrome)
+        PolicyContext context = createContext(accessPolicy, null, "203.0.113.195");
+        PolicyEvaluationResult result = rule.evaluate(context);
+
+        assertNotNull(result, "Missing coordinates must trigger a policy result");
+        assertTrue(result.isGeoFenceChallengeRequired(), "Status must be GEOFENCE_CHALLENGE_REQUIRED");
+        assertEquals("Location Verification Required", result.title());
+        assertEquals("Office Perimeter", result.details().get("Boundary Zone"));
+    }
+
+    @Test
+    @DisplayName("Session cookie verification bypasses geofence challenge without coordinates")
+    void testCookieVerificationBypassesChallenge() throws Exception {
+        GeoFencePolicy policyDto = new GeoFencePolicy(
+                "CIRCLE",
+                "ALLOW",
+                "Office Perimeter",
+                new GeoFencePolicy.CircleParams(12.9716, 77.5946, 500),
+                null
+        );
+        String json = objectMapper.writeValueAsString(policyDto);
+
+        AccessPolicy accessPolicy = new AccessPolicy();
+        accessPolicy.setMode(AccessPolicyMode.SECURED);
+        accessPolicy.setGeofence(json);
+
+        // Context with geofenceVerifiedByCookie = true
+        PolicyContext context = new PolicyContext(
+                100L,
+                "http://localhost:8080/fence-test",
+                "https://example.com/target",
+                true,
+                null,
+                null,
+                0,
+                accessPolicy,
+                null,
+                null,
+                "203.0.113.195",
+                "IN",
+                null,
+                null,
+                null,
+                false,
+                true, // geofenceVerifiedByCookie
+                null,
+                null,
+                false
+        );
+
+        PolicyEvaluationResult result = rule.evaluate(context);
+        assertNull(result, "Session with verified cookie should bypass geofence challenge");
+    }
 }

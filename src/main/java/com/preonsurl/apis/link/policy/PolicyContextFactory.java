@@ -96,6 +96,7 @@ public class PolicyContextFactory {
         DeviceInfo deviceInfo = deviceResolver.resolveDevice(request);
         String referer = request != null ? request.getHeader("Referer") : null;
         boolean verified = securityVerificationService.isVerifiedByCookie(request, shortUrlId);
+        boolean geofenceVerified = securityVerificationService.isGeofenceVerifiedByCookie(request, shortUrlId);
 
         return new PolicyContext(
                 shortUrlId,
@@ -114,6 +115,7 @@ public class PolicyContextFactory {
                 deviceInfo,
                 referer,
                 verified,
+                geofenceVerified,
                 null,
                 null,
                 false
@@ -142,6 +144,7 @@ public class PolicyContextFactory {
         DeviceInfo deviceInfo = deviceResolver.resolveDevice(request);
         String referer = request != null ? request.getHeader("Referer") : null;
         boolean verified = securityVerificationService.isVerifiedByCookie(request, entity.getId());
+        boolean geofenceVerified = securityVerificationService.isGeofenceVerifiedByCookie(request, entity.getId());
 
         return new PolicyContext(
                 entity.getId(),
@@ -160,6 +163,7 @@ public class PolicyContextFactory {
                 deviceInfo,
                 referer,
                 verified,
+                geofenceVerified,
                 pin,
                 password,
                 true

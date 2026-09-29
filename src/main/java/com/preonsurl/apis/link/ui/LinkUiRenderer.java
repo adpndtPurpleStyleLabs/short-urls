@@ -54,6 +54,23 @@ public class LinkUiRenderer {
     }
 
     /**
+     * Renders the GeoFence Location Verification Challenge page using Thymeleaf.
+     */
+    public String renderGeoFenceChallenge(
+            String targetPath,
+            String boundaryName,
+            String ruleAction,
+            String errorMessage
+    ) {
+        Context context = new Context();
+        context.setVariable("targetPath", targetPath);
+        context.setVariable("boundaryName", boundaryName != null && !boundaryName.isBlank() ? boundaryName : "Designated Perimeter");
+        context.setVariable("ruleAction", ruleAction != null ? ruleAction.toUpperCase() : "ALLOW");
+        context.setVariable("errorMessage", errorMessage);
+        return templateEngine.process("challenge-geofence", context);
+    }
+
+    /**
      * Renders the Exhausted / Inaccessible Link webpage using Thymeleaf.
      */
     public String renderExhaustedPage(

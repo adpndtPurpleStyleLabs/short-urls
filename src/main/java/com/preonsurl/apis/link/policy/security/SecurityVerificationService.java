@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class SecurityVerificationService {
 
     public static final String COOKIE_PREFIX = "PREONS_SEC_";
+    public static final String GEO_COOKIE_PREFIX = "PREONS_GEO_";
     public static final String VERIFIED_VALUE = "VERIFIED";
     public static final long DEFAULT_MAX_AGE_SECONDS = 600; // 10 minutes
 
@@ -39,6 +40,29 @@ public class SecurityVerificationService {
     }
 
     /**
+     * Determines whether the incoming request presents a valid geofence boundary verification cookie
+     * or a fully verified session cookie.
+     */
+    public boolean isGeofenceVerifiedByCookie(HttpServletRequest request, Long shortUrlId) {
+        if (request == null || request.getCookies() == null || shortUrlId == null) {
+            return false;
+        }
+
+        if (isVerifiedByCookie(request, shortUrlId)) {
+            return true;
+        }
+
+        String cookieName = GEO_COOKIE_PREFIX + shortUrlId;
+        for (Cookie cookie : request.getCookies()) {
+            if (cookieName.equals(cookie.getName()) && VERIFIED_VALUE.equals(cookie.getValue())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Generates an HTTP-only, secure authentication cookie after successful credential challenge.
      *
      * @param shortUrlId The unique ID of the short URL
@@ -46,6 +70,18 @@ public class SecurityVerificationService {
      */
     public ResponseCookie createVerificationCookie(Long shortUrlId) {
         return ResponseCookie.from(COOKIE_PREFIX + shortUrlId, VERIFIED_VALUE)
+                .path("/")
+                .maxAge(DEFAULT_MAX_AGE_SECONDS)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .build();
+    }
+
+    /**
+     * Generates an HTTP-only, secure cookie after successful geofence verification.
+     */
+    public ResponseCookie createGeofenceVerificationCookie(Long shortUrlId) {
+        return ResponseCookie.from(GEO_COOKIE_PREFIX + shortUrlId, VERIFIED_VALUE)
                 .path("/")
                 .maxAge(DEFAULT_MAX_AGE_SECONDS)
                 .httpOnly(true)

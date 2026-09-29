@@ -112,9 +112,23 @@ public class LinkAccessAndUsageService {
     }
 
     /**
+     * Helper delegation for checking geofence verification cookie.
+     */
+    public boolean isGeofenceVerifiedByCookie(HttpServletRequest request, Long shortUrlId) {
+        return securityVerificationService.isGeofenceVerifiedByCookie(request, shortUrlId);
+    }
+
+    /**
      * Helper delegation for creating security challenge authorization cookie.
      */
     public ResponseCookie createVerificationCookie(Long shortUrlId) {
         return securityVerificationService.createVerificationCookie(shortUrlId);
+    }
+
+    /**
+     * Helper delegation for creating geofence authorization cookie.
+     */
+    public ResponseCookie createGeofenceVerificationCookie(Long shortUrlId) {
+        return securityVerificationService.createGeofenceVerificationCookie(shortUrlId);
     }
 }

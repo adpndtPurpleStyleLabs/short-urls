@@ -1,6 +1,7 @@
 package com.preonsurl.apis.link.controller;
 
 import com.preonsurl.apis.link.dto.ApiResponse;
+import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.GeoFencePolicy;
 import com.preonsurl.apis.link.dto.PolicyEvaluationResult;
 import com.preonsurl.apis.link.entity.AccessPolicy;
 import com.preonsurl.apis.link.entity.NewUrl;
@@ -8,6 +9,7 @@ import com.preonsurl.apis.link.enums.LinkMode;
 import com.preonsurl.apis.link.event.ShortUrlServedEvent;
 import com.preonsurl.apis.link.exception.UrlExpiredException;
 import com.preonsurl.apis.link.exception.UrlUsageLimitExceededException;
+import com.preonsurl.apis.link.policy.evaluator.GeoFencePolicyEvaluator;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.service.LinkAccessAndUsageService;
 import com.preonsurl.apis.link.service.MirrorService;
@@ -55,6 +57,7 @@ public class ServingController {
     private final ApplicationEventPublisher eventPublisher;
     private final ProxyService proxyService;
     private final MirrorService mirrorService;
+    private final GeoFencePolicyEvaluator geoFencePolicyEvaluator;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.preonsurl.apis.publiclink.service.PublicLinkService publicLinkService;
@@ -68,7 +71,8 @@ public class ServingController {
                              LinkUiRenderer linkUiRenderer,
                              ApplicationEventPublisher eventPublisher,
                              ProxyService proxyService,
-                             MirrorService mirrorService) {
+                             MirrorService mirrorService,
+                             @org.springframework.beans.factory.annotation.Autowired(required = false) GeoFencePolicyEvaluator geoFencePolicyEvaluator) {
         this.servingCacheService = servingCacheService;
         this.repository = repository;
         this.policyService = policyService;
@@ -76,6 +80,7 @@ public class ServingController {
         this.eventPublisher = eventPublisher;
         this.proxyService = proxyService;
         this.mirrorService = mirrorService;
+        this.geoFencePolicyEvaluator = geoFencePolicyEvaluator;
     }
 
     @Operation(summary = "Handle CORS Preflight", description = "Responds to preflight OPTIONS requests for short links and proxied/mirrored routes")
@@ -152,6 +157,13 @@ public class ServingController {
                     servingCacheService.getLruCache().remove(fullUrl);
                 }
                 return handlePolicyRejection(evalResult, request);
+            }
+
+            if (evalResult.isGeoFenceChallengeRequired()) {
+                log.info("Prompting GeoFence location challenge for cached url='{}' [IP={}]", fullUrl, ipAddress);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(renderGeoFenceChallengePage(path, evalResult.accessPolicy(), null));
             }
 
             if (evalResult.isChallengeRequired()) {
@@ -231,6 +243,13 @@ public class ServingController {
                     if (mirrorEval.isRejected()) {
                         return handlePolicyRejection(mirrorEval, request);
                     }
+                    if (mirrorEval.isGeoFenceChallengeRequired()) {
+                        log.info("Prompting GeoFence location challenge for mirror url='{}' [IP={}]", fullUrl, ipAddress);
+                        return ResponseEntity.ok()
+                                .contentType(MediaType.TEXT_HTML)
+                                .body(renderGeoFenceChallengePage(match.prefix(), mirrorEval.accessPolicy(), null));
+                    }
+
                     if (mirrorEval.isChallengeRequired()) {
                         AccessPolicy policy = mirrorEval.accessPolicy();
                         return ResponseEntity.ok()
@@ -303,6 +322,13 @@ public class ServingController {
         PolicyEvaluationResult evalResult = policyService.evaluatePolicies(entity, request);
         if (evalResult.isRejected()) {
             return handlePolicyRejection(evalResult, request);
+        }
+
+        if (evalResult.isGeoFenceChallengeRequired()) {
+            log.info("Prompting GeoFence location challenge for url='{}' [IP={}]", fullUrl, ipAddress);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(renderGeoFenceChallengePage(path, evalResult.accessPolicy(), null));
         }
 
         if (evalResult.isChallengeRequired()) {
@@ -381,13 +407,15 @@ public class ServingController {
 
 
     @Operation(
-            summary = "Verify PIN or Password for secured link",
-            description = "Validates submitted credentials. Redirects to target destination on success, returns challenge with error on failure."
+            summary = "Verify PIN, Password, or GeoLocation for secured link",
+            description = "Validates submitted credentials or geocoordinates. Redirects to target destination on success, returns challenge or error on failure."
     )
     @PostMapping("/**")
     public ResponseEntity<?> verifyAndServe(
             @RequestParam(required = false) String pin,
             @RequestParam(required = false) String password,
+            @RequestParam(required = false) Double geo_lat,
+            @RequestParam(required = false) Double geo_lng,
             HttpServletRequest request
     ) {
         String fullUrl = request.getRequestURL().toString();
@@ -396,7 +424,12 @@ public class ServingController {
             path = request.getRequestURI().substring(1);
         }
 
-        if (path.endsWith("/verify")) {
+        if (path.endsWith("/geoverify")) {
+            path = path.substring(0, path.length() - "/geoverify".length());
+            if (fullUrl.endsWith("/geoverify")) {
+                fullUrl = fullUrl.substring(0, fullUrl.length() - "/geoverify".length());
+            }
+        } else if (path.endsWith("/verify")) {
             path = path.substring(0, path.length() - "/verify".length());
             if (fullUrl.endsWith("/verify")) {
                 fullUrl = fullUrl.substring(0, fullUrl.length() - "/verify".length());
@@ -414,6 +447,7 @@ public class ServingController {
         String ipAddress = extractClientIp(request);
         String userAgent = request.getHeader("User-Agent");
         String referer = request.getHeader("Referer");
+        boolean isAjax = isAjaxRequest(request);
 
         Optional<NewUrl> entityOpt = findEntityByUrlOrPath(fullUrl, path);
 
@@ -442,11 +476,102 @@ public class ServingController {
         }
 
         NewUrl entity = entityOpt.get();
+
+        // Check if this is a geofence verification request (submitted coords or /geoverify without pin/pass)
+        boolean isGeofenceRequest = (pin == null && password == null)
+                && (geo_lat != null || geo_lng != null
+                    || request.getParameter("geo_lat") != null
+                    || request.getHeader("X-Geo-Latitude") != null
+                    || request.getRequestURI().endsWith("/geoverify"));
+
+        if (isGeofenceRequest) {
+            PolicyEvaluationResult evalResult = policyService.evaluatePolicies(entity, request);
+
+            if (evalResult.isRejected()) {
+                log.warn("GeoFence verification rejected for url='{}' [IP={}]", fullUrl, ipAddress);
+                if (isAjax) {
+                    return ResponseEntity.status(evalResult.httpStatus())
+                            .body(Map.of(
+                                    "status", "REJECTED",
+                                    "violationType", evalResult.violationType() != null ? evalResult.violationType().name() : "REJECTED",
+                                    "title", evalResult.title() != null ? evalResult.title() : "Access Restricted",
+                                    "message", evalResult.description() != null ? evalResult.description() : "Access Denied",
+                                    "details", evalResult.details() != null ? evalResult.details() : Map.of()
+                            ));
+                }
+                return handlePolicyRejection(evalResult, request);
+            }
+
+            if (evalResult.isGeoFenceChallengeRequired()) {
+                log.warn("GeoFence coordinates missing or unresolvable for url='{}' [IP={}]", fullUrl, ipAddress);
+                if (isAjax) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "status", "ERROR",
+                            "message", "Unable to determine your physical location. Please permit location access and try again."
+                    ));
+                }
+                return ResponseEntity.ok()
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(renderGeoFenceChallengePage(path, evalResult.accessPolicy(), "Unable to determine your physical location. Please try again."));
+            }
+
+            if (evalResult.isChallengeRequired()) {
+                // GeoFence passed! But link ALSO requires PIN/Password/OTP.
+                // Issue temporary PREONS_GEO_ cookie so geofence check is satisfied on next step.
+                ResponseCookie geoCookie = policyService.createGeofenceVerificationCookie(entity.getId());
+                log.info("GeoFence passed for url='{}', now prompting security credentials [IP={}]", fullUrl, ipAddress);
+                if (isAjax) {
+                    return ResponseEntity.ok()
+                            .header(HttpHeaders.SET_COOKIE, geoCookie.toString())
+                            .body(Map.of(
+                                    "status", "CHALLENGE_REQUIRED",
+                                    "redirectUrl", "/" + path
+                            ));
+                }
+                return ResponseEntity.status(HttpStatus.FOUND)
+                        .header(HttpHeaders.SET_COOKIE, geoCookie.toString())
+                        .location(URI.create("/" + path))
+                        .build();
+            }
+
+            // All policies satisfied (including GeoFence)! Record serve & issue PREONS_SEC_ cookie
+            log.info("GeoFence verification passed for url='{}' -> redirecting to '{}' [IP={}]",
+                    fullUrl, entity.getOriginalUrl(), ipAddress);
+            eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+
+            ResponseCookie cookie = policyService.createVerificationCookie(entity.getId());
+
+            URI redirectTarget = (entity.getLinkMode() == LinkMode.PROXY || entity.getLinkMode() == LinkMode.MIRROR)
+                    ? URI.create(entity.getNewUrl())
+                    : URI.create(entity.getOriginalUrl());
+
+            if (isAjax) {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                        .body(Map.of(
+                                "status", "ALLOWED",
+                                "redirectUrl", redirectTarget.toString()
+                        ));
+            }
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .location(redirectTarget)
+                    .build();
+        }
+
+        // Standard PIN/Password verification flow
         PolicyEvaluationResult verification = policyService.verifyCredentials(entity, pin, password, request);
 
         if (verification.isRejected()) {
             if (verification.violationType() == PolicyEvaluationResult.ViolationType.INVALID_CREDENTIALS) {
                 log.warn("Failed security challenge attempt for url='{}' [IP={}]", fullUrl, ipAddress);
+                if (isAjax) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                            "status", "INVALID_CREDENTIALS",
+                            "message", verification.description()
+                    ));
+                }
                 AccessPolicy policy = verification.accessPolicy();
                 boolean reqPin = policy != null && policy.hasPin();
                 boolean reqPass = policy != null && policy.hasPassword();
@@ -463,15 +588,20 @@ public class ServingController {
                 fullUrl, entity.getOriginalUrl(), ipAddress);
         eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
 
-        ResponseCookie cookie = ResponseCookie.from("PREONS_SEC_" + entity.getId(), "VERIFIED")
-                .path("/")
-                .maxAge(600)
-                .httpOnly(true)
-                .build();
+        ResponseCookie cookie = policyService.createVerificationCookie(entity.getId());
 
         URI redirectTarget = (entity.getLinkMode() == LinkMode.PROXY || entity.getLinkMode() == LinkMode.MIRROR)
                 ? URI.create(entity.getNewUrl())
                 : URI.create(entity.getOriginalUrl());
+
+        if (isAjax) {
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(Map.of(
+                            "status", "ALLOWED",
+                            "redirectUrl", redirectTarget.toString()
+                    ));
+        }
 
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
@@ -753,10 +883,47 @@ public class ServingController {
         return Optional.empty();
     }
 
+    private String renderGeoFenceChallengePage(String path, AccessPolicy policy, String errorMessage) {
+        String fenceName = "Designated Perimeter";
+        String action = "ALLOW";
+        if (policy != null && policy.hasGeofence() && geoFencePolicyEvaluator != null) {
+            GeoFencePolicy fp = geoFencePolicyEvaluator.parsePolicy(policy.getGeofence());
+            if (fp != null) {
+                if (fp.name() != null && !fp.name().isBlank()) {
+                    fenceName = fp.name();
+                }
+                if (fp.action() != null && !fp.action().isBlank()) {
+                    action = fp.action().toUpperCase();
+                }
+            }
+        }
+        return linkUiRenderer.renderGeoFenceChallenge(path, fenceName, action, errorMessage);
+    }
+
+    private boolean isAjaxRequest(HttpServletRequest request) {
+        if (request == null) return false;
+        String requestedWith = request.getHeader("X-Requested-With");
+        String accept = request.getHeader("Accept");
+        String contentType = request.getContentType();
+        return "XMLHttpRequest".equalsIgnoreCase(requestedWith)
+                || (accept != null && accept.contains("application/json"))
+                || (contentType != null && contentType.contains("application/json"));
+    }
+
     private ResponseEntity<?> validateMirrorSubrequestPolicies(NewUrl entity, HttpServletRequest request, String path) {
         PolicyEvaluationResult result = policyService.evaluatePolicies(entity, request);
         if (result.isRejected()) {
             return handlePolicyRejection(result, request);
+        }
+
+        if (result.isGeoFenceChallengeRequired()) {
+            if (isBrowserHtmlRequest(request)) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(renderGeoFenceChallengePage(path, result.accessPolicy(), null));
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Location verification required"));
+            }
         }
 
         if (result.isChallengeRequired()) {

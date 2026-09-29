@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Verification Required - PreonsURL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #ffffff;
+            --surface-card: #ffffff;
+            --border-subtle: #e4e4e7;
+            --border-medium: #d4d4d8;
+            --border-focus: #000000;
+            --text-pure: #000000;
+            --text-high: #09090b;
+            --text-muted: #52525b;
+            --text-subtle: #71717a;
+            --accent-glow: rgba(0, 0, 0, 0.08);
+            --accent-glow-strong: rgba(0, 0, 0, 0.18);
+            --error-bg: #fef2f2;
+            --error-border: #fca5a5;
+            --error-text: #991b1b;
+            --success-bg: #f4f4f5;
+            --success-border: #18181b;
+            --success-text: #09090b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Manrope", sans-serif;
+            font-weight: 500;
+            background-color: var(--bg-canvas);
+            color: var(--text-pure);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+            position: relative;
+            overflow-x: hidden;
+            background-image:
+                    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(0, 0, 0, 0.04) 0%, transparent 70%),
+                    radial-gradient(ellipse 60% 40% at 50% 110%, rgba(0, 0, 0, 0.02) 0%, transparent 60%);
+        }
+
+        /* Ambient Geometric Grid */
+        .ambient-grid {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            z-index: 0;
+        }
+
+        /* Luxury Monochrome Card Container */
+        .card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface-card);
+            border-radius: 18px;
+            padding: 42px 32px 30px;
+            box-shadow:
+                    0 0 0 1px rgba(0, 0, 0, 0.04),
+                    0 20px 48px -12px rgba(0, 0, 0, 0.1),
+                    0 2px 6px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-medium);
+            text-align: center;
+            animation: cardAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(14px) scale(0.985);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Radar Pulse Aura */
+        .radar-aura-container {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-wave {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.14);
+            animation: radarPulse 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+            pointer-events: none;
+        }
+
+        .radar-wave:nth-child(2) {
+            animation-delay: 0.9s;
+        }
+
+        .radar-wave:nth-child(3) {
+            animation-delay: 1.8s;
+        }
+
+        @keyframes radarPulse {
+            0% {
+                transform: scale(0.65);
+                opacity: 0.85;
+            }
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+        }
+
+        .center-badge {
+            position: relative;
+            z-index: 2;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: #000000;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.22);
+            transition: all 0.3s ease;
+        }
+
+        .center-badge svg {
+            width: 22px;
+            height: 22px;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .is-scanning .center-badge svg {
+            animation: compassSweep 2s ease-in-out infinite;
+        }
+
+        @keyframes compassSweep {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(28deg); }
+            100% { transform: rotate(-28deg); }
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--text-pure);
+            letter-spacing: -0.025em;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            max-width: 360px;
+            margin: 0 auto 20px;
+        }
+
+        /* Boundary Zone Pill */
+        .boundary-tag-wrapper {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 12px;
+            background: #f4f4f5;
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            margin-bottom: 22px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #18181b;
+        }
+
+        .boundary-tag-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #000000;
+        }
+
+        .boundary-tag-action {
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: #000000;
+            color: #ffffff;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        /* Live Status Indicator Box */
+        .status-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #fafafa;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-bottom: 22px;
+            transition: all 0.25s ease;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #71717a;
+            flex-shrink: 0;
+            transition: background 0.25s ease;
+        }
+
+        .is-scanning .status-dot {
+            background: #000000;
+            animation: pulseDot 1.2s infinite ease-in-out;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 0.3; transform: scale(0.85); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Error Banner */
+        .alert {
+            display: none;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: var(--error-text);
+            font-size: 12px;
+            font-weight: 500;
+            text-align: left;
+            margin-bottom: 20px;
+            line-height: 1.45;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .alert.is-visible {
+            display: flex;
+        }
+
+        .alert svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .alert-content strong {
+            display: block;
+            margin-bottom: 2px;
+            font-weight: 700;
+        }
+
+        .coords-chip {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 7px;
+            background: rgba(0, 0, 0, 0.06);
+            border-radius: 5px;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 11px;
+            color: #18181b;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        /* Action Buttons */
+        .btn-primary {
+            width: 100%;
+            height: 42px;
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #000000;
+            border-radius: 9px;
+            padding: 0 18px;
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #18181b;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px var(--accent-glow-strong);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-primary svg {
+            width: 15px;
+            height: 15px;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-primary:hover:not(:disabled) svg {
+            transform: translateX(3px);
+        }
+
+        /* Spinner */
+        .spinner {
+            display: none;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+
+        .is-scanning .spinner {
+            display: inline-block;
+        }
+
+        .is-scanning .btn-icon {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Privacy reassurance info link */
+        .privacy-info {
+            margin: 18px 0 22px;
+        }
+
+        .privacy-link {
+            font-size: 11.5px;
+            color: var(--text-subtle);
+            text-decoration: none;
+            transition: color 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .privacy-link:hover {
+            color: var(--text-pure);
+        }
+
+        .privacy-link svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        /* Divider & Badges Footer */
+        .badges-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .badge-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-subtle);
+            font-weight: 500;
+        }
+
+        .badge-item svg {
+            width: 12px;
+            height: 12px;
+            color: var(--text-subtle);
+        }
+
+        .badge-divider {
+            width: 1px;
+            height: 12px;
+            background: var(--border-subtle);
+        }
+
+        /* Browser Permission Modal */
+        .location-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(9, 9, 11, 0.48);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .location-modal.is-visible {
+            display: flex;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        .location-dialog {
+            width: 100%;
+            max-width: 440px;
+            max-height: min(720px, calc(100vh - 40px));
+            overflow-y: auto;
+            background: #ffffff;
+            border: 1px solid #e4e4e7;
+            border-radius: 18px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+            padding: 26px;
+            text-align: left;
+            animation: dialogSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .location-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .location-modal-icon {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #f4f4f5;
+            color: #09090b;
+        }
+
+        .location-modal-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .location-close {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e4e4e7;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #52525b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .location-close:hover {
+            background: #f4f4f5;
+            color: #09090b;
+            border-color: #d4d4d8;
+        }
+
+        .location-close svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .location-dialog h2 {
+            margin: 0 0 6px;
+            font-size: 17px;
+            font-weight: 700;
+            color: #09090b;
+            letter-spacing: -0.02em;
+        }
+
+        .location-dialog .location-description {
+            margin: 0;
+            color: #52525b;
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+
+        .location-steps {
+            margin: 18px 0 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 9px;
+        }
+
+        .location-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            padding: 10px 12px;
+            border: 1px solid #ededf0;
+            border-radius: 9px;
+            background: #ffffff;
+        }
+
+        .location-step-number {
+            width: 22px;
+            height: 22px;
+            flex: 0 0 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: #18181b;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .location-step-content strong {
+            display: block;
+            margin-bottom: 2px;
+            color: #18181b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .location-step-content span {
+            display: block;
+            color: #71717a;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+
+        .location-modal-actions {
+            display: flex;
+            gap: 9px;
+            margin-top: 22px;
+        }
+
+        .location-action {
+            height: 40px;
+            flex: 1;
+            border-radius: 8px;
+            padding: 0 14px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .location-retry {
+            border: 1px solid #18181b;
+            background: #18181b;
+            color: #ffffff;
+        }
+
+        .location-retry:hover {
+            background: #000000;
+            transform: translateY(-1px);
+        }
+
+        .location-dismiss {
+            border: 1px solid #d4d4d8;
+            background: #ffffff;
+            color: #27272a;
+        }
+
+        .location-dismiss:hover {
+            background: #f4f4f5;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes dialogSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 440px) {
+            .card {
+                padding: 34px 20px 24px;
+            }
+            .badges-footer {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .badge-divider {
+                display: none;
+            }
+            .location-modal-actions {
+                flex-direction: column-reverse;
+            }
+            .location-action {
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Ambient Geometric Grid -->
+<div class="ambient-grid" aria-hidden="true"></div>
+
+<!-- Main Verification Card -->
+<main class="card" id="geofence-card">
+    <!-- Animated Radar Pulse Center Aura -->
+    <div class="radar-aura-container" aria-hidden="true">
+        <div class="radar-wave"></div>
+        <div class="radar-wave"></div>
+        <div class="radar-wave"></div>
+        <div class="center-badge" id="center-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Title and Description -->
+    <h1 id="headline">Location Verification Required</h1>
+    <p class="subtitle" id="subtext">
+        This link is protected by a geographic boundary policy. Your current physical location is needed to verify access.
+    </p>
+
+    <!-- Boundary Zone Chip -->
+    <div class="boundary-tag-wrapper">
+        <span class="boundary-tag-dot"></span>
+        <span th:text="${boundaryName}">Designated Perimeter</span>
+        <span class="boundary-tag-action" th:text="${ruleAction}">ALLOW</span>
+    </div>
+
+    <!-- Rejection / Error Alert Banner -->
+    <div class="alert" id="error-alert" th:classappend="${errorMessage != null and !errorMessage.isEmpty()} ? 'is-visible' : ''">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <div class="alert-content">
+            <strong id="error-title">Access Restricted</strong>
+            <span id="error-message" th:text="${errorMessage}">Access is restricted from your current physical location.</span>
+            <div id="error-coords-container"></div>
+        </div>
+    </div>
+
+    <!-- Status Indicator Box -->
+    <div class="status-box" id="status-box">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Click "Verify Location" to grant browser location access.</span>
+    </div>
+
+    <!-- Primary Action Button -->
+    <button type="button" id="verify-btn" class="btn-primary">
+        <span class="spinner" id="btn-spinner"></span>
+        <span id="btn-text">Verify Location</span>
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+    </button>
+
+    <!-- Hidden Form for Fallback Direct Submission -->
+    <form method="POST" th:action="${'/' + targetPath + '/geoverify'}" id="fallback-form" style="display: none;">
+        <input type="hidden" name="geo_lat" id="form-lat" />
+        <input type="hidden" name="geo_lng" id="form-lng" />
+    </form>
+
+    <!-- Privacy Notice -->
+    <div class="privacy-info">
+        <a class="privacy-link" id="privacy-toggle" title="How your location is handled">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Location is evaluated instantly and never tracked</span>
+        </a>
+    </div>
+
+    <!-- Security Badges Footer -->
+    <footer class="badges-footer">
+        <div class="badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+            <span>Verified Perimeter</span>
+        </div>
+        <div class="badge-divider"></div>
+        <div class="badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>256-bit Encrypted</span>
+        </div>
+        <div class="badge-divider"></div>
+        <div class="badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>PreonsURL Guard</span>
+        </div>
+    </footer>
+</main>
+
+<!-- Browser Permission Instructions Modal -->
+<div class="location-modal" id="location-modal" role="dialog" aria-modal="true" aria-labelledby="location-modal-title">
+    <div class="location-dialog">
+        <div class="location-modal-header">
+            <div class="location-modal-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"></path>
+                    <circle cx="12" cy="9" r="2.5"></circle>
+                </svg>
+            </div>
+            <button type="button" class="location-close" id="location-close" aria-label="Close instructions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <h2 id="location-modal-title">Location Permission Required</h2>
+        <p class="location-description" id="location-modal-description">
+            Your browser blocked or could not determine your location. Please grant location access in your browser settings to continue.
+        </p>
+
+        <ol class="location-steps" id="location-steps"></ol>
+
+        <div class="location-modal-actions">
+            <button type="button" class="location-action location-dismiss" id="location-dismiss">Close</button>
+            <button type="button" class="location-action location-retry" id="location-retry">Try Again</button>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const TARGET_PATH = /*[[${targetPath}]]*/ '';
+    const VERIFY_URL = '/' + TARGET_PATH + '/geoverify';
+    /*]]>*/
+
+    const card = document.getElementById('geofence-card');
+    const verifyBtn = document.getElementById('verify-btn');
+    const btnText = document.getElementById('btn-text');
+    const statusText = document.getElementById('status-text');
+    const errorAlert = document.getElementById('error-alert');
+    const errorTitle = document.getElementById('error-title');
+    const errorMessage = document.getElementById('error-message');
+    const errorCoordsContainer = document.getElementById('error-coords-container');
+    const fallbackForm = document.getElementById('fallback-form');
+    const formLat = document.getElementById('form-lat');
+    const formLng = document.getElementById('form-lng');
+
+    let isProcessing = false;
+
+    // Detect browser for tailored permission help
+    function detectBrowser() {
+        const ua = navigator.userAgent;
+        if (/Edg\//i.test(ua)) return 'edge';
+        if (/Firefox\//i.test(ua)) return 'firefox';
+        if (/Chrome\//i.test(ua) && !/Edg\//i.test(ua)) return 'chrome';
+        if (/Safari\//i.test(ua) && !/Chrome\//i.test(ua)) return 'safari';
+        return 'other';
+    }
+
+    // High accuracy browser geolocation request
+    function fetchCurrentCoordinates() {
+        return new Promise((resolve, reject) => {
+            if (!window.isSecureContext && location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                reject({ code: 'HTTPS_REQUIRED', message: 'Location verification requires an HTTPS secure connection.' });
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                reject({ code: 'UNSUPPORTED', message: 'Geolocation is not supported by this browser.' });
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    });
+                },
+                error => {
+                    reject({ code: error.code, message: error.message });
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 12000,
+                    maximumAge: 0
+                }
+            );
+        });
+    }
+
+    // Submits coordinates via AJAX or fallback form
+    async function submitCoordinates(coords) {
+        setUiState('validating');
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append('geo_lat', coords.latitude);
+            formData.append('geo_lng', coords.longitude);
+
+            const response = await fetch(VERIFY_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-Geo-Latitude': coords.latitude.toString(),
+                    'X-Geo-Longitude': coords.longitude.toString()
+                },
+                body: formData.toString()
+            });
+
+            const data = await response.json();
+
+            if (response.ok && (data.status === 'ALLOWED' || data.status === 'CHALLENGE_REQUIRED')) {
+                setUiState('success');
+                statusText.textContent = data.status === 'CHALLENGE_REQUIRED'
+                    ? 'Location verified. Redirecting to security challenge...'
+                    : 'Location authorized. Redirecting to destination...';
+
+                setTimeout(() => {
+                    window.location.href = data.redirectUrl || ('/' + TARGET_PATH);
+                }, 600);
+            } else {
+                // Rejection or failure
+                setUiState('rejected');
+                const title = data.title || 'Access Restricted: GeoFence Perimeter';
+                const msg = data.message || 'Access is not permitted from your physical location.';
+                showError(title, msg, coords);
+            }
+        } catch (fetchErr) {
+            console.warn('AJAX verification encountered error, attempting form submit fallback:', fetchErr);
+            formLat.value = coords.latitude;
+            formLng.value = coords.longitude;
+            fallbackForm.submit();
+        }
+    }
+
+    function setUiState(state) {
+        if (state === 'scanning') {
+            isProcessing = true;
+            card.classList.add('is-scanning');
+            verifyBtn.disabled = true;
+            btnText.textContent = 'Locating...';
+            statusText.textContent = 'Requesting location permission from your browser...';
+            hideError();
+        } else if (state === 'validating') {
+            isProcessing = true;
+            card.classList.add('is-scanning');
+            verifyBtn.disabled = true;
+            btnText.textContent = 'Verifying Perimeter...';
+            statusText.textContent = 'Evaluating your coordinates against perimeter rules...';
+        } else if (state === 'success') {
+            isProcessing = false;
+            card.classList.remove('is-scanning');
+            verifyBtn.disabled = true;
+            btnText.textContent = 'Access Approved';
+            document.getElementById('center-badge').innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            `;
+            document.getElementById('center-badge').style.background = '#09090b';
+        } else {
+            // ready or rejected
+            isProcessing = false;
+            card.classList.remove('is-scanning');
+            verifyBtn.disabled = false;
+            btnText.textContent = 'Verify Location';
+            statusText.textContent = state === 'rejected'
+                ? 'Location outside allowed perimeter. You can retry.'
+                : 'Click "Verify Location" to grant browser location access.';
+        }
+    }
+
+    function showError(title, msg, coords) {
+        errorTitle.textContent = title;
+        errorMessage.textContent = msg;
+        if (coords && coords.latitude != null && coords.longitude != null) {
+            errorCoordsContainer.innerHTML = `<span class="coords-chip">Detected: ${coords.latitude.toFixed(4)}°, ${coords.longitude.toFixed(4)}°</span>`;
+        } else {
+            errorCoordsContainer.innerHTML = '';
+        }
+        errorAlert.classList.add('is-visible');
+    }
+
+    function hideError() {
+        errorAlert.classList.remove('is-visible');
+    }
+
+    async function handleVerification() {
+        if (isProcessing) return;
+        setUiState('scanning');
+
+        try {
+            const coords = await fetchCurrentCoordinates();
+            await submitCoordinates(coords);
+        } catch (err) {
+            setUiState('ready');
+            console.warn('Geolocation acquisition error:', err);
+            showLocationModal(err.code);
+        }
+    }
+
+    // Step-by-step browser permission instructions
+    function getLocationInstructions(errorCode) {
+        const browser = detectBrowser();
+
+        if (errorCode === 'HTTPS_REQUIRED') {
+            return {
+                title: 'Secure Connection Required',
+                description: 'Browsers require a secure HTTPS connection to access GPS coordinates.',
+                steps: [
+                    ['1', 'Use HTTPS', 'Ensure the URL starts with https:// in your address bar.'],
+                    ['2', 'Reload Page', 'Refresh this webpage over HTTPS.'],
+                    ['3', 'Retry', 'Click Try Again below.']
+                ]
+            };
+        }
+
+        const common = {
+            chrome: [
+                ['1', 'Open Site Settings', 'Click the tune/padlock icon beside the URL in the address bar.'],
+                ['2', 'Allow Location', 'Toggle Location to "Allow" for this website.'],
+                ['3', 'Reload & Retry', 'Select "Try Again" below to refresh the location check.']
+            ],
+            firefox: [
+                ['1', 'Open Permissions', 'Click the permission/padlock icon next to the address bar.'],
+                ['2', 'Clear Blocked State', 'Remove the "Blocked" status for Location, then choose "Allow".'],
+                ['3', 'Retry', 'Click "Try Again" below.']
+            ],
+            safari: [
+                ['1', 'Open Safari Settings', 'In the Safari menu bar, click Safari → Settings for This Website (or on iOS tap "aA" → Website Settings).'],
+                ['2', 'Set Location to Allow', 'Change Location access to "Allow".'],
+                ['3', 'Retry', 'Select "Try Again" below.']
+            ],
+            edge: [
+                ['1', 'Open Permissions', 'Click the lock/tune icon on the left side of the address bar.'],
+                ['2', 'Allow Location', 'Set Location to "Allow".'],
+                ['3', 'Retry', 'Click "Try Again" below.']
+            ],
+            other: [
+                ['1', 'Open Browser Settings', 'Open your browser permissions or site settings.'],
+                ['2', 'Enable Location', 'Allow location access for this site.'],
+                ['3', 'Retry', 'Select "Try Again" below.']
+            ]
+        };
+
+        if (errorCode === 2) {
+            return {
+                title: 'Location Unavailable',
+                description: 'Your browser or device could not retrieve GPS coordinates. Ensure device Location Services are turned ON in system settings.',
+                steps: common[browser]
+            };
+        }
+
+        return {
+            title: 'Location Access Was Denied',
+            description: 'This protected link requires your physical location to verify boundary compliance. Please allow location access for this site.',
+            steps: common[browser]
+        };
+    }
+
+    function showLocationModal(errorCode) {
+        const modal = document.getElementById('location-modal');
+        const title = document.getElementById('location-modal-title');
+        const desc = document.getElementById('location-modal-description');
+        const stepsContainer = document.getElementById('location-steps');
+
+        const data = getLocationInstructions(errorCode);
+        title.textContent = data.title;
+        desc.textContent = data.description;
+        stepsContainer.innerHTML = data.steps.map(s => `
+            <li class="location-step">
+                <span class="location-step-number">${s[0]}</span>
+                <span class="location-step-content">
+                    <strong>${s[1]}</strong>
+                    <span>${s[2]}</span>
+                </span>
+            </li>
+        `).join('');
+
+        modal.classList.add('is-visible');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLocationModal() {
+        const modal = document.getElementById('location-modal');
+        modal.classList.remove('is-visible');
+        document.body.style.overflow = '';
+    }
+
+    // Event Listeners
+    verifyBtn.addEventListener('click', handleVerification);
+
+    document.getElementById('location-close').addEventListener('click', closeLocationModal);
+    document.getElementById('location-dismiss').addEventListener('click', closeLocationModal);
+    document.getElementById('location-retry').addEventListener('click', () => {
+        closeLocationModal();
+        handleVerification();
+    });
+
+    document.getElementById('location-modal').addEventListener('click', e => {
+        if (e.target.id === 'location-modal') closeLocationModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeLocationModal();
+    });
+
+    // Auto-prompt on load after smooth card animation completes
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            handleVerification();
+        }, 350);
+    });
+</script>
+</body>
+</html>

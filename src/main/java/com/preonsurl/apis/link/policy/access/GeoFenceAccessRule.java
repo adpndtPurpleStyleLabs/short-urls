@@ -39,17 +39,41 @@ public class GeoFenceAccessRule implements LinkPolicyRule {
 
     @Override
     public PolicyEvaluationResult evaluate(PolicyContext context) {
+        // If already authorized by session cookie or geofence verification cookie, allow without re-prompt
+        if (context.geofenceVerifiedByCookie() || context.verifiedByCookie()) {
+            return null;
+        }
+
         String geofenceJson = context.accessPolicy().getGeofence();
+        GeoFencePolicy policy = geoFencePolicyEvaluator.parsePolicy(geofenceJson);
+        String action = policy != null ? policy.action() : "ALLOW";
+        String fenceName = policy != null ? policy.name() : null;
+
         Double clientLat = context.clientCoordinates() != null ? context.clientCoordinates().latitude() : null;
         Double clientLng = context.clientCoordinates() != null ? context.clientCoordinates().longitude() : null;
 
+        // If coordinates have not been provided yet (typical initial direct link visit in browser)
+        if (clientLat == null || clientLng == null) {
+            boolean loopbackAllowed = geoFencePolicyEvaluator.isAllowed(null, null, geofenceJson, context.clientIp());
+            if (loopbackAllowed) {
+                return null;
+            }
+
+            log.info("Client coordinates absent for GeoFence protected link: id={}, url='{}', rule='{}'. Triggering browser location challenge.",
+                    context.shortUrlId(), context.newUrl(), action);
+
+            return resultFactory.geofenceChallengeRequired(
+                    context.accessPolicy(),
+                    context.usagePolicy(),
+                    fenceName,
+                    action
+            );
+        }
+
+        // Coordinates present: evaluate physical boundary
         boolean allowed = geoFencePolicyEvaluator.isAllowed(clientLat, clientLng, geofenceJson, context.clientIp());
 
         if (!allowed) {
-            GeoFencePolicy policy = geoFencePolicyEvaluator.parsePolicy(geofenceJson);
-            String action = policy != null ? policy.action() : "ALLOW";
-            String fenceName = policy != null ? policy.name() : null;
-
             log.warn("Access rejected by GeoFence boundary policy: id={}, url='{}', clientCoords=({}, {}), rule='{}'",
                     context.shortUrlId(), context.newUrl(), clientLat, clientLng, action);
 

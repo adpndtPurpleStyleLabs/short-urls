@@ -25,6 +25,7 @@ public record PolicyEvaluationResult(
     public enum Status {
         ALLOWED,
         CHALLENGE_REQUIRED,
+        GEOFENCE_CHALLENGE_REQUIRED,
         REJECTED,
         NOT_FOUND
     }
@@ -49,6 +50,10 @@ public record PolicyEvaluationResult(
 
     public boolean isChallengeRequired() {
         return status == Status.CHALLENGE_REQUIRED;
+    }
+
+    public boolean isGeoFenceChallengeRequired() {
+        return status == Status.GEOFENCE_CHALLENGE_REQUIRED;
     }
 
     public boolean isRejected() {
