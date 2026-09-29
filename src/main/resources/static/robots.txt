@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /features
+Allow: /create
+Allow: /contact
+Allow: /api-documentation
+Allow: /status
+
+Disallow: /console
+Disallow: /console/
+Disallow: /login
+Disallow: /register
+Disallow: /verification
+Disallow: /psecure
+Disallow: /psecure/
+Disallow: /api/
+Disallow: /link/
+Disallow: /track/
+Disallow: /api/track/
+Disallow: /link-otp/
+Disallow: /api/link-otp/
+
+Sitemap: https://app.surls.me/sitemap.xml

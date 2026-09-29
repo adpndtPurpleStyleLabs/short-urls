@@ -1,10 +1,52 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="PreonsURL features — secure, programmable links with access control and lifecycle management.">
-<title>SecureURLs — Features</title>
+<th:block th:replace="~{fragments/seo :: seo(
+  title='SecureURLs.me Features — Security Rules, GeoFencing &amp; Link Analytics',
+  description='Explore SecureURLs.me capabilities including cryptographic link protection, device &amp; location rules, expiration policies, click limits, custom domains, and real-time analytics.',
+  canonical='https://app.surls.me/features',
+  robots='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+  ogType='website',
+  ogImage='https://adpndt.sirv.com/Images/logo_full_black.png'
+)}"></th:block>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://app.surls.me/features#webpage",
+      "url": "https://app.surls.me/features",
+      "name": "SecureURLs.me Features — Security Rules, GeoFencing & Link Analytics",
+      "isPartOf": {
+        "@type": "WebSite",
+        "@id": "https://app.surls.me/#website",
+        "name": "SecureURLs.me",
+        "url": "https://app.surls.me/"
+      },
+      "description": "Explore SecureURLs.me capabilities including cryptographic link protection, device & location rules, expiration policies, click limits, custom domains, and real-time analytics."
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://app.surls.me/features#breadcrumbs",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://app.surls.me/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Features",
+          "item": "https://app.surls.me/features"
+        }
+      ]
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -134,7 +176,7 @@
 </div></section>
 
 <section class="section" id="features"><div class="container">
-<div class="section-head"><div class="kicker">High-value features</div><h2>Every link gets its own layer of control.</h2><p>SecureURLs gives you practical controls for sharing, protecting and managing links — without turning a simple URL into a complicated workflow.</p></div>
+<div class="section-head"><div class="kicker">High-value features</div><h2>Every link gets its own layer of control.</h2><p>SecureURLs.me gives you practical controls for sharing, protecting and managing links — without turning a simple URL into a complicated workflow.</p></div>
 <div class="feature-table-wrap">
 <table class="feature-table">
 <thead>
@@ -318,10 +360,10 @@
 </div></div>
 </div></div></section>
 
-<section class="section"><div class="container"><div class="cta"><div class="kicker">Ready when you are</div><h2>Turn a URL into a link you can control.</h2><p>Create your first SecureURLs link and choose exactly how much control you need.</p><a class="btn" href="/register">Create your first link →</a></div></div></section>
+<section class="section"><div class="container"><div class="cta"><div class="kicker">Ready when you are</div><h2>Turn a URL into a link you can control.</h2><p>Create your first SecureURLs.me link and choose exactly how much control you need.</p><a class="btn" href="/register">Create your first link →</a></div></div></section>
 </main>
 
-<footer class="footer"><div class="container footer-inner"><div>© 2026 SecureURLs. Links with control built in.</div><div class="footer-links"><a href="/feature.html">Features</a><a href="/#pricing">Pricing</a><a href="/api-documentation">Developers</a><a href="/login">Sign in</a><a href="/register">Get started</a></div></div></footer>
+<footer class="footer"><div class="container footer-inner"><div>© 2026 SecureURLs.me. Links with control built in.</div><div class="footer-links"><a href="/features">Features</a><a href="/#pricing">Pricing</a><a href="/api-documentation">Developers</a><a href="/login">Sign in</a><a href="/register">Get started</a></div></div></footer>
 </div>
 </body>
 </html>

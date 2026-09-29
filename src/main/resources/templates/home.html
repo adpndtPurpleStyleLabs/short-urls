@@ -2,11 +2,57 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="SecureURLs — secure, programmable link infrastructure for modern products and teams." />
+  <th:block th:replace="~{fragments/seo :: seo(
+    title='SecureURLs.me — Secure Short Links &amp; URL Protection',
+    description='Create secure short links with password protection, expiration, access controls, analytics, and custom domains with SecureURLs.me.',
+    canonical='https://app.surls.me/',
+    robots='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    ogType='website',
+    ogImage='https://adpndt.sirv.com/Images/logo_full_black.png'
+  )}"></th:block>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <title>SecureURLs — Secure Link Infrastructure</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://app.surls.me/#organization",
+        "name": "SecureURLs.me",
+        "url": "https://app.surls.me/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://adpndt.sirv.com/Images/logo_full_black.png"
+        },
+        "description": "SecureURLs.me provides secure, programmable link infrastructure with access controls, cryptographic protection, expiration, and analytics."
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://app.surls.me/#website",
+        "url": "https://app.surls.me/",
+        "name": "SecureURLs.me",
+        "publisher": {
+          "@id": "https://app.surls.me/#organization"
+        }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://app.surls.me/#webpage",
+        "url": "https://app.surls.me/",
+        "name": "SecureURLs.me — Secure Short Links & URL Protection",
+        "isPartOf": {
+          "@id": "https://app.surls.me/#website"
+        },
+        "about": {
+          "@id": "https://app.surls.me/#organization"
+        },
+        "description": "Create secure short links with password protection, expiration, access controls, analytics, and custom domains with SecureURLs.me."
+      }
+    ]
+  }
+  </script>
   <style>
     :root {
       --bg: #fff;
@@ -1367,7 +1413,7 @@
       <div class="section-head">
         <div class="kicker">One link. More control.</div>
         <h2>A URL shortener that behaves like infrastructure.</h2>
-        <p> SecureURLs brings link creation, lifecycle controls, access protection, branded domains and delivery modes into one focused system. </p>
+        <p> SecureURLs.me brings link creation, lifecycle controls, access protection, branded domains and delivery modes into one focused system. </p>
       </div>
       <div class="feature-grid">
         <article class="card">
@@ -1423,7 +1469,7 @@
       <div class="section-head">
         <div class="kicker">Use cases</div>
         <h2>From everyday short links to controlled delivery.</h2>
-        <p> SecureURLs can cover straightforward link sharing, branded campaigns, operational workflows and advanced access-controlled delivery from the same link layer. </p>
+        <p> SecureURLs.me can cover straightforward link sharing, branded campaigns, operational workflows and advanced access-controlled delivery from the same link layer. </p>
       </div>
       <div class="usecase-list">
         <div class="usecase-row"> <span class="usecase-num">01</span>
@@ -1980,13 +2026,13 @@
           <span class="browser-dot"></span><span class="browser-dot"></span
         ><span class="browser-dot"></span
         ><span style="margin-left: 10px; font-size: 10px; color: #999"
-        >app.preonsurl.com/domains</span
+        >app.surls.me/domains</span
         >
         </div>
 
         <div class="mock">
           <aside class="mock-side">
-            <div class="mock-brand">SecureURLs</div>
+            <div class="mock-brand">SecureURLs.me</div>
 
             <div class="mock-item active">Links</div>
 
@@ -2057,7 +2103,7 @@
       <div>
         <div class="kicker">Built for integration</div>
         <h2>One API call from your product.</h2>
-        <p style="color: #707070; line-height: 1.7"> Keep link creation inside your own application. Protect API operations with an API key and let SecureURLs handle code generation, persistence and delivery. </p>
+        <p style="color: #707070; line-height: 1.7"> Keep link creation inside your own application. Protect API operations with an API key and let SecureURLs.me handle code generation, persistence and delivery. </p>
         <div class="checks">
           <div class="check"><b>✓</b><span>JSON API</span></div>
           <div class="check"><b>✓</b><span>API-key authentication</span></div>
@@ -2073,14 +2119,14 @@
       <div class="section-head">
         <div class="kicker">Feature comparison</div>
         <h2>Focused on controlled links.</h2>
-        <p> Feature availability changes by provider and plan. This comparison reflects publicly documented capabilities and SecureURLs's current feature set. </p>
+        <p> Feature availability changes by provider and plan. This comparison reflects publicly documented capabilities and SecureURLs.me's current feature set. </p>
       </div>
       <div class="compare-wrap">
         <table class="compare">
           <thead>
           <tr>
             <th>Capability</th>
-            <th>SecureURLs</th>
+            <th>SecureURLs.me</th>
             <th>Short.io</th>
             <th>Rebrandly</th>
             <th>Dub</th>
@@ -2205,11 +2251,11 @@
             <div class="kicker">Free</div>
             <div class="pricing-title">Free</div>
             <div class="pricing-price"> <strong>$0</strong> <span>forever</span> </div>
-            <p class="pricing-copy"> The essentials for creating simple short links on the default SecureURLs domain. </p>
+            <p class="pricing-copy"> The essentials for creating simple short links on the default SecureURLs.me domain. </p>
           </div>
           <div class="pricing-grid">
             <div class="pricing-feature"> <span class="pricing-check">✓</span> <span><strong>1 million redirects</strong></span> </div>
-            <div class="pricing-feature"> <span class="pricing-check">✓</span> <span><strong>Default SecureURLs domain</strong></span> </div>
+            <div class="pricing-feature"> <span class="pricing-check">✓</span> <span><strong>Default SecureURLs.me domain</strong></span> </div>
             <div class="pricing-feature"> <span class="pricing-check">✓</span> <span><strong>Redirect delivery</strong></span> </div>
           </div>
           <div style="margin-top: 28px"> <a class="btn primary" href="/register">Start for free →</a> </div>
@@ -2317,14 +2363,14 @@
       <div class="cta">
         <div class="kicker" style="color: #888">Ready when you are</div>
         <h2 style="margin-top: 12px; color: #fff">Build links your product can depend on.</h2>
-        <p> Create your first short link, connect a domain, and start treating URLs as programmable infrastructure. </p> <a class="btn" href="/register">Get started with SecureURLs →</a> </div>
+        <p> Create your first short link, connect a domain, and start treating URLs as programmable infrastructure. </p> <a class="btn" href="/register">Get started with SecureURLs.me →</a> </div>
     </div>
   </section>
 </main>
 <footer class="footer">
   <div class="container footer-inner">
-    <div>© 2026 SecureURLs. Secure link infrastructure.</div>
-    <div class="footer-links"> <a href="/docs">API docs</a> <a href="/status">Status</a> <a href="/privacy">Privacy</a> <a href="/terms">Terms</a> </div>
+    <div>© 2026 SecureURLs.me. Secure link infrastructure.</div>
+    <div class="footer-links"> <a href="/api-documentation">API docs</a> <a href="/status">Status</a> <a href="/privacy">Privacy</a> <a href="/terms">Terms</a> </div>
   </div>
 </footer>
 <script>

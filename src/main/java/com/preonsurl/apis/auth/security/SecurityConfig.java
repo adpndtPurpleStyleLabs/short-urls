@@ -58,10 +58,7 @@ public class SecurityConfig {
                         // Preflight CORS requests
                         // =========================
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // =========================
-                        // Authentication & Verification & Console UI & Link QR Codes & Public Links & Tracking & OTP
-                        // =========================
-                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**", "/console", "/console/**","/", "/api/contact/**", "/create", "/api/public-links", "/api/public-links/**", "/psecure", "/psecure/**","/api-documentation", "/uptime", "/uptime/**", "/api/public/uptime", "/api/public/uptime/**", "/api/uptime/**", "/api/track/**", "/track/**", "/api/link-otp/**", "/link-otp/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**", "/console", "/console/**", "/", "/features", "/contact", "/status", "/uptime", "/uptime/**", "/api/contact/**", "/create", "/api/public-links", "/api/public-links/**", "/psecure", "/psecure/**", "/api-documentation", "/docs", "/api/public/uptime", "/api/public/uptime/**", "/api/uptime/**", "/api/track/**", "/track/**", "/api/link-otp/**", "/link-otp/**", "/robots.txt", "/sitemap.xml", "/favicon.ico", "/favicon-*.png", "/apple-touch-icon.png", "/site.webmanifest", "/images/**").permitAll()
                         // =========================
                         // Swagger / OpenAPI
                         // =========================

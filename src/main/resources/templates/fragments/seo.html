@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:fragment="seo(title, description, canonical, robots, ogType, ogImage)"
+              th:with="resolvedTitle=${title != null ? title : (seoTitle != null ? seoTitle : 'SecureURLs.me — Secure Short Links &amp; URL Protection')},
+                       resolvedDescription=${description != null ? description : (seoDescription != null ? seoDescription : 'Create secure short links with password protection, expiration, access controls, analytics, and custom domains with SecureURLs.me.')},
+                       resolvedCanonical=${canonical != null ? canonical : (canonicalUrl != null ? canonicalUrl : 'https://app.surls.me/')},
+                       resolvedRobots=${robots != null ? robots : (seoRobots != null ? seoRobots : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')},
+                       resolvedOgType=${ogType != null ? ogType : (pageType != null ? pageType : 'website')},
+                       resolvedOgImage=${ogImage != null ? ogImage : 'https://adpndt.sirv.com/Images/logo_full_black.png'}">
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title th:text="${resolvedTitle}">SecureURLs.me — Secure Short Links &amp; URL Protection</title>
+        <meta name="description" th:content="${resolvedDescription}">
+        <link rel="canonical" th:href="${resolvedCanonical}">
+        <meta name="robots" th:content="${resolvedRobots}">
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" th:content="${resolvedOgType}">
+        <meta property="og:site_name" content="SecureURLs.me">
+        <meta property="og:title" th:content="${resolvedTitle}">
+        <meta property="og:description" th:content="${resolvedDescription}">
+        <meta property="og:url" th:content="${resolvedCanonical}">
+        <meta property="og:image" th:content="${resolvedOgImage}">
+
+        <!-- Twitter / X -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" th:content="${resolvedTitle}">
+        <meta name="twitter:description" th:content="${resolvedDescription}">
+        <meta name="twitter:image" th:content="${resolvedOgImage}">
+
+        <!-- Favicons & App Icons -->
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="manifest" href="/site.webmanifest">
+    </th:block>
+
+    <th:block th:fragment="noindex(title)"
+              th:with="resolvedTitle=${title != null ? title : (seoTitle != null ? seoTitle : 'SecureURLs.me')}">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title th:text="${resolvedTitle}">SecureURLs.me</title>
+        <meta name="robots" content="noindex, nofollow">
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="manifest" href="/site.webmanifest">
+    </th:block>
+</head>
+<body>
+</body>
+</html>

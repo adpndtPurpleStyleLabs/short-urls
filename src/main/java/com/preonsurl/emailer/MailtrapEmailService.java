@@ -1526,7 +1526,7 @@ public class MailtrapEmailService implements EmailService {
                 				<p class="code-label"> One-Time Passcode </p>
                 				<div class="code-display">%s</div>
                 				<p class="expiry-note"> This one-time passcode is valid for <strong>10 minutes</strong> and can only be used once. </p>
-                				<div class="security-note"> For your security, never share this verification code with anyone. SecureURLs will never ask you to provide this code outside the verification process. </div>
+                				<div class="security-note"> For your security, never share this verification code with anyone. SecureURLs.me will never ask you to provide this code outside the verification process. </div>
                 			</div>
                 			<!-- ================================ Footer ================================ -->
                 			<div class="footer">

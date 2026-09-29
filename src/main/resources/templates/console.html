@@ -4,7 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureURLs — Console</title>
+    <title>SecureURLs.me — Console</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
@@ -7919,7 +7925,7 @@
          SIDEBAR
     ========================= -->
         <aside class="sidebar" id="sidebar">
-            <a href="/" class="sidebar-brand" aria-label="SecureURLs Home">
+            <a href="/" class="sidebar-brand" aria-label="SecureURLs.me Home">
                 <img src="https://adpndt.sirv.com/Images/logo_black_3.png" alt="SecureURLs.me" class="brand-logo-img">
             </a>
 
@@ -7999,7 +8005,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span>SecureURLs Platform &bull; v1.0</span>
+                <span>SecureURLs.me Platform &bull; v1.0</span>
             </div>
         </aside>
 
@@ -8019,7 +8025,7 @@
                         </svg>
                     </button>
 
-                    <a href="/" class="mobile-header-brand" aria-label="SecureURLs Home">
+                    <a href="/" class="mobile-header-brand" aria-label="SecureURLs.me Home">
                         <img src="https://adpndt.sirv.com/Images/logo_black_3.png" alt="SecureURLs.me" class="mobile-brand-logo-img">
                     </a>
 
@@ -8471,7 +8477,7 @@
                     <div class="page-header">
                         <div>
                             <h1 class="page-title">API Keys</h1>
-                            <p class="page-subtitle">Use API keys to access SecureURLs programmatically.</p>
+                            <p class="page-subtitle">Use API keys to access SecureURLs.me programmatically.</p>
                         </div>
                     </div>
 
@@ -8513,7 +8519,7 @@
                                     </svg>
                                 </div>
                                 <h2 class="apikey-empty-title">No API key yet</h2>
-                                <p class="apikey-empty-desc">Create an API key to start using the PreonsURL API in your
+                                <p class="apikey-empty-desc">Create an API key to start using the SecureURLs.me API in your
                                     applications and automation.</p>
                                 <button class="btn btn-primary" id="createApiKeyBtn" type="button">
                                     + Create API Key
@@ -12183,7 +12189,7 @@
                         <tr>
                             <td style="font-weight:600; font-family:monospace; color:var(--text);">${escapeHtml(inv.invoiceNumber)}</td>
                             <td style="color:var(--muted);">${formattedDate}</td>
-                            <td style="color:var(--text); font-weight:500;">PreonsURL ${escapeHtml(inv.plan)} Plan</td>
+                            <td style="color:var(--text); font-weight:500;">SecureURLs.me ${escapeHtml(inv.plan)} Plan</td>
                             <td style="font-weight:700; color:var(--text);">${inv.currency} ${Number(inv.amount).toFixed(2)}</td>
                             <td>
                                 <span class="invoice-status-pill ${statusClass}">${escapeHtml(inv.status)}</span>
@@ -12252,7 +12258,7 @@
          */
         async function openRazorpayUpgrade() {
             if (appState.plan === "PRO") {
-                showToast("success", "Active Plan", "You are already enjoying PreonsURL Pro!");
+                showToast("success", "Active Plan", "You are already enjoying SecureURLs.me Pro!");
                 navigateTo("billing");
                 return;
             }
@@ -12280,7 +12286,7 @@
                     key: orderData.keyId,
                     amount: orderData.amountSubunits,
                     currency: orderData.currency || "USD",
-                    name: orderData.companyName || "PreonsURL",
+                    name: orderData.companyName || "SecureURLs.me",
                     description: orderData.description || "Pro Subscription ($50.00)",
                     order_id: orderData.orderId,
                     prefill: {

@@ -1,9 +1,59 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureURL API Documentation</title>
+    <th:block th:replace="~{fragments/seo :: seo(
+      title='SecureURLs.me Developer API Documentation — REST APIs &amp; SDKs',
+      description='Comprehensive REST API reference and developer documentation for programmatically creating, managing, and securing links with SecureURLs.me.',
+      canonical='https://app.surls.me/api-documentation',
+      robots='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+      ogType='article',
+      ogImage='https://adpndt.sirv.com/Images/logo_full_black.png'
+    )}"></th:block>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "TechArticle",
+          "@id": "https://app.surls.me/api-documentation#article",
+          "url": "https://app.surls.me/api-documentation",
+          "name": "SecureURLs.me Developer API Documentation — REST APIs & SDKs",
+          "headline": "SecureURLs.me Developer API Documentation",
+          "description": "Comprehensive REST API reference and developer documentation for programmatically creating, managing, and securing links with SecureURLs.me.",
+          "isPartOf": {
+            "@type": "WebSite",
+            "@id": "https://app.surls.me/#website",
+            "name": "SecureURLs.me",
+            "url": "https://app.surls.me/"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "@id": "https://app.surls.me/#organization",
+            "name": "SecureURLs.me",
+            "url": "https://app.surls.me/"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://app.surls.me/api-documentation#breadcrumbs",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://app.surls.me/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "API Documentation",
+              "item": "https://app.surls.me/api-documentation"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -798,7 +848,7 @@
 
                 <div class="eyebrow">
                     <span class="eyebrow-dot"></span>
-                    SecureURL API
+                    SecureURLs.me API
                 </div>
 
                 <h1>
@@ -807,7 +857,7 @@
                 </h1>
 
                 <p class="hero-description">
-                    SecureURL's API lets you create controlled, branded and
+                    SecureURLs.me's API lets you create controlled, branded and
                     trackable links programmatically. Authenticate your
                     requests with an API key and create links directly from
                     your application or from this documentation.
@@ -815,7 +865,7 @@
 
                 <div class="note">
                     <strong>Base URL</strong><br>
-                    Replace the URL below with your SecureURL API host.
+                    Replace the URL below with your SecureURLs.me API host.
                     The endpoint shown in this documentation is
                     <code>/link/create</code>.
                 </div>
@@ -832,7 +882,7 @@
                 </h2>
 
                 <p class="section-description">
-                    SecureURL accepts an API key through the
+                    SecureURLs.me accepts an API key through the
                     <code>X-API-Key</code> HTTP header when creating links
                     through the API.
                 </p>
@@ -883,7 +933,7 @@
                 </h2>
 
                 <p class="section-description">
-                    Create or retrieve a SecureURL link using the
+                    Create or retrieve a SecureURLs.me link using the
                     <code>POST</code> endpoint.
                 </p>
 
@@ -1022,7 +1072,7 @@
                 </h2>
 
                 <p class="section-description">
-                    Parameters available for creating a SecureURL.
+                    Parameters available for creating a SecureURLs.me link.
                 </p>
 
                 <div class="table-wrap">
@@ -1149,7 +1199,7 @@
                             </td>
 
                             <td>
-                                Whether SecureURL should generate a short code.
+                                Whether SecureURLs.me should generate a short code.
                             </td>
                         </tr>
 
@@ -1215,7 +1265,7 @@
                 </h2>
 
                 <p class="section-description">
-                    The <code>linkMode</code> determines how SecureURL
+                    The <code>linkMode</code> determines how SecureURLs.me
                     delivers the destination.
                 </p>
 
@@ -1248,7 +1298,7 @@
                             </td>
 
                             <td>
-                                Embeds the destination inside SecureURL.
+                                Embeds the destination inside SecureURLs.me.
                             </td>
                         </tr>
 
@@ -1258,7 +1308,7 @@
                             </td>
 
                             <td>
-                                Serves the destination through SecureURL.
+                                Serves the destination through SecureURLs.me.
                             </td>
                         </tr>
 
@@ -1291,7 +1341,7 @@
 
                 <p class="section-description">
                     A successful request returns the created or resolved
-                    SecureURL together with its configuration.
+                    SecureURLs.me link together with its configuration.
                 </p>
 
                 <div class="response-card">
@@ -1391,7 +1441,7 @@
 
 
             <footer>
-                SecureURL API · Links with control built in.
+                SecureURLs.me API · Links with control built in.
             </footer>
 
         </div>
@@ -1412,7 +1462,7 @@
      * Change this if your API lives on another origin.
      *
      * Example:
-     * https://api.secureurls.me
+     * https://app.surls.me
      */
     const API_BASE_URL = window.location.origin;
 
