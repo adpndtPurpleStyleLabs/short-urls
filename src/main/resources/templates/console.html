@@ -16705,7 +16705,7 @@
                 domainHost = selectedDomain;
                 proto = "https://";
             } else {
-                const host = window.location.host || "localhost:8081";
+                const host =  window.PREONS_DEFAULT_SERVE_DOMAIN  || window.location.host || "localhost:8081";
                 const protocol = window.location.protocol || "http:";
                 domainHost = host;
                 proto = `${protocol}//`;
