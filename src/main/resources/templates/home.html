@@ -221,7 +221,7 @@
     }
 
     .hero {
-      padding: 105px 0 85px;
+      padding: 35px 0 35px;
       text-align: center;
     }
 
@@ -431,6 +431,205 @@
 
     .section {
       padding: 105px 0;
+    }
+    /* Protection methods strip */
+
+    .protection-strip {
+      border-top:1px solid var(--line);
+      background: rgba(250, 250, 250, 0.72);
+    }
+
+    .protection-strip-inner {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .protection-strip-inner::-webkit-scrollbar {
+      display: none;
+    }
+
+    .protection-strip-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 22px;
+      height: 22px;
+      color: #555;
+      font-size: 11px;
+      font-weight: 650;
+      white-space: nowrap;
+      border-right: 1px solid var(--line-dark);
+    }
+
+    .protection-strip-item:first-child {
+      padding-left: 0;
+    }
+
+    .protection-strip-item:last-child {
+      border-right: 0;
+      padding-right: 0;
+    }
+
+    .protection-strip-icon {
+      width: 17px;
+      height: 17px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #222;
+      flex: none;
+    }
+
+    .protection-strip-icon svg {
+      width: 15px;
+      height: 15px;
+      display: block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .protection-strip-item strong {
+      color: #222;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .protection-strip-inner {
+        justify-content: flex-start;
+        padding: 0 14px;
+      }
+      .protection-strip-item {
+        padding: 0 15px;
+      }
+      .protection-strip-item:first-child {
+        padding-left: 0;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .protection-strip-inner {
+        min-height: 46px;
+      }
+      .protection-strip-item {
+        font-size: 10px;
+        padding: 0 13px;
+        gap: 6px;
+      }
+      .protection-strip-icon {
+        width: 15px;
+        height: 15px;
+      }
+      .protection-strip-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+    /* Security controls strip */
+
+    .security-strip {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(250, 250, 250, 0.72);
+    }
+
+    .security-strip-inner {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .security-strip-inner::-webkit-scrollbar {
+      display: none;
+    }
+
+    .security-strip-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 19px;
+      height: 24px;
+      color: #555;
+      font-size: 11px;
+      font-weight: 650;
+      white-space: nowrap;
+      border-right: 1px solid var(--line-dark);
+    }
+
+    .security-strip-item:first-child {
+      padding-left: 0;
+    }
+
+    .security-strip-item:last-child {
+      border-right: 0;
+      padding-right: 0;
+    }
+
+    .security-strip-icon {
+      width: 17px;
+      height: 17px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #222;
+      flex: none;
+    }
+
+    .security-strip-icon svg {
+      width: 15px;
+      height: 15px;
+      display: block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .security-strip-item strong {
+      color: #222;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .security-strip-inner {
+        justify-content: flex-start;
+        padding: 0 14px;
+      }
+      .security-strip-item {
+        padding: 0 15px;
+      }
+      .security-strip-item:first-child {
+        padding-left: 0;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .security-strip-inner {
+        min-height: 52px;
+      }
+      .security-strip-item {
+        font-size: 10px;
+        padding: 0 13px;
+        gap: 6px;
+      }
+      .security-strip-icon {
+        width: 15px;
+        height: 15px;
+      }
+      .security-strip-icon svg {
+        width: 14px;
+        height: 14px;
+      }
     }
     /* Scroll reveal for sections below the hero */
 
@@ -1406,6 +1605,72 @@
         <div class="stat"><strong>3.27M/s</strong><span>peak generated codes / sec</span></div>
         <div class="stat"><strong>0</strong><span>collisions in the benchmark</span></div>
       </div>
+    </div>
+  </section>
+  <section class="protection-strip" aria-label="URL protection methods">
+    <div class="container protection-strip-inner">
+      <div class="protection-strip-item"> <span class="protection-strip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><circle cx="8" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="16" cy="12" r="1"></circle></svg></span> <strong>OTP</strong> </div>
+      <div class="protection-strip-item"> <span class="protection-strip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"></rect><circle cx="9" cy="9" r="1"></circle><circle cx="12" cy="9" r="1"></circle><circle cx="15" cy="9" r="1"></circle><circle cx="9" cy="13" r="1"></circle><circle cx="12" cy="13" r="1"></circle><circle cx="15" cy="13" r="1"></circle></svg></span> <strong>PIN Protected</strong> </div>
+      <div class="protection-strip-item"> <span class="protection-strip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path><circle cx="12" cy="15" r="1.2"></circle><path d="M12 16.2v2"></path></svg></span> <strong>Password Protected URL</strong> </div>
+    </div>
+  </section>
+  <section class="security-strip" aria-label="Security and access controls">
+    <div class="container security-strip-inner">
+      <div class="security-strip-item"> <span class="security-strip-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8"></circle>
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+          </svg>
+        </span> <strong>GeoFencing</strong> </div>
+      <div class="security-strip-item"> <span class="security-strip-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+            <path d="M8 9h8"></path>
+            <path d="M8 13h5"></path>
+            <path d="M8 16h3"></path>
+          </svg>
+        </span> <strong>IP</strong> </div>
+      <div class="security-strip-item"> <span class="security-strip-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M3 12h18"></path>
+            <path d="M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9"></path>
+            <path d="M12 3c-2.5 2.5-3.5 5.5-3.5 9s1 6.5 3.5 9"></path>
+          </svg>
+        </span> <strong>Country</strong> </div>
+      <div class="security-strip-item"> <span class="security-strip-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="7" y="2.5" width="10" height="19" rx="2"></rect>
+            <path d="M10 5h4"></path>
+            <circle cx="12" cy="18.5" r=".7"></circle>
+          </svg>
+        </span> <strong>Device</strong> </div>
+      <div class="security-strip-item"> <span class="security-strip-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5"></circle>
+            <path d="M12 7v5l3 2"></path>
+          </svg>
+        </span> <strong>Expire Time</strong> </div>
+      <div class="security-strip-item"> <span class="security-strip-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 5h12"></path>
+            <path d="M8 12h12"></path>
+            <path d="M8 19h12"></path>
+            <path d="M4 5h.01"></path>
+            <path d="M4 12h.01"></path>
+            <path d="M4 19h.01"></path>
+          </svg>
+        </span> <strong>Limited Usage</strong> </div>
+      <div class="security-strip-item"> <span class="security-strip-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.2 1.2"></path>
+            <path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 7 20l1.2-1.2"></path>
+          </svg>
+        </span> <strong>Allowed Referrers</strong> </div>
     </div>
   </section>
   <section class="section-reveal section" id="features">
