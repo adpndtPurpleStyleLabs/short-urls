@@ -21,3 +21,6 @@ Disallow: /link-otp/
 Disallow: /api/link-otp/
 
 Sitemap: https://surls.me/sitemap.xml
+
+# AI/LLM site information:
+# https://surls.me/llms.txt

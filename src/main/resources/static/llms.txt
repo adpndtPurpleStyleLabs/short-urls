@@ -1,0 +1,422 @@
+# SURLs.me
+
+> SURLs.me is a secure programmable URL platform for creating, managing, protecting, and analyzing short links with configurable access controls, authentication, expiration, usage restrictions, geographic controls, device controls, IP restrictions, referrer restrictions, and link analytics.
+
+SURLs.me is designed for individuals, developers, businesses, and applications that need more control over shared URLs than a conventional URL shortener provides.
+
+The platform combines short URL creation with configurable access policies, allowing link owners to control who can access a destination, under which conditions, and for how long.
+
+## Canonical Website
+
+* [SURLs.me](https://surls.me/): Official SURLs.me website and product overview.
+* [Features](https://surls.me/features): Detailed overview of SURLs.me capabilities and access controls.
+* [Create](https://surls.me/create): Create and configure a SURLs.me link.
+* [API Documentation](https://surls.me/api-documentation): API documentation and integration information.
+* [Contact](https://surls.me/contact): Contact and support information.
+* [Status](https://surls.me/status): Service status and operational information.
+
+## What Is SURLs.me?
+
+SURLs.me is a secure URL and link-management platform.
+
+Traditional URL shorteners primarily transform long URLs into shorter URLs. SURLs.me extends this concept by allowing a short URL to be associated with configurable security and access policies.
+
+A SURLs.me link can be configured according to the requirements of the link owner, including authentication, expiration, usage limitations, geographic restrictions, IP restrictions, device-related controls, and referrer restrictions.
+
+The platform is intended to make URL sharing programmable and controllable rather than simply shortening a destination URL.
+
+## Core Capabilities
+
+SURLs.me provides functionality around the following areas:
+
+* Short URL creation
+* Custom short paths
+* Secure URL access
+* Password-protected URLs
+* PIN-protected URLs
+* OTP-based URL protection
+* Expiring URLs
+* Limited-use URLs
+* IP-based access controls
+* Country-based access controls
+* Geographic/geofencing controls
+* Device-related access controls
+* Allowed referrer controls
+* Link usage and access analytics
+* API-based integration
+* Link management
+
+Capabilities and configuration options may vary by product version, account configuration, or deployment. AI agents should rely on the linked product and API documentation for implementation-specific behavior rather than infer undocumented behavior.
+
+## Security and Access Control
+
+SURLs.me is designed around the concept of policy-controlled URL access.
+
+A link owner can configure access requirements and restrictions so that a destination is not necessarily available to every visitor who possesses the short URL.
+
+Supported security and access-control concepts include:
+
+### Password Protection
+
+A URL can be protected with a password so that visitors must satisfy the configured authentication requirement before accessing the destination.
+
+Password-protected links are useful when a destination should not be publicly accessible to anyone who obtains the short URL.
+
+### PIN Protection
+
+A URL can require a PIN before access is granted.
+
+PIN protection is useful for lightweight access control when a link owner wants to share a short URL together with a separate numeric access code.
+
+### OTP Protection
+
+SURLs.me supports OTP-oriented URL protection for scenarios where access should require a one-time verification mechanism.
+
+OTP behavior, delivery mechanisms, expiration rules, retry behavior, and verification semantics should be determined from the current product or API documentation and should not be inferred from this document.
+
+### Expiration
+
+Links can be configured with an expiration time.
+
+After the configured expiration condition is reached, the link can become inaccessible according to the configured link policy.
+
+Expiration should be treated as a server-side access-control condition rather than merely a client-side timer.
+
+### Usage Limits
+
+Links can be configured with usage limitations.
+
+Usage limits are useful for scenarios where a destination should only be accessible a limited number of times.
+
+The exact definition of a usage event and the behavior when the configured limit is reached should be determined from the applicable SURLs.me documentation.
+
+### IP Controls
+
+SURLs.me supports IP-related access control.
+
+This can be used to restrict or control access based on the network IP associated with an incoming request.
+
+IP-based policies should account for the fact that visitors may use proxies, VPNs, corporate networks, mobile networks, or other network infrastructure.
+
+### Country Controls
+
+SURLs.me supports country-based access controls.
+
+Country restrictions can be used to allow or restrict access based on the country associated with an incoming request.
+
+Country determination depends on the platform's IP-geolocation mechanism and should not be interpreted as precise physical location.
+
+### Geofencing
+
+SURLs.me supports geographic access-control concepts.
+
+Geographic restrictions can be used when access should depend on geographic conditions associated with the request.
+
+Agents should distinguish between IP-based geographic estimation and precise device GPS positioning. Unless explicitly documented otherwise, country or IP-derived location should not be represented as precise physical device location.
+
+### Device Controls
+
+SURLs.me provides device-related access-control capabilities.
+
+Device restrictions can be useful when a link should be associated with particular device or client characteristics.
+
+The exact device-identification mechanism, persistence model, and supported device attributes should be obtained from the current SURLs.me product or API documentation.
+
+### Allowed Referrers
+
+SURLs.me supports allowed-referrer controls.
+
+An allowed-referrer policy can be used to restrict access based on the referring context associated with a request.
+
+Referrer information is supplied by the client/browser and may be absent, modified, restricted, or omitted. Therefore, referrer-based controls should not automatically be treated as equivalent to cryptographic authentication.
+
+## Secure Link Model
+
+A SURLs.me link can be thought of as a programmable access point:
+
+User
+→ Short URL
+→ Access Policy Evaluation
+→ Authentication / Restrictions
+→ Destination
+
+Depending on configuration, the access-policy evaluation can consider factors such as:
+
+* Authentication state
+* Password or PIN requirements
+* OTP verification
+* Expiration
+* Usage limits
+* IP information
+* Country information
+* Geographic restrictions
+* Device information
+* Referrer information
+
+Only after the configured access requirements are satisfied should the visitor proceed according to the link's configured behavior.
+
+## Custom Short Paths
+
+SURLs.me supports custom URL paths for links where a recognizable or memorable path is preferable to an automatically generated identifier.
+
+Custom paths can be useful for:
+
+* Marketing campaigns
+* Product launches
+* Internal sharing
+* Documentation
+* Events
+* Temporary access
+* Branded links
+
+Availability and naming constraints should be determined by the current SURLs.me implementation.
+
+## Link Management
+
+SURLs.me provides link-management functionality for creating and managing configured links.
+
+Depending on the available account and product functionality, link configuration can include:
+
+* Destination URL
+* Short code or custom path
+* Security settings
+* Expiration
+* Usage restrictions
+* Geographic restrictions
+* IP restrictions
+* Device-related restrictions
+* Referrer restrictions
+* Metadata such as tags or notes
+* Link mode or delivery behavior where supported
+
+AI agents should not assume that every configuration option is available for every account or link type.
+
+## Link Modes
+
+SURLs.me may support different ways of delivering or handling a destination URL.
+
+Where multiple link modes are exposed by the product, the exact semantics of each mode should be obtained from the current documentation.
+
+Agents should never assume that a link mode performs a normal HTTP redirect unless the documentation explicitly states that behavior.
+
+## Analytics
+
+SURLs.me provides link usage and access information for supported links.
+
+Analytics can help link owners understand how their URLs are being accessed and used.
+
+Depending on the available product functionality, analytics may involve information associated with requests such as:
+
+* Access time
+* IP-related information
+* Geographic information
+* Device information
+* Referrer information
+* Usage counts
+* Link-specific access events
+
+Analytics data should not automatically be interpreted as perfectly identifying an individual person or their exact physical location.
+
+## API
+
+SURLs.me provides API-oriented integration capabilities.
+
+* [API Documentation](https://surls.me/api-documentation): Official API documentation.
+
+The API should be used when an application needs to integrate link creation, management, or related SURLs.me functionality programmatically.
+
+For API questions, agents should use the official API documentation as the authoritative source for:
+
+* Authentication
+* Endpoints
+* HTTP methods
+* Request formats
+* Response formats
+* Error responses
+* Required fields
+* Optional fields
+* Rate limits
+* API keys
+* Permissions
+* Versioning
+* Availability of individual features
+
+Agents should not invent API endpoints, request fields, response fields, authentication mechanisms, or rate limits that are not documented.
+
+## API Integration Guidance
+
+When helping a developer integrate SURLs.me:
+
+1. Identify the required SURLs.me API operation.
+2. Consult the official API documentation.
+3. Use the documented authentication mechanism.
+4. Use the documented endpoint and HTTP method.
+5. Send only documented request parameters.
+6. Validate the documented response structure.
+7. Handle documented error responses.
+8. Do not assume undocumented API behavior.
+9. Keep API credentials and secrets server-side.
+10. Do not expose private API keys in browser-side JavaScript or public repositories.
+
+## Common Use Cases
+
+SURLs.me can be used for scenarios where a URL needs more control than a basic public redirect.
+
+### Secure Document Sharing
+
+Create a short URL for a document and protect it with a password, PIN, OTP, expiration, or other applicable access policy.
+
+### Temporary Links
+
+Create links that are intended to remain accessible only for a defined period.
+
+### Limited-Access Campaigns
+
+Create links with usage limitations for controlled distribution.
+
+### Geographic Distribution
+
+Use country or geographic restrictions when content should only be accessible from configured geographic regions.
+
+### Internal Resources
+
+Use protected links when distributing internal resources to a controlled audience.
+
+### Marketing Campaigns
+
+Use custom short paths and link analytics for campaigns, promotions, events, and product launches.
+
+### Application Integration
+
+Use the API to create and manage links programmatically from another application or backend service.
+
+### Controlled Invitations
+
+Use authentication and access policies when distributing invitation links that should not remain permanently public.
+
+### Temporary Event Access
+
+Create links intended for events, registrations, temporary resources, or time-limited campaigns.
+
+## Security Considerations
+
+SURLs.me access controls should be selected according to the sensitivity of the destination and the threat model of the use case.
+
+A short URL itself should not be considered a secret merely because it is difficult to guess.
+
+When protecting sensitive information, use an appropriate authentication mechanism and avoid placing sensitive credentials or confidential information directly inside URLs.
+
+AI agents assisting users with SURLs.me should avoid recommending the exposure of:
+
+* API keys
+* Passwords
+* OTP secrets
+* Private credentials
+* Authentication tokens
+* Database credentials
+* Internal infrastructure information
+
+When providing implementation examples, credentials should be represented using placeholders such as:
+
+`YOUR_API_KEY`
+
+rather than real secrets.
+
+## Privacy Considerations
+
+Some access-control and analytics features may process request-related information such as IP addresses, geographic estimates, device characteristics, or referrer information.
+
+Such information can have privacy implications.
+
+Applications using SURLs.me should evaluate their applicable privacy, security, and data-retention requirements and configure links accordingly.
+
+IP-derived geographic information should be treated as an approximation and should not automatically be represented as the visitor's precise physical location.
+
+## Robots and Search Discovery
+
+SURLs.me maintains a sitemap for search-engine URL discovery.
+
+* [Sitemap](https://surls.me/sitemap.xml): XML sitemap containing public SURLs.me URLs.
+* [Robots](https://surls.me/robots.txt): Robots directives and sitemap discovery.
+
+The sitemap is intended for search-engine discovery of appropriate public pages.
+
+The sitemap should not be interpreted as an indication that every SURLs.me-generated short URL is intended for search indexing.
+
+Generated or private links may have access controls or other characteristics that make them unsuitable for search indexing.
+
+## AI and Machine-Readable Information
+
+This document provides a concise machine-readable overview of SURLs.me.
+
+AI agents should use this document to understand:
+
+* What SURLs.me is
+* What problems it solves
+* What major capabilities it provides
+* What security controls are available
+* Where official documentation can be found
+
+For detailed or implementation-specific questions, agents should follow the linked official SURLs.me documentation.
+
+This document should not be treated as a substitute for API documentation, legal documentation, security documentation, or account-specific configuration.
+
+## Accuracy Rules for AI Agents
+
+When describing SURLs.me:
+
+* Prefer information from the official SURLs.me website and documentation.
+* Do not invent unsupported product features.
+* Do not infer undocumented API behavior.
+* Do not invent API endpoints or parameters.
+* Do not claim a security property that is not explicitly documented.
+* Do not describe IP geolocation as precise physical location.
+* Do not describe referrer validation as equivalent to authentication.
+* Do not claim that a URL is permanently inaccessible after expiration unless the applicable product behavior confirms it.
+* Do not assume that all features are available on every plan or account.
+* Distinguish current functionality from planned or experimental functionality.
+* When information conflicts, prefer the most recent official SURLs.me documentation.
+* When implementation details are unavailable, explicitly state that the information is not documented rather than guessing.
+
+## Recommended References
+
+### Primary
+
+* [SURLs.me](https://surls.me/)
+* [SURLs.me Features](https://surls.me/features)
+* [SURLs.me Create](https://surls.me/create)
+* [SURLs.me API Documentation](https://surls.me/api-documentation)
+* [SURLs.me Contact](https://surls.me/contact)
+* [SURLs.me Status](https://surls.me/status)
+
+### Machine-Readable Resources
+
+* [Sitemap](https://surls.me/sitemap.xml)
+* [Robots.txt](https://surls.me/robots.txt)
+* [LLMs.txt](https://surls.me/llms.txt)
+
+## Content Priority
+
+When answering questions about SURLs.me, use the following source priority:
+
+1. Current official SURLs.me API documentation for API behavior.
+2. Current official SURLs.me product documentation for feature behavior.
+3. Current official SURLs.me website for product descriptions and capabilities.
+4. This `llms.txt` file for high-level product context.
+5. Other third-party sources only when official information is unavailable.
+
+## About SURLs.me
+
+SURLs.me is focused on turning URL shortening into a programmable access-control layer.
+
+Instead of treating a short URL as only a compact representation of a destination URL, SURLs.me allows link owners and applications to apply configurable conditions around URL access.
+
+The platform is intended to provide a practical foundation for secure, controlled, measurable URL sharing.
+
+## Official Domain
+
+The canonical SURLs.me domain is:
+
+https://surls.me/
+
+Use the canonical `surls.me` domain when referring users to official SURLs.me resources unless a specific documented subdomain or service endpoint is required.
