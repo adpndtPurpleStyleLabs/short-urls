@@ -73,7 +73,7 @@ public class AuthUiController {
                 "Disallow: /api/track/\n" +
                 "Disallow: /link-otp/\n" +
                 "Disallow: /api/link-otp/\n\n" +
-                "Sitemap: https://app.surls.me/sitemap.xml\n";
+                "Sitemap: https://surls.me/sitemap.xml\n";
     }
 
     @GetMapping(value = "/sitemap.xml", produces = "application/xml;charset=UTF-8")
@@ -82,32 +82,32 @@ public class AuthUiController {
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" +
                 "  <url>\n" +
-                "    <loc>https://app.surls.me/</loc>\n" +
+                "    <loc>https://surls.me/</loc>\n" +
                 "    <changefreq>weekly</changefreq>\n" +
                 "    <priority>1.0</priority>\n" +
                 "  </url>\n" +
                 "  <url>\n" +
-                "    <loc>https://app.surls.me/features</loc>\n" +
+                "    <loc>https://surls.me/features</loc>\n" +
                 "    <changefreq>weekly</changefreq>\n" +
                 "    <priority>0.9</priority>\n" +
                 "  </url>\n" +
                 "  <url>\n" +
-                "    <loc>https://app.surls.me/create</loc>\n" +
+                "    <loc>https://surls.me/create</loc>\n" +
                 "    <changefreq>weekly</changefreq>\n" +
                 "    <priority>0.8</priority>\n" +
                 "  </url>\n" +
                 "  <url>\n" +
-                "    <loc>https://app.surls.me/contact</loc>\n" +
+                "    <loc>https://surls.me/contact</loc>\n" +
                 "    <changefreq>monthly</changefreq>\n" +
                 "    <priority>0.7</priority>\n" +
                 "  </url>\n" +
                 "  <url>\n" +
-                "    <loc>https://app.surls.me/api-documentation</loc>\n" +
+                "    <loc>https://surls.me/api-documentation</loc>\n" +
                 "    <changefreq>monthly</changefreq>\n" +
                 "    <priority>0.8</priority>\n" +
                 "  </url>\n" +
                 "  <url>\n" +
-                "    <loc>https://app.surls.me/status</loc>\n" +
+                "    <loc>https://surls.me/status</loc>\n" +
                 "    <changefreq>daily</changefreq>\n" +
                 "    <priority>0.6</priority>\n" +
                 "  </url>\n" +

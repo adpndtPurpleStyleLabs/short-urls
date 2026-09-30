@@ -20,4 +20,4 @@ Disallow: /api/track/
 Disallow: /link-otp/
 Disallow: /api/link-otp/
 
-Sitemap: https://app.surls.me/sitemap.xml
+Sitemap: https://surls.me/sitemap.xml

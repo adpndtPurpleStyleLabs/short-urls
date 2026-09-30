@@ -4,7 +4,7 @@
     <th:block th:fragment="seo(title, description, canonical, robots, ogType, ogImage)"
               th:with="resolvedTitle=${title != null ? title : (seoTitle != null ? seoTitle : 'SecureURLs.me — Secure Short Links &amp; URL Protection')},
                        resolvedDescription=${description != null ? description : (seoDescription != null ? seoDescription : 'Create secure short links with password protection, expiration, access controls, analytics, and custom domains with SecureURLs.me.')},
-                       resolvedCanonical=${canonical != null ? canonical : (canonicalUrl != null ? canonicalUrl : 'https://app.surls.me/')},
+                       resolvedCanonical=${canonical != null ? canonical : (canonicalUrl != null ? canonicalUrl : 'https://surls.me/')},
                        resolvedRobots=${robots != null ? robots : (seoRobots != null ? seoRobots : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')},
                        resolvedOgType=${ogType != null ? ogType : (pageType != null ? pageType : 'website')},
                        resolvedOgImage=${ogImage != null ? ogImage : 'https://adpndt.sirv.com/Images/logo_full_black.png'}">
