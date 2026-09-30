@@ -50,70 +50,6 @@ public class AuthUiController {
     @GetMapping({"/api-documentation", "/docs"})
     public String showcreateLinkPage(Model model) {return "documentation/api-documentation";}
 
-    @GetMapping(value = "/robots.txt", produces = "text/plain;charset=UTF-8")
-    @ResponseBody
-    public String showRobotsTxt() {
-        return "User-agent: *\n" +
-                "Allow: /\n" +
-                "Allow: /features\n" +
-                "Allow: /create\n" +
-                "Allow: /contact\n" +
-                "Allow: /api-documentation\n" +
-                "Allow: /status\n" +
-                "Disallow: /console\n" +
-                "Disallow: /console/\n" +
-                "Disallow: /login\n" +
-                "Disallow: /register\n" +
-                "Disallow: /verification\n" +
-                "Disallow: /psecure\n" +
-                "Disallow: /psecure/\n" +
-                "Disallow: /api/\n" +
-                "Disallow: /link/\n" +
-                "Disallow: /track/\n" +
-                "Disallow: /api/track/\n" +
-                "Disallow: /link-otp/\n" +
-                "Disallow: /api/link-otp/\n\n" +
-                "Sitemap: https://surls.me/sitemap.xml\n";
-    }
-
-    @GetMapping(value = "/sitemap.xml", produces = "application/xml;charset=UTF-8")
-    @ResponseBody
-    public String showSitemapXml() {
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" +
-                "  <url>\n" +
-                "    <loc>https://surls.me/</loc>\n" +
-                "    <changefreq>weekly</changefreq>\n" +
-                "    <priority>1.0</priority>\n" +
-                "  </url>\n" +
-                "  <url>\n" +
-                "    <loc>https://surls.me/features</loc>\n" +
-                "    <changefreq>weekly</changefreq>\n" +
-                "    <priority>0.9</priority>\n" +
-                "  </url>\n" +
-                "  <url>\n" +
-                "    <loc>https://surls.me/create</loc>\n" +
-                "    <changefreq>weekly</changefreq>\n" +
-                "    <priority>0.8</priority>\n" +
-                "  </url>\n" +
-                "  <url>\n" +
-                "    <loc>https://surls.me/contact</loc>\n" +
-                "    <changefreq>monthly</changefreq>\n" +
-                "    <priority>0.7</priority>\n" +
-                "  </url>\n" +
-                "  <url>\n" +
-                "    <loc>https://surls.me/api-documentation</loc>\n" +
-                "    <changefreq>monthly</changefreq>\n" +
-                "    <priority>0.8</priority>\n" +
-                "  </url>\n" +
-                "  <url>\n" +
-                "    <loc>https://surls.me/status</loc>\n" +
-                "    <changefreq>daily</changefreq>\n" +
-                "    <priority>0.6</priority>\n" +
-                "  </url>\n" +
-                "</urlset>";
-    }
-
     @GetMapping("/")
     public String showHomePage(Model model) {
         return "home";
@@ -122,6 +58,11 @@ public class AuthUiController {
     @GetMapping("/contact")
     public String showContactUsPage(Model model) {
         return "contact";
+    }
+
+    @GetMapping("/faq")
+    public String showFaqPage(Model model) {
+        return "faq";
     }
 
     @GetMapping("/create")

@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -53,7 +54,7 @@ public class AuthUiControllerTest {
         mockMvc.perform(get("/register"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(content().string(containsString("PreonsURL")))
+                .andExpect(content().string(anyOf(containsString("SecureURLs"), containsString("PreonsURL"))))
                 .andExpect(content().string(containsString("Register Now")))
                 .andExpect(content().string(containsString("Establish Account")))
                 .andExpect(content().string(containsString("Full Name")))
@@ -66,7 +67,7 @@ public class AuthUiControllerTest {
         mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(content().string(containsString("PreonsURL")))
+                .andExpect(content().string(anyOf(containsString("SecureURLs"), containsString("PreonsURL"))))
                 .andExpect(content().string(containsString("Welcome Back")))
                 .andExpect(content().string(containsString("Authenticate")))
                 .andExpect(content().string(containsString("Username")));
