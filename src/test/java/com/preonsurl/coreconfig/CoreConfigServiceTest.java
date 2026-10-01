@@ -110,12 +110,11 @@ class CoreConfigServiceTest {
 
     private void mockActiveConfigs(List<CoreConfig> configs) {
         when(repository.findAllByActiveTrue()).thenReturn(configs);
-        service.initialize();
     }
 
     @Test
-    @DisplayName("initialize and refresh populates memory cache from active database configurations")
-    void initialize_populatesCache() {
+    @DisplayName("first request populates memory cache on demand from active database configurations")
+    void firstRequest_populatesCache() {
         mockActiveConfigs(List.of(stringConfig, intConfig));
 
         assertEquals("https://example.com", service.get("app.domain"));
@@ -124,6 +123,22 @@ class CoreConfigServiceTest {
         assertTrue(service.contains("worker.count"));
         assertNotNull(service.getLastRefresh());
         assertEquals(2, service.getAll().size());
+        verify(repository, times(1)).findAllByActiveTrue();
+    }
+
+    @Test
+    @DisplayName("cache is queried only on first request and subsequent requests use memory cache")
+    void cache_loadedOnFirstRequestOnly() {
+        when(repository.findAllByActiveTrue()).thenReturn(List.of(stringConfig));
+
+        verify(repository, never()).findAllByActiveTrue();
+
+        assertEquals("https://example.com", service.get("app.domain"));
+        verify(repository, times(1)).findAllByActiveTrue();
+
+        assertEquals("https://example.com", service.get("app.domain"));
+        assertTrue(service.contains("app.domain"));
+        verify(repository, times(1)).findAllByActiveTrue();
     }
 
     @Test
