@@ -1,0 +1,16 @@
+{
+  "pages_checked": 30,
+  "json_ld_valid": true,
+  "header_fragment_present": true,
+  "footer_present": true,
+  "canonical_config_present": true,
+  "unique_page_titles": true,
+  "unique_meta_descriptions": true,
+  "schema_types": [
+    "WebPage",
+    "WebSite",
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+  ]
+}

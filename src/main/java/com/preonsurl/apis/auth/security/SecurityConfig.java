@@ -58,8 +58,88 @@ public class SecurityConfig {
                         // Preflight CORS requests
                         // =========================
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**", "/register", "/register/**", "/login", "/login/**", "/verification", "/verification/**", "/console", "/console/**", "/", "/features", "/contact", "/status", "/uptime", "/uptime/**", "/api/contact/**", "/create", "/api/public-links", "/api/public-links/**", "/psecure", "/psecure/**", "/api-documentation", "/docs", "/api/public/uptime", "/api/public/uptime/**", "/api/uptime/**", "/api/track/**", "/track/**", "/api/link-otp/**", "/link-otp/**", "/robots.txt", "/sitemap.xml", "/favicon.ico", "/favicon-*.png", "/apple-touch-icon.png", "/site.webmanifest", "/images/**").permitAll()
-                        // =========================
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/register",
+                                "/register/**",
+                                "/login",
+                                "/login/**",
+                                "/verification",
+                                "/verification/**",
+                                "/console",
+                                "/console/**",
+                                "/",
+                                "/features",
+                                "/contact",
+                                "/status",
+                                "/uptime",
+                                "/uptime/**",
+                                "/api/contact/**",
+                                "/create",
+                                "/api/public-links",
+                                "/api/public-links/**",
+                                "/psecure",
+                                "/psecure/**",
+                                "/api-documentation",
+                                "/docs",
+                                "/api/public/uptime",
+                                "/api/public/uptime/**",
+                                "/api/uptime/**",
+                                "/api/track/**",
+                                "/track/**",
+                                "/api/link-otp/**",
+                                "/link-otp/**",
+
+                                // =========================
+                                // SEO landing pages
+                                // =========================
+                                "/surl-shortener",
+                                "/secure-url",
+                                "/password-protected-url",
+                                "/pin-protected-url",
+                                "/one-time-link",
+                                "/expiring-link",
+                                "/temporary-url",
+                                "/limited-use-link",
+
+                                "/secure-file-sharing",
+                                "/secure-download-link",
+                                "/temporary-download-link",
+                                "/expiring-download-link",
+                                "/one-time-download-link",
+
+                                "/branded-short-links",
+                                "/branded-url-shortener",
+                                "/custom-domain-url-shortener",
+                                "/white-label-url-shortener",
+
+                                "/url-shortener-api",
+                                "/url-shortener-api-java",
+                                "/url-shortener-api-python",
+                                "/url-shortener-api-nodejs",
+                                "/url-shortener-api-go",
+                                "/url-shortener-api-csharp",
+
+                                "/smart-links",
+                                "/dynamic-links",
+                                "/link-tracking",
+                                "/link-analytics",
+                                "/qr-code-url-shortener",
+
+                                "/bitly-alternative",
+                                "/tinyurl-alternative",
+
+                                // =========================
+                                // Static / SEO assets
+                                // =========================
+                                "/robots.txt",
+                                "/sitemap.xml",
+                                "/favicon.ico",
+                                "/favicon-*.png",
+                                "/apple-touch-icon.png",
+                                "/site.webmanifest",
+                                "/images/**"
+                        ).permitAll()                        // =========================
                         // Swagger / OpenAPI
                         // =========================
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()

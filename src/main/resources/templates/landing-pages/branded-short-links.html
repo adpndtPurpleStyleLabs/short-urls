@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <th:block th:replace="~{fragments/seo :: seo(
+    title='Branded Short Links — SURLS',
+    description='Create recognizable short URLs using your own domain and paths for campaigns, QR codes, communications, and product workflows.',
+    canonical='https://surls.me/branded-short-links',
+    robots='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    ogType='website',
+    ogImage='https://adpndt.sirv.com/Images/logo_full_black.png'
+  )}"></th:block>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#fff;--surface:#fafafa;--text:#111;--muted:#6b6b6b;--line:#e8e8e8;--line-dark:#d7d7d7;--max:1180px;--shadow:0 18px 60px rgba(0,0,0,.07)}
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--text);font-family:"Manrope",sans-serif;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none} .container{width:min(calc(100% - 40px),var(--max));margin:auto}
+    .ambient-grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(0,0,0,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.03) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(circle at center,black 40%,transparent 80%);mask-image:radial-gradient(circle at center,black 40%,transparent 80%);z-index:0}
+    .free-banner,main,footer{position:relative;z-index:1} .free-banner{background:#111;color:#fff;font-size:12px} .free-banner-inner{min-height:38px;display:flex;align-items:center;justify-content:center;gap:14px} .free-banner strong{font-weight:750} .free-banner-copy{color:#aaa} .free-banner a{font-weight:700}
+    .hero{padding:92px 0 82px;text-align:center} .eyebrow{display:inline-flex;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:#555;font-size:12px;font-weight:700;letter-spacing:.02em}
+    h1{max-width:920px;margin:20px auto 0;font-size:clamp(46px,7vw,78px);line-height:.98;letter-spacing:-.065em;font-weight:780} .hero p{max-width:720px;margin:26px auto 0;color:var(--muted);font-size:18px;line-height:1.7}
+    .actions{display:flex;justify-content:center;gap:10px;margin-top:32px} .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border:1px solid var(--line-dark);border-radius:10px;font-size:14px;font-weight:700;background:#fff} .btn.primary{background:#111;color:#fff;border-color:#111}
+    .section{padding:90px 0} .section.alt{background:var(--surface)} .head{max-width:720px;margin-bottom:42px} .kicker{text-transform:uppercase;letter-spacing:.13em;font-size:11px;color:#777;font-weight:750} h2{font-size:clamp(34px,4.5vw,54px);line-height:1.04;letter-spacing:-.055em;margin:12px 0 15px} .head p{color:#707070;line-height:1.7;font-size:16px;margin:0}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)} .card{padding:28px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:205px;background:#fff} .card .num{font:11px ui-monospace;color:#999} .card h3{font-size:17px;margin:30px 0 9px} .card p{font-size:13px;line-height:1.7;color:#707070;margin:0}
+    .workflow{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:stretch} .panel{border:1px solid var(--line);border-radius:22px;background:#fff;padding:32px;box-shadow:var(--shadow)} .step{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)} .step:last-child{border-bottom:0} .step-no{width:30px;height:30px;border:1px solid #111;border-radius:50%;display:grid;place-items:center;font:11px ui-monospace;flex:none} .step strong{display:block;font-size:14px;margin-bottom:5px} .step span{font-size:13px;color:#707070;line-height:1.6}
+    .audiences{display:grid;grid-template-columns:repeat(3,1fr);gap:12px} .audience{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff} .audience strong{display:block;font-size:14px;margin-bottom:7px} .audience span{font-size:12px;color:#777;line-height:1.6}
+    .faq{border-top:1px solid var(--line)} details{border-bottom:1px solid var(--line);padding:20px 0} summary{cursor:pointer;font-weight:700;font-size:15px} details p{color:#707070;line-height:1.7;font-size:14px;max-width:800px}
+    .cta{padding:70px 30px;text-align:center;background:#111;color:#fff;border-radius:26px} .cta p{color:#aaa;max-width:600px;margin:15px auto 28px;line-height:1.7} .cta .btn{background:#fff;color:#111;border-color:#fff}
+    .related{display:grid;grid-template-columns:repeat(3,1fr);gap:14px} .related-card{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:.2s} .related-card:hover{transform:translateY(-2px);border-color:#bbb} .related-card span{display:block;font-weight:750;font-size:14px} .related-card small{display:block;color:#777;line-height:1.6;margin:8px 0 18px;font-size:12px} .related-card b{font-size:12px}
+    .footer{border-top:1px solid var(--line);padding:34px 0;color:#777;font-size:12px} .footer-inner{display:flex;justify-content:space-between;gap:20px} .footer-links{display:flex;gap:20px}
+    @media(max-width:900px){.grid,.audiences,.related{grid-template-columns:1fr 1fr}.workflow{grid-template-columns:1fr;gap:25px}}
+    @media(max-width:620px){.container{width:min(calc(100% - 28px),var(--max))}.hero{padding:72px 0 60px}.hero p{font-size:16px}.actions{flex-direction:column}.actions .btn{width:100%}.grid,.audiences,.related{grid-template-columns:1fr}.section{padding:70px 0}.footer-inner{flex-direction:column}.footer-links{flex-wrap:wrap;gap:14px}.free-banner-copy{display:none}}
+  </style>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://surls.me/branded-short-links#webpage",
+      "url": "https://surls.me/branded-short-links",
+      "name": "Branded Short Links — SURLS",
+      "description": "Create recognizable short URLs using your own domain and paths for campaigns, QR codes, communications, and product workflows.",
+      "isPartOf": {
+        "@id": "https://surls.me/#website"
+      },
+      "breadcrumb": {
+        "@id": "https://surls.me/branded-short-links#breadcrumb"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://surls.me/#website",
+      "url": "https://surls.me/",
+      "name": "SURLS",
+      "publisher": {
+        "@id": "https://surls.me/#organization"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://surls.me/#organization",
+      "name": "SURLS",
+      "url": "https://surls.me/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://adpndt.sirv.com/Images/logo_full_black.png"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://surls.me/branded-short-links#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "SURLS",
+          "item": "https://surls.me/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Branded Short Links",
+          "item": "https://surls.me/branded-short-links"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://surls.me/branded-short-links#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a branded short link?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It is a short link served from a domain associated with your brand rather than a generic shared domain."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I combine multiple controls?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Lifecycle and access controls can be combined where the configured workflow supports them."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use this from an application?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. SURLS provides API-oriented link infrastructure for application-generated and managed links."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use my own domain?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Custom-domain support lets you connect and verify a domain for branded short links."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<div class="ambient-grid" aria-hidden="true"></div>
+<div class="free-banner"><div class="container free-banner-inner"><span><strong>Always Free</strong> <span class="free-banner-copy">1 million redirects + default domain included.</span></span><a href="/register">Sign up now →</a></div></div>
+<header th:replace="~{fragment/header :: header}"></header>
+
+<main>
+<section class="hero">
+  <div class="container">
+    <span class="eyebrow">SURLS / Branded Short Links</span>
+    <h1>Replace generic-looking links with a branded endpoint that fits your product, campaign, or organization.</h1>
+    <p>Your brand at the point of the click</p>
+    <div class="actions"><a class="btn primary" href="/create">Create your first link →</a><a class="btn" href="/features">Explore SURLS</a></div>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container">
+    <div class="head"><div class="kicker">Why this matters</div><h2>Branded links can improve recognition across campaigns, customer communications, QR codes, and product workflows while keeping SURLS controls behind the link.</h2><p>SURLS puts link creation, lifecycle, access control, domains, and delivery behavior behind one manageable endpoint.</p></div>
+    <div class="grid">
+      <article class="card"><span class="num">01</span><h3>Control the lifecycle</h3><p>Set expiration, usage limits, or one-time behavior so links follow the actual lifetime of the resource.</p></article>
+      <article class="card"><span class="num">02</span><h3>Protect access</h3><p>Use password or PIN protection and other available access rules when a destination should not be openly exposed.</p></article>
+      <article class="card"><span class="num">03</span><h3>Keep the URL stable</h3><p>Manage the destination behind the public link so published URLs can continue working as your content changes.</p></article>
+    </div>
+    <div class="head" style="margin-top:54px"><div class="kicker">Core capabilities</div><h2>Built around the way this link is actually used.</h2><p>Choose the controls that match the resource, recipient, and lifetime of the URL.</p></div>
+    <div class="grid"><article class="card"><span class="num">01</span><h3>Brand-owned domain</h3><p>Designed as part of a managed link workflow so the public URL remains useful while its behavior stays configurable.</p></article><article class="card"><span class="num">02</span><h3>Recognizable paths</h3><p>Designed as part of a managed link workflow so the public URL remains useful while its behavior stays configurable.</p></article><article class="card"><span class="num">03</span><h3>Campaign consistency</h3><p>Designed as part of a managed link workflow so the public URL remains useful while its behavior stays configurable.</p></article></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="head"><div class="kicker">How it works</div><h2>From destination to controlled link.</h2><p>A simple workflow that scales from one manual link to application-generated infrastructure.</p></div>
+    <div class="workflow">
+      <div class="panel">
+        <div class="step"><div class="step-no">01</div><div><strong>Choose a destination</strong><span>Start with the URL, download endpoint, campaign destination, or application resource you want to expose.</span></div></div>
+        <div class="step"><div class="step-no">02</div><div><strong>Apply the policy</strong><span>Configure the access and lifecycle rules that match the use case: protection, expiration, usage, or domain.</span></div></div>
+        <div class="step"><div class="step-no">03</div><div><strong>Publish the link</strong><span>Share the resulting short URL anywhere a normal link can be used: browser, email, QR code, product UI, or API workflow.</span></div></div>
+        <div class="step"><div class="step-no">04</div><div><strong>Manage it later</strong><span>Review activity and update the link without needing to replace every place where the public URL was published.</span></div></div>
+      </div>
+      <div class="panel">
+        <div class="kicker">Built for</div>
+        <h3 style="font-size:26px;letter-spacing:-.04em;margin:14px 0 12px">Real workflows, not just redirects.</h3>
+        <p style="color:#707070;line-height:1.7;font-size:14px">SURLS is designed for teams that need a dependable link layer between an audience and a destination.</p>
+        <div class="audiences" style="grid-template-columns:1fr;margin-top:22px"><div class="audience"><strong>Marketing Teams</strong><span>Built around real marketing teams workflows.</span></div><div class="audience"><strong>Agencies</strong><span>Built around real agencies workflows.</span></div><div class="audience"><strong>Businesses</strong><span>Built around real businesses workflows.</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container">
+    <div class="head"><div class="kicker">Frequently asked</div><h2>Clear answers before you ship.</h2></div>
+    <div class="faq">
+      <details open><summary>What is a branded short link?</summary><p>It is a short link served from a domain associated with your brand rather than a generic shared domain.</p></details>
+      <details><summary>Can I combine multiple controls?</summary><p>Yes. SURLS is designed so lifecycle and access controls can be combined where the workflow requires more than one condition.</p></details>
+      <details><summary>Can I use this from an application?</summary><p>Yes. SURLS provides API-oriented link infrastructure so applications can create and manage links programmatically.</p></details>
+      <details><summary>Can I use my own domain?</summary><p>Custom-domain support lets you connect a domain, verify DNS, and create links using that domain.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="head"><div class="kicker">Explore more</div><h2>Continue building around the link.</h2><p>Explore related SURLS capabilities and use cases.</p></div>
+    <div class="related"><a class="related-card" href="/surl-shortener"><span>URL Shortener</span><small>A short link should be more than a redirect. SURLS gives every link a destination, lifecycle, access controls, and useful context.</small><b>Explore →</b></a>
+<a class="related-card" href="/secure-url"><span>Secure URL</span><small>Put a control layer in front of a destination URL. Decide who can access it, how long it remains available, and how many times it can be used.</small><b>Explore →</b></a>
+<a class="related-card" href="/password-protected-url"><span>Password Protected URL</span><small>Add a password gate before the destination without changing the destination URL.</small><b>Explore →</b></a>
+<a class="related-card" href="/pin-protected-url"><span>PIN Protected URL</span><small>A familiar numeric access experience for controlled sharing, without exposing the destination directly.</small><b>Explore →</b></a>
+<a class="related-card" href="/one-time-link"><span>One-Time Link</span><small>Useful for invitations, sensitive downloads, private handoffs, and workflows where reuse is not desirable.</small><b>Explore →</b></a>
+<a class="related-card" href="/expiring-link"><span>Expiring Link</span><small>Give every shared URL a clear lifetime instead of leaving it active indefinitely.</small><b>Explore →</b></a></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:10px">
+  <div class="container">
+    <div class="cta"><div class="kicker" style="color:#888">Ready when you are</div><h2 style="margin-top:12px;color:#fff">Build links your product can depend on.</h2><p>Create your first short link, add the controls you need, and start treating URLs as programmable infrastructure.</p><a class="btn" href="/register">Get started with SecureURLs.me →</a></div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div>© 2026 SecureURLs.me. Secure link infrastructure.</div>
+    <div class="footer-links">
+      <a href="/faq">FAQ</a>
+      <a href="/api-documentation">API docs</a>
+      <a href="/status">Status</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
