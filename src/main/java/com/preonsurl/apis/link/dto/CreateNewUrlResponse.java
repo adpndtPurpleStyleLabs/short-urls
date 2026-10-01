@@ -50,8 +50,36 @@ public record CreateNewUrlResponse(
         AccessPolicies accessPolicies,
 
         @Schema(description = "Creation source: API or UI", example = "UI")
-        String createdBy
+        String createdBy,
+
+        @Schema(description = "Custom domain if configured", example = "links.mybrand.com")
+        String domain,
+
+        @Schema(description = "Short code / slug of the link", example = "diwali-sale")
+        String shortCode,
+
+        @Schema(description = "Total click count of the link", example = "42")
+        Long clickCount
 ) {
+    public CreateNewUrlResponse(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            Boolean isActive,
+            String publicId,
+            UsagePolicies usagePolicies,
+            AccessPolicies accessPolicies,
+            String createdBy
+    ) {
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, publicId, usagePolicies, accessPolicies, createdBy, null, null, null);
+    }
+
     public CreateNewUrlResponse(
             String newUrl,
             String originalUrl,

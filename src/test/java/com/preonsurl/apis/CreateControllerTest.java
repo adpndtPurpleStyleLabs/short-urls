@@ -82,6 +82,15 @@ class CreateControllerTest {
     private CustomDomainRepository customDomainRepository;
 
     @Autowired
+    private com.preonsurl.apis.link.repository.AccessPolicyRepository accessPolicyRepository;
+
+    @Autowired
+    private com.preonsurl.apis.link.repository.UsagePolicyRepository usagePolicyRepository;
+
+    @Autowired
+    private com.preonsurl.apis.link.repository.LinkRecipientRepository linkRecipientRepository;
+
+    @Autowired
     private JwtService jwtService;
 
     private static final String VALID_API_KEY = "test-api-key-12345";
@@ -92,6 +101,9 @@ class CreateControllerTest {
     void setUp() {
         apiKeyCache.clear();
         userCache.clear();
+        accessPolicyRepository.deleteAll();
+        usagePolicyRepository.deleteAll();
+        linkRecipientRepository.deleteAll();
         changeLogRepository.deleteAll();
         tagRepository.deleteAll();
         accessLogRepository.deleteAll();
@@ -950,7 +962,7 @@ class CreateControllerTest {
     }
 
     @Test
-    void idempotent_whenActiveNonExpiredNonLimited_returnsExisting() throws Exception {
+    void whenExactSameDestinationUrl_alwaysCreatesNewUrl() throws Exception {
         String payload = """
                 {
                     "url": "https://example.com/idempotent-check"
@@ -967,17 +979,17 @@ class CreateControllerTest {
 
         String newUrl1 = res1.split("\"newUrl\":\"")[1].split("\"")[0];
 
-        // Second call -> should be idempotent and return existing URL
+        // Second call with exact same destination URL -> creates new URL, does not return old URL
         String res2 = mockMvc.perform(post("/link/create")
                         .header("X-API-KEY", VALID_API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.existing").value(true))
+                .andExpect(jsonPath("$.data.existing").value(false))
                 .andReturn().getResponse().getContentAsString();
 
         String newUrl2 = res2.split("\"newUrl\":\"")[1].split("\"")[0];
-        assertEquals(newUrl1, newUrl2, "Should return existing newUrl");
+        assertNotEquals(newUrl1, newUrl2, "Should create a new unique URL for each request");
     }
 
     @Test
@@ -1297,6 +1309,449 @@ class CreateControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editPayload))
                 .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    void editNewUrl_byPublicIdAndId_success() throws Exception {
+        String createPayload = """
+                {
+                    "url": "https://example.com/dest-for-public-id-test",
+                    "notes": "Initial note before ID edit"
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        // 1. Edit using "id" field instead of newUrl
+        String editPayloadId = """
+                {
+                    "id": "%s",
+                    "originalUrl": "https://example.com/dest-updated-via-id",
+                    "notes": "Note updated via id",
+                    "tags": ["id-tag-1", "id-tag-2"]
+                }
+                """.formatted(publicId);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayloadId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.publicId").value(publicId))
+                .andExpect(jsonPath("$.data.originalUrl").value("https://example.com/dest-updated-via-id"))
+                .andExpect(jsonPath("$.data.notes").value("Note updated via id"))
+                .andExpect(jsonPath("$.data.tags", containsInAnyOrder("id-tag-1", "id-tag-2")));
+
+        // 2. Edit using "publicId" field
+        String editPayloadPublicId = """
+                {
+                    "publicId": "%s",
+                    "notes": "Note updated via publicId key"
+                }
+                """.formatted(publicId);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayloadPublicId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.notes").value("Note updated via publicId key"));
+    }
+
+    @Test
+    void editNewUrl_customPathUpdate_updatesSlugNewUrlAndInvalidatesOldCache() throws Exception {
+        String createPayload = """
+                {
+                    "url": "https://example.com/target-for-slug-change"
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String oldNewUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+        String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
+
+        // Edit custom path to "spring-sale-2026"
+        String editPayload = """
+                {
+                    "newUrl": "%s",
+                    "customPath": "spring-sale-2026"
+                }
+                """.formatted(oldNewUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/spring-sale-2026"))
+                .andExpect(jsonPath("$.data.customPath").value("spring-sale-2026"));
+
+        // Verify that visiting the new custom path serves the redirect
+        mockMvc.perform(get("/spring-sale-2026"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/target-for-slug-change"));
+
+        // Verify change logs for custom_path, short_code, and new_url
+        NewUrl updated = shortUrlRepository.findByPublicId(publicId).orElseThrow();
+        assertEquals("spring-sale-2026", updated.getCustomPath());
+        assertEquals("spring-sale-2026", updated.getShortCode());
+        assertEquals("http://localhost:8081/spring-sale-2026", updated.getNewUrl());
+
+        List<NewUrlChangeLog> logs = changeLogRepository.findByUrlIdAndActionOrderByCreatedAtDesc(updated.getId(), "EDITED");
+        assertTrue(logs.stream().anyMatch(l -> "custom_path".equals(l.getFieldName()) && "spring-sale-2026".equals(l.getNewValue())));
+        assertTrue(logs.stream().anyMatch(l -> "short_code".equals(l.getFieldName()) && "spring-sale-2026".equals(l.getNewValue())));
+        assertTrue(logs.stream().anyMatch(l -> "new_url".equals(l.getFieldName()) && "http://localhost:8081/spring-sale-2026".equals(l.getNewValue())));
+    }
+
+    @Test
+    void editNewUrl_customPathCollision_returnsBadRequest() throws Exception {
+        // Create link 1 with path "path-alpha"
+        String p1 = """
+                {
+                    "url": "https://example.com/alpha",
+                    "customPath": "path-alpha"
+                }
+                """;
+        mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(p1))
+                .andExpect(status().isOk());
+
+        // Create link 2 with path "path-beta"
+        String p2 = """
+                {
+                    "url": "https://example.com/beta",
+                    "customPath": "path-beta"
+                }
+                """;
+        String res2 = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(p2))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl2 = res2.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        // Attempt to edit link 2 to have customPath "path-alpha"
+        String editCollision = """
+                {
+                    "newUrl": "%s",
+                    "customPath": "path-alpha"
+                }
+                """.formatted(newUrl2);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editCollision))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("already in use")));
+    }
+
+    @Test
+    void editNewUrl_domainUpdate_movesBetweenDomainsAndUpdatesNewUrl() throws Exception {
+        User user = userRepository.findByUsername("testuser").orElseThrow();
+
+        // Register and verify a custom domain for testuser
+        CustomDomain customDomain = new CustomDomain(user.getId(), "links.testbrand.com", "target.domain.com");
+        customDomain.setStatus(DomainStatus.ACTIVE);
+        customDomainRepository.save(customDomain);
+
+        // Create initial link on default domain
+        String createPayload = """
+                {
+                    "url": "https://example.com/branded-promo",
+                    "customPath": "promo-deal"
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String initialUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+
+        // 1. Move to verified custom domain "links.testbrand.com"
+        String editToCustomDomain = """
+                {
+                    "newUrl": "%s",
+                    "domain": "links.testbrand.com"
+                }
+                """.formatted(initialUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editToCustomDomain))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.domain").value("links.testbrand.com"))
+                .andExpect(jsonPath("$.data.newUrl").value("https://links.testbrand.com/promo-deal"));
+
+        // 2. Move back to default domain by passing empty domain
+        String editBackToDefaultDomain = """
+                {
+                    "newUrl": "https://links.testbrand.com/promo-deal",
+                    "domain": ""
+                }
+                """;
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editBackToDefaultDomain))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.newUrl").value("http://localhost:8081/promo-deal"));
+    }
+
+    @Test
+    void editNewUrl_resetClickCount_resetsCounterAndUsagePolicy() throws Exception {
+        String createPayload = """
+                {
+                    "url": "https://example.com/exhausted-link-test",
+                    "usageLimit": 5
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+        String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
+
+        // Simulate exhausted link (clickCount = 5)
+        NewUrl entity = shortUrlRepository.findByPublicId(publicId).orElseThrow();
+        entity.setClickCount(5L);
+        shortUrlRepository.save(entity);
+
+        usagePolicyRepository.findByShortUrlId(entity.getId()).ifPresent(up -> {
+            up.setCurrentUsage(5L);
+            usagePolicyRepository.save(up);
+        });
+
+        // Edit link to reset click count and increase limit to 20
+        String editPayload = """
+                {
+                    "newUrl": "%s",
+                    "resetClickCount": true,
+                    "usageLimit": 20
+                }
+                """.formatted(newUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.usageLimit").value(20));
+
+        NewUrl updated = shortUrlRepository.findByPublicId(publicId).orElseThrow();
+        assertEquals(0L, updated.getClickCount());
+        assertEquals(20L, updated.getUsageLimit());
+
+        com.preonsurl.apis.link.entity.UsagePolicy up = usagePolicyRepository.findByShortUrlId(entity.getId()).orElseThrow();
+        assertEquals(0L, up.getCurrentUsage());
+        assertEquals(20L, up.getUsageLimit());
+
+        List<NewUrlChangeLog> logs = changeLogRepository.findByUrlIdAndActionOrderByCreatedAtDesc(entity.getId(), "EDITED");
+        assertTrue(logs.stream().anyMatch(l -> "click_count".equals(l.getFieldName()) && "5".equals(l.getOldValue()) && "0".equals(l.getNewValue())));
+    }
+
+    @Test
+    void editNewUrl_accessPolicies_otpAndGeofence_andSwitchToPublic() throws Exception {
+        String createPayload = """
+                {
+                    "url": "https://example.com/policy-edit-flow"
+                }
+                """;
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+        String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
+        NewUrl entity = shortUrlRepository.findByPublicId(publicId).orElseThrow();
+
+        // 1. Edit with Email OTP Access Policy
+        String editOtpPayload = """
+                {
+                    "newUrl": "%s",
+                    "accessPolicies": {
+                        "mode": "SECURED",
+                        "otp": {
+                            "enabled": true,
+                            "emails": ["vip-client@example.com"],
+                            "sendEmails": false
+                        }
+                    }
+                }
+                """.formatted(newUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editOtpPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessPolicies.mode").value("SECURED"))
+                .andExpect(jsonPath("$.data.accessPolicies.otp.enabled").value(true))
+                .andExpect(jsonPath("$.data.accessPolicies.otp.emails", containsInAnyOrder("vip-client@example.com")));
+
+        com.preonsurl.apis.link.entity.AccessPolicy ap = accessPolicyRepository.findByShortUrlId(entity.getId()).orElseThrow();
+        assertTrue(ap.isOtpEnabled());
+        assertEquals("vip-client@example.com", ap.getOtpEmails());
+        assertFalse(linkRecipientRepository.findByShortUrlIdOrderByIdAsc(entity.getId()).isEmpty());
+
+        // 2. Edit with GeoFence Access Policy
+        String editGeofencePayload = """
+                {
+                    "newUrl": "%s",
+                    "accessPolicies": {
+                        "mode": "SECURED",
+                        "geofence": {
+                            "type": "CIRCLE",
+                            "action": "ALLOW",
+                            "name": "SF HQ",
+                            "circle": {
+                                "latitude": 37.7749,
+                                "longitude": -122.4194,
+                                "radiusMeters": 5000
+                            }
+                        }
+                    }
+                }
+                """.formatted(newUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editGeofencePayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessPolicies.mode").value("SECURED"))
+                .andExpect(jsonPath("$.data.accessPolicies.geofence.type").value("CIRCLE"))
+                .andExpect(jsonPath("$.data.accessPolicies.geofence.action").value("ALLOW"))
+                .andExpect(jsonPath("$.data.accessPolicies.geofence.circle.latitude").value(37.7749))
+                .andExpect(jsonPath("$.data.accessPolicies.geofence.circle.longitude").value(-122.4194));
+
+        com.preonsurl.apis.link.entity.AccessPolicy apGeofence = accessPolicyRepository.findByShortUrlId(entity.getId()).orElseThrow();
+        assertNotNull(apGeofence.getGeofence());
+        assertTrue(apGeofence.getGeofence().contains("37.7749"));
+
+        // 3. Switch back to PUBLIC mode: resets all credentials and policies
+        String editPublicPayload = """
+                {
+                    "newUrl": "%s",
+                    "accessPolicies": {
+                        "mode": "PUBLIC"
+                    }
+                }
+                """.formatted(newUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(editPublicPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessPolicies.mode").value("PUBLIC"))
+                .andExpect(jsonPath("$.data.accessPolicies.otp").doesNotExist())
+                .andExpect(jsonPath("$.data.accessPolicies.geofence").doesNotExist());
+
+        com.preonsurl.apis.link.entity.AccessPolicy apPublic = accessPolicyRepository.findByShortUrlId(entity.getId()).orElseThrow();
+        assertEquals(com.preonsurl.apis.link.enums.AccessPolicyMode.PUBLIC, apPublic.getMode());
+        assertFalse(apPublic.isOtpEnabled());
+        assertNull(apPublic.getGeofence());
+        assertTrue(linkRecipientRepository.findByShortUrlIdOrderByIdAsc(entity.getId()).isEmpty());
+    }
+
+    @Test
+    void editNewUrl_clearExpireAt_setsDefaultLongTermExpiry() throws Exception {
+        Instant soonExpiry = Instant.now().plus(2, ChronoUnit.DAYS);
+        String createPayload = """
+                {
+                    "url": "https://example.com/soon-expiring",
+                    "expireAt": "%s"
+                }
+                """.formatted(soonExpiry.toString());
+
+        String createRes = mockMvc.perform(post("/link/create")
+                        .header("X-API-KEY", VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createPayload))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String newUrl = createRes.split("\"newUrl\":\"")[1].split("\"")[0];
+        String publicId = createRes.split("\"publicId\":\"")[1].split("\"")[0];
+
+        // Clear expiration date
+        String clearPayload = """
+                {
+                    "newUrl": "%s",
+                    "clearExpireAt": true
+                }
+                """.formatted(newUrl);
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(clearPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        NewUrl updated = shortUrlRepository.findByPublicId(publicId).orElseThrow();
+        // Default expiry is ~10 years in the future, definitely after 5 years
+        assertTrue(updated.getExpireAt().isAfter(Instant.now().plus(5 * 365, ChronoUnit.DAYS)));
+
+        List<NewUrlChangeLog> logs = changeLogRepository.findByUrlIdAndActionOrderByCreatedAtDesc(updated.getId(), "EDITED");
+        assertTrue(logs.stream().anyMatch(l -> "expire_at".equals(l.getFieldName())));
+    }
+
+    @Test
+    void editNewUrl_missingIdentifier_returnsBadRequest() throws Exception {
+        String invalidPayload = """
+                {
+                    "notes": "Missing newUrl, id, and shortCode"
+                }
+                """;
+
+        mockMvc.perform(post("/link/edit")
+                        .header("Authorization", validJwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidPayload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message", containsString("cannot be empty")));
     }
 
     @Test

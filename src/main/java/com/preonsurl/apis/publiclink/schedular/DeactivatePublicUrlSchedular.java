@@ -29,7 +29,13 @@ public class DeactivatePublicUrlSchedular {
     ) {
         this.publicSecureUrlRepository = publicSecureUrlRepository;
         this.publicSecureUrlLruCache = publicSecureUrlLruCache;
-        this.EXPIRY_DAYS = coreConfigService.getInt(CoreConfigKeys.App.PSECURE_URL_EXPIRY_DAYS);
+        int days = 15;
+        try {
+            days = coreConfigService.getInt(CoreConfigKeys.App.PSECURE_URL_EXPIRY_DAYS);
+        } catch (Exception e) {
+            log.warn("PSECURE_URL_EXPIRY_DAYS core config not found, defaulting to 15 days: {}", e.getMessage());
+        }
+        this.EXPIRY_DAYS = days;
     }
 
     /**

@@ -614,6 +614,30 @@
             text-transform: uppercase;
         }
 
+        .optional-badge {
+            display: inline-block;
+            margin-left: 5px;
+            font-size: 9px;
+            background: #f0f0f0;
+            color: #666;
+            padding: 2px 5px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .enum-badge {
+            display: inline-block;
+            margin-left: 5px;
+            font-size: 9px;
+            background: #eef4ff;
+            color: #1d4ed8;
+            padding: 2px 5px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
         .type {
             font-family: "JetBrains Mono", monospace;
             color: #666;
@@ -818,6 +842,22 @@
                 Parameters
             </a>
 
+            <a href="#usage-policies">
+                Usage Policies
+            </a>
+
+            <a href="#access-policies">
+                Access Policies
+            </a>
+
+            <a href="#geofencing">
+                Geofencing
+            </a>
+
+            <a href="#link-modes">
+                Link Modes
+            </a>
+
             <a href="#response">
                 Response
             </a>
@@ -1008,7 +1048,7 @@
     "type": "UNLIMITED"
   },
   "accessPolicies": {
-    "type": "PUBLIC"
+    "mode": "PUBLIC"
   },
   "notes": "Diwali campaign landing page",
   "tags": [
@@ -1072,7 +1112,7 @@
                 </h2>
 
                 <p class="section-description">
-                    Parameters available for creating a SecureURLs.me link.
+                    Parameters available for creating a SecureURLs.me link via <code>POST /link/create</code>.
                 </p>
 
                 <div class="table-wrap">
@@ -1100,13 +1140,14 @@
                             </td>
 
                             <td>
-                                Original destination URL.
+                                The original destination URL to shorten. Must include a valid <code>http://</code> or <code>https://</code> scheme.
                             </td>
                         </tr>
 
                         <tr>
                             <td>
                                 <span class="param-name">customPath</span>
+                                <span class="optional-badge">optional</span>
                             </td>
 
                             <td class="type">
@@ -1114,42 +1155,15 @@
                             </td>
 
                             <td>
-                                Optional custom path such as
-                                <code>invoice/diwali-sale</code>.
+                                Optional custom path or slug (e.g. <code>invoice/diwali-sale</code> or <code>vip-event</code>).
+                                Accepted aliases: <code>slug</code>, <code>path</code>.
                             </td>
                         </tr>
 
                         <tr>
                             <td>
-                                <span class="param-name">usagePolicies</span>
-                            </td>
-
-                            <td class="type">
-                                object
-                            </td>
-
-                            <td>
-                                Controls lifetime and usage behavior.
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>
-                                <span class="param-name">accessPolicies</span>
-                            </td>
-
-                            <td class="type">
-                                object
-                            </td>
-
-                            <td>
-                                Controls who can access the link.
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>
-                                <span class="param-name">notes</span>
+                                <span class="param-name">domain</span>
+                                <span class="optional-badge">optional</span>
                             </td>
 
                             <td class="type">
@@ -1157,41 +1171,30 @@
                             </td>
 
                             <td>
-                                Optional internal note.
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>
-                                <span class="param-name">tags</span>
-                            </td>
-
-                            <td class="type">
-                                string[]
-                            </td>
-
-                            <td>
-                                Tags for organization and filtering.
+                                Custom branded domain (e.g. <code>links.mybrand.com</code>). Must be configured and verified under your account.
+                                Accepted aliases: <code>customDomain</code>, <code>custom_domain</code>.
                             </td>
                         </tr>
 
                         <tr>
                             <td>
                                 <span class="param-name">linkMode</span>
+                                <span class="enum-badge">enum</span>
                             </td>
 
                             <td class="type">
-                                enum
+                                string
                             </td>
 
                             <td>
-                                REDIRECT, IFRAME, PROXY or MIRROR.
+                                Delivery mode for the link: <code>REDIRECT</code> (default), <code>IFRAME</code>, <code>PROXY</code>, or <code>MIRROR</code>.
                             </td>
                         </tr>
 
                         <tr>
                             <td>
                                 <span class="param-name">addShortCode</span>
+                                <span class="optional-badge">optional</span>
                             </td>
 
                             <td class="type">
@@ -1199,27 +1202,15 @@
                             </td>
 
                             <td>
-                                Whether SecureURLs.me should generate a short code.
+                                When <code>true</code>, SecureURLs generates a unique short code and appends it to <code>customPath</code> (e.g. <code>invoice/5PQGVZoWpR8</code>). Default is <code>false</code>.
+                                Accepted aliases: <code>AddShortCode</code>, <code>add_short_code</code>.
                             </td>
                         </tr>
 
                         <tr>
                             <td>
-                                <span class="param-name">expireAt</span>
-                            </td>
-
-                            <td class="type">
-                                ISO-8601
-                            </td>
-
-                            <td>
-                                Legacy expiration timestamp.
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>
-                                <span class="param-name">usageLimit</span>
+                                <span class="param-name">usagePolicies</span>
+                                <span class="optional-badge">optional</span>
                             </td>
 
                             <td class="type">
@@ -1227,15 +1218,29 @@
                             </td>
 
                             <td>
-                                Legacy usage limit. Supports
-                                <code>once</code>, <code>unlimited</code>
-                                or a positive integer.
+                                Controls lifetime, click limits, and scheduled access windows. See <a href="#usage-policies">Usage Policies</a>.
                             </td>
                         </tr>
 
                         <tr>
                             <td>
-                                <span class="param-name">domain</span>
+                                <span class="param-name">accessPolicies</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Controls access authentication, IP allowlists, country/device restrictions, email OTP, and geofencing. See <a href="#access-policies">Access Policies</a>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">notes</span>
+                                <span class="optional-badge">optional</span>
                             </td>
 
                             <td class="type">
@@ -1243,7 +1248,55 @@
                             </td>
 
                             <td>
-                                Optional custom domain.
+                                Optional internal note or campaign description.
+                                Accepted alias: <code>note</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">tags</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                string[]
+                            </td>
+
+                            <td>
+                                Array of tags for categorization, filtering, and reporting (e.g. <code>["marketing", "campaign"]</code>).
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">expireAt</span>
+                                <span class="optional-badge">legacy</span>
+                            </td>
+
+                            <td class="type">
+                                ISO-8601
+                            </td>
+
+                            <td>
+                                Legacy expiration timestamp in UTC (e.g. <code>2026-12-31T23:59:59Z</code>). Prefer <code>usagePolicies.expireAt</code>.
+                                Accepted aliases: <code>expire</code>, <code>expiresAt</code>, <code>expire_at</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">usageLimit</span>
+                                <span class="optional-badge">legacy</span>
+                            </td>
+
+                            <td class="type">
+                                object | number
+                            </td>
+
+                            <td>
+                                Legacy usage limit: <code>"once"</code>, <code>"unlimited"</code>, or a positive integer. Prefer <code>usagePolicies.usageLimit</code>.
+                                Accepted aliases: <code>limit</code>, <code>usage_limit</code>.
                             </td>
                         </tr>
 
@@ -1256,17 +1309,603 @@
             </section>
 
 
+            <!-- USAGE POLICIES -->
+
+            <section class="section api-section" id="usage-policies">
+
+                <h2>
+                    Usage Policies
+                </h2>
+
+                <p class="section-description">
+                    The <code>usagePolicies</code> object controls link lifetime, maximum click thresholds, and scheduled access windows.
+                </p>
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">type</span>
+                                <span class="enum-badge">enum</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Policy type:
+                                <code>UNLIMITED</code> (default, no click limit),
+                                <code>ONE_TIME</code> (expires after 1 click), or
+                                <code>USAGE_LIMIT</code> (expires after <code>usageLimit</code> clicks).
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">usageLimit</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                integer
+                            </td>
+
+                            <td>
+                                Maximum number of allowed accesses (minimum <code>1</code>). Required when <code>type</code> is <code>USAGE_LIMIT</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">expireAt</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                ISO-8601
+                            </td>
+
+                            <td>
+                                UTC timestamp after which the link becomes inactive (e.g. <code>2026-12-31T23:59:59Z</code>).
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">schedule</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Time window during which the link is accessible. Requires both <code>startAt</code> and <code>endAt</code> in UTC ISO-8601 format, where <code>endAt &gt; startAt</code>.
+                            </td>
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div class="copy-wrap" style="margin-top: 18px;">
+                    <button class="copy-btn" onclick="copyCode('usagePoliciesExample')">Copy</button>
+                    <pre id="usagePoliciesExample" class="code-block">{
+  "usagePolicies": {
+    "type": "USAGE_LIMIT",
+    "usageLimit": 500,
+    "expireAt": "2026-12-31T23:59:59Z",
+    "schedule": {
+      "startAt": "2026-10-01T09:00:00Z",
+      "endAt": "2026-10-31T18:00:00Z"
+    }
+  }
+}</pre>
+                </div>
+
+            </section>
+
+
+            <!-- ACCESS POLICIES -->
+
+            <section class="section api-section" id="access-policies">
+
+                <h2>
+                    Access Policies
+                </h2>
+
+                <p class="section-description">
+                    The <code>accessPolicies</code> object enforces authentication, network restrictions, device/country filtering, email OTP verification, and geofencing.
+                </p>
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">mode</span>
+                                <span class="enum-badge">enum</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Access mode: <code>PUBLIC</code> (default, open to all visitors) or <code>SECURED</code> (enforces configured access restrictions). When set to <code>SECURED</code>, at least one restriction rule must be provided.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">pin</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Numeric PIN protection: <code>{ "pin": "482931" }</code>. Must contain between 4 and 12 numeric digits.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">password</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Password protection: <code>{ "password": "SecretPassword123" }</code>. Must contain between 6 and 128 characters.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">ipAllowlist</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                IP address allowlist: <code>{ "addresses": ["103.21.45.10", "103.21.45.0/24"] }</code>. Supports IPv4, IPv6, and CIDR blocks.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">country</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Country restriction: <code>{ "countries": ["IN", "US", "GB"] }</code>. ISO 3166-1 alpha-2 uppercase country codes.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">device</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Device category restriction: <code>{ "devices": ["MOBILE", "DESKTOP", "TABLET"] }</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">referrer</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                HTTP Referer restriction: <code>{ "referrers": ["example.com", "*.partner.org"] }</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">otp</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Email OTP verification: <code>{ "enabled": true, "emails": ["user@example.com"], "sendIndividualEmail": true }</code>. Only designated email recipients can receive verification codes to unlock the link.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">geofence</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Geographic boundary perimeter control (Circle or Polygon). See <a href="#geofencing">Geofencing</a>.
+                            </td>
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- GEOFENCING -->
+
+            <section class="section api-section" id="geofencing">
+
+                <h2>
+                    Geofencing
+                </h2>
+
+                <p class="section-description">
+                    The <code>geofence</code> object within <code>accessPolicies</code> restricts link access to physical real-world boundaries. SecureURLs supports both radial <strong>Circle</strong> boundaries and arbitrary multi-point <strong>Polygon</strong> boundaries.
+                </p>
+
+                <div class="note" style="margin-bottom: 22px;">
+                    <strong>How Geofencing Works</strong><br>
+                    When a visitor opens a geofenced link, SecureURLs evaluates their latitude and longitude coordinates. If browser coordinates have not yet been granted, a verification challenge screen is displayed requesting location permission. Once validated, SecureURLs issues an encrypted, HTTP-only session verification cookie so subsequent clicks during the session are seamless without re-prompting.
+                </div>
+
+                <h3>Top-level Geofence Fields</h3>
+
+                <div class="table-wrap" style="margin-bottom: 25px;">
+
+                    <table>
+
+                        <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">type</span>
+                                <span class="required">required</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Perimeter geometry type: <code>"CIRCLE"</code> or <code>"POLYGON"</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">action</span>
+                                <span class="enum-badge">enum</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Evaluation action when the visitor is inside the perimeter:
+                                <ul style="margin: 6px 0 0 16px; padding: 0;">
+                                    <li><code>"ALLOW"</code> (default) — Access is permitted <strong>only inside</strong> the perimeter. Visitors outside are blocked.</li>
+                                    <li><code>"BLOCK"</code> — Visitors <strong>inside</strong> the perimeter are blocked. Visitors outside are permitted.</li>
+                                </ul>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">name</span>
+                                <span class="optional-badge">optional</span>
+                            </td>
+
+                            <td class="type">
+                                string
+                            </td>
+
+                            <td>
+                                Optional descriptive label for the perimeter (e.g. <code>"San Francisco Tech Campus"</code> or <code>"Downtown Retail Zone"</code>).
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">circle</span>
+                                <span class="optional-badge">conditional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Circular perimeter parameters. Required when <code>type</code> is <code>"CIRCLE"</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">polygon</span>
+                                <span class="optional-badge">conditional</span>
+                            </td>
+
+                            <td class="type">
+                                object
+                            </td>
+
+                            <td>
+                                Polygon perimeter parameters. Required when <code>type</code> is <code>"POLYGON"</code>.
+                            </td>
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <h3>1. Circular Geofence (<code>circle</code>)</h3>
+
+                <p class="section-description">
+                    A circular geofence establishes a radial boundary around a central geographic coordinate. Evaluation uses the great-circle Haversine formula against the specified radius.
+                </p>
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">circle.latitude</span>
+                                <span class="required">required</span>
+                            </td>
+
+                            <td class="type">
+                                number
+                            </td>
+
+                            <td>
+                                Center point latitude in decimal degrees (between <code>-90.0</code> and <code>90.0</code>). Example: <code>37.774929</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">circle.longitude</span>
+                                <span class="required">required</span>
+                            </td>
+
+                            <td class="type">
+                                number
+                            </td>
+
+                            <td>
+                                Center point longitude in decimal degrees (between <code>-180.0</code> and <code>180.0</code>). Example: <code>-122.419416</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">circle.radiusMeters</span>
+                                <span class="required">required</span>
+                            </td>
+
+                            <td class="type">
+                                integer
+                            </td>
+
+                            <td>
+                                Radius of the perimeter in meters (must be greater than <code>0</code>). Example: <code>500</code> for a 500-meter radius around the center.
+                            </td>
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div class="copy-wrap" style="margin-top: 18px; margin-bottom: 35px;">
+                    <button class="copy-btn" onclick="copyCode('circleGeofenceExample')">Copy</button>
+                    <pre id="circleGeofenceExample" class="code-block">{
+  "accessPolicies": {
+    "mode": "SECURED",
+    "geofence": {
+      "type": "CIRCLE",
+      "action": "ALLOW",
+      "name": "Headquarters 500m Perimeter",
+      "circle": {
+        "latitude": 37.774929,
+        "longitude": -122.419416,
+        "radiusMeters": 500
+      }
+    }
+  }
+}</pre>
+                </div>
+
+                <h3>2. Polygon Geofence (<code>polygon</code>)</h3>
+
+                <p class="section-description">
+                    A polygon geofence defines an arbitrary, multi-sided closed geographic boundary using a sequence of vertex coordinates. Evaluation uses the ray-casting point-in-polygon algorithm.
+                </p>
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">polygon.coordinates</span>
+                                <span class="required">required</span>
+                            </td>
+
+                            <td class="type">
+                                object[]
+                            </td>
+
+                            <td>
+                                Array of coordinate points defining the vertices of the enclosed boundary. <strong>Must contain at least 3 points</strong>. Vertices should be arranged in consecutive order around the perimeter (clockwise or counter-clockwise).
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">coordinates[].latitude</span>
+                                <span class="required">required</span>
+                            </td>
+
+                            <td class="type">
+                                number
+                            </td>
+
+                            <td>
+                                Vertex latitude in decimal degrees. Example: <code>37.7950</code>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="param-name">coordinates[].longitude</span>
+                                <span class="required">required</span>
+                            </td>
+
+                            <td class="type">
+                                number
+                            </td>
+
+                            <td>
+                                Vertex longitude in decimal degrees. Example: <code>-122.4030</code>.
+                            </td>
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div class="copy-wrap" style="margin-top: 18px;">
+                    <button class="copy-btn" onclick="copyCode('polygonGeofenceExample')">Copy</button>
+                    <pre id="polygonGeofenceExample" class="code-block">{
+  "accessPolicies": {
+    "mode": "SECURED",
+    "geofence": {
+      "type": "POLYGON",
+      "action": "ALLOW",
+      "name": "Downtown Innovation District",
+      "polygon": {
+        "coordinates": [
+          { "latitude": 37.7950, "longitude": -122.4030 },
+          { "latitude": 37.7960, "longitude": -122.3950 },
+          { "latitude": 37.7900, "longitude": -122.3920 },
+          { "latitude": 37.7880, "longitude": -122.4000 }
+        ]
+      }
+    }
+  }
+}</pre>
+                </div>
+
+            </section>
+
+
             <!-- LINK MODES -->
 
-            <section class="section">
+            <section class="section api-section" id="link-modes">
 
                 <h2>
                     Link modes
                 </h2>
 
                 <p class="section-description">
-                    The <code>linkMode</code> determines how SecureURLs.me
-                    delivers the destination.
+                    The <code>linkMode</code> determines how SecureURLs.me delivers the destination.
                 </p>
 
                 <div class="table-wrap">
@@ -1288,7 +1927,7 @@
                             </td>
 
                             <td>
-                                Navigates the visitor to the destination.
+                                Issues an HTTP 302 redirect navigating the visitor directly to the target URL. Default mode.
                             </td>
                         </tr>
 
@@ -1298,7 +1937,7 @@
                             </td>
 
                             <td>
-                                Embeds the destination inside SecureURLs.me.
+                                Embeds the destination inside a SecureURLs presentation wrapper.
                             </td>
                         </tr>
 
@@ -1308,7 +1947,7 @@
                             </td>
 
                             <td>
-                                Serves the destination through SecureURLs.me.
+                                SecureURLs fetches the target resource on the server and streams it back to the client, masking origin headers.
                             </td>
                         </tr>
 
@@ -1318,7 +1957,7 @@
                             </td>
 
                             <td>
-                                Serves a rewritten copy of the destination.
+                                SecureURLs serves a rewritten copy of the destination, dynamically converting links and assets.
                             </td>
                         </tr>
 
@@ -1340,8 +1979,7 @@
                 </h2>
 
                 <p class="section-description">
-                    A successful request returns the created or resolved
-                    SecureURLs.me link together with its configuration.
+                    A successful request returns the newly created link together with its full configuration.
                 </p>
 
                 <div class="response-card">
@@ -1368,6 +2006,7 @@
                         </button>
 
                         <pre id="responseExample" class="code-block">{
+  "success": true,
   "data": {
     "newUrl": "https://secure.indexrender.io/invoice/diwali-sale",
     "originalUrl": "https://example.com/products/item1",
@@ -1384,8 +2023,23 @@
     "linkMode": "REDIRECT",
     "isActive": true,
     "publicId": "f8K2mP9xQ7La3VnR6Tc1Zw",
-    "usagePolicies": {},
-    "accessPolicies": {},
+    "usagePolicies": {
+      "type": "UNLIMITED",
+      "usageLimit": null,
+      "expireAt": null,
+      "schedule": null
+    },
+    "accessPolicies": {
+      "mode": "PUBLIC",
+      "pin": null,
+      "password": null,
+      "ipAllowlist": null,
+      "country": null,
+      "device": null,
+      "referrer": null,
+      "otp": null,
+      "geofence": null
+    },
     "createdBy": "API"
   },
   "message": "New URL created successfully"
@@ -1403,13 +2057,14 @@
             <section class="section" id="examples">
 
                 <h2>
-                    cURL
+                    Examples &amp; cURL
                 </h2>
 
                 <p class="section-description">
-                    The same request can be executed from your backend,
-                    terminal or CI/CD pipeline.
+                    Ready-to-use cURL commands for standard creation, password &amp; PIN protection, circular geofencing, and polygonal geofencing.
                 </p>
+
+                <h3 style="font-size: 16px; margin: 24px 0 10px;">1. Standard Branded Link</h3>
 
                 <div class="copy-wrap">
 
@@ -1428,11 +2083,134 @@
     "customPath": "invoice/diwali-sale",
     "linkMode": "REDIRECT",
     "addShortCode": true,
+    "usagePolicies": {
+      "type": "UNLIMITED"
+    },
+    "accessPolicies": {
+      "mode": "PUBLIC"
+    },
     "notes": "Diwali campaign landing page",
     "tags": [
       "marketing",
       "diwali"
     ]
+  }'</pre>
+
+                </div>
+
+                <h3 style="font-size: 16px; margin: 28px 0 10px;">2. Link with Circular Geofence (500m Radius)</h3>
+
+                <div class="copy-wrap">
+
+                    <button
+                            class="copy-btn"
+                            onclick="copyCode('curlCircleExample')"
+                    >
+                        Copy
+                    </button>
+
+                    <pre id="curlCircleExample" class="code-block">curl -X POST "https://secure.indexrender.io/link/create" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "url": "https://example.com/confidential-briefing",
+    "customPath": "briefing-sf",
+    "linkMode": "REDIRECT",
+    "accessPolicies": {
+      "mode": "SECURED",
+      "geofence": {
+        "type": "CIRCLE",
+        "action": "ALLOW",
+        "name": "SF Office 500m Perimeter",
+        "circle": {
+          "latitude": 37.774929,
+          "longitude": -122.419416,
+          "radiusMeters": 500
+        }
+      }
+    },
+    "notes": "Location-restricted access to internal document"
+  }'</pre>
+
+                </div>
+
+                <h3 style="font-size: 16px; margin: 28px 0 10px;">3. Link with Polygon Geofence (Custom Boundary)</h3>
+
+                <div class="copy-wrap">
+
+                    <button
+                            class="copy-btn"
+                            onclick="copyCode('curlPolygonExample')"
+                    >
+                        Copy
+                    </button>
+
+                    <pre id="curlPolygonExample" class="code-block">curl -X POST "https://secure.indexrender.io/link/create" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "url": "https://example.com/expo-exclusive",
+    "customPath": "expo-zone",
+    "linkMode": "REDIRECT",
+    "accessPolicies": {
+      "mode": "SECURED",
+      "geofence": {
+        "type": "POLYGON",
+        "action": "ALLOW",
+        "name": "Convention Center District",
+        "polygon": {
+          "coordinates": [
+            { "latitude": 37.7950, "longitude": -122.4030 },
+            { "latitude": 37.7960, "longitude": -122.3950 },
+            { "latitude": 37.7900, "longitude": -122.3920 },
+            { "latitude": 37.7880, "longitude": -122.4000 }
+          ]
+        }
+      }
+    },
+    "notes": "Attendee-only access inside convention grounds"
+  }'</pre>
+
+                </div>
+
+                <h3 style="font-size: 16px; margin: 28px 0 10px;">4. Multi-Layer Security (Password + PIN + Email OTP)</h3>
+
+                <div class="copy-wrap">
+
+                    <button
+                            class="copy-btn"
+                            onclick="copyCode('curlSecuredExample')"
+                    >
+                        Copy
+                    </button>
+
+                    <pre id="curlSecuredExample" class="code-block">curl -X POST "https://secure.indexrender.io/link/create" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "url": "https://example.com/board-minutes-q3",
+    "customPath": "board-q3",
+    "linkMode": "REDIRECT",
+    "usagePolicies": {
+      "type": "USAGE_LIMIT",
+      "usageLimit": 20,
+      "expireAt": "2026-12-31T23:59:59Z"
+    },
+    "accessPolicies": {
+      "mode": "SECURED",
+      "password": {
+        "password": "BoardMeetingPassword2026!"
+      },
+      "pin": {
+        "pin": "918273"
+      },
+      "otp": {
+        "enabled": true,
+        "emails": ["director1@example.com", "director2@example.com"],
+        "sendIndividualEmail": true
+      }
+    },
+    "notes": "Confidential Q3 board minutes with 3-tier verification"
   }'</pre>
 
                 </div>
@@ -1476,7 +2254,7 @@
             type: "UNLIMITED"
         },
         accessPolicies: {
-            type: "PUBLIC"
+            mode: "PUBLIC"
         },
         notes: "Diwali campaign landing page",
         tags: [

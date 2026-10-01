@@ -6,33 +6,55 @@ import com.preonsurl.apis.link.dto.CreateRequest.UsagePolicies.UsagePolicies;
 import com.preonsurl.apis.link.enums.LinkMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 
 import java.time.Instant;
 import java.util.List;
 
 @Schema(description = "Request payload for editing an existing shortened URL")
 public record EditNewUrlRequest(
-        @NotBlank(message = "newUrl cannot be empty")
-        @Schema(description = "The short URL identifying the link to edit", example = "http://localhost:8081/invoice/diwali-sale", requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(description = "The short URL identifying the link to edit", example = "http://localhost:8081/invoice/diwali-sale", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         @JsonAlias({"newLink", "shortUrl", "fullUrl"})
         String newUrl,
 
+        @Schema(description = "Public identifier of the link to edit", example = "f8K2mP9xQ7La3VnR6Tc1Zw", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"id", "public_id"})
+        String publicId,
+
+        @Schema(description = "Short code / slug of the link to edit or update", example = "diwali-sale", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"code", "short_code"})
+        String shortCode,
+
         @Schema(description = "Updated destination target URL", example = "https://example.com/products/item1-updated", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        @JsonAlias({"url", "targetUrl"})
+        @JsonAlias({"url", "targetUrl", "destinationUrl"})
         String originalUrl,
 
-        @Schema(description = "Updated custom path", example = "invoice/diwali-sale-2", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        @JsonAlias({"path", "custom_path"})
+        @Schema(description = "Updated custom path / slug", example = "invoice/diwali-sale-2", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"path", "custom_path", "slug"})
         String customPath,
+
+        @Schema(description = "Updated custom domain for the shortened URL", example = "links.mybrand.com", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"customDomain", "custom_domain"})
+        String domain,
 
         @Schema(description = "Updated expiration timestamp in UTC ISO-8601 format. Must be in the future.", example = "2026-12-31T23:59:59Z", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         @JsonAlias({"expire", "expiresAt", "expire_at"})
         Instant expireAt,
 
+        @Schema(description = "Whether to remove expiration date (set to unlimited/never expire)", example = "false", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"clear_expire", "clear_expire_at", "clearExpiry"})
+        Boolean clearExpireAt,
+
         @Schema(description = "Updated usage limit: 'once', 'unlimited', a positive integer, or null for unlimited", example = "10", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         @JsonAlias({"limit", "usage_limit"})
         Object usageLimit,
+
+        @Schema(description = "Whether to reset click count and current usage to 0", example = "true", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"resetClicks", "reset_click_count", "reset_clicks", "resetUsage"})
+        Boolean resetClickCount,
+
+        @Schema(description = "Explicitly set the click count and current usage counter", example = "0", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"clicks", "click_count"})
+        Long clickCount,
 
         @Schema(description = "Updated note for this shortened URL", example = "Updated Diwali campaign notes", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         @JsonAlias({"note", "noteText"})
@@ -68,9 +90,31 @@ public record EditNewUrlRequest(
             String notes,
             List<String> tags,
             LinkMode linkMode,
+            Boolean isActive,
+            UsagePolicies usagePolicies,
+            AccessPolicies accessPolicies
+    ) {
+        this(newUrl, null, null, originalUrl, customPath, null, expireAt, null, usageLimit, null, null, notes, tags, linkMode, isActive, usagePolicies, accessPolicies);
+    }
+
+    public EditNewUrlRequest(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            Instant expireAt,
+            Object usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
             Boolean isActive
     ) {
         this(newUrl, originalUrl, customPath, expireAt, usageLimit, notes, tags, linkMode, isActive, null, null);
+    }
+
+    public boolean hasIdentifier() {
+        return (newUrl != null && !newUrl.isBlank())
+                || (publicId != null && !publicId.isBlank())
+                || (shortCode != null && !shortCode.isBlank());
     }
 
     public boolean hasUsagePolicies() {
@@ -84,6 +128,7 @@ public record EditNewUrlRequest(
     public boolean hasUsageLimit() {
         return usageLimit != null;
     }
+
     public Long resolvedUsageLimit() {
         if (usageLimit == null) {
             return null;

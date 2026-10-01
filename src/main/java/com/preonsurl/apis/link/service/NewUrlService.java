@@ -74,10 +74,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import com.preonsurl.apis.link.dto.UrlListItemResponse;
 import com.preonsurl.apis.link.dto.LinkAccessLogResponse;
+import java.time.temporal.ChronoUnit;
+import java.util.regex.Pattern;
 
 @Service
 public class NewUrlService {
     private static final Logger log = LoggerFactory.getLogger(NewUrlService.class);
+    private static final Pattern CUSTOM_PATH_PATTERN =
+            Pattern.compile("^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$");
     private final int DEFAULT_EXPIRE_YEARS = 10;
     private final NewUrlRepository repository;
     private final NewUrlAccessLogRepository accessLogRepository;
@@ -204,54 +208,7 @@ public class NewUrlService {
 
         if (customPath != null) {
             if (addShortCode) {
-                // Check if an existing URL exists for the same originalUrl, customPath, and domain that is still usable
-                Optional<NewUrl> existing = repository.findAllByOriginalUrlAndCustomPathOrderByIdDesc(originalUrl, customPath)
-                        .stream()
-                        .filter(this::isUsable)
-                        .filter(e -> Objects.equals(e.getDomain(), effectiveDomain.domainName()))
-                        .findFirst();
-
-                if (existing.isPresent()) {
-                    NewUrl found = existing.get();
-                    if (found.getUserId() == null && userId != null) {
-                        found.setUserId(userId);
-                        repository.save(found);
-                    }
-                    if (found.getNote() == null && request.notes() != null && !request.notes().isBlank()) {
-                        found.setNote(request.notes().trim());
-                        repository.save(found);
-                    }
-                    if (found.getLinkMode() != linkMode && request.linkMode() != null) {
-                        found.setLinkMode(linkMode);
-                        repository.save(found);
-                    }
-                    if (found.getCreatedBy() == null || found.getCreatedBy().isBlank()) {
-                        found.setCreatedBy(source);
-                        repository.save(found);
-                    }
-                    List<String> tags = saveTags(found.getId(), userId, request.tags());
-                    if (tags.isEmpty()) {
-                        tags = tagRepository.findByUrlId(found.getId()).stream().map(NewUrlTag::getTag).toList();
-                    }
-                    savePolicies(found.getId(), request, found.getExpireAt());
-                    return new CreateNewUrlResponse(
-                            found.getNewUrl(),
-                            found.getOriginalUrl(),
-                            customPath,
-                            true,
-                            found.getExpireAt(),
-                            found.getUsageLimit(),
-                            found.getNote(),
-                            tags,
-                            found.getLinkMode(),
-                            found.isActive(),
-                            found.getPublicId(),
-                            found.getCreatedBy() != null ? found.getCreatedBy() : source
-                    );
-                }
-
-
-                // If no usable existing URL found, generate a new short code and append to customPath
+                // Generate a new unique short code and append to customPath for every request
                 String shortCode = generateUniqueShortCode();
                 String fullPath = customPath + "/" + shortCode;
                 String newUrl = baseDomainUrl + "/" + fullPath;
@@ -408,55 +365,9 @@ public class NewUrlService {
                 );
             }
         } else {
-            // Check if an auto-generated short URL already exists for the same URL and domain that is active, non-expired, and non-limit-exceeded
-            Optional<NewUrl> existing = repository.findAllByOriginalUrlAndCustomPathIsNullOrderByIdDesc(originalUrl)
-                    .stream()
-                    .filter(this::isUsable)
-                    .filter(e -> Objects.equals(e.getDomain(), effectiveDomain.domainName()))
-                    .findFirst();
-
-            if (existing.isPresent()) {
-                NewUrl found = existing.get();
-                if (found.getUserId() == null && userId != null) {
-                    found.setUserId(userId);
-                    repository.save(found);
-                }
-                if (found.getNote() == null && request.notes() != null && !request.notes().isBlank()) {
-                    found.setNote(request.notes().trim());
-                    repository.save(found);
-                }
-                if (found.getLinkMode() != linkMode && request.linkMode() != null) {
-                    found.setLinkMode(linkMode);
-                    repository.save(found);
-                }
-                if (found.getCreatedBy() == null || found.getCreatedBy().isBlank()) {
-                    found.setCreatedBy(source);
-                    repository.save(found);
-                }
-                List<String> tags = saveTags(found.getId(), userId, request.tags());
-                if (tags.isEmpty()) {
-                    tags = tagRepository.findByUrlId(found.getId()).stream().map(NewUrlTag::getTag).toList();
-                }
-                savePolicies(found.getId(), request, found.getExpireAt());
-                return new CreateNewUrlResponse(
-                        found.getNewUrl(),
-                        found.getOriginalUrl(),
-                        null,
-                        true,
-                        found.getExpireAt(),
-                        found.getUsageLimit(),
-                        found.getNote(),
-                        tags,
-                        found.getLinkMode(),
-                        found.isActive(),
-                        found.getPublicId(),
-                        found.getCreatedBy() != null ? found.getCreatedBy() : source
-                );
-            }
-
-            // If no usable URL exists, generate a new short code
-            String code = generateUniqueShortCode();
-            String newUrl = baseDomainUrl + "/" + code;
+                // Generate a new unique short code for every request
+                String code = generateUniqueShortCode();
+                String newUrl = baseDomainUrl + "/" + code;
 
             NewUrl newUrlEntity = new NewUrl(code, originalUrl, null, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
             newUrlEntity.setUserId(userId);
@@ -621,30 +532,63 @@ public class NewUrlService {
         );
     }
 
+    private NewUrl findEntityForEdit(EditNewUrlRequest request, Long userId) {
+        if (request.publicId() != null && !request.publicId().isBlank()) {
+            String trimmedPublicId = request.publicId().trim();
+            Optional<NewUrl> found = repository.findByPublicIdAndUserId(trimmedPublicId, userId);
+            if (found.isPresent()) {
+                return found.get();
+            }
+        }
+
+        if (request.newUrl() != null && !request.newUrl().isBlank()) {
+            String trimmedUrl = request.newUrl().trim();
+
+            Optional<NewUrl> found = repository.findByPublicIdAndUserId(trimmedUrl, userId);
+            if (found.isPresent()) {
+                return found.get();
+            }
+
+            found = repository.findByNewUrlAndUserId(trimmedUrl, userId);
+            if (found.isPresent()) {
+                return found.get();
+            }
+
+            if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+                String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
+                found = repository.findByNewUrlAndUserId(prefixed, userId);
+                if (found.isPresent()) {
+                    return found.get();
+                }
+            }
+
+            found = repository.findByShortCodeAndUserId(trimmedUrl, userId);
+            if (found.isPresent()) {
+                return found.get();
+            }
+        }
+
+        if (request.shortCode() != null && !request.shortCode().isBlank()) {
+            String trimmedCode = request.shortCode().trim();
+            Optional<NewUrl> found = repository.findByShortCodeAndUserId(trimmedCode, userId);
+            if (found.isPresent()) {
+                return found.get();
+            }
+        }
+
+        throw new UrlNotFoundException("Link not found or access denied");
+    }
+
     @Transactional
     public CreateNewUrlResponse editNewUrl(EditNewUrlRequest request, Long userId) {
         if (userId == null) {
             throw new AccessDeniedException("User ID is required to edit link");
         }
-        if (request == null || request.newUrl() == null || request.newUrl().isBlank()) {
-            throw new IllegalArgumentException("URL parameter 'newUrl' cannot be empty");
+        if (request == null || !request.hasIdentifier()) {
+            throw new IllegalArgumentException("URL parameter 'newUrl' or 'id'/'publicId' cannot be empty");
         }
 
-        String trimmedUrl = request.newUrl().trim();
-
-        // 1. Locate entity by newUrl or shortCode for this user
-        Optional<NewUrl> found = repository.findByNewUrlAndUserId(trimmedUrl, userId);
-
-        if (found.isEmpty() && !trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
-            String prefixed = domain + (trimmedUrl.startsWith("/") ? "" : "/") + trimmedUrl;
-            found = repository.findByNewUrlAndUserId(prefixed, userId);
-        }
-
-        if (found.isEmpty()) {
-            found = repository.findByShortCodeAndUserId(trimmedUrl, userId);
-        }
-
-        NewUrl entity = found.orElseThrow(() -> new UrlNotFoundException("Link not found or access denied"));
+        NewUrl entity = findEntityForEdit(request, userId);
         final Long shortUrlId = entity.getId();
 
         LinkMode finalMode = request.linkMode() != null ? request.linkMode() : entity.getLinkMode();
@@ -657,39 +601,149 @@ public class NewUrlService {
 
         boolean modified = false;
 
-        // A. originalUrl
+        // A. Destination URL (originalUrl)
         if (request.originalUrl() != null && !request.originalUrl().isBlank()) {
             String newOriginalUrl = request.originalUrl().trim();
             validateUrl(newOriginalUrl);
             if (!Objects.equals(entity.getOriginalUrl(), newOriginalUrl)) {
                 String oldVal = entity.getOriginalUrl();
                 entity.setOriginalUrl(newOriginalUrl);
+                entity.setOriginalUrlHash(NewUrl.hashUrl(newOriginalUrl));
                 changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "original_url", oldVal, newOriginalUrl));
                 modified = true;
             }
         }
 
-        // B. customPath
+        // B. Custom Domain & Slug/Path
+        EffectiveDomain targetDomain;
+        if (request.domain() != null) {
+            targetDomain = resolveEffectiveDomain(request.domain(), userId);
+        } else {
+            String currentDomainName = entity.getDomain();
+            String currentBaseUrl = (currentDomainName != null && !currentDomainName.isBlank())
+                    ? "https://" + currentDomainName
+                    : this.domain;
+            targetDomain = new EffectiveDomain(currentDomainName, currentBaseUrl);
+        }
+
+        String targetCustomPath = entity.getCustomPath();
+        String targetShortCode = entity.getShortCode();
+
         if (request.customPath() != null) {
-            String newCustomPath = request.customPath().trim();
-            if (newCustomPath.isBlank()) {
-                newCustomPath = null;
-            }
-            if (!Objects.equals(entity.getCustomPath(), newCustomPath)) {
-                String oldVal = entity.getCustomPath();
-                entity.setCustomPath(newCustomPath);
-                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "custom_path", oldVal, newCustomPath));
-                modified = true;
+            String rawPath = request.customPath().trim();
+            while (rawPath.startsWith("/")) rawPath = rawPath.substring(1).trim();
+            while (rawPath.endsWith("/")) rawPath = rawPath.substring(0, rawPath.length() - 1).trim();
+            if (rawPath.isEmpty()) {
+                targetCustomPath = null;
+                if (Objects.equals(entity.getShortCode(), entity.getCustomPath())) {
+                    targetShortCode = generateUniqueShortCode();
+                }
+            } else {
+                if (rawPath.length() > 64) {
+                    throw new IllegalArgumentException("customPath cannot exceed 64 characters");
+                }
+                if (!CUSTOM_PATH_PATTERN.matcher(rawPath).matches()) {
+                    throw new IllegalArgumentException("Invalid customPath format: '" + rawPath + "'");
+                }
+                targetCustomPath = rawPath;
+                targetShortCode = rawPath;
             }
         }
 
-        // C & D. Usage Policies
+        if (request.shortCode() != null && !request.shortCode().isBlank()) {
+            String rawCode = request.shortCode().trim();
+            if (rawCode.length() > 64) {
+                throw new IllegalArgumentException("shortCode cannot exceed 64 characters");
+            }
+            if (!CUSTOM_PATH_PATTERN.matcher(rawCode).matches()) {
+                throw new IllegalArgumentException("Invalid shortCode format: '" + rawCode + "'");
+            }
+            targetShortCode = rawCode;
+            if (request.customPath() == null && entity.getCustomPath() != null && Objects.equals(entity.getCustomPath(), entity.getShortCode())) {
+                targetCustomPath = rawCode;
+            }
+        }
+
+        String targetSlug = targetCustomPath != null ? targetCustomPath : targetShortCode;
+        String targetNewUrl = targetDomain.baseUrl() + "/" + targetSlug;
+
+        // Collision checks
+        if (!Objects.equals(entity.getShortCode(), targetShortCode)) {
+            Optional<NewUrl> codeCollision = repository.findByShortCode(targetShortCode);
+            if (codeCollision.isPresent() && !Objects.equals(codeCollision.get().getId(), entity.getId())) {
+                throw new IllegalArgumentException("Short code or custom path '" + targetShortCode + "' is already in use");
+            }
+        }
+
+        if (!Objects.equals(entity.getNewUrl(), targetNewUrl)) {
+            Optional<NewUrl> urlCollision = repository.findByNewUrl(targetNewUrl);
+            if (urlCollision.isPresent() && !Objects.equals(urlCollision.get().getId(), entity.getId())) {
+                throw new IllegalArgumentException("URL '" + targetNewUrl + "' is already in use");
+            }
+        }
+
+        if (!Objects.equals(entity.getCustomPath(), targetCustomPath)) {
+            String oldVal = entity.getCustomPath();
+            entity.setCustomPath(targetCustomPath);
+            changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "custom_path", oldVal, targetCustomPath));
+            modified = true;
+        }
+
+        if (!Objects.equals(entity.getShortCode(), targetShortCode)) {
+            String oldVal = entity.getShortCode();
+            entity.setShortCode(targetShortCode);
+            changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "short_code", oldVal, targetShortCode));
+            modified = true;
+        }
+
+        if (!Objects.equals(entity.getDomain(), targetDomain.domainName())) {
+            String oldVal = entity.getDomain();
+            entity.setDomain(targetDomain.domainName());
+            changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "domain", oldVal, targetDomain.domainName()));
+            modified = true;
+        }
+
+        if (!Objects.equals(entity.getNewUrl(), targetNewUrl)) {
+            String oldVal = entity.getNewUrl();
+            lruCache.remove(oldVal);
+            entity.setNewUrl(targetNewUrl);
+            changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "new_url", oldVal, targetNewUrl));
+            modified = true;
+        }
+
+        // C. Click Count / Reset
+        if (Boolean.TRUE.equals(request.resetClickCount()) || request.clickCount() != null) {
+            long targetClicks = Boolean.TRUE.equals(request.resetClickCount()) ? 0L : request.clickCount();
+            if (targetClicks < 0) {
+                throw new IllegalArgumentException("clickCount cannot be negative");
+            }
+            if (entity.getClickCount() != targetClicks) {
+                String oldVal = String.valueOf(entity.getClickCount());
+                String newVal = String.valueOf(targetClicks);
+                entity.setClickCount(targetClicks);
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "click_count", oldVal, newVal));
+                modified = true;
+
+                usagePolicyRepository.findByShortUrlId(shortUrlId).ifPresent(up -> {
+                    up.setCurrentUsage(targetClicks);
+                    usagePolicyRepository.save(up);
+                });
+            }
+        }
+
+        // D. Usage Policies & Expiration
         if (request.hasUsagePolicies()) {
             UsagePolicies upReq = request.usagePolicies();
             UsagePolicyType newType = upReq.resolvedType();
             Long newUsageLimit = upReq.resolvedUsageLimit();
             Instant newExpireAt = upReq.expireAt();
             AccessSchedule schedule = upReq.schedule();
+
+            if (newExpireAt == null && newType == UsagePolicyType.UNLIMITED) {
+                newExpireAt = Instant.now().plus(3650, ChronoUnit.DAYS);
+            } else if (newExpireAt != null && !newExpireAt.isAfter(Instant.now())) {
+                throw new IllegalArgumentException("expireAt must be in the future");
+            }
 
             if (!Objects.equals(entity.getUsageLimit(), newUsageLimit)) {
                 String oldVal = entity.getUsageLimit() != null ? entity.getUsageLimit().toString() : null;
@@ -699,19 +753,20 @@ public class NewUrlService {
                 modified = true;
             }
 
-            if (!Objects.equals(entity.getExpireAt(), newExpireAt)) {
+            if (newExpireAt != null && !Objects.equals(entity.getExpireAt(), newExpireAt)) {
                 String oldVal = entity.getExpireAt() != null ? entity.getExpireAt().toString() : null;
-                String newVal = newExpireAt != null ? newExpireAt.toString() : null;
+                String newVal = newExpireAt.toString();
                 entity.setExpireAt(newExpireAt);
                 changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "expire_at", oldVal, newVal));
                 modified = true;
             }
 
+            final Instant effectiveExpireAt = newExpireAt != null ? newExpireAt : entity.getExpireAt();
             UsagePolicy up = usagePolicyRepository.findByShortUrlId(shortUrlId)
-                    .orElseGet(() -> new UsagePolicy(shortUrlId, newType, newUsageLimit, newExpireAt, null, null));
+                    .orElseGet(() -> new UsagePolicy(shortUrlId, newType, newUsageLimit, effectiveExpireAt, null, null));
             up.setPolicyType(newType);
             up.setUsageLimit(newUsageLimit);
-            up.setExpireAt(newExpireAt);
+            up.setExpireAt(effectiveExpireAt);
             if (schedule != null) {
                 schedule.validate();
                 up.setStartAt(schedule.startAt());
@@ -722,17 +777,35 @@ public class NewUrlService {
             }
             usagePolicyRepository.save(up);
         } else {
-            // Legacy C. expireAt
-            if (request.expireAt() != null) {
+            // Legacy expiration & usageLimit
+            if (Boolean.TRUE.equals(request.clearExpireAt())) {
+                Instant defaultExpire = Instant.now().plus(3650, ChronoUnit.DAYS);
+                if (!Objects.equals(entity.getExpireAt(), defaultExpire)) {
+                    String oldVal = entity.getExpireAt() != null ? entity.getExpireAt().toString() : null;
+                    entity.setExpireAt(defaultExpire);
+                    changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "expire_at", oldVal, defaultExpire.toString()));
+                    modified = true;
+                    usagePolicyRepository.findByShortUrlId(shortUrlId).ifPresent(up -> {
+                        up.setExpireAt(defaultExpire);
+                        usagePolicyRepository.save(up);
+                    });
+                }
+            } else if (request.expireAt() != null) {
+                if (!request.expireAt().isAfter(Instant.now())) {
+                    throw new IllegalArgumentException("expireAt must be in the future");
+                }
                 if (!Objects.equals(entity.getExpireAt(), request.expireAt())) {
                     String oldVal = entity.getExpireAt() != null ? entity.getExpireAt().toString() : null;
                     entity.setExpireAt(request.expireAt());
                     changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "expire_at", oldVal, request.expireAt().toString()));
                     modified = true;
+                    usagePolicyRepository.findByShortUrlId(shortUrlId).ifPresent(up -> {
+                        up.setExpireAt(request.expireAt());
+                        usagePolicyRepository.save(up);
+                    });
                 }
             }
 
-            // Legacy D. usageLimit
             if (request.hasUsageLimit()) {
                 Long newUsageLimit = request.resolvedUsageLimit();
                 if (!Objects.equals(entity.getUsageLimit(), newUsageLimit)) {
@@ -741,24 +814,16 @@ public class NewUrlService {
                     entity.setUsageLimit(newUsageLimit);
                     changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "usage_limit", oldVal, newVal));
                     modified = true;
+                    usagePolicyRepository.findByShortUrlId(shortUrlId).ifPresent(up -> {
+                        up.setUsageLimit(newUsageLimit);
+                        up.setPolicyType(newUsageLimit != null ? (newUsageLimit == 1 ? UsagePolicyType.ONE_TIME : UsagePolicyType.USAGE_LIMIT) : UsagePolicyType.UNLIMITED);
+                        usagePolicyRepository.save(up);
+                    });
                 }
-            }
-
-            if (request.expireAt() != null || request.hasUsageLimit()) {
-                usagePolicyRepository.findByShortUrlId(entity.getId()).ifPresent(up -> {
-                    if (request.expireAt() != null) {
-                        up.setExpireAt(request.expireAt());
-                    }
-                    if (request.hasUsageLimit()) {
-                        up.setUsageLimit(request.resolvedUsageLimit());
-                        up.setPolicyType(request.resolvedUsageLimit() != null ? UsagePolicyType.USAGE_LIMIT : UsagePolicyType.UNLIMITED);
-                    }
-                    usagePolicyRepository.save(up);
-                });
             }
         }
 
-        // Access Policies
+        // E. Access Policies
         if (request.hasAccessPolicies()) {
             AccessPolicies apReq = request.accessPolicies();
             AccessPolicy ap = accessPolicyRepository.findByShortUrlId(shortUrlId)
@@ -815,19 +880,85 @@ public class NewUrlService {
                 } else {
                     ap.setReferrers(null);
                 }
+
+                // Email OTP
+                if (apReq.otp() != null && apReq.otp().isEnabled()) {
+                    ap.setOtpEnabled(true);
+                    List<String> emails = apReq.otp().emails() != null
+                            ? apReq.otp().emails().stream().map(String::trim).map(String::toLowerCase).filter(s -> !s.isEmpty()).distinct().toList()
+                            : List.of();
+                    ap.setOtpEmails(String.join(",", emails));
+
+                    linkRecipientRepository.deleteByShortUrlId(shortUrlId);
+
+                    String linkUrl = entity.getNewUrl();
+                    boolean shouldSend = apReq.otp().shouldSendEmails();
+
+                    for (String email : emails) {
+                        String token = UUID.randomUUID().toString().replace("-", "");
+                        LinkRecipient recipient = new LinkRecipient(shortUrlId, email, token);
+                        if (shouldSend && !linkUrl.isBlank() && emailService != null) {
+                            try {
+                                String trackingPixelUrl = this.domain + "/api/track/email-open/" + token;
+                                emailService.sendSecuredLinkInvitation(email, linkUrl, trackingPixelUrl);
+                                recipient.setEmailSent(true);
+                                recipient.setEmailSentAt(Instant.now());
+                            } catch (Exception e) {
+                                log.warn("Failed to dispatch invitation email to '{}': {}", email, e.getMessage());
+                            }
+                        }
+                        linkRecipientRepository.save(recipient);
+                    }
+                } else {
+                    ap.setOtpEnabled(false);
+                    ap.setOtpEmails(null);
+                    linkRecipientRepository.deleteByShortUrlId(shortUrlId);
+                }
+
+                // Geofence
+                if (apReq.geofence() != null && apReq.geofence().isValid()) {
+                    try {
+                        ap.setGeofence(objectMapper.writeValueAsString(apReq.geofence()));
+                    } catch (Exception e) {
+                        log.warn("Failed to serialize geofence policy: {}", e.getMessage());
+                    }
+                } else {
+                    ap.setGeofence(null);
+                }
+
+                boolean hasAnyRestriction = ap.hasPin()
+                        || ap.hasPassword()
+                        || (ap.getIpAllowlist() != null && !ap.getIpAllowlist().isBlank())
+                        || (ap.getCountries() != null && !ap.getCountries().isBlank())
+                        || (ap.getDeviceTypes() != null && !ap.getDeviceTypes().isBlank())
+                        || (ap.getReferrers() != null && !ap.getReferrers().isBlank())
+                        || ap.isOtpEnabled()
+                        || (ap.getGeofence() != null && !ap.getGeofence().isBlank());
+
+                if (!hasAnyRestriction) {
+                    throw new IllegalArgumentException(
+                            "Secured access policy requires at least one restriction configured (pin, password, otp, ipAllowlist, country, device, referrer, or geofence)"
+                    );
+                }
             } else {
+                // Mode is PUBLIC: wipe all security restrictions
                 ap.setPinHash(null);
                 ap.setPasswordHash(null);
                 ap.setIpAllowlist(null);
                 ap.setCountries(null);
                 ap.setDeviceTypes(null);
                 ap.setReferrers(null);
+                ap.setOtpEnabled(false);
+                ap.setOtpEmails(null);
+                linkRecipientRepository.deleteByShortUrlId(shortUrlId);
+                ap.setGeofence(null);
             }
 
             accessPolicyRepository.save(ap);
+            changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "access_policies", null, mode.name()));
         }
 
-        // E. notes
+        // F. notes
         if (request.notes() != null) {
             String newNote = request.notes().trim();
             if (newNote.isBlank()) {
@@ -841,7 +972,7 @@ public class NewUrlService {
             }
         }
 
-        // F. linkMode
+        // G. linkMode
         if (request.linkMode() != null) {
             if (!Objects.equals(entity.getLinkMode(), request.linkMode())) {
                 String oldVal = entity.getLinkMode() != null ? entity.getLinkMode().name() : null;
@@ -851,7 +982,7 @@ public class NewUrlService {
             }
         }
 
-        // G. isActive
+        // H. isActive
         if (request.isActive() != null) {
             if (entity.isActive() != request.isActive()) {
                 String oldVal = String.valueOf(entity.isActive());
@@ -862,7 +993,7 @@ public class NewUrlService {
             }
         }
 
-        // H. tags
+        // I. tags
         if (request.tags() != null) {
             List<String> currentTags = tagRepository.findByUrlId(entity.getId()).stream()
                     .map(NewUrlTag::getTag)
@@ -887,7 +1018,6 @@ public class NewUrlService {
 
         if (modified) {
             entity = repository.save(entity);
-            // Invalidate in LRU cache
             lruCache.remove(entity.getNewUrl());
         }
 
@@ -912,7 +1042,10 @@ public class NewUrlService {
                 entity.getPublicId(),
                 finalUsagePolicies,
                 finalAccessPolicies,
-                entity.getCreatedBy() != null ? entity.getCreatedBy() : "UI"
+                entity.getCreatedBy() != null ? entity.getCreatedBy() : "UI",
+                entity.getDomain(),
+                entity.getShortCode(),
+                entity.getClickCount()
         );
     }
 

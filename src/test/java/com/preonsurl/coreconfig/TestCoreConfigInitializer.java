@@ -38,6 +38,7 @@ public class TestCoreConfigInitializer implements BeanPostProcessor {
         saveConfig(repo, CoreConfigKeys.App.APP_URL, "http://localhost:8081", ConfigValueType.STRING, now);
         saveConfig(repo, CoreConfigKeys.App.SECURE_URL, "http://localhost:8081", ConfigValueType.STRING, now);
         saveConfig(repo, CoreConfigKeys.App.PSECURE_URL, "http://localhost:8081/p/", ConfigValueType.STRING, now);
+        saveConfig(repo, CoreConfigKeys.App.PSECURE_URL_EXPIRY_DAYS, "15", ConfigValueType.INTEGER, now);
 
         // Shortener
         saveConfig(repo, CoreConfigKeys.Shortener.WORKER_COUNT, "4", ConfigValueType.INTEGER, now);
