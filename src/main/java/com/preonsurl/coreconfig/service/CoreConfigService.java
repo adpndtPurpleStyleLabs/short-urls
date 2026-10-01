@@ -3,7 +3,6 @@ package com.preonsurl.coreconfig.service;
 import com.preonsurl.coreconfig.entity.CoreConfig;
 import com.preonsurl.coreconfig.exception.CoreConfigNotFoundException;
 import com.preonsurl.coreconfig.repository.CoreConfigRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,17 +20,25 @@ public class CoreConfigService {
     private final CoreConfigRepository repository;
     private final AtomicReference<Map<String, CoreConfig>> cache = new AtomicReference<>(Collections.emptyMap());
     private volatile LocalDateTime lastRefresh;
-    @PostConstruct
-    public void initialize() {
-        refresh();
+
+    private void ensureCacheLoaded() {
+        if (cache.get().isEmpty()) {
+            synchronized (this) {
+                if (cache.get().isEmpty()) {
+                    refresh();
+                }
+            }
+        }
     }
 
     @Scheduled(fixedDelayString = "${preonsurl.coreconfig.refresh-ms:60000}")
     public void scheduledRefresh() {
-        refresh();
+        if (!cache.get().isEmpty()) {
+            refresh();
+        }
     }
 
-    public void refresh() {
+    public synchronized void refresh() {
         Map<String, CoreConfig> newCache = repository.findAllByActiveTrue()
                         .stream()
                         .collect(Collectors.toUnmodifiableMap(CoreConfig::getConfigKey, config -> config));
@@ -39,14 +46,18 @@ public class CoreConfigService {
         cache.set(newCache);
         lastRefresh = LocalDateTime.now();
     }
+
     public String get(String key) {
+        ensureCacheLoaded();
         CoreConfig config = cache.get().get(key);
         if (config == null) {
             throw new CoreConfigNotFoundException("Core config not found: " + key);
         }
         return config.getConfigValue();
     }
+
     public String getOrDefault(String key, String defaultValue) {
+        ensureCacheLoaded();
         CoreConfig config = cache.get().get(key);
         return config != null ? config.getConfigValue() : defaultValue;
     }
@@ -72,10 +83,12 @@ public class CoreConfigService {
     }
 
     public boolean contains(String key) {
+        ensureCacheLoaded();
         return cache.get().containsKey(key);
     }
 
     public Map<String, CoreConfig> getAll() {
+        ensureCacheLoaded();
         return cache.get();
     }
 

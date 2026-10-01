@@ -34,6 +34,9 @@ import com.preonsurl.coreconfig.service.CoreConfigService;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -1458,7 +1461,8 @@ public class NewUrlService {
                 .orElseThrow(() -> new ResourceNotFoundException("Link not found"));
     }
 
-    @PostConstruct
+    @Async
+    @EventListener(ApplicationReadyEvent.class)
     public void backfillMissingPublicIds() {
         try {
             List<NewUrl> missing = repository.findAllByPublicIdIsNull();
