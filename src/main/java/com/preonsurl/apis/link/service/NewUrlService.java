@@ -4,9 +4,11 @@ import com.preonsurl.apis.domain.entity.CustomDomain;
 import com.preonsurl.apis.domain.entity.DomainStatus;
 import com.preonsurl.apis.domain.repository.CustomDomainRepository;
 import com.preonsurl.apis.link.cache.NewUrlLruCache;
+import com.preonsurl.apis.link.dto.AnalyticsPreferences;
 import com.preonsurl.apis.link.dto.CreateRequest.CreateNewUrlRequest;
 import com.preonsurl.apis.link.dto.CreateNewUrlResponse;
 import com.preonsurl.apis.link.dto.EditNewUrlRequest;
+import com.preonsurl.apis.link.dto.LinkAccessLogResponse;
 import com.preonsurl.apis.link.entity.NewUrl;
 import com.preonsurl.apis.link.entity.NewUrlAccessLog;
 import com.preonsurl.apis.link.entity.NewUrlChangeLog;
@@ -339,6 +341,11 @@ public class NewUrlService {
 
                 // Save to database
                 NewUrl newUrlEntity = new NewUrl(shortCode, originalUrl, customPath, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
+                AnalyticsPreferences ap = request.resolvedAnalytics();
+                newUrlEntity.setTrackLocation(ap.resolvedTrackLocation());
+                newUrlEntity.setTrackUserAgent(ap.resolvedTrackUserAgent());
+                newUrlEntity.setTrackIp(ap.resolvedTrackIp());
+                newUrlEntity.setTrackReferrer(ap.resolvedTrackReferrer());
                 newUrlEntity.setUserId(userId);
                 newUrlEntity.setCreatedBy(source);
                 if (request.notes() != null && !request.notes().isBlank()) {
@@ -373,6 +380,11 @@ public class NewUrlService {
                 String newUrl = baseDomainUrl + "/" + code;
 
             NewUrl newUrlEntity = new NewUrl(code, originalUrl, null, effectiveDomain.domainName(), newUrl, expiresAt, request.resolvedUsageLimit(), linkMode);
+            AnalyticsPreferences ap = request.resolvedAnalytics();
+            newUrlEntity.setTrackLocation(ap.resolvedTrackLocation());
+            newUrlEntity.setTrackUserAgent(ap.resolvedTrackUserAgent());
+            newUrlEntity.setTrackIp(ap.resolvedTrackIp());
+            newUrlEntity.setTrackReferrer(ap.resolvedTrackReferrer());
             newUrlEntity.setUserId(userId);
             newUrlEntity.setCreatedBy(source);
             if (request.notes() != null && !request.notes().isBlank()) {
@@ -531,7 +543,11 @@ public class NewUrlService {
                 newUrl.getPublicId(),
                 usagePolicies,
                 accessPolicies,
-                newUrl.getCreatedBy() != null ? newUrl.getCreatedBy() : "UI"
+                newUrl.getCreatedBy() != null ? newUrl.getCreatedBy() : "UI",
+                newUrl.getDomain(),
+                newUrl.getShortCode(),
+                newUrl.getClickCount(),
+                new AnalyticsPreferences(newUrl.getTrackLocation(), newUrl.getTrackUserAgent(), newUrl.getTrackIp(), newUrl.getTrackReferrer())
         );
     }
 
@@ -975,6 +991,27 @@ public class NewUrlService {
             }
         }
 
+        // Analytics tracking preferences
+        if (request.hasAnalytics()) {
+            AnalyticsPreferences apReq = request.analytics();
+            if (apReq.trackLocation() != null && !Objects.equals(entity.getTrackLocation(), apReq.trackLocation())) {
+                entity.setTrackLocation(apReq.trackLocation());
+                modified = true;
+            }
+            if (apReq.trackUserAgent() != null && !Objects.equals(entity.getTrackUserAgent(), apReq.trackUserAgent())) {
+                entity.setTrackUserAgent(apReq.trackUserAgent());
+                modified = true;
+            }
+            if (apReq.trackIp() != null && !Objects.equals(entity.getTrackIp(), apReq.trackIp())) {
+                entity.setTrackIp(apReq.trackIp());
+                modified = true;
+            }
+            if (apReq.trackReferrer() != null && !Objects.equals(entity.getTrackReferrer(), apReq.trackReferrer())) {
+                entity.setTrackReferrer(apReq.trackReferrer());
+                modified = true;
+            }
+        }
+
         // G. linkMode
         if (request.linkMode() != null) {
             if (!Objects.equals(entity.getLinkMode(), request.linkMode())) {
@@ -1048,7 +1085,8 @@ public class NewUrlService {
                 entity.getCreatedBy() != null ? entity.getCreatedBy() : "UI",
                 entity.getDomain(),
                 entity.getShortCode(),
-                entity.getClickCount()
+                entity.getClickCount(),
+                new AnalyticsPreferences(entity.getTrackLocation(), entity.getTrackUserAgent(), entity.getTrackIp(), entity.getTrackReferrer())
         );
     }
 
@@ -1451,7 +1489,14 @@ public class NewUrlService {
                 log.getIpAddress(),
                 log.getUserAgent(),
                 log.getReferer(),
-                log.getAccessedAt()
+                log.getAccessedAt(),
+                log.getCountry(),
+                log.getCity(),
+                log.getLatitude(),
+                log.getLongitude(),
+                log.getDevice(),
+                log.getBrowser(),
+                log.getOs()
         ));
     }
 

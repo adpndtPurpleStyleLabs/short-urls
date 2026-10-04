@@ -5,6 +5,12 @@ public record ShortUrlServedEvent(
         String newUrl,
         String ipAddress,
         String userAgent,
-        String referer
+        String referer,
+        Double latitude,
+        Double longitude
 ) {
+    public ShortUrlServedEvent(Long shortUrlId, String newUrl, String ipAddress, String userAgent, String referer) {
+        this(shortUrlId, newUrl, ipAddress, userAgent, referer, null, null);
+    }
 }
+

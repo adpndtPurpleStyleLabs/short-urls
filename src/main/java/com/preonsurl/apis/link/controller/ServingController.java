@@ -449,6 +449,39 @@ public class ServingController {
         String referer = request.getHeader("Referer");
         boolean isAjax = isAjaxRequest(request);
 
+        Double clientLat = geo_lat;
+        Double clientLng = geo_lng;
+        if (clientLat == null) {
+            String latHeader = request.getHeader("X-Geo-Latitude");
+            if (latHeader == null) latHeader = request.getHeader("X-Latitude");
+            if (latHeader == null) latHeader = request.getParameter("lat");
+            if (latHeader == null) latHeader = request.getParameter("latitude");
+            if (latHeader == null) latHeader = request.getParameter("geo_lat");
+            if (latHeader == null) latHeader = request.getParameter("geo_latitude");
+            if (latHeader != null) {
+                try { clientLat = Double.parseDouble(latHeader.trim()); } catch (Exception ignored) {}
+            }
+        }
+        if (clientLng == null) {
+            String lngHeader = request.getHeader("X-Geo-Longitude");
+            if (lngHeader == null) lngHeader = request.getHeader("X-Longitude");
+            if (lngHeader == null) lngHeader = request.getParameter("lng");
+            if (lngHeader == null) lngHeader = request.getParameter("lon");
+            if (lngHeader == null) lngHeader = request.getParameter("longitude");
+            if (lngHeader == null) lngHeader = request.getParameter("geo_lng");
+            if (lngHeader == null) lngHeader = request.getParameter("geo_longitude");
+            if (lngHeader != null) {
+                try { clientLng = Double.parseDouble(lngHeader.trim()); } catch (Exception ignored) {}
+            }
+        }
+        if (clientLat != null && clientLng != null) {
+            if (Math.abs(clientLat) > 90.0 && Math.abs(clientLng) <= 90.0) {
+                Double tmp = clientLat;
+                clientLat = clientLng;
+                clientLng = tmp;
+            }
+        }
+
         Optional<NewUrl> entityOpt = findEntityByUrlOrPath(fullUrl, path);
 
         if (entityOpt.isEmpty()) {
@@ -538,7 +571,7 @@ public class ServingController {
             log.info("GeoFence verification passed for url='{}' -> redirecting to '{}' [IP={}]",
                     fullUrl, entity.getOriginalUrl(), ipAddress);
             if (entity.getLinkMode() != LinkMode.PROXY && entity.getLinkMode() != LinkMode.MIRROR) {
-                eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+                eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer, clientLat, clientLng));
             }
 
             ResponseCookie cookie = policyService.createVerificationCookie(entity.getId());
@@ -590,7 +623,7 @@ public class ServingController {
         log.info("Security challenge passed for url='{}' -> redirecting to '{}' [IP={}]",
                 fullUrl, entity.getOriginalUrl(), ipAddress);
         if (entity.getLinkMode() != LinkMode.PROXY && entity.getLinkMode() != LinkMode.MIRROR) {
-            eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+            eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer, clientLat, clientLng));
         }
 
         ResponseCookie cookie = policyService.createVerificationCookie(entity.getId());

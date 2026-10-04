@@ -59,8 +59,33 @@ public record CreateNewUrlResponse(
         String shortCode,
 
         @Schema(description = "Total click count of the link", example = "42")
-        Long clickCount
+        Long clickCount,
+
+        @Schema(description = "Analytics and telemetry collection preferences")
+        AnalyticsPreferences analytics
 ) {
+    public CreateNewUrlResponse(
+            String newUrl,
+            String originalUrl,
+            String customPath,
+            boolean existing,
+            Instant expireAt,
+            Long usageLimit,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            Boolean isActive,
+            String publicId,
+            UsagePolicies usagePolicies,
+            AccessPolicies accessPolicies,
+            String createdBy,
+            String domain,
+            String shortCode,
+            Long clickCount
+    ) {
+        this(newUrl, originalUrl, customPath, existing, expireAt, usageLimit, notes, tags, linkMode, isActive, publicId, usagePolicies, accessPolicies, createdBy, domain, shortCode, clickCount, AnalyticsPreferences.allEnabled());
+    }
+
     public CreateNewUrlResponse(
             String newUrl,
             String originalUrl,

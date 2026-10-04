@@ -233,6 +233,39 @@ public class NewUrl {
     private Instant updatedAt;
 
 
+    @Column(name = "track_location")
+    private Boolean trackLocation = true;
+
+
+    @Column(name = "track_user_agent")
+    private Boolean trackUserAgent = true;
+
+
+    @Column(name = "track_ip")
+    private Boolean trackIp = true;
+
+
+    @Column(name = "track_referrer")
+    private Boolean trackReferrer = true;
+
+
+    public boolean isTrackLocationEnabled() {
+        return trackLocation == null || trackLocation;
+    }
+
+    public boolean isTrackUserAgentEnabled() {
+        return trackUserAgent == null || trackUserAgent;
+    }
+
+    public boolean isTrackIpEnabled() {
+        return trackIp == null || trackIp;
+    }
+
+    public boolean isTrackReferrerEnabled() {
+        return trackReferrer == null || trackReferrer;
+    }
+
+
     // =========================================================
     // CONSTRUCTORS
     // =========================================================

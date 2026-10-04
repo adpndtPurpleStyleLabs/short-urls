@@ -30,6 +30,27 @@ public class NewUrlAccessLog {
     @Column(name = "referer", length = 1024)
     private String referer;
 
+    @Column(name = "country", length = 128)
+    private String country;
+
+    @Column(name = "city", length = 128)
+    private String city;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "device", length = 64)
+    private String device;
+
+    @Column(name = "browser", length = 64)
+    private String browser;
+
+    @Column(name = "os", length = 64)
+    private String os;
+
     @Column(name = "accessed_at", nullable = false, updatable = false)
     private LocalDateTime accessedAt;
 
@@ -37,11 +58,24 @@ public class NewUrlAccessLog {
     }
 
     public NewUrlAccessLog(Long shortUrlId, String shortCode, String ipAddress, String userAgent, String referer) {
+        this(shortUrlId, shortCode, ipAddress, userAgent, referer, null, null, null, null, null, null, null);
+    }
+
+    public NewUrlAccessLog(Long shortUrlId, String shortCode, String ipAddress, String userAgent, String referer,
+                           String country, String city, Double latitude, Double longitude,
+                           String device, String browser, String os) {
         this.shortUrlId = shortUrlId;
         this.shortCode = shortCode;
         this.ipAddress = ipAddress;
         this.userAgent = truncate(userAgent, 512);
         this.referer = truncate(referer, 1024);
+        this.country = truncate(country, 128);
+        this.city = truncate(city, 128);
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.device = truncate(device, 64);
+        this.browser = truncate(browser, 64);
+        this.os = truncate(os, 64);
     }
 
     @PrePersist
@@ -100,6 +134,62 @@ public class NewUrlAccessLog {
         this.referer = truncate(referer, 1024);
     }
 
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = truncate(country, 128);
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = truncate(city, 128);
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getDevice() {
+        return device;
+    }
+
+    public void setDevice(String device) {
+        this.device = truncate(device, 64);
+    }
+
+    public String getBrowser() {
+        return browser;
+    }
+
+    public void setBrowser(String browser) {
+        this.browser = truncate(browser, 64);
+    }
+
+    public String getOs() {
+        return os;
+    }
+
+    public void setOs(String os) {
+        this.os = truncate(os, 64);
+    }
+
     public LocalDateTime getAccessedAt() {
         return accessedAt;
     }
@@ -108,3 +198,4 @@ public class NewUrlAccessLog {
         this.accessedAt = accessedAt;
     }
 }
+

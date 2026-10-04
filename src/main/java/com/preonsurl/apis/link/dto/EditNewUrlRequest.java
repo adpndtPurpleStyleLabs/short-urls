@@ -79,8 +79,35 @@ public record EditNewUrlRequest(
         @Valid
         @Schema(description = "Updated access-control policies for the shortened URL", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         @JsonAlias({"access_policies", "accessPolicy"})
-        AccessPolicies accessPolicies
+        AccessPolicies accessPolicies,
+
+        @Valid
+        @Schema(description = "Updated analytics tracking preferences", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"analyticsPreferences", "tracking"})
+        AnalyticsPreferences analytics
 ) {
+    public EditNewUrlRequest(
+            String newUrl,
+            String publicId,
+            String shortCode,
+            String originalUrl,
+            String customPath,
+            String domain,
+            Instant expireAt,
+            Boolean clearExpireAt,
+            Object usageLimit,
+            Boolean resetClickCount,
+            Long clickCount,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            Boolean isActive,
+            UsagePolicies usagePolicies,
+            AccessPolicies accessPolicies
+    ) {
+        this(newUrl, publicId, shortCode, originalUrl, customPath, domain, expireAt, clearExpireAt, usageLimit, resetClickCount, clickCount, notes, tags, linkMode, isActive, usagePolicies, accessPolicies, null);
+    }
+
     public EditNewUrlRequest(
             String newUrl,
             String originalUrl,
@@ -94,7 +121,7 @@ public record EditNewUrlRequest(
             UsagePolicies usagePolicies,
             AccessPolicies accessPolicies
     ) {
-        this(newUrl, null, null, originalUrl, customPath, null, expireAt, null, usageLimit, null, null, notes, tags, linkMode, isActive, usagePolicies, accessPolicies);
+        this(newUrl, null, null, originalUrl, customPath, null, expireAt, null, usageLimit, null, null, notes, tags, linkMode, isActive, usagePolicies, accessPolicies, null);
     }
 
     public EditNewUrlRequest(
@@ -109,6 +136,10 @@ public record EditNewUrlRequest(
             Boolean isActive
     ) {
         this(newUrl, originalUrl, customPath, expireAt, usageLimit, notes, tags, linkMode, isActive, null, null);
+    }
+
+    public boolean hasAnalytics() {
+        return analytics != null;
     }
 
     public boolean hasIdentifier() {

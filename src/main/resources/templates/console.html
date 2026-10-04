@@ -6520,44 +6520,286 @@
         /* =========================
            URL ANALYTICS MODAL
         ========================= */
-        .analytics-modal-dialog {
-            width: min(1400px, calc(100vw - 32px));
+        #urlAnalyticsModal {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+
+        #urlAnalyticsModal.open {
+            padding: 20px 16px !important;
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+        }
+
+        .modal-dialog.analytics-modal-dialog {
+            position: relative !important;
+            width: min(1220px, calc(100vw - 32px)) !important;
+            max-width: 96vw !important;
+            height: calc(100vh - 40px) !important;
+            max-height: calc(100vh - 40px) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 16px !important;
+            box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
+            overflow: hidden !important;
+            margin: auto 0 !important;
+            z-index: 100 !important;
+        }
+
+        .analytics-modal-dialog .modal-header {
+            padding: 18px 26px !important;
+            background: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-shrink: 0 !important;
         }
 
         .analytics-modal-body {
-            padding: 24px;
-            overflow-y: auto;
-            flex: 1;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            padding: 24px 28px !important;
+            background: #f8fafc !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            flex: 1 1 0% !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            max-height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 22px !important;
+            overscroll-behavior-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: thin !important;
+            scrollbar-color: #94a3b8 #f1f5f9 !important;
+        }
+
+        .analytics-modal-body:focus {
+            outline: none !important;
+        }
+
+        .analytics-modal-body > * {
+            flex-shrink: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .analytics-modal-body::-webkit-scrollbar {
+            width: 10px !important;
+        }
+
+        .analytics-modal-body::-webkit-scrollbar-track {
+            background: #f1f5f9 !important;
+            border-radius: 8px !important;
+        }
+
+        .analytics-modal-body::-webkit-scrollbar-thumb {
+            background: #94a3b8 !important;
+            border-radius: 8px !important;
+            border: 2px solid #f1f5f9 !important;
+        }
+
+        .analytics-modal-body::-webkit-scrollbar-thumb:hover {
+            background: #64748b !important;
         }
 
         .analytics-summary-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 16px 20px;
-            background: var(--surface-soft);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 16px !important;
+            padding: 20px 24px !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 14px !important;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+            min-height: 84px !important;
+            flex-shrink: 0 !important;
         }
 
         .analytics-summary-details strong {
-            display: block;
-            font-size: 14px;
-            font-weight: 700;
-            word-break: break-all;
+            display: block !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+            word-break: break-all !important;
         }
 
         .analytics-summary-details span {
-            display: block;
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 2px;
-            word-break: break-all;
+            display: block !important;
+            font-size: 13px !important;
+            color: #64748b !important;
+            margin-top: 4px !important;
+            word-break: break-all !important;
+        }
+
+        /* 4 KPI Cards Grid */
+        .analytics-kpi-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+            gap: 16px !important;
+            flex-shrink: 0 !important;
+            width: 100% !important;
+        }
+
+        .analytics-kpi-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 14px !important;
+            padding: 22px 24px !important;
+            min-height: 148px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+            flex-shrink: 0 !important;
+            transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+        }
+
+        .analytics-kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .analytics-kpi-top {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+        }
+
+        .analytics-kpi-label {
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+        }
+
+        .analytics-kpi-icon {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 8px !important;
+            background: #f1f5f9 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #0f172a !important;
+            flex-shrink: 0 !important;
+        }
+
+        .analytics-kpi-value {
+            font-size: 32px !important;
+            font-weight: 800 !important;
+            color: #0f172a !important;
+            margin: 10px 0 4px 0 !important;
+            letter-spacing: -0.03em !important;
+            line-height: 1.15 !important;
+            word-break: break-all !important;
+        }
+
+        .analytics-kpi-caption {
+            font-size: 12.5px !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+        }
+
+        /* Breakdowns Grid */
+        .analytics-breakdown-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important;
+            gap: 18px !important;
+            flex-shrink: 0 !important;
+            width: 100% !important;
+        }
+
+        .analytics-breakdown-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 14px !important;
+            padding: 24px 26px !important;
+            min-height: 270px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+            flex-shrink: 0 !important;
+        }
+
+        .analytics-breakdown-title {
+            font-size: 14.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            margin-bottom: 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding-bottom: 12px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+
+        .analytics-breakdown-list {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px !important;
+            flex: 1 1 auto !important;
+            justify-content: flex-start !important;
+        }
+
+        .analytics-progress-item {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+        }
+
+        .analytics-progress-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            font-size: 13px !important;
+        }
+
+        .analytics-progress-track {
+            height: 8px !important;
+            width: 100% !important;
+            background: #f1f5f9 !important;
+            border-radius: 9999px !important;
+            overflow: hidden !important;
+        }
+
+        .analytics-progress-fill {
+            height: 100% !important;
+            background: #0f172a !important;
+            border-radius: 9999px !important;
+            transition: width 0.4s ease !important;
+        }
+
+        /* Generic modal card rules */
+        .analytics-modal-body .card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 14px !important;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+            overflow: hidden !important;
+            flex-shrink: 0 !important;
+        }
+
+        .analytics-modal-body .analytics-card-header {
+            padding: 20px 26px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            background: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+        }
+
+        .analytics-modal-body .analytics-card-body {
+            padding: 24px 26px !important;
+            background: #ffffff !important;
         }
 
         /* Confirmation Dialog */
@@ -8040,6 +8282,98 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Analytics Preferences & Telemetry Items */
+        .analytics-preference-item:hover {
+            border-color: #0f172a !important;
+            background: #f8fafc;
+        }
+
+        /* Access Points World Map Marker & Popup */
+        .access-pin-wrapper {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .access-pin-inner {
+            position: relative;
+            width: 24px;
+            height: 30px;
+            cursor: pointer;
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+        }
+        .access-pin-inner:hover {
+            transform: scale(1.3) translateY(-4px);
+        }
+        .access-pin-pulse {
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .access-point-pin {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #000000;
+            border: 2.5px solid #ffffff;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25), 0 3px 6px rgba(0, 0, 0, 0.35);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.15s ease-in-out;
+        }
+        .access-point-pin:hover {
+            transform: scale(1.35);
+            background: #16a34a;
+            box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.35), 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+            padding: 2px;
+        }
+        .leaflet-popup-content {
+            margin: 12px 14px;
+            line-height: 1.4;
+            font-family: inherit;
+        }
+        .map-popup-card {
+            font-size: 12px;
+            color: #1e293b;
+        }
+        .map-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-weight: 700;
+            font-size: 13.5px;
+            color: #0f172a;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+        }
+        .map-popup-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 3px 0;
+            font-size: 11.5px;
+        }
+        .map-popup-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        .map-popup-value {
+            color: #0f172a;
+            font-weight: 600;
+            text-align: right;
+        }
     </style>
 </head>
 
@@ -9114,6 +9448,17 @@
                             </span>
                             <span class="modal-nav-text">Link Mode</span>
                         </button>
+                        <button class="modal-nav-btn" data-tab="analytics" type="button">
+                            <span class="modal-nav-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                            </span>
+                            <span class="modal-nav-text">Analytics</span>
+                        </button>
                         <button class="modal-nav-btn" data-tab="meta" type="button">
                             <span class="modal-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -10099,6 +10444,88 @@
                             </div>
                         </div>
 
+                        <!-- Tab: Analytics -->
+                        <div class="modal-section-pane" id="paneAnalytics">
+                            <h3>Analytics & Telemetry</h3>
+                            <br>
+                            <div class="form-card">
+                                <div class="form-card-header">
+                                    <div class="form-card-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                                        </svg>
+                                        <span>Visitor Telemetry Collection</span>
+                                    </div>
+                                    <span class="form-badge-optional">Granular Capture</span>
+                                </div>
+                                <p style="font-size:12.5px; color:#64748b; margin-bottom:16px;">
+                                    Configure which telemetry parameters are captured from the visitor's browser and stored in the database.
+                                </p>
+
+                                <div style="display:flex; flex-direction:column; gap:12px;">
+                                    <!-- 1. Ensure location -->
+                                    <label class="analytics-preference-item" style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; padding:14px; border:1px solid #e2e8f0; border-radius:10px; transition:border-color 0.2s, background 0.2s;">
+                                        <input type="checkbox" id="modalTrackLocation" checked style="width:18px; height:18px; accent-color:#000; margin-top:2px; cursor:pointer;">
+                                        <div style="flex:1;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <strong style="font-size:13.5px; color:#0f172a;">1. Ensure location</strong>
+                                                <span class="badge" style="font-size:10px; padding:2px 7px; background:#000; color:#fff; font-weight:700; border-radius:4px;">WORLD MAP</span>
+                                            </div>
+                                            <p style="margin:4px 0 0; font-size:12px; color:#64748b; line-height:1.45;">
+                                                Capture coordinates (latitude, longitude) and country/city information from visitor requests to plot real-time points of access on the interactive world map.
+                                            </p>
+                                        </div>
+                                    </label>
+
+                                    <!-- 2. Capture User Agent -->
+                                    <label class="analytics-preference-item" style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; padding:14px; border:1px solid #e2e8f0; border-radius:10px; transition:border-color 0.2s, background 0.2s;">
+                                        <input type="checkbox" id="modalTrackUserAgent" checked style="width:18px; height:18px; accent-color:#000; margin-top:2px; cursor:pointer;">
+                                        <div style="flex:1;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <strong style="font-size:13.5px; color:#0f172a;">2. Capture User Agent</strong>
+                                                <span class="badge" style="font-size:10px; padding:2px 7px; background:#f1f5f9; color:#475569; font-weight:700; border-radius:4px;">BROWSER &amp; OS</span>
+                                            </div>
+                                            <p style="margin:4px 0 0; font-size:12px; color:#64748b; line-height:1.45;">
+                                                Parse and record client hardware category (Mobile, Desktop, Tablet, Bot), browser engine, and operating system.
+                                            </p>
+                                        </div>
+                                    </label>
+
+                                    <!-- 3. Capture IP -->
+                                    <label class="analytics-preference-item" style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; padding:14px; border:1px solid #e2e8f0; border-radius:10px; transition:border-color 0.2s, background 0.2s;">
+                                        <input type="checkbox" id="modalTrackIp" checked style="width:18px; height:18px; accent-color:#000; margin-top:2px; cursor:pointer;">
+                                        <div style="flex:1;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <strong style="font-size:13.5px; color:#0f172a;">3. Capture IP</strong>
+                                                <span class="badge" style="font-size:10px; padding:2px 7px; background:#f1f5f9; color:#475569; font-weight:700; border-radius:4px;">IP ADDRESS</span>
+                                            </div>
+                                            <p style="margin:4px 0 0; font-size:12px; color:#64748b; line-height:1.45;">
+                                                Record visitor IPv4/IPv6 network addresses and edge proxy connecting addresses.
+                                            </p>
+                                        </div>
+                                    </label>
+
+                                    <!-- 4. Capture Referrer -->
+                                    <label class="analytics-preference-item" style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; padding:14px; border:1px solid #e2e8f0; border-radius:10px; transition:border-color 0.2s, background 0.2s;">
+                                        <input type="checkbox" id="modalTrackReferrer" checked style="width:18px; height:18px; accent-color:#000; margin-top:2px; cursor:pointer;">
+                                        <div style="flex:1;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <strong style="font-size:13.5px; color:#0f172a;">4. Capture Referrer</strong>
+                                                <span class="badge" style="font-size:10px; padding:2px 7px; background:#f1f5f9; color:#475569; font-weight:700; border-radius:4px;">REFERRER</span>
+                                            </div>
+                                            <p style="margin:4px 0 0; font-size:12px; color:#64748b; line-height:1.45;">
+                                                Record the referring URL origin header to track inbound traffic channels and campaigns.
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Tab: Tags & Notes -->
                         <div class="modal-section-pane" id="paneMeta">
                             <h3>Tags & Notes</h3>
@@ -10362,13 +10789,23 @@
                 <!-- Link Info Summary -->
                 <div class="analytics-summary-box">
                     <div class="analytics-summary-details">
-                        <strong id="analyticsShortUrlDisplay">—</strong>
-                        <span id="analyticsOriginalUrlDisplay">—</span>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <span class="badge" style="font-size:10px; font-weight:700; background:#0f172a; color:#ffffff; padding:4px 9px; border-radius:6px; letter-spacing:0.04em;">SHORT LINK</span>
+                            <strong id="analyticsShortUrlDisplay" style="font-size:16px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color:#0f172a;">—</strong>
+                            <button type="button" class="btn btn-secondary" id="analyticsCopyShortBtn" title="Copy Short URL" style="height:30px; padding:0 12px; font-size:12px; border-radius:6px; display:inline-flex; align-items:center; gap:6px; font-weight:600;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                <span>Copy</span>
+                            </button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+<!--                            <span style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Destination:</span>-->
+                            <span id="analyticsOriginalUrlDisplay" style="font-size:13.5px; color:#334155; word-break:break-all; font-weight:500;">—</span>
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
                         <button class="btn btn-secondary" id="analyticsQrBtn" type="button"
-                            style="display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 14px; font-size:12.5px; border-radius:8px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            style="display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 16px; font-size:13px; border-radius:8px; font-weight:600;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="7" height="7" rx="1.5" />
                                 <rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -10377,8 +10814,9 @@
                             </svg>
                             <span>QR Code</span>
                         </button>
-                        <button class="btn btn-primary" id="analyticsEditLinkBtn" type="button">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        <button class="btn btn-primary" id="analyticsEditLinkBtn" type="button"
+                            style="display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 16px; font-size:13px; border-radius:8px; font-weight:600;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                             </svg>
@@ -10387,13 +10825,63 @@
                     </div>
                 </div>
 
+                <!-- 4 KPI Summary Cards Grid -->
+                <div class="analytics-kpi-grid">
+                    <!-- 1. Total Clicks -->
+                    <div class="analytics-kpi-card">
+                        <div class="analytics-kpi-top">
+                            <span class="analytics-kpi-label">Total Clicks</span>
+                            <div class="analytics-kpi-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                            </div>
+                        </div>
+                        <div class="analytics-kpi-value" id="kpiTotalClicks">—</div>
+                        <div class="analytics-kpi-caption" id="kpiClicksPeriod">Selected period</div>
+                    </div>
+
+                    <!-- 2. Unique Visitors -->
+                    <div class="analytics-kpi-card">
+                        <div class="analytics-kpi-top">
+                            <span class="analytics-kpi-label">Unique Visitors</span>
+                            <div class="analytics-kpi-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </div>
+                        </div>
+                        <div class="analytics-kpi-value" id="kpiUniqueVisitors">—</div>
+                        <div class="analytics-kpi-caption" id="kpiUniqueRatio">Distinct IP addresses</div>
+                    </div>
+
+                    <!-- 3. Top Location -->
+                    <div class="analytics-kpi-card">
+                        <div class="analytics-kpi-top">
+                            <span class="analytics-kpi-label">Top Location</span>
+                            <div class="analytics-kpi-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </div>
+                        </div>
+                        <div class="analytics-kpi-value" style="font-size: 22px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiTopCountry">—</div>
+                        <div class="analytics-kpi-caption" id="kpiTopCity">Country / City</div>
+                    </div>
+
+                    <!-- 4. Top Device & Platform -->
+                    <div class="analytics-kpi-card">
+                        <div class="analytics-kpi-top">
+                            <span class="analytics-kpi-label">Top Platform</span>
+                            <div class="analytics-kpi-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                            </div>
+                        </div>
+                        <div class="analytics-kpi-value" style="font-size: 22px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiTopDevice">—</div>
+                        <div class="analytics-kpi-caption" id="kpiTopBrowser">Device &amp; Browser</div>
+                    </div>
+                </div>
+
                 <!-- Clicks Chart Card -->
-                <div class="card">
+                <div class="card" style="min-height: 350px;">
                     <div class="analytics-card-header">
                         <div>
-                            <h3 class="analytics-card-title">Clicks</h3>
-                            <p class="page-subtitle" id="analyticsDateRangeText">Daily clicks for the selected period.
-                            </p>
+                            <h3 class="analytics-card-title">Clicks &amp; Traffic Trends</h3>
+                            <p class="page-subtitle" id="analyticsDateRangeText">Daily clicks for the selected period.</p>
                         </div>
                         <select class="analytics-range-select" id="analyticsModalRange" aria-label="Range selector">
                             <option value="7">Last 7 days</option>
@@ -10401,25 +10889,46 @@
                             <option value="90">Last 90 days</option>
                         </select>
                     </div>
-                    <div class="analytics-card-body">
-                        <div class="analytics-stat-group">
-                            <div class="analytics-stat-number" id="analyticsModalTotalClicks">—</div>
-                            <div class="analytics-stat-label">total clicks</div>
-                        </div>
-                        <div class="chart-container" id="analyticsModalChartContainer">
+                    <div class="analytics-card-body" style="padding: 24px 26px;">
+                        <div class="chart-container" id="analyticsModalChartContainer" style="height: 250px; min-height: 250px;">
                             <div class="chart-empty" id="analyticsModalChartEmpty">Loading click data...</div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Breakdowns Grid: Devices & Locations -->
+                <div class="analytics-breakdown-grid">
+                    <!-- Devices & Platforms -->
+                    <div class="analytics-breakdown-card">
+                        <h4 class="analytics-breakdown-title">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                            <span>Devices &amp; Platforms</span>
+                        </h4>
+                        <div class="analytics-breakdown-list" id="analyticsDeviceBreakdownList">
+                            <div class="chart-empty" style="min-height: 150px; font-size: 13px;">Loading device telemetry...</div>
+                        </div>
+                    </div>
+
+                    <!-- Top Locations & Referrers -->
+                    <div class="analytics-breakdown-card">
+                        <h4 class="analytics-breakdown-title">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            <span>Locations &amp; Referrers</span>
+                        </h4>
+                        <div class="analytics-breakdown-list" id="analyticsLocationBreakdownList">
+                            <div class="chart-empty" style="min-height: 150px; font-size: 13px;">Loading geographic telemetry...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Recipient OTP & Email Delivery Tracking Card -->
-                <div class="card" id="analyticsOtpTrackingCard" style="display:none; margin-top: 20px;">
+                <div class="card" id="analyticsOtpTrackingCard" style="display:none; margin-top: 4px;">
                     <div class="analytics-card-header" style="flex-wrap: wrap; gap: 12px;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <h3 class="analytics-card-title">Recipient OTP &amp; Email Delivery Tracking</h3>
                                 <span class="pro-tag-badge"
-                                    style="background:#eef2ff; color:#4f46e5; border-color:#c7d2fe; display:inline-flex;">
+                                    style="background:#000000; color:#ffffff; border-color:#000000; display:inline-flex;">
                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2.5">
                                         <rect width="20" height="16" x="2" y="4" rx="2" />
@@ -10431,56 +10940,56 @@
                             <p class="page-subtitle">Real-time status of individual invitations, 1px tracking beacon
                                 opens, OTP requests, and page access.</p>
                         </div>
-                        <button class="btn" id="refreshOtpRecipientsBtn" type="button"
-                            style="height:32px; font-size:12px;">Refresh Tracking</button>
+                        <button class="btn btn-secondary" id="refreshOtpRecipientsBtn" type="button"
+                            style="height:34px; font-size:12.5px; font-weight:600; padding:0 14px;">Refresh Tracking</button>
                     </div>
 
                     <!-- Metric summary chips -->
                     <div
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; padding: 0 4px;">
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 20px; padding: 20px 24px 0 24px;">
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
                             <div
-                                style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
                                 Total Recipients</div>
-                            <div style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 4px;"
+                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;"
                                 id="otpMetricTotal">0</div>
                         </div>
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
                             <div
-                                style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
                                 Emails Sent</div>
-                            <div style="font-size: 20px; font-weight: 700; color: #2563eb; margin-top: 4px;"
+                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;"
                                 id="otpMetricSent">0</div>
                         </div>
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
                             <div
-                                style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
                                 Email Opened (1px)</div>
-                            <div style="font-size: 20px; font-weight: 700; color: #7c3aed; margin-top: 4px;"
+                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;"
                                 id="otpMetricOpened">0</div>
                         </div>
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
                             <div
-                                style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
                                 OTP Called</div>
-                            <div style="font-size: 20px; font-weight: 700; color: #d97706; margin-top: 4px;"
+                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;"
                                 id="otpMetricOtpCalled">0</div>
                         </div>
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
                             <div
-                                style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
                                 Page Opened</div>
-                            <div style="font-size: 20px; font-weight: 700; color: #16a34a; margin-top: 4px;"
+                            <div style="font-size: 24px; font-weight: 800; color: #16a34a; margin-top: 6px;"
                                 id="otpMetricPageOpened">0</div>
                         </div>
                     </div>
 
-                    <div class="table-wrapper">
+                    <div class="table-wrapper" style="padding: 0 24px 20px 24px;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -10493,7 +11002,7 @@
                             </thead>
                             <tbody id="otpRecipientsTableBody">
                                 <tr>
-                                    <td colspan="5" class="table-empty-state" style="padding:28px 16px;">
+                                    <td colspan="5" class="table-empty-state" style="padding:32px 16px;">
                                         <span style="color:#64748b;">No OTP recipients tracked for this URL.</span>
                                     </td>
                                 </tr>
@@ -10502,45 +11011,72 @@
                     </div>
                 </div>
 
+                <!-- Points of Access (World Map) Card -->
+                <div class="card" id="analyticsMapCard" style="min-height: 540px;">
+                    <div class="analytics-card-header" style="flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <h3 class="analytics-card-title">Points of Access</h3>
+                                <span class="pro-tag-badge" style="background:#000000; color:#ffffff; border-color:#000000; display:inline-flex;">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                    </svg>
+                                    WORLD MAP
+                                </span>
+                            </div>
+                            <p class="page-subtitle">Real-time geographic distribution of link access points plotted on an interactive world map.</p>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span id="mapPointCountBadge" style="font-size:12px; font-weight:700; color:#0f172a; background:#f1f5f9; padding:5px 12px; border-radius:6px; border:1px solid #e2e8f0;">0 Points Plotted</span>
+                            <button class="btn btn-secondary" id="resetMapZoomBtn" type="button" style="height:34px; font-size:12.5px; font-weight:600; padding:0 14px;">Reset View</button>
+                        </div>
+                    </div>
+                    <div class="analytics-card-body" style="padding:0; position:relative;">
+                        <div id="analyticsWorldMap" style="height:460px; min-height:460px; width:100%; border-radius:0 0 14px 14px; background:#f8fafc; z-index:1;"></div>
+                    </div>
+                </div>
+
                 <!-- Access Log Card -->
-                <div class="card">
+                <div class="card" style="min-height: 420px;">
                     <div class="analytics-card-header">
                         <div>
                             <h3 class="analytics-card-title">Access Log</h3>
                             <p class="page-subtitle">Recent visitor requests recorded for this URL.</p>
                         </div>
-                        <button class="btn" id="refreshAccessLogsBtn" type="button"
-                            style="height:32px;font-size:12px;">Refresh</button>
+                        <button class="btn btn-secondary" id="refreshAccessLogsBtn" type="button"
+                            style="height:34px; font-size:12.5px; font-weight:600; padding:0 14px;">Refresh</button>
                     </div>
-                    <div class="table-wrapper">
+                    <div class="table-wrapper" style="min-height: 280px;">
                         <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Accessed At</th>
                                     <th>IP Address</th>
-                                    <th>User Agent</th>
+                                    <th>Location</th>
+                                    <th>Device &amp; Browser</th>
                                     <th>Referrer</th>
-                                    <th>Short Code</th>
                                 </tr>
                             </thead>
                             <tbody id="accessLogsTableBody">
                                 <tr>
-                                    <td colspan="5" class="table-empty-state" style="padding:40px 16px;">
+                                    <td colspan="5" class="table-empty-state" style="padding:48px 16px;">
                                         <div class="loading-state-box" style="padding:0;">
-                                            <svg class="spin-icon" width="20" height="20" viewBox="0 0 24 24"
+                                            <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2.5"
                                                 style="color:#000000;">
                                                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                                             </svg>
-                                            <span>Loading access logs...</span>
+                                            <span style="font-weight:500;">Loading access logs...</span>
                                         </div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="table-pagination">
-                        <span id="accessLogsPaginationInfo">Loading...</span>
+                    <div class="table-pagination" style="padding:16px 24px;">
+                        <span id="accessLogsPaginationInfo" style="font-weight:500;">Loading...</span>
                         <div class="pagination-actions">
                             <button class="pagination-btn" id="accessLogsPrevBtn" type="button">← Previous</button>
                             <button class="pagination-btn" id="accessLogsNextBtn" type="button">Next →</button>
@@ -11901,7 +12437,7 @@
             selectedUrl: null,
             selectedOriginalUrl: null,
             accessLogPage: 0,
-            accessLogPageSize: 10,
+            accessLogPageSize: 20,
             modalMode: "create", // "create" | "edit"
             editingOriginalNewUrl: null,
             activeApiKey: null,
@@ -14529,18 +15065,64 @@
             const foundLink = (appState.currentLinksData || []).find(l => l.shortLink === shortUrl);
             appState.selectedPublicId = publicId || foundLink?.publicId || "";
 
-            document.getElementById("analyticsShortUrlDisplay").textContent = shortUrl;
-            document.getElementById("analyticsOriginalUrlDisplay").textContent = originalUrl || "—";
-            document.getElementById("analyticsModalRange").value = String(appState.urlAnalyticsRange);
+            const shortUrlEl = document.getElementById("analyticsShortUrlDisplay");
+            if (shortUrlEl) shortUrlEl.textContent = shortUrl;
+            const origUrlEl = document.getElementById("analyticsOriginalUrlDisplay");
+            if (origUrlEl) origUrlEl.textContent = originalUrl || "—";
+            const rangeSelectEl = document.getElementById("analyticsModalRange");
+            if (rangeSelectEl) rangeSelectEl.value = String(appState.urlAnalyticsRange);
+
+            // Reset KPI cards to clean loading state
+            const kpiTotalClicks = document.getElementById("kpiTotalClicks");
+            if (kpiTotalClicks) kpiTotalClicks.innerHTML = getInlineSpinnerHtml(16);
+            const kpiVisitors = document.getElementById("kpiUniqueVisitors");
+            if (kpiVisitors) kpiVisitors.innerHTML = getInlineSpinnerHtml(16);
+            const kpiCountry = document.getElementById("kpiTopCountry");
+            if (kpiCountry) kpiCountry.textContent = "—";
+            const kpiCity = document.getElementById("kpiTopCity");
+            if (kpiCity) kpiCity.textContent = "Country / City";
+            const kpiDevice = document.getElementById("kpiTopDevice");
+            if (kpiDevice) kpiDevice.textContent = "—";
+            const kpiBrowser = document.getElementById("kpiTopBrowser");
+            if (kpiBrowser) kpiBrowser.textContent = "Device & Browser";
+
+            const devBreakdown = document.getElementById("analyticsDeviceBreakdownList");
+            if (devBreakdown) devBreakdown.innerHTML = `<div class="chart-empty" style="min-height: 150px; font-size: 13px;">Analyzing device telemetry...</div>`;
+            const locBreakdown = document.getElementById("analyticsLocationBreakdownList");
+            if (locBreakdown) locBreakdown.innerHTML = `<div class="chart-empty" style="min-height: 150px; font-size: 13px;">Analyzing geographic telemetry...</div>`;
 
             const modal = document.getElementById("urlAnalyticsModal");
             modal.classList.add("open");
             modal.setAttribute("aria-hidden", "false");
             document.body.style.overflow = "hidden";
 
+            const bodyEl = document.querySelector(".analytics-modal-body");
+            if (bodyEl) {
+                bodyEl.scrollTop = 0;
+            }
+
+            // Initialize or prepare world map immediately
+            initOrGetAnalyticsWorldMap();
+
             loadUrlAnalyticsData();
             loadAccessLogsData();
             loadOtpRecipientsData();
+
+            setTimeout(() => {
+                if (analyticsWorldMap) {
+                    analyticsWorldMap.invalidateSize(true);
+                }
+            }, 80);
+            setTimeout(() => {
+                if (analyticsWorldMap) {
+                    analyticsWorldMap.invalidateSize(true);
+                }
+            }, 250);
+            setTimeout(() => {
+                if (analyticsWorldMap) {
+                    analyticsWorldMap.invalidateSize(true);
+                }
+            }, 500);
         }
 
         function closeUrlAnalyticsModal() {
@@ -14552,10 +15134,51 @@
 
         document.getElementById("urlAnalyticsCloseBtn").addEventListener("click", closeUrlAnalyticsModal);
         document.getElementById("urlAnalyticsBackdrop").addEventListener("click", closeUrlAnalyticsModal);
+        
+        // Forward wheel events from modal header so scrolling works even when mouse is on the header
+        document.querySelector(".analytics-modal-dialog .modal-header")?.addEventListener("wheel", (e) => {
+            const bodyEl = document.querySelector(".analytics-modal-body");
+            if (bodyEl) {
+                bodyEl.scrollTop += e.deltaY;
+            }
+        }, { passive: true });
         document.getElementById("analyticsQrBtn")?.addEventListener("click", () => {
             const shortUrl = appState.selectedUrl;
             const pubId = appState.selectedPublicId;
             openQrCodeModal(pubId, shortUrl);
+        });
+
+        // Copy short link from analytics summary box
+        document.getElementById("analyticsCopyShortBtn")?.addEventListener("click", async () => {
+            const shortUrl = appState.selectedUrl;
+            if (!shortUrl) return;
+            const btn = document.getElementById("analyticsCopyShortBtn");
+            const originalHtml = btn ? btn.innerHTML : "";
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(shortUrl);
+                } else {
+                    const ta = document.createElement("textarea");
+                    ta.value = shortUrl;
+                    ta.style.position = "fixed";
+                    ta.style.opacity = "0";
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                }
+                if (btn) {
+                    btn.innerHTML = `
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span style="color:#16a34a; font-weight:700;">Copied!</span>
+                    `;
+                    setTimeout(() => {
+                        btn.innerHTML = originalHtml;
+                    }, 2000);
+                }
+            } catch (err) {
+                showToast("info", "Link copied", "Short link copied to clipboard.");
+            }
         });
 
         document.getElementById("analyticsModalRange").addEventListener("change", (e) => {
@@ -14604,14 +15227,16 @@
             if (!appState.selectedUrl) return;
 
             const container = document.getElementById("analyticsModalChartContainer");
-            const totalClicksEl = document.getElementById("analyticsModalTotalClicks");
-            totalClicksEl.innerHTML = getInlineSpinnerHtml(14);
-            container.innerHTML = getSpinnerHtml(20, "Loading click data...");
+            const kpiTotalClicksEl = document.getElementById("kpiTotalClicks");
+            if (kpiTotalClicksEl) kpiTotalClicksEl.innerHTML = getInlineSpinnerHtml(16);
+            if (container) container.innerHTML = getSpinnerHtml(20, "Loading click data...");
 
             try {
                 const { startDate, endDate } = getDateRange(appState.urlAnalyticsRange);
-                document.getElementById("analyticsDateRangeText").textContent =
-                    `${formatDate(startDate)} – ${formatDate(endDate)}`;
+                const dateRangeTextEl = document.getElementById("analyticsDateRangeText");
+                if (dateRangeTextEl) {
+                    dateRangeTextEl.textContent = `${formatDate(startDate)} – ${formatDate(endDate)}`;
+                }
 
                 const query = new URLSearchParams({
                     newUrl: appState.selectedUrl,
@@ -14624,15 +15249,18 @@
 
                 if (response.ok && result.success && result.data) {
                     const data = result.data;
-                    totalClicksEl.textContent = formatNumber(data.totalClicks || 0);
-                    renderSvgBarChart(container, data.dailyClicks || []);
+                    const totalClicks = Number(data.totalClicks || 0);
+                    if (kpiTotalClicksEl) kpiTotalClicksEl.textContent = formatNumber(totalClicks);
+                    const periodEl = document.getElementById("kpiClicksPeriod");
+                    if (periodEl) periodEl.textContent = `Last ${appState.urlAnalyticsRange} days`;
+                    if (container) renderSvgBarChart(container, data.dailyClicks || []);
                 } else {
-                    totalClicksEl.textContent = "0";
-                    renderSvgBarChart(container, []);
+                    if (kpiTotalClicksEl) kpiTotalClicksEl.textContent = "0";
+                    if (container) renderSvgBarChart(container, []);
                 }
             } catch (err) {
-                totalClicksEl.textContent = "—";
-                container.innerHTML = `<div class="chart-empty">Unable to load link analytics.</div>`;
+                if (kpiTotalClicksEl) kpiTotalClicksEl.textContent = "—";
+                if (container) container.innerHTML = `<div class="chart-empty">Unable to load link analytics.</div>`;
             }
         }
 
@@ -14650,6 +15278,8 @@
             const pubId = appState.selectedPublicId || (appState.currentLinksData || []).find(l => l.shortLink === appState.selectedUrl)?.publicId;
             if (!pubId) {
                 tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No public identifier available for this link.</td></tr>`;
+                updateAnalyticsWorldMap([]);
+                updateAnalyticsStatsFromLogs([], 0);
                 return;
             }
 
@@ -14665,7 +15295,9 @@
 
                 if (response.ok && result.success && result.data) {
                     const data = result.data;
-                    renderAccessLogsTable(data.content || []);
+                    const logs = data.content || [];
+                    renderAccessLogsTable(logs);
+                    updateAnalyticsStatsFromLogs(logs, Number(data.totalElements || logs.length));
 
                     const total = Number(data.totalElements || 0);
                     const page = Number(data.number || 0);
@@ -14680,37 +15312,471 @@
                     document.getElementById("accessLogsNextBtn").disabled = data.last === true || end >= total;
                 } else {
                     tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No access logs found.</td></tr>`;
+                    updateAnalyticsWorldMap([]);
+                    updateAnalyticsStatsFromLogs([], 0);
                 }
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">Unable to load access logs.</td></tr>`;
+                updateAnalyticsWorldMap([]);
+                updateAnalyticsStatsFromLogs([], 0);
             }
+        }
+
+        function updateAnalyticsStatsFromLogs(logs, totalLogsCount) {
+            const list = Array.isArray(logs) ? logs : [];
+            const uniqueIps = new Set(list.map(l => l.ipAddress).filter(Boolean));
+            const uniqueCount = uniqueIps.size;
+
+            // 1. KPI: Unique Visitors
+            const visitorsEl = document.getElementById("kpiUniqueVisitors");
+            const visitorsRatioEl = document.getElementById("kpiUniqueRatio");
+            if (visitorsEl) {
+                visitorsEl.textContent = list.length > 0 ? formatNumber(uniqueCount) : "0";
+            }
+            if (visitorsRatioEl) {
+                if (list.length > 0) {
+                    const pct = Math.round((uniqueCount / list.length) * 100);
+                    visitorsRatioEl.textContent = `${pct}% unique (${list.length} in log sample)`;
+                } else {
+                    visitorsRatioEl.textContent = "No visitor records";
+                }
+            }
+
+            // 2. Tally geographic locations
+            const countryCounts = {};
+            const cityCounts = {};
+            list.forEach(l => {
+                const country = (l.country || "").trim();
+                const city = (l.city || "").trim();
+                if (country) {
+                    countryCounts[country] = (countryCounts[country] || 0) + 1;
+                }
+                if (city) {
+                    cityCounts[city] = (cityCounts[city] || 0) + 1;
+                }
+            });
+
+            const sortedCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+            const sortedCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]);
+
+            const topCountryEl = document.getElementById("kpiTopCountry");
+            const topCityEl = document.getElementById("kpiTopCity");
+            if (topCountryEl) {
+                if (sortedCountries.length > 0) {
+                    topCountryEl.textContent = sortedCountries[0][0];
+                    topCountryEl.title = `${sortedCountries[0][0]} (${sortedCountries[0][1]} clicks)`;
+                } else {
+                    topCountryEl.textContent = list.length > 0 ? "Global / Unknown" : "—";
+                }
+            }
+            if (topCityEl) {
+                if (sortedCities.length > 0) {
+                    topCityEl.textContent = `Top City: ${sortedCities[0][0]} (${sortedCities[0][1]})`;
+                } else if (sortedCountries.length > 0) {
+                    topCityEl.textContent = `${sortedCountries.length} countries recorded`;
+                } else {
+                    topCityEl.textContent = "Country / City";
+                }
+            }
+
+            // 3. Tally devices & platforms
+            const deviceCounts = {};
+            const browserCounts = {};
+            const osCounts = {};
+            list.forEach(l => {
+                const dev = (l.device || "").trim() || "Unknown";
+                const brw = (l.browser || "").trim() || "Unknown";
+                const os = (l.os || "").trim() || "Unknown";
+                deviceCounts[dev] = (deviceCounts[dev] || 0) + 1;
+                browserCounts[brw] = (browserCounts[brw] || 0) + 1;
+                osCounts[os] = (osCounts[os] || 0) + 1;
+            });
+
+            const sortedDevices = Object.entries(deviceCounts).sort((a, b) => b[1] - a[1]);
+            const sortedBrowsers = Object.entries(browserCounts).sort((a, b) => b[1] - a[1]);
+            const sortedOs = Object.entries(osCounts).sort((a, b) => b[1] - a[1]);
+
+            const topDeviceEl = document.getElementById("kpiTopDevice");
+            const topBrowserEl = document.getElementById("kpiTopBrowser");
+            if (topDeviceEl) {
+                if (sortedDevices.length > 0 && sortedDevices[0][0] !== "Unknown") {
+                    const devPct = Math.round((sortedDevices[0][1] / list.length) * 100);
+                    topDeviceEl.textContent = `${sortedDevices[0][0]} (${devPct}%)`;
+                } else if (sortedOs.length > 0 && sortedOs[0][0] !== "Unknown") {
+                    topDeviceEl.textContent = sortedOs[0][0];
+                } else {
+                    topDeviceEl.textContent = list.length > 0 ? "Web Browser" : "—";
+                }
+            }
+            if (topBrowserEl) {
+                const topB = sortedBrowsers.length > 0 ? sortedBrowsers[0][0] : "";
+                const topO = sortedOs.length > 0 ? sortedOs[0][0] : "";
+                if (topB && topO && topB !== "Unknown" && topO !== "Unknown") {
+                    topBrowserEl.textContent = `${topB} • ${topO}`;
+                } else if (topB && topB !== "Unknown") {
+                    topBrowserEl.textContent = topB;
+                } else {
+                    topBrowserEl.textContent = "Device & Browser";
+                }
+            }
+
+            // 4. Render Devices & Browsers breakdown
+            const deviceContainer = document.getElementById("analyticsDeviceBreakdownList");
+            if (deviceContainer) {
+                if (list.length === 0) {
+                    deviceContainer.innerHTML = `<div class="chart-empty" style="min-height: 150px; font-size: 13px;">No device telemetry recorded yet for this URL.</div>`;
+                } else {
+                    // Combine top devices / OS / browsers into clean progress items
+                    const comboCounts = {};
+                    list.forEach(l => {
+                        const d = (l.device && l.device !== "Unknown") ? l.device : (l.os && l.os !== "Unknown" ? l.os : "Other");
+                        const b = (l.browser && l.browser !== "Unknown") ? l.browser : "";
+                        const label = b ? `${d} (${b})` : d;
+                        comboCounts[label] = (comboCounts[label] || 0) + 1;
+                    });
+                    const sortedCombo = Object.entries(comboCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+                    deviceContainer.innerHTML = sortedCombo.map(([label, count]) => {
+                        const pct = Math.max(3, Math.round((count / list.length) * 100));
+                        return `
+                            <div class="analytics-progress-item">
+                                <div class="analytics-progress-header">
+                                    <span style="font-weight:600; color:#0f172a;">${escapeHtml(label)}</span>
+                                    <span style="font-weight:600; color:#64748b; font-size:12px;">${count} click${count === 1 ? '' : 's'} &bull; ${pct}%</span>
+                                </div>
+                                <div class="analytics-progress-track">
+                                    <div class="analytics-progress-fill" style="width:${pct}%;"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
+            }
+
+            // 5. Render Locations & Referrers breakdown
+            const locationContainer = document.getElementById("analyticsLocationBreakdownList");
+            if (locationContainer) {
+                if (list.length === 0) {
+                    locationContainer.innerHTML = `<div class="chart-empty" style="min-height: 150px; font-size: 13px;">No geographic telemetry recorded yet for this URL.</div>`;
+                } else {
+                    let items = [];
+                    if (sortedCountries.length > 0) {
+                        items = sortedCountries.slice(0, 4);
+                    } else {
+                        // fallback to referrers if countries not available
+                        const refCounts = {};
+                        list.forEach(l => {
+                            const ref = (l.referer || "").trim() || "Direct";
+                            refCounts[ref] = (refCounts[ref] || 0) + 1;
+                        });
+                        items = Object.entries(refCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+                    }
+
+                    locationContainer.innerHTML = items.map(([label, count]) => {
+                        const pct = Math.max(3, Math.round((count / list.length) * 100));
+                        return `
+                            <div class="analytics-progress-item">
+                                <div class="analytics-progress-header">
+                                    <span style="font-weight:600; color:#0f172a; display:inline-flex; align-items:center; gap:6px;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                        <span>${escapeHtml(label)}</span>
+                                    </span>
+                                    <span style="font-weight:600; color:#64748b; font-size:12px;">${count} click${count === 1 ? '' : 's'} &bull; ${pct}%</span>
+                                </div>
+                                <div class="analytics-progress-track">
+                                    <div class="analytics-progress-fill" style="width:${pct}%;"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
+            }
+        }
+
+        let analyticsWorldMap = null;
+        let analyticsMapMarkersGroup = null;
+
+        function createAccessPinIcon() {
+            return L.divIcon({
+                className: 'access-pin-wrapper',
+                html: `
+                    <div class="access-pin-inner">
+                        <svg width="24" height="30" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20.25 10.8 29.25 11.28 29.64C11.69 29.98 12.31 29.98 12.72 29.64C13.2 29.25 24 20.25 24 12C24 5.37258 18.6274 0 12 0Z" fill="#000000"/>
+                            <circle cx="12" cy="11" r="5.5" fill="#ffffff"/>
+                            <circle cx="12" cy="11" r="3" fill="#16a34a"/>
+                        </svg>
+                        <div class="access-pin-pulse"></div>
+                    </div>
+                `,
+                iconSize: [24, 30],
+                iconAnchor: [12, 30],
+                popupAnchor: [0, -32]
+            });
+        }
+
+        function initOrGetAnalyticsWorldMap() {
+            const container = document.getElementById("analyticsWorldMap");
+            if (!container || typeof L === "undefined") return null;
+
+            if (!analyticsWorldMap) {
+                analyticsWorldMap = L.map("analyticsWorldMap", {
+                    zoomControl: true,
+                    attributionControl: true,
+                    minZoom: 1,
+                    maxZoom: 18,
+                    scrollWheelZoom: false
+                }).setView([20.0, 0.0], 2);
+
+                L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_42rc_1_e641a47f73ab4b4bd0900f4a", {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(analyticsWorldMap);
+
+                analyticsMapMarkersGroup = L.featureGroup().addTo(analyticsWorldMap);
+
+                // Ensure wheel events over the map scroll the modal body smoothly without getting swallowed
+                container.addEventListener("wheel", (e) => {
+                    const modalBody = document.querySelector(".analytics-modal-body");
+                    if (modalBody) {
+                        modalBody.scrollTop += e.deltaY;
+                    }
+                }, { passive: true });
+
+                document.getElementById("resetMapZoomBtn")?.addEventListener("click", () => {
+                    if (analyticsWorldMap) {
+                        analyticsWorldMap.invalidateSize(true);
+                        if (analyticsMapMarkersGroup && analyticsMapMarkersGroup.getLayers().length > 0) {
+                            const bounds = analyticsMapMarkersGroup.getBounds();
+                            if (bounds.isValid()) {
+                                const ne = bounds.getNorthEast();
+                                const sw = bounds.getSouthWest();
+                                const latDiff = Math.abs(ne.lat - sw.lat);
+                                const lngDiff = Math.abs(ne.lng - sw.lng);
+                                if (latDiff < 0.005 && lngDiff < 0.005) {
+                                    analyticsWorldMap.setView(bounds.getCenter(), 5);
+                                } else {
+                                    analyticsWorldMap.fitBounds(bounds.pad(0.2), { maxZoom: 8, padding: [40, 40] });
+                                }
+                                return;
+                            }
+                        }
+                        analyticsWorldMap.setView([20.0, 0.0], 2);
+                    }
+                });
+            } else {
+                if (analyticsWorldMap.scrollWheelZoom) {
+                    analyticsWorldMap.scrollWheelZoom.disable();
+                }
+                analyticsWorldMap.invalidateSize(true);
+            }
+
+            return analyticsWorldMap;
+        }
+
+        function updateAnalyticsWorldMap(logs) {
+            const map = initOrGetAnalyticsWorldMap();
+            if (!map || !analyticsMapMarkersGroup) return;
+
+            map.invalidateSize(true);
+            analyticsMapMarkersGroup.clearLayers();
+
+            const parsedPoints = [];
+            (logs || []).forEach(pt => {
+                if (!pt || pt.latitude == null || pt.longitude == null) return;
+                let lat = Number(pt.latitude);
+                let lng = Number(pt.longitude);
+                if (isNaN(lat) || isNaN(lng)) return;
+
+                // Auto-detect and fix inverted lat/long
+                if ((lat > 90 || lat < -90) && (lng >= -90 && lng <= 90)) {
+                    const temp = lat;
+                    lat = lng;
+                    lng = temp;
+                }
+
+                // Range validation: latitude [-90, 90], longitude [-180, 180]
+                if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+
+                parsedPoints.push({
+                    raw: pt,
+                    lat: lat,
+                    lng: lng
+                });
+            });
+
+            const badgeEl = document.getElementById("mapPointCountBadge");
+            if (badgeEl) {
+                badgeEl.textContent = `${parsedPoints.length} Point${parsedPoints.length === 1 ? '' : 's'} Plotted`;
+            }
+
+            if (parsedPoints.length === 0) {
+                map.setView([20.0, 0.0], 2);
+                return;
+            }
+
+            parsedPoints.forEach(p => {
+                const lat = p.lat;
+                const lng = p.lng;
+                const pt = p.raw;
+
+                const icon = createAccessPinIcon();
+                const marker = L.marker([lat, lng], { icon: icon });
+
+                const cityName = pt.city ? `${escapeHtml(pt.city)}, ` : "";
+                const countryName = escapeHtml(pt.country || "Access Location");
+                const ipStr = pt.ipAddress ? `<code>${escapeHtml(pt.ipAddress)}</code>` : '<span style="color:#94a3b8;">Not Tracked</span>';
+                const deviceStr = pt.device ? escapeHtml(pt.device) : "Unknown";
+                const browserStr = pt.browser ? escapeHtml(pt.browser) : "Unknown";
+                const osStr = pt.os ? escapeHtml(pt.os) : "Unknown";
+                const timeStr = formatTimestamp(pt.accessedAt);
+
+                const popupHtml = `
+                    <div class="map-popup-card">
+                        <div class="map-popup-header">
+                            <span>📍</span>
+                            <span>${cityName}${countryName}</span>
+                        </div>
+                        <div class="map-popup-row">
+                            <span class="map-popup-label">Time:</span>
+                            <span class="map-popup-value">${timeStr}</span>
+                        </div>
+                        <div class="map-popup-row">
+                            <span class="map-popup-label">IP:</span>
+                            <span class="map-popup-value">${ipStr}</span>
+                        </div>
+                        <div class="map-popup-row">
+                            <span class="map-popup-label">Device &amp; OS:</span>
+                            <span class="map-popup-value">${deviceStr} &bull; ${osStr}</span>
+                        </div>
+                        <div class="map-popup-row">
+                            <span class="map-popup-label">Browser:</span>
+                            <span class="map-popup-value">${browserStr}</span>
+                        </div>
+                        <div class="map-popup-row">
+                            <span class="map-popup-label">Coordinates:</span>
+                            <span class="map-popup-value">${lat.toFixed(4)}, ${lng.toFixed(4)}</span>
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupHtml, { offset: [0, -20] });
+                analyticsMapMarkersGroup.addLayer(marker);
+            });
+
+            try {
+                const bounds = analyticsMapMarkersGroup.getBounds();
+                if (!bounds.isValid()) {
+                    map.setView([20.0, 0.0], 2);
+                } else {
+                    const ne = bounds.getNorthEast();
+                    const sw = bounds.getSouthWest();
+                    const latDiff = Math.abs(ne.lat - sw.lat);
+                    const lngDiff = Math.abs(ne.lng - sw.lng);
+
+                    // If single point or tightly clustered points, zoom to regional level 5
+                    if (latDiff < 0.005 && lngDiff < 0.005) {
+                        map.setView(bounds.getCenter(), 5);
+                    } else {
+                        map.fitBounds(bounds.pad(0.2), {
+                            maxZoom: 8,
+                            padding: [40, 40]
+                        });
+                    }
+                }
+            } catch (e) {
+                map.setView([20.0, 0.0], 2);
+            }
+
+            setTimeout(() => {
+                if (map) map.invalidateSize(true);
+            }, 150);
         }
 
         function renderAccessLogsTable(logs) {
             const tbody = document.getElementById("accessLogsTableBody");
-            if (!logs.length) {
+            if (!logs || !logs.length) {
                 tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No access logs recorded for this link yet.</td></tr>`;
+                updateAnalyticsWorldMap([]);
                 return;
             }
 
-            tbody.innerHTML = logs.map(log => `
-            <tr>
-                <td>${formatTimestamp(log.accessedAt)}</td>
-                <td><code>${escapeHtml(log.ipAddress || "—")}</code></td>
-                <td title="${escapeAttribute(log.userAgent || "")}">
-                    <div style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                        ${escapeHtml(log.userAgent || "—")}
-                    </div>
-                </td>
-                <td title="${escapeAttribute(log.referer || "")}">
-                    <div style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                        ${escapeHtml(log.referer || "Direct")}
-                    </div>
-                </td>
-                <td>${escapeHtml(log.shortCode || "—")}</td>
-            </tr>
-        `).join("");
+            tbody.innerHTML = logs.map(log => {
+                // 1. Location display
+                let locationHtml = `<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px;">Not Tracked</span>`;
+                if (log.country || (log.latitude != null && log.longitude != null)) {
+                    const countryName = log.country || "Known Location";
+                    const cityName = log.city ? `${log.city}, ` : "";
+                    let coords = "";
+                    if (log.latitude != null && log.longitude != null) {
+                        let displayLat = Number(log.latitude);
+                        let displayLng = Number(log.longitude);
+                        if (!isNaN(displayLat) && !isNaN(displayLng)) {
+                            if ((displayLat > 90 || displayLat < -90) && (displayLng >= -90 && displayLng <= 90)) {
+                                const tmp = displayLat;
+                                displayLat = displayLng;
+                                displayLng = tmp;
+                            }
+                            coords = `<span style="display:inline-block; font-family:monospace; font-size:10px; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; margin-top:3px;">${displayLat.toFixed(4)}, ${displayLng.toFixed(4)}</span>`;
+                        }
+                    }
+                    locationHtml = `
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <span style="font-weight:600; font-size:12px; color:#0f172a; display:inline-flex; align-items:center; gap:4px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                ${escapeHtml(cityName + countryName)}
+                            </span>
+                            ${coords}
+                        </div>
+                    `;
+                }
+
+                // 2. Device & Browser display
+                let clientHtml = `<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px;">Not Tracked</span>`;
+                if (log.device || log.browser || log.os || log.userAgent) {
+                    const deviceLabel = log.device || "Unknown";
+                    const browserLabel = log.browser || "Unknown";
+                    const osLabel = log.os || "Unknown";
+                    clientHtml = `
+                        <div style="display:flex; flex-direction:column; gap:3px;">
+                            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                                <span class="badge" style="background:#0f172a; color:#fff; font-size:10px; padding:1px 6px; border-radius:4px;">${escapeHtml(deviceLabel)}</span>
+                                <span class="badge" style="background:#f1f5f9; color:#334155; font-size:10px; padding:1px 6px; border-radius:4px; font-weight:600;">${escapeHtml(browserLabel)}</span>
+                                <span class="badge" style="background:#f8fafc; border:1px solid #e2e8f0; color:#64748b; font-size:10px; padding:1px 6px; border-radius:4px;">${escapeHtml(osLabel)}</span>
+                            </div>
+                            ${log.userAgent ? `<div style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; color:#94a3b8;" title="${escapeAttribute(log.userAgent)}">${escapeHtml(log.userAgent)}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                // 3. IP Address display
+                const ipDisplay = log.ipAddress 
+                    ? `<code style="font-size:12px; font-weight:600; color:#0f172a;">${escapeHtml(log.ipAddress)}</code>`
+                    : `<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px;">Not Tracked</span>`;
+
+                return `
+                <tr>
+                    <td><div style="font-size:12px; font-weight:500; color:#0f172a;">${formatTimestamp(log.accessedAt)}</div></td>
+                    <td>${ipDisplay}</td>
+                    <td>${locationHtml}</td>
+                    <td>${clientHtml}</td>
+                    <td title="${escapeAttribute(log.referer || "")}">
+                        <div style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:#475569;">
+                            ${escapeHtml(log.referer || "Direct")}
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join("");
+
+            updateAnalyticsWorldMap(logs);
         }
+
+        window.addEventListener("resize", () => {
+            if (analyticsWorldMap && document.getElementById("urlAnalyticsModal")?.classList.contains("open")) {
+                analyticsWorldMap.invalidateSize(true);
+            }
+        });
 
         async function loadOtpRecipientsData() {
             const pubId = appState.selectedPublicId;
@@ -16925,7 +17991,7 @@
             }
         }
 
-        const MODAL_TABS = ["general", "usage", "access", "mode", "meta"];
+        const MODAL_TABS = ["general", "usage", "access", "mode", "analytics", "meta"];
         let currentModalTab = "general";
 
         function updateModalFooterButtons() {
@@ -17074,6 +18140,12 @@
             setModalGeoFenceData(null);
             document.getElementById("modalTags").value = "";
             document.getElementById("modalNotes").value = "";
+
+            // Reset Analytics checkboxes
+            document.getElementById("modalTrackLocation").checked = true;
+            document.getElementById("modalTrackUserAgent").checked = true;
+            document.getElementById("modalTrackIp").checked = true;
+            document.getElementById("modalTrackReferrer").checked = true;
 
             // Reset Mode to REDIRECT
             const redirectRadio = document.querySelector('input[name="modalLinkMode"][value="REDIRECT"]');
@@ -17265,6 +18337,13 @@
                     } else {
                         resetModalCorsUI();
                     }
+
+                    // 4. Analytics Preferences
+                    const an = data.analytics || data.analyticsPreferences || {};
+                    document.getElementById("modalTrackLocation").checked = an.trackLocation !== false;
+                    document.getElementById("modalTrackUserAgent").checked = an.trackUserAgent !== false;
+                    document.getElementById("modalTrackIp").checked = an.trackIp !== false;
+                    document.getElementById("modalTrackReferrer").checked = an.trackReferrer !== false;
                 }
             } catch (err) {
                 showToast("error", "Failed to load link details", err.message);
@@ -17741,6 +18820,12 @@
                     referrer: referrers.length ? { referrers } : null,
                     geofence: getModalGeoFenceData()
                 },
+                analytics: {
+                    trackLocation: document.getElementById("modalTrackLocation").checked,
+                    trackUserAgent: document.getElementById("modalTrackUserAgent").checked,
+                    trackIp: document.getElementById("modalTrackIp").checked,
+                    trackReferrer: document.getElementById("modalTrackReferrer").checked
+                },
                 linkMode,
                 addShortCode
             };
@@ -17927,6 +19012,12 @@
                     device: devices.length ? { devices } : null,
                     referrer: referrers.length ? { referrers } : null,
                     geofence: getModalGeoFenceData()
+                },
+                analytics: {
+                    trackLocation: document.getElementById("modalTrackLocation").checked,
+                    trackUserAgent: document.getElementById("modalTrackUserAgent").checked,
+                    trackIp: document.getElementById("modalTrackIp").checked,
+                    trackReferrer: document.getElementById("modalTrackReferrer").checked
                 }
             };
 
@@ -19028,33 +20119,31 @@
                 return;
             }
 
-            const width = 800;
-            const height = 180;
-            const padding = { top: 16, right: 12, bottom: 28, left: 36 };
+            const width = 860;
+            const height = 230;
+            const padding = { top: 22, right: 16, bottom: 32, left: 42 };
             const chartWidth = width - padding.left - padding.right;
             const chartHeight = height - padding.top - padding.bottom;
             const maxValue = Math.max(1, ...normalized.map(row => row.val));
-            const barGap = normalized.length > 45 ? 2 : 4;
-            const barWidth = Math.max(2, (chartWidth - barGap * (normalized.length - 1)) / normalized.length);
+            const slotWidth = chartWidth / normalized.length;
+            const barWidth = Math.min(18, Math.max(3, slotWidth * 0.6));
 
             const gridLines = 3;
-            let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img">`;
+            let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" style="width:100%; height:100%; display:block; overflow:visible;" role="img">`;
 
             // Horizontal Grid Lines
             for (let i = 0; i <= gridLines; i++) {
                 const y = padding.top + (chartHeight / gridLines) * i;
                 const value = Math.round(maxValue - (maxValue / gridLines) * i);
                 svg += `
-                <line class="chart-grid-line" x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}"></line>
-                <text class="chart-axis-label" x="${padding.left - 6}" y="${y + 3}" text-anchor="end">${escapeHtml(formatNumber(value))}</text>
+                <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"></line>
+                <text x="${padding.left - 8}" y="${y + 3.5}" fill="#94a3b8" font-size="10.5" font-weight="600" text-anchor="end" font-family="inherit">${escapeHtml(formatNumber(value))}</text>
             `;
             }
 
             // Bars
             normalized.forEach((row, index) => {
-                const x = padding.left + index * (barWidth + barGap);
-                const barHeight = maxValue === 0 ? 0 : (row.val / maxValue) * chartHeight;
-                const y = padding.top + chartHeight - barHeight;
+                const x = padding.left + index * slotWidth + (slotWidth - barWidth) / 2;
                 const dateObj = new Date(`${row.date}T00:00:00`);
                 const dateLabel = isNaN(dateObj.getTime())
                     ? row.date
@@ -19065,25 +20154,49 @@
                     index === normalized.length - 1 ||
                     index % Math.ceil(normalized.length / 6) === 0;
 
-                svg += `
-                <rect
-                    class="chart-bar"
-                    x="${x.toFixed(2)}"
-                    y="${y.toFixed(2)}"
-                    width="${barWidth.toFixed(2)}"
-                    height="${Math.max(1, barHeight).toFixed(2)}"
-                    rx="1.5"
-                >
-                    <title>${escapeHtml(dateLabel)}: ${escapeHtml(formatNumber(row.val))} ${escapeHtml(unitLabel)}</title>
-                </rect>
-            `;
+                if (row.val === 0) {
+                    // Subtle light dot/dash for empty days
+                    svg += `
+                    <rect
+                        x="${x.toFixed(2)}"
+                        y="${(padding.top + chartHeight - 2).toFixed(2)}"
+                        width="${barWidth.toFixed(2)}"
+                        height="2"
+                        rx="1"
+                        fill="#cbd5e1"
+                        opacity="0.7"
+                    >
+                        <title>${escapeHtml(dateLabel)}: 0 ${escapeHtml(unitLabel)}</title>
+                    </rect>
+                    `;
+                } else {
+                    const barHeight = Math.max(6, (row.val / maxValue) * chartHeight);
+                    const y = padding.top + chartHeight - barHeight;
+                    svg += `
+                    <rect
+                        class="chart-bar"
+                        x="${x.toFixed(2)}"
+                        y="${y.toFixed(2)}"
+                        width="${barWidth.toFixed(2)}"
+                        height="${barHeight.toFixed(2)}"
+                        rx="3"
+                        fill="#0f172a"
+                        style="cursor:pointer; transition: fill 0.15s ease;"
+                    >
+                        <title>${escapeHtml(dateLabel)}: ${escapeHtml(formatNumber(row.val))} ${escapeHtml(unitLabel)}</title>
+                    </rect>
+                    `;
+                }
 
                 if (showLabel) {
                     svg += `
-                    <text class="chart-axis-label"
-                          x="${(x + barWidth / 2).toFixed(2)}"
+                    <text x="${(padding.left + index * slotWidth + slotWidth / 2).toFixed(2)}"
                           y="${height - 8}"
-                          text-anchor="middle">${escapeHtml(dateLabel)}</text>
+                          fill="#64748b"
+                          font-size="10.5"
+                          font-weight="500"
+                          text-anchor="middle"
+                          font-family="inherit">${escapeHtml(dateLabel)}</text>
                 `;
                 }
             });

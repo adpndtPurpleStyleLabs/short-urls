@@ -107,7 +107,15 @@ public record CreateNewUrlRequest(
                 requiredMode = Schema.RequiredMode.NOT_REQUIRED
         )
         @JsonAlias({"customDomain", "custom_domain"})
-        String domain
+        String domain,
+
+        @Valid
+        @Schema(
+                description = "Analytics and telemetry collection preferences for the link",
+                requiredMode = Schema.RequiredMode.NOT_REQUIRED
+        )
+        @JsonAlias({"analyticsPreferences", "tracking"})
+        com.preonsurl.apis.link.dto.AnalyticsPreferences analytics
 
 ) {
 
@@ -124,9 +132,25 @@ public record CreateNewUrlRequest(
             LinkMode linkMode,
             Boolean addShortCode,
             Instant expireAt,
+            Object usageLimit,
+            String domain
+    ) {
+        this(url, customPath, usagePolicies, accessPolicies, notes, tags, linkMode, addShortCode, expireAt, usageLimit, domain, null);
+    }
+
+    public CreateNewUrlRequest(
+            String url,
+            String customPath,
+            UsagePolicies usagePolicies,
+            AccessPolicies accessPolicies,
+            String notes,
+            List<String> tags,
+            LinkMode linkMode,
+            Boolean addShortCode,
+            Instant expireAt,
             Object usageLimit
     ) {
-        this(url, customPath, usagePolicies, accessPolicies, notes, tags, linkMode, addShortCode, expireAt, usageLimit, null);
+        this(url, customPath, usagePolicies, accessPolicies, notes, tags, linkMode, addShortCode, expireAt, usageLimit, null, null);
     }
 
     public CreateNewUrlRequest(
@@ -224,6 +248,10 @@ public record CreateNewUrlRequest(
                 ? AccessPolicies.publicAccess()
                 : accessPolicies;
         return ap.validate();
+    }
+
+    public com.preonsurl.apis.link.dto.AnalyticsPreferences resolvedAnalytics() {
+        return analytics != null ? analytics : com.preonsurl.apis.link.dto.AnalyticsPreferences.allEnabled();
     }
 
     public Instant resolvedExpireAt() {
