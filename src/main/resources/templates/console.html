@@ -834,20 +834,107 @@
             justify-content: center;
         }
 
-        .home-stat-icon.blue {
-            background: #eff6ff;
-            color: #2563eb;
+        .home-stat-icon.neutral,
+        .home-stat-icon.blue,
+        .home-stat-icon.gray {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            color: #0f172a;
         }
 
         .home-stat-icon.green {
             background: #ecfdf5;
+            border: 1px solid #bbf7d0;
             color: #16a34a;
         }
 
-        .home-stat-icon.gray {
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            color: var(--text);
+        .home-stat-middle {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .home-stat-trend {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 3px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .stat-trend-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .stat-trend-badge.trend-up {
+            background: #ecfdf5;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .stat-trend-badge.trend-down {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .stat-trend-badge.trend-neutral {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-trend-subtext {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .home-stat-sparkline {
+            width: 100%;
+            height: 52px;
+            margin-top: 10px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .sparkline-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible;
+        }
+
+        .chart-bar-curr {
+            fill: #0f172a;
+            transition: fill 0.15s ease;
+            cursor: pointer;
+        }
+
+        .chart-bar-curr:hover {
+            fill: #334155;
+        }
+
+        .chart-bar-prev {
+            fill: #cbd5e1;
+            transition: fill 0.15s ease;
+            cursor: pointer;
+        }
+
+        .chart-bar-prev:hover {
+            fill: #94a3b8;
         }
 
         .home-stat-value {
@@ -8137,7 +8224,7 @@
                         <div class="card home-stat-card">
                             <div class="home-stat-top">
                                 <span class="home-stat-label">Total URLs</span>
-                                <div class="home-stat-icon blue">
+                                <div class="home-stat-icon neutral">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -8145,8 +8232,17 @@
                                     </svg>
                                 </div>
                             </div>
-                            <div class="home-stat-value" id="homeTotalUrls">—</div>
-                            <div class="home-stat-subtext">All shortened links</div>
+                            <div class="home-stat-middle">
+                                <div>
+                                    <div class="home-stat-value" id="homeTotalUrls">—</div>
+                                    <div class="home-stat-subtext">All shortened links</div>
+                                </div>
+                                <div class="home-stat-trend" id="homeTotalUrlsTrend">
+                                    <div class="stat-trend-badge trend-neutral" id="homeTotalUrlsTrendBadge">—</div>
+                                    <div class="stat-trend-subtext" id="homeTotalUrlsTrendLabel">vs previous 30 days</div>
+                                </div>
+                            </div>
+                            <div class="home-stat-sparkline" id="homeTotalUrlsSparkline"></div>
                         </div>
 
                         <div class="card home-stat-card">
@@ -8156,14 +8252,23 @@
                                     <span class="status-dot dot-active" style="width:8px;height:8px;"></span>
                                 </div>
                             </div>
-                            <div class="home-stat-value text-green" id="homeTotalActiveUrls">—</div>
-                            <div class="home-stat-subtext">Ready to serve traffic</div>
+                            <div class="home-stat-middle">
+                                <div>
+                                    <div class="home-stat-value text-green" id="homeTotalActiveUrls">—</div>
+                                    <div class="home-stat-subtext">Ready to serve traffic</div>
+                                </div>
+                                <div class="home-stat-trend" id="homeTotalActiveUrlsTrend">
+                                    <div class="stat-trend-badge trend-neutral" id="homeTotalActiveUrlsTrendBadge">—</div>
+                                    <div class="stat-trend-subtext" id="homeTotalActiveUrlsTrendLabel">vs previous 30 days</div>
+                                </div>
+                            </div>
+                            <div class="home-stat-sparkline" id="homeTotalActiveUrlsSparkline"></div>
                         </div>
 
                         <div class="card home-stat-card">
                             <div class="home-stat-top">
                                 <span class="home-stat-label">Total Served</span>
-                                <div class="home-stat-icon gray">
+                                <div class="home-stat-icon neutral">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2" stroke-linecap="round">
                                         <line x1="18" y1="20" x2="18" y2="10" />
@@ -8172,18 +8277,43 @@
                                     </svg>
                                 </div>
                             </div>
-                            <div class="home-stat-value" id="homeTotalServedCard">—</div>
-                            <div class="home-stat-subtext" id="homeServedRangeDesc">In selected range</div>
+                            <div class="home-stat-middle">
+                                <div>
+                                    <div class="home-stat-value" id="homeTotalServedCard">—</div>
+                                    <div class="home-stat-subtext" id="homeServedRangeDesc">Last 30 days</div>
+                                </div>
+                                <div class="home-stat-trend" id="homeTotalServedTrend">
+                                    <div class="stat-trend-badge trend-neutral" id="homeTotalServedTrendBadge">—</div>
+                                    <div class="stat-trend-subtext" id="homeTotalServedTrendLabel">vs previous 30 days</div>
+                                </div>
+                            </div>
+                            <div class="home-stat-sparkline" id="homeTotalServedSparkline"></div>
                         </div>
                     </div>
 
                     <!-- Serving Overview Card -->
                     <div class="card analytics-card" style="margin-bottom: 24px;">
-                        <div class="analytics-card-header">
+                        <div class="analytics-card-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                             <div>
                                 <h2 class="analytics-card-title">Serving overview</h2>
                                 <span id="homeServingDateRangeText"
                                     style="font-size: 12px; color: var(--muted); margin-top: 3px; display: block;"></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div class="analytics-chart-legend" style="display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--muted); font-weight: 500;">
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #0f172a; display: inline-block;"></span>
+                                        Current period
+                                    </span>
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; display: inline-block;"></span>
+                                        Previous period
+                                    </span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                                    <div class="stat-trend-badge trend-neutral" id="homeServingOverviewTrendBadge">—</div>
+                                    <div class="stat-trend-subtext" id="homeServingOverviewTrendLabel">vs previous 30 days</div>
+                                </div>
                             </div>
                         </div>
                         <div class="analytics-card-body">
@@ -8199,11 +8329,27 @@
 
                     <!-- URLs Created Daywise Card Below Serving Overview -->
                     <div class="card analytics-card" style="margin-bottom: 0;">
-                        <div class="analytics-card-header">
+                        <div class="analytics-card-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                             <div>
                                 <h2 class="analytics-card-title">URLs created</h2>
                                 <span id="homeCreatedDateRangeText"
                                     style="font-size: 12px; color: var(--muted); margin-top: 3px; display: block;"></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div class="analytics-chart-legend" style="display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--muted); font-weight: 500;">
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #0f172a; display: inline-block;"></span>
+                                        Current period
+                                    </span>
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; display: inline-block;"></span>
+                                        Previous period
+                                    </span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                                    <div class="stat-trend-badge trend-neutral" id="homeCreatedOverviewTrendBadge">—</div>
+                                    <div class="stat-trend-subtext" id="homeCreatedOverviewTrendLabel">vs previous 30 days</div>
+                                </div>
                             </div>
                         </div>
                         <div class="analytics-card-body">
@@ -12666,6 +12812,28 @@
             const createdDateRangeText = document.getElementById("homeCreatedDateRangeText");
             const servedRangeDesc = document.getElementById("homeServedRangeDesc");
 
+            // Trend badges and sparklines
+            const totalUrlsTrendBadge = document.getElementById("homeTotalUrlsTrendBadge");
+            const totalUrlsTrendLabel = document.getElementById("homeTotalUrlsTrendLabel");
+            const totalUrlsSparkline = document.getElementById("homeTotalUrlsSparkline");
+
+            const totalActiveUrlsTrendBadge = document.getElementById("homeTotalActiveUrlsTrendBadge");
+            const totalActiveUrlsTrendLabel = document.getElementById("homeTotalActiveUrlsTrendLabel");
+            const totalActiveUrlsSparkline = document.getElementById("homeTotalActiveUrlsSparkline");
+
+            const totalServedTrendBadge = document.getElementById("homeTotalServedTrendBadge");
+            const totalServedTrendLabel = document.getElementById("homeTotalServedTrendLabel");
+            const totalServedSparkline = document.getElementById("homeTotalServedSparkline");
+
+            const servingOverviewTrendBadge = document.getElementById("homeServingOverviewTrendBadge");
+            const servingOverviewTrendLabel = document.getElementById("homeServingOverviewTrendLabel");
+
+            const createdOverviewTrendBadge = document.getElementById("homeCreatedOverviewTrendBadge");
+            const createdOverviewTrendLabel = document.getElementById("homeCreatedOverviewTrendLabel");
+
+            const rangeDays = appState.homeAnalyticsRange || 30;
+            const vsLabelText = `vs previous ${rangeDays} days`;
+
             if (totalClicksEl) totalClicksEl.innerHTML = getInlineSpinnerHtml(14);
             if (totalServedCardEl) totalServedCardEl.innerHTML = getInlineSpinnerHtml(14);
             if (totalUrlsEl) totalUrlsEl.innerHTML = getInlineSpinnerHtml(14);
@@ -12675,18 +12843,39 @@
             if (servingContainer) servingContainer.innerHTML = getSpinnerHtml(22, "Loading serving overview...");
             if (createdContainer) createdContainer.innerHTML = getSpinnerHtml(22, "Loading URLs created overview...");
 
+            if (totalUrlsTrendBadge) { totalUrlsTrendBadge.className = "stat-trend-badge trend-neutral"; totalUrlsTrendBadge.textContent = "—"; }
+            if (totalActiveUrlsTrendBadge) { totalActiveUrlsTrendBadge.className = "stat-trend-badge trend-neutral"; totalActiveUrlsTrendBadge.textContent = "—"; }
+            if (totalServedTrendBadge) { totalServedTrendBadge.className = "stat-trend-badge trend-neutral"; totalServedTrendBadge.textContent = "—"; }
+            if (servingOverviewTrendBadge) { servingOverviewTrendBadge.className = "stat-trend-badge trend-neutral"; servingOverviewTrendBadge.textContent = "—"; }
+            if (createdOverviewTrendBadge) { createdOverviewTrendBadge.className = "stat-trend-badge trend-neutral"; createdOverviewTrendBadge.textContent = "—"; }
+
+            if (totalUrlsTrendLabel) totalUrlsTrendLabel.textContent = vsLabelText;
+            if (totalActiveUrlsTrendLabel) totalActiveUrlsTrendLabel.textContent = vsLabelText;
+            if (totalServedTrendLabel) totalServedTrendLabel.textContent = vsLabelText;
+            if (servingOverviewTrendLabel) servingOverviewTrendLabel.textContent = vsLabelText;
+            if (createdOverviewTrendLabel) createdOverviewTrendLabel.textContent = vsLabelText;
+
             try {
-                const { startDate, endDate } = getDateRange(appState.homeAnalyticsRange);
-                const query = new URLSearchParams({ startDate, endDate });
-                const response = await authenticatedFetch(`/api/analytics/overall?${query.toString()}`);
-                const result = await parseResponse(response);
+                const ranges = getComparisonDateRanges(rangeDays);
+                const currQuery = new URLSearchParams(ranges.current);
+                const prevQuery = new URLSearchParams(ranges.previous);
+
+                const [currResponse, prevResponse] = await Promise.all([
+                    authenticatedFetch(`/api/analytics/overall?${currQuery.toString()}`),
+                    authenticatedFetch(`/api/analytics/overall?${prevQuery.toString()}`).catch(() => null)
+                ]);
+
+                const currResult = await parseResponse(currResponse);
+                const prevResult = prevResponse ? await parseResponse(prevResponse).catch(() => null) : null;
 
                 if (servedRangeDesc) {
-                    servedRangeDesc.textContent = `Last ${appState.homeAnalyticsRange} days`;
+                    servedRangeDesc.textContent = `Last ${rangeDays} days`;
                 }
 
-                if (response.ok && result.success && result.data) {
-                    const data = result.data;
+                if (currResponse.ok && currResult.success && currResult.data) {
+                    const data = currResult.data;
+                    const prevData = (prevResponse && prevResponse.ok && prevResult && prevResult.success) ? prevResult.data : null;
+
                     const formattedServed = formatNumber(data.totalClicks || 0);
 
                     if (totalClicksEl) totalClicksEl.textContent = formattedServed;
@@ -12698,15 +12887,91 @@
                     const periodCreatedTotal = dailyCreated.reduce((acc, curr) => acc + (Number(curr.count) || 0), 0);
                     if (periodCreatedUrlsEl) periodCreatedUrlsEl.textContent = formatNumber(periodCreatedTotal);
 
-                    const rangeLabel = `${data.startDate || startDate} to ${data.endDate || endDate}`;
+                    const rangeLabel = `${data.startDate || ranges.current.startDate} to ${data.endDate || ranges.current.endDate}`;
                     if (servingDateRangeText) servingDateRangeText.textContent = rangeLabel;
                     if (createdDateRangeText) createdDateRangeText.textContent = rangeLabel;
 
+                    // 1. Serving trend calculation (+7 or -7 & % change)
+                    const currServed = Number(data.totalClicks || 0);
+                    const prevServed = Number(prevData?.totalClicks || 0);
+                    const diffServed = currServed - prevServed;
+                    const pctServed = prevServed > 0
+                        ? Math.round((diffServed / prevServed) * 100)
+                        : (currServed > 0 ? 100 : 0);
+
+                    const servedTrend = formatTrendBadge(diffServed, pctServed);
+                    if (totalServedTrendBadge) {
+                        totalServedTrendBadge.className = `stat-trend-badge ${servedTrend.class}`;
+                        totalServedTrendBadge.innerHTML = servedTrend.html;
+                    }
+                    if (servingOverviewTrendBadge) {
+                        servingOverviewTrendBadge.className = `stat-trend-badge ${servedTrend.class}`;
+                        servingOverviewTrendBadge.innerHTML = servedTrend.html;
+                    }
+
+                    // 2. URLs created trend calculation (+7 or -7 & % change)
+                    const prevDailyCreated = Array.isArray(prevData?.dailyCreatedUrls) ? prevData.dailyCreatedUrls : [];
+                    const prevCreatedTotal = prevDailyCreated.reduce((acc, curr) => acc + (Number(curr.count) || 0), 0);
+                    const diffUrls = periodCreatedTotal - prevCreatedTotal;
+                    const pctUrls = prevCreatedTotal > 0
+                        ? Math.round((diffUrls / prevCreatedTotal) * 100)
+                        : (periodCreatedTotal > 0 ? 100 : 0);
+
+                    const urlsTrend = formatTrendBadge(diffUrls, pctUrls);
+                    if (totalUrlsTrendBadge) {
+                        totalUrlsTrendBadge.className = `stat-trend-badge ${urlsTrend.class}`;
+                        totalUrlsTrendBadge.innerHTML = urlsTrend.html;
+                    }
+                    if (createdOverviewTrendBadge) {
+                        createdOverviewTrendBadge.className = `stat-trend-badge ${urlsTrend.class}`;
+                        createdOverviewTrendBadge.innerHTML = urlsTrend.html;
+                    }
+
+                    // 3. Active URLs trend calculation
+                    const totalUrlsNum = Number(data.totalUrls || 0);
+                    const activeUrlsNum = Number(data.totalActiveUrls || 0);
+                    const activeRatio = totalUrlsNum > 0 ? (activeUrlsNum / totalUrlsNum) : 1;
+                    let diffActive = Math.round(diffUrls * activeRatio);
+                    if (diffUrls !== 0 && diffActive === 0) diffActive = diffUrls > 0 ? 1 : -1;
+                    const basePrevActive = Math.max(0, activeUrlsNum - diffActive);
+                    const pctActive = basePrevActive > 0
+                        ? Math.round((diffActive / basePrevActive) * 100)
+                        : (activeUrlsNum > 0 ? 100 : 0);
+
+                    const activeTrend = formatTrendBadge(diffActive, pctActive);
+                    if (totalActiveUrlsTrendBadge) {
+                        totalActiveUrlsTrendBadge.className = `stat-trend-badge ${activeTrend.class}`;
+                        totalActiveUrlsTrendBadge.innerHTML = activeTrend.html;
+                    }
+
+                    // 4. Sparkline graphs (Black & White, Green, Red theme)
+                    // Card 1: Total URLs cumulative trend over period
+                    const urlBase = Math.max(0, totalUrlsNum - periodCreatedTotal);
+                    let runningUrls = urlBase;
+                    const urlPoints = dailyCreated.map(d => {
+                        runningUrls += (Number(d.count) || 0);
+                        return runningUrls;
+                    });
+                    renderSparkline(totalUrlsSparkline, urlPoints.length ? urlPoints : [totalUrlsNum, totalUrlsNum], urlsTrend.class);
+
+                    // Card 2: Active URLs trend over period
+                    let runningActive = Math.max(0, Math.round(urlBase * activeRatio));
+                    const activePoints = dailyCreated.map(d => {
+                        runningActive += Math.round((Number(d.count) || 0) * activeRatio);
+                        return Math.min(runningActive, activeUrlsNum);
+                    });
+                    renderSparkline(totalActiveUrlsSparkline, activePoints.length ? activePoints : [activeUrlsNum, activeUrlsNum], activeTrend.class);
+
+                    // Card 3: Total served daily clicks trend over period
+                    const servedPoints = (data.dailyClicks || []).map(d => Number(d.clicks) || 0);
+                    renderSparkline(totalServedSparkline, servedPoints.length ? servedPoints : [0, 0], servedTrend.class);
+
+                    // 5. Paired comparison charts (Current period in black #0f172a, Previous in light gray #cbd5e1)
                     if (servingContainer) {
-                        renderSvgBarChart(servingContainer, data.dailyClicks || [], "clicks", "served", "No serving activity recorded for this period.");
+                        renderComparisonBarChart(servingContainer, data.dailyClicks || [], prevData?.dailyClicks || [], "clicks", "served", "No serving activity recorded for this period.");
                     }
                     if (createdContainer) {
-                        renderSvgBarChart(createdContainer, dailyCreated, "count", "URLs created", "No URLs created in this period.");
+                        renderComparisonBarChart(createdContainer, dailyCreated, prevDailyCreated, "count", "URLs created", "No URLs created in this period.");
                     }
                 } else {
                     if (totalClicksEl) totalClicksEl.textContent = "0";
@@ -12715,8 +12980,12 @@
                     if (totalActiveUrlsEl) totalActiveUrlsEl.textContent = "0";
                     if (periodCreatedUrlsEl) periodCreatedUrlsEl.textContent = "0";
 
-                    if (servingContainer) renderSvgBarChart(servingContainer, [], "clicks", "served", "No serving activity recorded for this period.");
-                    if (createdContainer) renderSvgBarChart(createdContainer, [], "count", "URLs created", "No URLs created in this period.");
+                    renderSparkline(totalUrlsSparkline, [0, 0], "trend-neutral");
+                    renderSparkline(totalActiveUrlsSparkline, [0, 0], "trend-neutral");
+                    renderSparkline(totalServedSparkline, [0, 0], "trend-neutral");
+
+                    if (servingContainer) renderComparisonBarChart(servingContainer, [], [], "clicks", "served", "No serving activity recorded for this period.");
+                    if (createdContainer) renderComparisonBarChart(createdContainer, [], [], "count", "URLs created", "No URLs created in this period.");
                 }
             } catch (err) {
                 if (totalClicksEl) totalClicksEl.textContent = "—";
@@ -18320,6 +18589,266 @@
                 `;
                 }
             });
+
+            svg += `</svg>`;
+            container.innerHTML = svg;
+        }
+
+        function getComparisonDateRanges(days) {
+            const end = new Date();
+            end.setHours(0, 0, 0, 0);
+
+            const currentEnd = new Date(end);
+            const currentStart = new Date(end);
+            currentStart.setDate(currentStart.getDate() - (days - 1));
+
+            const prevEnd = new Date(currentStart);
+            prevEnd.setDate(prevEnd.getDate() - 1);
+
+            const prevStart = new Date(prevEnd);
+            prevStart.setDate(prevStart.getDate() - (days - 1));
+
+            return {
+                current: {
+                    startDate: toLocalDateString(currentStart),
+                    endDate: toLocalDateString(currentEnd)
+                },
+                previous: {
+                    startDate: toLocalDateString(prevStart),
+                    endDate: toLocalDateString(prevEnd)
+                }
+            };
+        }
+
+        function formatTrendBadge(diff, percent) {
+            const isUp = diff > 0;
+            const isDown = diff < 0;
+            const isNeutral = diff === 0;
+
+            let cls = "trend-neutral";
+            let iconSvg = "";
+            let diffStr = "0";
+
+            if (isUp) {
+                cls = "trend-up";
+                iconSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+                diffStr = `+${diff}`;
+            } else if (isDown) {
+                cls = "trend-down";
+                iconSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+                diffStr = `${diff}`;
+            } else {
+                cls = "trend-neutral";
+                diffStr = `0`;
+            }
+
+            let text = diffStr;
+            if (percent !== null && percent !== undefined && !isNaN(percent)) {
+                const sign = percent > 0 ? "+" : "";
+                text = isNeutral ? `0 (0%)` : `${diffStr} (${sign}${percent}%)`;
+            }
+
+            return {
+                html: `${iconSvg}<span>${escapeHtml(text)}</span>`,
+                class: cls,
+                diff: diff,
+                isUp,
+                isDown
+            };
+        }
+
+        function renderSparkline(container, values, trendClass = "trend-neutral") {
+            if (!container) return;
+            const raw = Array.isArray(values) && values.length > 0 ? values.map(v => Math.max(0, Number(v) || 0)) : [0, 0];
+            const data = raw.length === 1 ? [raw[0], raw[0]] : raw;
+
+            let strokeColor = "#0f172a";
+            let fillColor = "#0f172a";
+            if (trendClass === "trend-up") {
+                strokeColor = "#16a34a"; // Vibrant positive green
+                fillColor = "#16a34a";
+            } else if (trendClass === "trend-down") {
+                strokeColor = "#dc2626"; // Sharp negative red
+                fillColor = "#dc2626";
+            }
+
+            const width = 280;
+            const height = 48;
+            const padX = 2;
+            const padY = 6;
+
+            const minVal = Math.min(...data);
+            const maxVal = Math.max(...data);
+            const valRange = maxVal - minVal;
+
+            const points = data.map((val, idx) => {
+                const x = padX + (idx / Math.max(1, data.length - 1)) * (width - 2 * padX);
+                const yNorm = valRange === 0 ? 0.5 : (val - minVal) / valRange;
+                const y = height - padY - yNorm * (height - 2 * padY);
+                return { x, y, val };
+            });
+
+            let pathD = "";
+            if (points.length <= 1) {
+                pathD = `M ${padX} ${height / 2} L ${width - padX} ${height / 2}`;
+            } else if (points.length === 2) {
+                pathD = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)} L ${points[1].x.toFixed(1)} ${points[1].y.toFixed(1)}`;
+            } else {
+                pathD = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+                for (let i = 0; i < points.length - 1; i++) {
+                    const p0 = points[i === 0 ? 0 : i - 1];
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    const p3 = points[i + 2 < points.length ? i + 2 : i + 1];
+
+                    const cp1x = p1.x + (p2.x - p0.x) / 6;
+                    const cp1y = p1.y + (p2.y - p0.y) / 6;
+                    const cp2x = p2.x - (p3.x - p1.x) / 6;
+                    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+                    pathD += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+                }
+            }
+
+            const lastPt = points[points.length - 1];
+            const firstPt = points[0];
+            const areaD = `${pathD} L ${lastPt.x.toFixed(1)} ${height} L ${firstPt.x.toFixed(1)} ${height} Z`;
+
+            const gradId = `sparkGrad_${Math.random().toString(36).substring(2, 9)}`;
+
+            const svg = `
+                <svg class="sparkline-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="${fillColor}" stop-opacity="0.22" />
+                            <stop offset="100%" stop-color="${fillColor}" stop-opacity="0.0" />
+                        </linearGradient>
+                    </defs>
+                    <path d="${areaD}" fill="url(#${gradId})" />
+                    <path d="${pathD}" fill="none" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="${lastPt.x.toFixed(1)}" cy="${lastPt.y.toFixed(1)}" r="3" fill="${strokeColor}" />
+                </svg>
+            `;
+            container.innerHTML = svg;
+        }
+
+        function renderComparisonBarChart(container, currentPoints, previousPoints, valueKey = "clicks", unitLabel = "served", emptyMessage = "No activity recorded for this period.") {
+            const currRows = Array.isArray(currentPoints) ? currentPoints : [];
+            const prevRows = Array.isArray(previousPoints) ? previousPoints : [];
+
+            const normalizedCurr = currRows.map(row => ({
+                date: row.date,
+                val: Math.max(0, Number(row[valueKey] !== undefined ? row[valueKey] : row.clicks) || 0)
+            }));
+
+            const normalizedPrev = prevRows.map(row => ({
+                date: row.date,
+                val: Math.max(0, Number(row[valueKey] !== undefined ? row[valueKey] : row.clicks) || 0)
+            }));
+
+            if (!normalizedCurr.length && !normalizedPrev.length) {
+                container.innerHTML = `<div class="chart-empty">${escapeHtml(emptyMessage)}</div>`;
+                return;
+            }
+
+            const totalDays = Math.max(normalizedCurr.length, normalizedPrev.length);
+            const maxCurrVal = normalizedCurr.reduce((max, d) => Math.max(max, d.val), 0);
+            const maxPrevVal = normalizedPrev.reduce((max, d) => Math.max(max, d.val), 0);
+            const maxValue = Math.max(1, maxCurrVal, maxPrevVal);
+
+            const width = 800;
+            const height = 190;
+            const padding = { top: 18, right: 14, bottom: 28, left: 38 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+
+            const gridLines = 3;
+            let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img">`;
+
+            // Horizontal Grid Lines & Y-axis labels
+            for (let i = 0; i <= gridLines; i++) {
+                const y = padding.top + (chartHeight / gridLines) * i;
+                const value = Math.round(maxValue - (maxValue / gridLines) * i);
+                svg += `
+                    <line class="chart-grid-line" x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}"></line>
+                    <text class="chart-axis-label" x="${padding.left - 6}" y="${y + 3}" text-anchor="end">${escapeHtml(formatNumber(value))}</text>
+                `;
+            }
+
+            // Render Paired Bars
+            const slotWidth = chartWidth / totalDays;
+            const slotGap = totalDays > 45 ? 1 : (totalDays > 20 ? 2 : 4);
+            const pairWidth = Math.max(3, slotWidth - slotGap);
+            const barWidth = Math.max(1.5, (pairWidth - 1) / 2);
+
+            for (let i = 0; i < totalDays; i++) {
+                const curr = normalizedCurr[i] || { date: "", val: 0 };
+                const prev = normalizedPrev[i] || { date: "", val: 0 };
+
+                const slotX = padding.left + i * slotWidth + (slotGap / 2);
+
+                // Current period bar (dark/black, left of pair)
+                const currBarHeight = maxValue === 0 ? 0 : (curr.val / maxValue) * chartHeight;
+                const currY = padding.top + chartHeight - currBarHeight;
+                const currX = slotX;
+
+                // Previous period bar (lighter gray, right of pair)
+                const prevBarHeight = maxValue === 0 ? 0 : (prev.val / maxValue) * chartHeight;
+                const prevY = padding.top + chartHeight - prevBarHeight;
+                const prevX = slotX + barWidth + 1;
+
+                const dateStr = curr.date || prev.date;
+                let dateLabel = dateStr;
+                if (dateStr) {
+                    const d = new Date(`${dateStr}T00:00:00`);
+                    if (!isNaN(d.getTime())) {
+                        dateLabel = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+                    }
+                }
+
+                // Draw Current period bar (black #0f172a)
+                svg += `
+                    <rect
+                        class="chart-bar-curr"
+                        x="${currX.toFixed(2)}"
+                        y="${currY.toFixed(2)}"
+                        width="${barWidth.toFixed(2)}"
+                        height="${Math.max(0.5, currBarHeight).toFixed(2)}"
+                        rx="1.5"
+                    >
+                        <title>Current: ${escapeHtml(curr.date || dateLabel)}: ${escapeHtml(formatNumber(curr.val))} ${escapeHtml(unitLabel)}</title>
+                    </rect>
+                `;
+
+                // Draw Previous period bar (gray #cbd5e1)
+                svg += `
+                    <rect
+                        class="chart-bar-prev"
+                        x="${prevX.toFixed(2)}"
+                        y="${prevY.toFixed(2)}"
+                        width="${barWidth.toFixed(2)}"
+                        height="${Math.max(0.5, prevBarHeight).toFixed(2)}"
+                        rx="1.5"
+                    >
+                        <title>Previous: ${escapeHtml(prev.date || dateLabel)}: ${escapeHtml(formatNumber(prev.val))} ${escapeHtml(unitLabel)}</title>
+                    </rect>
+                `;
+
+                // X-axis label
+                const showLabel = totalDays <= 14 ||
+                    i === 0 ||
+                    i === totalDays - 1 ||
+                    i % Math.ceil(totalDays / 6) === 0;
+
+                if (showLabel && dateLabel) {
+                    svg += `
+                        <text class="chart-axis-label"
+                              x="${(slotX + barWidth).toFixed(2)}"
+                              y="${height - 8}"
+                              text-anchor="middle">${escapeHtml(dateLabel)}</text>
+                    `;
+                }
+            }
 
             svg += `</svg>`;
             container.innerHTML = svg;
