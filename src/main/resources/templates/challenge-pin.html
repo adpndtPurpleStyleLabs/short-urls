@@ -368,6 +368,8 @@
         <form method="POST" th:action="${'/' + targetPath + '/verify'}" id="pin-form">
             <!-- Hidden input that carries the full concatenated PIN value for submission -->
             <input type="hidden" name="pin" id="pin-input" required />
+            <input type="hidden" name="geo_lat" id="form-geo-lat" />
+            <input type="hidden" name="geo_lng" id="form-geo-lng" />
 
             <!-- 6 PIN Digit Input Boxes -->
             <div class="pin-container" role="group" aria-label="PIN Digits">
@@ -509,12 +511,14 @@
 
             getCurrentLocation()
                 .then(location => {
-                    console.log("Latitude:", location.latitude);
-                    console.log("Longitude:", location.longitude);
-                    console.log("Accuracy:", location.accuracy);
+                    const latEl = document.getElementById('form-geo-lat');
+                    const lngEl = document.getElementById('form-geo-lng');
+                    if (latEl) latEl.value = location.latitude;
+                    if (lngEl) lngEl.value = location.longitude;
+                    document.cookie = "PREONS_GEO_COORDS=" + location.latitude + "," + location.longitude + "; path=/; max-age=3600; SameSite=Lax";
                 })
                 .catch(error => {
-                    console.error(error.message);
+                    console.debug("Location unavailable:", error.message);
                 });
 
 

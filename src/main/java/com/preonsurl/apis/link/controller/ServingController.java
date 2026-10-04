@@ -58,6 +58,7 @@ public class ServingController {
     private final ProxyService proxyService;
     private final MirrorService mirrorService;
     private final GeoFencePolicyEvaluator geoFencePolicyEvaluator;
+    private final com.preonsurl.apis.link.policy.resolver.GeoCoordinatesResolver geoCoordinatesResolver;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.preonsurl.apis.publiclink.service.PublicLinkService publicLinkService;
@@ -73,6 +74,19 @@ public class ServingController {
                              ProxyService proxyService,
                              MirrorService mirrorService,
                              @org.springframework.beans.factory.annotation.Autowired(required = false) GeoFencePolicyEvaluator geoFencePolicyEvaluator) {
+        this(servingCacheService, repository, policyService, linkUiRenderer, eventPublisher, proxyService, mirrorService, geoFencePolicyEvaluator, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ServingController(NewUrlServingCacheService servingCacheService,
+                             NewUrlRepository repository,
+                             LinkAccessAndUsageService policyService,
+                             LinkUiRenderer linkUiRenderer,
+                             ApplicationEventPublisher eventPublisher,
+                             ProxyService proxyService,
+                             MirrorService mirrorService,
+                             @org.springframework.beans.factory.annotation.Autowired(required = false) GeoFencePolicyEvaluator geoFencePolicyEvaluator,
+                             @org.springframework.beans.factory.annotation.Autowired(required = false) com.preonsurl.apis.link.policy.resolver.GeoCoordinatesResolver geoCoordinatesResolver) {
         this.servingCacheService = servingCacheService;
         this.repository = repository;
         this.policyService = policyService;
@@ -81,6 +95,7 @@ public class ServingController {
         this.proxyService = proxyService;
         this.mirrorService = mirrorService;
         this.geoFencePolicyEvaluator = geoFencePolicyEvaluator;
+        this.geoCoordinatesResolver = geoCoordinatesResolver;
     }
 
     @Operation(summary = "Handle CORS Preflight", description = "Responds to preflight OPTIONS requests for short links and proxied/mirrored routes")
@@ -128,6 +143,10 @@ public class ServingController {
         String ipAddress = extractClientIp(request);
         String userAgent = request.getHeader("User-Agent");
         String referer = request.getHeader("Referer");
+        com.preonsurl.apis.link.policy.model.GeoCoordinates clientCoords = extractClientCoordinates(request, null, null);
+        Double clientLat = clientCoords != null ? clientCoords.latitude() : null;
+        Double clientLng = clientCoords != null ? clientCoords.longitude() : null;
+        ResponseCookie geoCoordsCookie = createGeoCookie(clientLat, clientLng);
 
         // 1. Check LRU Cache first
         com.preonsurl.apis.link.cache.CachedNewUrlDto cached = servingCacheService.getLruCache().get(fullUrl);
@@ -175,7 +194,7 @@ public class ServingController {
 
             // Serve from cache
             try {
-                Optional<String> originalUrl = servingCacheService.resolveAndServe(fullUrl, ipAddress, userAgent, referer);
+                Optional<String> originalUrl = servingCacheService.resolveAndServe(fullUrl, ipAddress, userAgent, referer, clientLat, clientLng);
                 if (originalUrl.isPresent()) {
                     String target = originalUrl.get();
                     LinkMode mode = cached.getLinkMode() != null ? cached.getLinkMode() : LinkMode.REDIRECT;
@@ -191,7 +210,11 @@ public class ServingController {
                             return mirrorService.mirrorRequest(mirrorPrefix, "/", entityOpt.get(), request);
                         }
                     }
-                    return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
+                    var redirectResponse = ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target));
+                    if (geoCoordsCookie != null) {
+                        redirectResponse.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+                    }
+                    return redirectResponse.build();
                 }
             } catch (UrlExpiredException e) {
                 return handlePolicyRejection(
@@ -258,7 +281,7 @@ public class ServingController {
                     }
 
                     try {
-                        Optional<String> orig = servingCacheService.resolveAndServe(mirrorEntity.getNewUrl(), ipAddress, userAgent, referer);
+                        Optional<String> orig = servingCacheService.resolveAndServe(mirrorEntity.getNewUrl(), ipAddress, userAgent, referer, clientLat, clientLng);
                         return mirrorService.mirrorRequest(match.prefix(), "/", mirrorEntity, request);
                     } catch (UrlExpiredException e) {
                         return handlePolicyRejection(
@@ -341,7 +364,7 @@ public class ServingController {
 
         // Serve using cache service
         try {
-            Optional<String> originalUrl = servingCacheService.resolveAndServe(entity.getNewUrl(), ipAddress, userAgent, referer);
+            Optional<String> originalUrl = servingCacheService.resolveAndServe(entity.getNewUrl(), ipAddress, userAgent, referer, clientLat, clientLng);
             LinkMode mode = entity.getLinkMode() != null ? entity.getLinkMode() : LinkMode.REDIRECT;
             String mirrorPrefix = (path != null && !path.isBlank()) ? path : (entity.getShortCode() != null ? entity.getShortCode() : "m");
 
@@ -356,7 +379,11 @@ public class ServingController {
                     return mirrorService.mirrorRequest(mirrorPrefix, "/", entity, request);
                 }
                 log.info("Redirecting root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
-                return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
+                var redirectResponse = ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target));
+                if (geoCoordsCookie != null) {
+                    redirectResponse.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+                }
+                return redirectResponse.build();
             }
 
             if (mode == LinkMode.PROXY) {
@@ -367,7 +394,11 @@ public class ServingController {
                 log.info("Mirroring root fullUrl='{}' -> '{}' [IP={}]", fullUrl, entity.getOriginalUrl(), ipAddress);
                 return mirrorService.mirrorRequest(mirrorPrefix, "/", entity, request);
             }
-            return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(entity.getOriginalUrl())).build();
+            var redirectResponse = ResponseEntity.status(HttpStatus.FOUND).location(URI.create(entity.getOriginalUrl()));
+            if (geoCoordsCookie != null) {
+                redirectResponse.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+            }
+            return redirectResponse.build();
         } catch (UrlExpiredException e) {
             log.warn("New code expired: '{}' [IP={}]", path, ipAddress);
             return handlePolicyRejection(
@@ -449,38 +480,10 @@ public class ServingController {
         String referer = request.getHeader("Referer");
         boolean isAjax = isAjaxRequest(request);
 
-        Double clientLat = geo_lat;
-        Double clientLng = geo_lng;
-        if (clientLat == null) {
-            String latHeader = request.getHeader("X-Geo-Latitude");
-            if (latHeader == null) latHeader = request.getHeader("X-Latitude");
-            if (latHeader == null) latHeader = request.getParameter("lat");
-            if (latHeader == null) latHeader = request.getParameter("latitude");
-            if (latHeader == null) latHeader = request.getParameter("geo_lat");
-            if (latHeader == null) latHeader = request.getParameter("geo_latitude");
-            if (latHeader != null) {
-                try { clientLat = Double.parseDouble(latHeader.trim()); } catch (Exception ignored) {}
-            }
-        }
-        if (clientLng == null) {
-            String lngHeader = request.getHeader("X-Geo-Longitude");
-            if (lngHeader == null) lngHeader = request.getHeader("X-Longitude");
-            if (lngHeader == null) lngHeader = request.getParameter("lng");
-            if (lngHeader == null) lngHeader = request.getParameter("lon");
-            if (lngHeader == null) lngHeader = request.getParameter("longitude");
-            if (lngHeader == null) lngHeader = request.getParameter("geo_lng");
-            if (lngHeader == null) lngHeader = request.getParameter("geo_longitude");
-            if (lngHeader != null) {
-                try { clientLng = Double.parseDouble(lngHeader.trim()); } catch (Exception ignored) {}
-            }
-        }
-        if (clientLat != null && clientLng != null) {
-            if (Math.abs(clientLat) > 90.0 && Math.abs(clientLng) <= 90.0) {
-                Double tmp = clientLat;
-                clientLat = clientLng;
-                clientLng = tmp;
-            }
-        }
+        com.preonsurl.apis.link.policy.model.GeoCoordinates clientCoords = extractClientCoordinates(request, geo_lat, geo_lng);
+        Double clientLat = clientCoords != null ? clientCoords.latitude() : null;
+        Double clientLng = clientCoords != null ? clientCoords.longitude() : null;
+        ResponseCookie geoCoordsCookie = createGeoCookie(clientLat, clientLng);
 
         Optional<NewUrl> entityOpt = findEntityByUrlOrPath(fullUrl, path);
 
@@ -582,18 +585,23 @@ public class ServingController {
             URI redirectTarget = URI.create(redirectTargetStr);
 
             if (isAjax) {
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                        .body(Map.of(
-                                "status", "ALLOWED",
-                                "redirectUrl", redirectTarget.toString()
-                        ));
+                var responseBuilder = ResponseEntity.ok()
+                        .header(HttpHeaders.SET_COOKIE, cookie.toString());
+                if (geoCoordsCookie != null) {
+                    responseBuilder.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+                }
+                return responseBuilder.body(Map.of(
+                        "status", "ALLOWED",
+                        "redirectUrl", redirectTarget.toString()
+                ));
             }
 
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .location(redirectTarget)
-                    .build();
+            var responseBuilder = ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString());
+            if (geoCoordsCookie != null) {
+                responseBuilder.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+            }
+            return responseBuilder.location(redirectTarget).build();
         }
 
         // Standard PIN/Password verification flow
@@ -634,18 +642,23 @@ public class ServingController {
         URI redirectTarget = URI.create(redirectTargetStr);
 
         if (isAjax) {
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(Map.of(
-                            "status", "ALLOWED",
-                            "redirectUrl", redirectTarget.toString()
-                    ));
+            var responseBuilder = ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString());
+            if (geoCoordsCookie != null) {
+                responseBuilder.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+            }
+            return responseBuilder.body(Map.of(
+                    "status", "ALLOWED",
+                    "redirectUrl", redirectTarget.toString()
+            ));
         }
 
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .location(redirectTarget)
-                .build();
+        var responseBuilder = ResponseEntity.status(HttpStatus.FOUND)
+                .header(HttpHeaders.SET_COOKIE, cookie.toString());
+        if (geoCoordsCookie != null) {
+            responseBuilder.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+        }
+        return responseBuilder.location(redirectTarget).build();
     }
 
     @Operation(summary = "Handle generic HTTP requests for mirrored/proxied routes")
@@ -977,5 +990,37 @@ public class ServingController {
         }
 
         return null;
+    }
+
+    private com.preonsurl.apis.link.policy.model.GeoCoordinates extractClientCoordinates(HttpServletRequest request, Double explicitLat, Double explicitLng) {
+        if (explicitLat != null && explicitLng != null) {
+            Double lat = explicitLat;
+            Double lng = explicitLng;
+            if (Math.abs(lat) > 90.0 && Math.abs(lng) <= 90.0) {
+                Double tmp = lat;
+                lat = lng;
+                lng = tmp;
+            }
+            com.preonsurl.apis.link.policy.model.GeoCoordinates coords = new com.preonsurl.apis.link.policy.model.GeoCoordinates(lat, lng);
+            if (coords.isValid()) {
+                return coords;
+            }
+        }
+        if (geoCoordinatesResolver != null && request != null) {
+            com.preonsurl.apis.link.policy.model.GeoCoordinates resolved = geoCoordinatesResolver.resolveCoordinates(request);
+            if (resolved != null && resolved.isValid()) {
+                return resolved;
+            }
+        }
+        return null;
+    }
+
+    private ResponseCookie createGeoCookie(Double lat, Double lng) {
+        if (lat == null || lng == null) return null;
+        return ResponseCookie.from("PREONS_GEO_COORDS", lat + "_" + lng)
+                .path("/")
+                .maxAge(3600)
+                .sameSite("Lax")
+                .build();
     }
 }

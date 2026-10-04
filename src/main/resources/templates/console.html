@@ -6535,15 +6535,15 @@
 
         .modal-dialog.analytics-modal-dialog {
             position: relative !important;
-            width: min(1220px, calc(100vw - 32px)) !important;
-            max-width: 96vw !important;
-            height: calc(100vh - 40px) !important;
-            max-height: calc(100vh - 40px) !important;
+            width: min(1140px, calc(100vw - 32px)) !important;
+            max-width: 95vw !important;
+            height: calc(100vh - 36px) !important;
+            max-height: calc(100vh - 36px) !important;
             display: flex !important;
             flex-direction: column !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 16px !important;
+            border-radius: 12px !important;
             box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
             overflow: hidden !important;
             margin: auto 0 !important;
@@ -6551,7 +6551,7 @@
         }
 
         .analytics-modal-dialog .modal-header {
-            padding: 18px 26px !important;
+            padding: 12px 18px !important;
             background: #ffffff !important;
             border-bottom: 1px solid #e2e8f0 !important;
             display: flex !important;
@@ -6560,8 +6560,40 @@
             flex-shrink: 0 !important;
         }
 
+        .analytics-modal-dialog .modal-kicker {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.05em !important;
+            color: #64748b !important;
+            margin-bottom: 1px !important;
+        }
+
+        .analytics-modal-dialog #analyticsTitle {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.2 !important;
+            margin: 0 !important;
+        }
+
+        .analytics-modal-dialog #analyticsSubtitle {
+            font-size: 11.5px !important;
+            color: #64748b !important;
+            margin: 1px 0 0 0 !important;
+        }
+
+        .analytics-modal-dialog .modal-close-btn {
+            font-size: 18px !important;
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
         .analytics-modal-body {
-            padding: 24px 28px !important;
+            padding: 12px 16px !important;
             background: #f8fafc !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
@@ -6571,7 +6603,7 @@
             max-height: 100% !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 22px !important;
+            gap: 10px !important;
             overscroll-behavior-y: auto !important;
             -webkit-overflow-scrolling: touch !important;
             scrollbar-width: thin !important;
@@ -6589,17 +6621,17 @@
         }
 
         .analytics-modal-body::-webkit-scrollbar {
-            width: 10px !important;
+            width: 8px !important;
         }
 
         .analytics-modal-body::-webkit-scrollbar-track {
             background: #f1f5f9 !important;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
         }
 
         .analytics-modal-body::-webkit-scrollbar-thumb {
             background: #94a3b8 !important;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
             border: 2px solid #f1f5f9 !important;
         }
 
@@ -6611,19 +6643,19 @@
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            gap: 16px !important;
-            padding: 20px 24px !important;
+            gap: 12px !important;
+            padding: 8px 14px !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 14px !important;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
-            min-height: 84px !important;
+            border-radius: 9px !important;
+            box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
+            min-height: 44px !important;
             flex-shrink: 0 !important;
         }
 
         .analytics-summary-details strong {
-            display: block !important;
-            font-size: 16px !important;
+            display: inline-block !important;
+            font-size: 13.5px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
@@ -6632,17 +6664,17 @@
 
         .analytics-summary-details span {
             display: block !important;
-            font-size: 13px !important;
+            font-size: 12px !important;
             color: #64748b !important;
-            margin-top: 4px !important;
+            margin-top: 2px !important;
             word-break: break-all !important;
         }
 
         /* 4 KPI Cards Grid */
         .analytics-kpi-grid {
             display: grid !important;
-            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
-            gap: 16px !important;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+            gap: 10px !important;
             flex-shrink: 0 !important;
             width: 100% !important;
         }
@@ -6650,41 +6682,41 @@
         .analytics-kpi-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 14px !important;
-            padding: 22px 24px !important;
-            min-height: 148px !important;
+            border-radius: 9px !important;
+            padding: 10px 12px !important;
+            min-height: 72px !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+            box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
             flex-shrink: 0 !important;
             transition: transform 0.15s ease, box-shadow 0.15s ease !important;
         }
 
         .analytics-kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.08) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px 0 rgba(15, 23, 42, 0.06) !important;
         }
 
         .analytics-kpi-top {
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            gap: 8px !important;
+            gap: 6px !important;
         }
 
         .analytics-kpi-label {
-            font-size: 11.5px !important;
+            font-size: 10px !important;
             font-weight: 700 !important;
             color: #64748b !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.05em !important;
+            letter-spacing: 0.04em !important;
         }
 
         .analytics-kpi-icon {
-            width: 34px !important;
-            height: 34px !important;
-            border-radius: 8px !important;
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 5px !important;
             background: #f1f5f9 !important;
             display: flex !important;
             align-items: center !important;
@@ -6693,18 +6725,23 @@
             flex-shrink: 0 !important;
         }
 
+        .analytics-kpi-icon svg {
+            width: 12px !important;
+            height: 12px !important;
+        }
+
         .analytics-kpi-value {
-            font-size: 32px !important;
+            font-size: 19px !important;
             font-weight: 800 !important;
             color: #0f172a !important;
-            margin: 10px 0 4px 0 !important;
-            letter-spacing: -0.03em !important;
+            margin: 3px 0 1px 0 !important;
+            letter-spacing: -0.02em !important;
             line-height: 1.15 !important;
             word-break: break-all !important;
         }
 
         .analytics-kpi-caption {
-            font-size: 12.5px !important;
+            font-size: 10.5px !important;
             color: #64748b !important;
             font-weight: 500 !important;
         }
@@ -6712,8 +6749,8 @@
         /* Breakdowns Grid */
         .analytics-breakdown-grid {
             display: grid !important;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important;
-            gap: 18px !important;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+            gap: 10px !important;
             flex-shrink: 0 !important;
             width: 100% !important;
         }
@@ -6721,31 +6758,36 @@
         .analytics-breakdown-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 14px !important;
-            padding: 24px 26px !important;
-            min-height: 270px !important;
+            border-radius: 9px !important;
+            padding: 12px 14px !important;
+            min-height: 150px !important;
             display: flex !important;
             flex-direction: column !important;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+            box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
             flex-shrink: 0 !important;
         }
 
         .analytics-breakdown-title {
-            font-size: 14.5px !important;
+            font-size: 12.5px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
-            margin-bottom: 18px !important;
+            margin-bottom: 8px !important;
             display: flex !important;
             align-items: center !important;
-            gap: 10px !important;
-            padding-bottom: 12px !important;
+            gap: 6px !important;
+            padding-bottom: 6px !important;
             border-bottom: 1px solid #f1f5f9 !important;
+        }
+
+        .analytics-breakdown-title svg {
+            width: 13px !important;
+            height: 13px !important;
         }
 
         .analytics-breakdown-list {
             display: flex !important;
             flex-direction: column !important;
-            gap: 16px !important;
+            gap: 8px !important;
             flex: 1 1 auto !important;
             justify-content: flex-start !important;
         }
@@ -6753,18 +6795,19 @@
         .analytics-progress-item {
             display: flex !important;
             flex-direction: column !important;
-            gap: 6px !important;
+            gap: 3px !important;
         }
 
         .analytics-progress-header {
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            font-size: 13px !important;
+            font-size: 11.5px !important;
+            color: #1e293b !important;
         }
 
         .analytics-progress-track {
-            height: 8px !important;
+            height: 5px !important;
             width: 100% !important;
             background: #f1f5f9 !important;
             border-radius: 9999px !important;
@@ -6782,14 +6825,14 @@
         .analytics-modal-body .card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 14px !important;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+            border-radius: 9px !important;
+            box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
             overflow: hidden !important;
             flex-shrink: 0 !important;
         }
 
         .analytics-modal-body .analytics-card-header {
-            padding: 20px 26px !important;
+            padding: 8px 14px !important;
             border-bottom: 1px solid #f1f5f9 !important;
             background: #ffffff !important;
             display: flex !important;
@@ -6797,9 +6840,58 @@
             justify-content: space-between !important;
         }
 
+        .analytics-modal-body .analytics-card-title {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+        }
+
+        .analytics-modal-body .page-subtitle {
+            font-size: 11px !important;
+            color: #64748b !important;
+            margin: 1px 0 0 0 !important;
+        }
+
+        .analytics-modal-body .analytics-range-select {
+            height: 26px !important;
+            font-size: 11px !important;
+            padding: 0 6px !important;
+            border-radius: 5px !important;
+        }
+
         .analytics-modal-body .analytics-card-body {
-            padding: 24px 26px !important;
+            padding: 10px 14px !important;
             background: #ffffff !important;
+        }
+
+        .analytics-modal-body table.data-table th {
+            padding: 6px 10px !important;
+            font-size: 10.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
+        }
+
+        .analytics-modal-body table.data-table td {
+            padding: 6px 10px !important;
+            font-size: 11.5px !important;
+        }
+
+        .analytics-modal-body .table-wrapper {
+            border-radius: 0 0 9px 9px !important;
+        }
+
+        .analytics-modal-body .table-pagination {
+            padding: 8px 14px !important;
+            font-size: 11.5px !important;
+        }
+
+        .analytics-modal-body .pagination-btn {
+            height: 26px !important;
+            padding: 0 10px !important;
+            font-size: 11px !important;
+            border-radius: 5px !important;
         }
 
         /* Confirmation Dialog */
@@ -10777,7 +10869,7 @@
             aria-labelledby="analyticsTitle">
             <div class="modal-header">
                 <div>
-                    <div class="modal-kicker">URL ANALYTICS</div>
+<!--                    <div class="modal-kicker">URL ANALYTICS</div>-->
                     <h2 id="analyticsTitle">URL Analytics</h2>
                     <p id="analyticsSubtitle">Detailed click metrics and access log.</p>
                 </div>
@@ -10789,23 +10881,22 @@
                 <!-- Link Info Summary -->
                 <div class="analytics-summary-box">
                     <div class="analytics-summary-details">
-                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                            <span class="badge" style="font-size:10px; font-weight:700; background:#0f172a; color:#ffffff; padding:4px 9px; border-radius:6px; letter-spacing:0.04em;">SHORT LINK</span>
-                            <strong id="analyticsShortUrlDisplay" style="font-size:16px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color:#0f172a;">—</strong>
-                            <button type="button" class="btn btn-secondary" id="analyticsCopyShortBtn" title="Copy Short URL" style="height:30px; padding:0 12px; font-size:12px; border-radius:6px; display:inline-flex; align-items:center; gap:6px; font-weight:600;">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+<!--                            <span class="badge" style="font-size:9.5px; font-weight:700; background:#0f172a; color:#ffffff; padding:3px 7px; border-radius:5px; letter-spacing:0.04em;">SHORT LINK</span>-->
+                            <strong id="analyticsShortUrlDisplay" style="font-size:13.5px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color:#0f172a;">—</strong>
+                            <button type="button" class="btn btn-secondary" id="analyticsCopyShortBtn" title="Copy Short URL" style="height:26px; padding:0 10px; font-size:11px; border-radius:5px; display:inline-flex; align-items:center; gap:5px; font-weight:600;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                                 <span>Copy</span>
                             </button>
                         </div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-<!--                            <span style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Destination:</span>-->
-                            <span id="analyticsOriginalUrlDisplay" style="font-size:13.5px; color:#334155; word-break:break-all; font-weight:500;">—</span>
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                            <span id="analyticsOriginalUrlDisplay" style="font-size:12px; color:#334155; word-break:break-all; font-weight:500;">—</span>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                         <button class="btn btn-secondary" id="analyticsQrBtn" type="button"
-                            style="display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 16px; font-size:13px; border-radius:8px; font-weight:600;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            style="display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 10px; font-size:11.5px; border-radius:6px; font-weight:600;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="7" height="7" rx="1.5" />
                                 <rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -10815,8 +10906,8 @@
                             <span>QR Code</span>
                         </button>
                         <button class="btn btn-primary" id="analyticsEditLinkBtn" type="button"
-                            style="display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 16px; font-size:13px; border-radius:8px; font-weight:600;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            style="display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 10px; font-size:11.5px; border-radius:6px; font-weight:600;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                             </svg>
@@ -10859,7 +10950,7 @@
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
                             </div>
                         </div>
-                        <div class="analytics-kpi-value" style="font-size: 22px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiTopCountry">—</div>
+                        <div class="analytics-kpi-value" style="font-size: 16px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiTopCountry">—</div>
                         <div class="analytics-kpi-caption" id="kpiTopCity">Country / City</div>
                     </div>
 
@@ -10871,13 +10962,13 @@
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                             </div>
                         </div>
-                        <div class="analytics-kpi-value" style="font-size: 22px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiTopDevice">—</div>
+                        <div class="analytics-kpi-value" style="font-size: 16px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiTopDevice">—</div>
                         <div class="analytics-kpi-caption" id="kpiTopBrowser">Device &amp; Browser</div>
                     </div>
                 </div>
 
                 <!-- Clicks Chart Card -->
-                <div class="card" style="min-height: 350px;">
+                <div class="card" style="min-height: 220px;">
                     <div class="analytics-card-header">
                         <div>
                             <h3 class="analytics-card-title">Clicks &amp; Traffic Trends</h3>
@@ -10889,8 +10980,8 @@
                             <option value="90">Last 90 days</option>
                         </select>
                     </div>
-                    <div class="analytics-card-body" style="padding: 24px 26px;">
-                        <div class="chart-container" id="analyticsModalChartContainer" style="height: 250px; min-height: 250px;">
+                    <div class="analytics-card-body" style="padding: 12px 14px;">
+                        <div class="chart-container" id="analyticsModalChartContainer" style="height: 170px; min-height: 170px;">
                             <div class="chart-empty" id="analyticsModalChartEmpty">Loading click data...</div>
                         </div>
                     </div>
@@ -10922,14 +11013,14 @@
                 </div>
 
                 <!-- Recipient OTP & Email Delivery Tracking Card -->
-                <div class="card" id="analyticsOtpTrackingCard" style="display:none; margin-top: 4px;">
-                    <div class="analytics-card-header" style="flex-wrap: wrap; gap: 12px;">
+                <div class="card" id="analyticsOtpTrackingCard" style="display:none; margin-top: 2px;">
+                    <div class="analytics-card-header" style="flex-wrap: wrap; gap: 8px;">
                         <div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
                                 <h3 class="analytics-card-title">Recipient OTP &amp; Email Delivery Tracking</h3>
                                 <span class="pro-tag-badge"
-                                    style="background:#000000; color:#ffffff; border-color:#000000; display:inline-flex;">
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    style="background:#000000; color:#ffffff; border-color:#000000; display:inline-flex; font-size:9.5px; padding:2px 6px;">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2.5">
                                         <rect width="20" height="16" x="2" y="4" rx="2" />
                                         <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
@@ -10941,55 +11032,55 @@
                                 opens, OTP requests, and page access.</p>
                         </div>
                         <button class="btn btn-secondary" id="refreshOtpRecipientsBtn" type="button"
-                            style="height:34px; font-size:12.5px; font-weight:600; padding:0 14px;">Refresh Tracking</button>
+                            style="height:28px; font-size:11.5px; font-weight:600; padding:0 10px; border-radius:6px;">Refresh</button>
                     </div>
 
                     <!-- Metric summary chips -->
                     <div
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 20px; padding: 20px 24px 0 24px;">
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 10px; padding: 10px 14px 0 14px;">
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
                             <div
-                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
                                 Total Recipients</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;"
+                            <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 3px;"
                                 id="otpMetricTotal">0</div>
                         </div>
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
                             <div
-                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
                                 Emails Sent</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;"
+                            <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 3px;"
                                 id="otpMetricSent">0</div>
                         </div>
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
                             <div
-                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
                                 Email Opened (1px)</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;"
+                            <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 3px;"
                                 id="otpMetricOpened">0</div>
                         </div>
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
                             <div
-                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
                                 OTP Called</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;"
+                            <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 3px;"
                                 id="otpMetricOtpCalled">0</div>
                         </div>
                         <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
                             <div
-                                style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
                                 Page Opened</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #16a34a; margin-top: 6px;"
+                            <div style="font-size: 18px; font-weight: 800; color: #16a34a; margin-top: 3px;"
                                 id="otpMetricPageOpened">0</div>
                         </div>
                     </div>
 
-                    <div class="table-wrapper" style="padding: 0 24px 20px 24px;">
+                    <div class="table-wrapper" style="padding: 0 14px 10px 14px;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -11002,7 +11093,7 @@
                             </thead>
                             <tbody id="otpRecipientsTableBody">
                                 <tr>
-                                    <td colspan="5" class="table-empty-state" style="padding:32px 16px;">
+                                    <td colspan="5" class="table-empty-state" style="padding:18px 12px;">
                                         <span style="color:#64748b;">No OTP recipients tracked for this URL.</span>
                                     </td>
                                 </tr>
@@ -11012,13 +11103,13 @@
                 </div>
 
                 <!-- Points of Access (World Map) Card -->
-                <div class="card" id="analyticsMapCard" style="min-height: 540px;">
-                    <div class="analytics-card-header" style="flex-wrap: wrap; gap: 12px;">
+                <div class="card" id="analyticsMapCard" style="min-height: 320px;">
+                    <div class="analytics-card-header" style="flex-wrap: wrap; gap: 8px;">
                         <div>
-                            <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:6px;">
                                 <h3 class="analytics-card-title">Points of Access</h3>
-                                <span class="pro-tag-badge" style="background:#000000; color:#ffffff; border-color:#000000; display:inline-flex;">
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;">
+                                <span class="pro-tag-badge" style="background:#000000; color:#ffffff; border-color:#000000; display:inline-flex; font-size:9.5px; padding:2px 6px;">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:3px;">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <line x1="2" y1="12" x2="22" y2="12"></line>
                                         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
@@ -11028,27 +11119,27 @@
                             </div>
                             <p class="page-subtitle">Real-time geographic distribution of link access points plotted on an interactive world map.</p>
                         </div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <span id="mapPointCountBadge" style="font-size:12px; font-weight:700; color:#0f172a; background:#f1f5f9; padding:5px 12px; border-radius:6px; border:1px solid #e2e8f0;">0 Points Plotted</span>
-                            <button class="btn btn-secondary" id="resetMapZoomBtn" type="button" style="height:34px; font-size:12.5px; font-weight:600; padding:0 14px;">Reset View</button>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span id="mapPointCountBadge" style="font-size:11px; font-weight:700; color:#0f172a; background:#f1f5f9; padding:3px 8px; border-radius:5px; border:1px solid #e2e8f0;">0 Points Plotted</span>
+                            <button class="btn btn-secondary" id="resetMapZoomBtn" type="button" style="height:28px; font-size:11.5px; font-weight:600; padding:0 10px; border-radius:6px;">Reset View</button>
                         </div>
                     </div>
                     <div class="analytics-card-body" style="padding:0; position:relative;">
-                        <div id="analyticsWorldMap" style="height:460px; min-height:460px; width:100%; border-radius:0 0 14px 14px; background:#f8fafc; z-index:1;"></div>
+                        <div id="analyticsWorldMap" style="height:260px; min-height:260px; width:100%; border-radius:0 0 9px 9px; background:#f8fafc; z-index:1;"></div>
                     </div>
                 </div>
 
                 <!-- Access Log Card -->
-                <div class="card" style="min-height: 420px;">
+                <div class="card" style="min-height: 220px;">
                     <div class="analytics-card-header">
                         <div>
                             <h3 class="analytics-card-title">Access Log</h3>
                             <p class="page-subtitle">Recent visitor requests recorded for this URL.</p>
                         </div>
                         <button class="btn btn-secondary" id="refreshAccessLogsBtn" type="button"
-                            style="height:34px; font-size:12.5px; font-weight:600; padding:0 14px;">Refresh</button>
+                            style="height:28px; font-size:11.5px; font-weight:600; padding:0 10px; border-radius:6px;">Refresh</button>
                     </div>
-                    <div class="table-wrapper" style="min-height: 280px;">
+                    <div class="table-wrapper" style="min-height: 160px;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -11061,9 +11152,9 @@
                             </thead>
                             <tbody id="accessLogsTableBody">
                                 <tr>
-                                    <td colspan="5" class="table-empty-state" style="padding:48px 16px;">
+                                    <td colspan="5" class="table-empty-state" style="padding:22px 12px;">
                                         <div class="loading-state-box" style="padding:0;">
-                                            <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24"
+                                            <svg class="spin-icon" width="20" height="20" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2.5"
                                                 style="color:#000000;">
                                                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
@@ -11075,7 +11166,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="table-pagination" style="padding:16px 24px;">
+                    <div class="table-pagination">
                         <span id="accessLogsPaginationInfo" style="font-weight:500;">Loading...</span>
                         <div class="pagination-actions">
                             <button class="pagination-btn" id="accessLogsPrevBtn" type="button">← Previous</button>

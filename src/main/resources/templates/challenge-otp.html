@@ -481,6 +481,21 @@
         let userEmail = "";
         let countdownTimer = null;
         let timeLeft = 60;
+        let clientGeoLocation = null;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    clientGeoLocation = {
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    };
+                    document.cookie = "PREONS_GEO_COORDS=" + pos.coords.latitude + "," + pos.coords.longitude + "; path=/; max-age=3600; SameSite=Lax";
+                },
+                () => {},
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+            );
+        }
 
         function showAlert(msg, isSuccess = false) {
             alertBox.className = "alert " + (isSuccess ? "alert-success" : "alert-error");
@@ -660,10 +675,24 @@
             `;
 
             try {
+                const reqBody = {
+                    path: TARGET_PATH,
+                    email: userEmail,
+                    otp,
+                    geo_lat: clientGeoLocation ? clientGeoLocation.latitude : null,
+                    geo_lng: clientGeoLocation ? clientGeoLocation.longitude : null
+                };
+
+                const reqHeaders = { "Content-Type": "application/json" };
+                if (clientGeoLocation) {
+                    reqHeaders["X-Geo-Latitude"] = clientGeoLocation.latitude.toString();
+                    reqHeaders["X-Geo-Longitude"] = clientGeoLocation.longitude.toString();
+                }
+
                 const response = await fetch("/api/link-otp/verify", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ path: TARGET_PATH, email: userEmail, otp })
+                    headers: reqHeaders,
+                    body: JSON.stringify(reqBody)
                 });
 
                 const data = await response.json();

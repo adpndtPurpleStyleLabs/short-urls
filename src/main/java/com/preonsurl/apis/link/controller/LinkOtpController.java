@@ -32,20 +32,36 @@ public class LinkOtpController {
     private final NewUrlRepository newUrlRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final SecurityVerificationService securityVerificationService;
+    private final com.preonsurl.apis.link.policy.resolver.GeoCoordinatesResolver geoCoordinatesResolver;
 
     public LinkOtpController(
             LinkOtpService linkOtpService,
             NewUrlRepository newUrlRepository,
             ApplicationEventPublisher eventPublisher,
             SecurityVerificationService securityVerificationService) {
+        this(linkOtpService, newUrlRepository, eventPublisher, securityVerificationService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public LinkOtpController(
+            LinkOtpService linkOtpService,
+            NewUrlRepository newUrlRepository,
+            ApplicationEventPublisher eventPublisher,
+            SecurityVerificationService securityVerificationService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.preonsurl.apis.link.policy.resolver.GeoCoordinatesResolver geoCoordinatesResolver) {
         this.linkOtpService = linkOtpService;
         this.newUrlRepository = newUrlRepository;
         this.eventPublisher = eventPublisher;
         this.securityVerificationService = securityVerificationService;
+        this.geoCoordinatesResolver = geoCoordinatesResolver;
     }
 
     public record RequestOtpPayload(String path, String email) {}
-    public record VerifyOtpPayload(String path, String email, String otp) {}
+    public record VerifyOtpPayload(String path, String email, String otp, Double geo_lat, Double geo_lng) {
+        public VerifyOtpPayload(String path, String email, String otp) {
+            this(path, email, otp, null, null);
+        }
+    }
 
     @Operation(summary = "Request OTP for a secured link", description = "Validates recipient email and dispatches a 6-digit OTP code")
     @PostMapping("/request")
@@ -85,6 +101,32 @@ public class LinkOtpController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(outcome.message()));
         }
 
+        // Resolve visitor geographic coordinates from payload, edge headers, or cookies
+        Double clientLat = payload.geo_lat();
+        Double clientLng = payload.geo_lng();
+        if ((clientLat == null || clientLng == null) && geoCoordinatesResolver != null) {
+            com.preonsurl.apis.link.policy.model.GeoCoordinates coords = geoCoordinatesResolver.resolveCoordinates(request);
+            if (coords != null && coords.isValid()) {
+                if (clientLat == null) clientLat = coords.latitude();
+                if (clientLng == null) clientLng = coords.longitude();
+            }
+        }
+        if (clientLat != null && clientLng != null) {
+            if (Math.abs(clientLat) > 90.0 && Math.abs(clientLng) <= 90.0) {
+                Double tmp = clientLat;
+                clientLat = clientLng;
+                clientLng = tmp;
+            }
+        }
+
+        ResponseCookie geoCoordsCookie = (clientLat != null && clientLng != null)
+                ? ResponseCookie.from("PREONS_GEO_COORDS", clientLat + "_" + clientLng)
+                    .path("/")
+                    .maxAge(3600)
+                    .sameSite("Lax")
+                    .build()
+                : null;
+
         // Set security cookie using SecurityVerificationService
         ResponseCookie cookie = securityVerificationService.createVerificationCookie(entity.getId());
 
@@ -115,15 +157,18 @@ public class LinkOtpController {
             String userAgent = request.getHeader("User-Agent");
             String referer = request.getHeader("Referer");
 
-            eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+            eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer, clientLat, clientLng));
         }
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(ApiResponse.success(Map.of(
-                        "redirectUrl", targetRedirectUrl,
-                        "linkMode", mode.name()
-                ), "OTP verified successfully"));
+        var responseBuilder = ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString());
+        if (geoCoordsCookie != null) {
+            responseBuilder.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+        }
+        return responseBuilder.body(ApiResponse.success(Map.of(
+                "redirectUrl", targetRedirectUrl,
+                "linkMode", mode.name()
+        ), "OTP verified successfully"));
     }
 
     private Optional<NewUrl> findEntityByPath(String path, HttpServletRequest request) {

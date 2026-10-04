@@ -123,6 +123,86 @@ class ServingControllerTest {
     }
 
     @Test
+    void servingWithBrowserCoordinatesInQueryOrHeaderCapturesLatLongProperly() throws Exception {
+        NewUrl newUrl = new NewUrl(
+                "geoTest1",
+                "https://example.com/geo-landing",
+                "http://localhost/geoTest1"
+        );
+        NewUrl saved = shortUrlRepository.save(newUrl);
+
+        mockMvc.perform(get("/geoTest1")
+                        .param("geo_lat", "37.7749")
+                        .param("geo_lng", "-122.4194")
+                        .header("User-Agent", "PreonsBrowser/1.0"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/geo-landing"));
+
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            List<NewUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
+            assertEquals(1, logs.size(), "Access log should be saved");
+            NewUrlAccessLog log = logs.get(0);
+            assertNotNull(log.getLatitude(), "Latitude must not be null");
+            assertNotNull(log.getLongitude(), "Longitude must not be null");
+            assertEquals(37.7749, log.getLatitude(), 0.0001);
+            assertEquals(-122.4194, log.getLongitude(), 0.0001);
+        });
+    }
+
+    @Test
+    void servingWithBrowserCoordinatesInEdgeHeadersCapturesLatLongProperly() throws Exception {
+        NewUrl newUrl = new NewUrl(
+                "geoTest2",
+                "https://example.com/geo-edge",
+                "http://localhost/geoTest2"
+        );
+        NewUrl saved = shortUrlRepository.save(newUrl);
+
+        mockMvc.perform(get("/geoTest2")
+                        .header("CF-IPLatitude", "19.0760")
+                        .header("CF-IPLongitude", "72.8777")
+                        .header("User-Agent", "PreonsBrowser/1.0"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/geo-edge"));
+
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            List<NewUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
+            assertEquals(1, logs.size(), "Access log should be saved");
+            NewUrlAccessLog log = logs.get(0);
+            assertNotNull(log.getLatitude(), "Latitude must not be null");
+            assertNotNull(log.getLongitude(), "Longitude must not be null");
+            assertEquals(19.0760, log.getLatitude(), 0.0001);
+            assertEquals(72.8777, log.getLongitude(), 0.0001);
+        });
+    }
+
+    @Test
+    void servingWithBrowserCoordinatesInCookieCapturesLatLongProperly() throws Exception {
+        NewUrl newUrl = new NewUrl(
+                "geoTest3",
+                "https://example.com/geo-cookie",
+                "http://localhost/geoTest3"
+        );
+        NewUrl saved = shortUrlRepository.save(newUrl);
+
+        mockMvc.perform(get("/geoTest3")
+                        .cookie(new jakarta.servlet.http.Cookie("PREONS_GEO_COORDS", "51.5074,-0.1278"))
+                        .header("User-Agent", "PreonsBrowser/1.0"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/geo-cookie"));
+
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            List<NewUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
+            assertEquals(1, logs.size(), "Access log should be saved");
+            NewUrlAccessLog log = logs.get(0);
+            assertNotNull(log.getLatitude(), "Latitude must not be null");
+            assertNotNull(log.getLongitude(), "Longitude must not be null");
+            assertEquals(51.5074, log.getLatitude(), 0.0001);
+            assertEquals(-0.1278, log.getLongitude(), 0.0001);
+        });
+    }
+
+    @Test
     void servingNonExistentShortCodeReturns404NotFoundAndDoesNotLog() throws Exception {
         mockMvc.perform(get("/nonexistent123"))
                 .andExpect(status().isNotFound())
