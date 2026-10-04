@@ -537,13 +537,16 @@ public class ServingController {
             // All policies satisfied (including GeoFence)! Record serve & issue PREONS_SEC_ cookie
             log.info("GeoFence verification passed for url='{}' -> redirecting to '{}' [IP={}]",
                     fullUrl, entity.getOriginalUrl(), ipAddress);
-            eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+            if (entity.getLinkMode() != LinkMode.PROXY && entity.getLinkMode() != LinkMode.MIRROR) {
+                eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+            }
 
             ResponseCookie cookie = policyService.createVerificationCookie(entity.getId());
 
-            URI redirectTarget = (entity.getLinkMode() == LinkMode.PROXY || entity.getLinkMode() == LinkMode.MIRROR)
-                    ? URI.create(entity.getNewUrl())
-                    : URI.create(entity.getOriginalUrl());
+            String redirectTargetStr = (entity.getLinkMode() == LinkMode.PROXY || entity.getLinkMode() == LinkMode.MIRROR)
+                    ? ((path != null && !path.isBlank()) ? ("/" + path) : entity.getNewUrl())
+                    : entity.getOriginalUrl();
+            URI redirectTarget = URI.create(redirectTargetStr);
 
             if (isAjax) {
                 return ResponseEntity.ok()
@@ -586,13 +589,16 @@ public class ServingController {
         // Credentials verified: record serve & increment usage
         log.info("Security challenge passed for url='{}' -> redirecting to '{}' [IP={}]",
                 fullUrl, entity.getOriginalUrl(), ipAddress);
-        eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+        if (entity.getLinkMode() != LinkMode.PROXY && entity.getLinkMode() != LinkMode.MIRROR) {
+            eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+        }
 
         ResponseCookie cookie = policyService.createVerificationCookie(entity.getId());
 
-        URI redirectTarget = (entity.getLinkMode() == LinkMode.PROXY || entity.getLinkMode() == LinkMode.MIRROR)
-                ? URI.create(entity.getNewUrl())
-                : URI.create(entity.getOriginalUrl());
+        String redirectTargetStr = (entity.getLinkMode() == LinkMode.PROXY || entity.getLinkMode() == LinkMode.MIRROR)
+                ? ((path != null && !path.isBlank()) ? ("/" + path) : entity.getNewUrl())
+                : entity.getOriginalUrl();
+        URI redirectTarget = URI.create(redirectTargetStr);
 
         if (isAjax) {
             return ResponseEntity.ok()

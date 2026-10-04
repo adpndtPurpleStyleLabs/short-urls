@@ -129,4 +129,42 @@ class LinkOtpServiceTest {
 
         verify(recipientRepository).save(recipient);
     }
+
+    @Test
+    @DisplayName("verifyOtp returns short newUrl when linkMode is MIRROR")
+    void testVerifyOtpSuccessMirrorMode() {
+        newUrl.setLinkMode(com.preonsurl.apis.link.enums.LinkMode.MIRROR);
+        LinkRecipient recipient = new LinkRecipient(100L, "alice@example.com", "token123");
+        recipient.setOtpRequested(true);
+        recipient.setOtpCodeHash("hashed-otp");
+        recipient.setOtpExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES));
+
+        when(recipientRepository.findByShortUrlIdAndEmailIgnoreCase(100L, "alice@example.com")).thenReturn(Optional.of(recipient));
+        when(passwordEncoder.matches("123456", "hashed-otp")).thenReturn(true);
+        when(recipientRepository.save(any(LinkRecipient.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        LinkOtpService.VerifyOtpOutcome outcome = linkOtpService.verifyOtp(newUrl, "alice@example.com", "123456");
+
+        assertThat(outcome.success()).isTrue();
+        assertThat(outcome.redirectUrl()).isEqualTo("http://short.ly/otp123");
+    }
+
+    @Test
+    @DisplayName("verifyOtp returns short newUrl when linkMode is PROXY")
+    void testVerifyOtpSuccessProxyMode() {
+        newUrl.setLinkMode(com.preonsurl.apis.link.enums.LinkMode.PROXY);
+        LinkRecipient recipient = new LinkRecipient(100L, "alice@example.com", "token123");
+        recipient.setOtpRequested(true);
+        recipient.setOtpCodeHash("hashed-otp");
+        recipient.setOtpExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES));
+
+        when(recipientRepository.findByShortUrlIdAndEmailIgnoreCase(100L, "alice@example.com")).thenReturn(Optional.of(recipient));
+        when(passwordEncoder.matches("123456", "hashed-otp")).thenReturn(true);
+        when(recipientRepository.save(any(LinkRecipient.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        LinkOtpService.VerifyOtpOutcome outcome = linkOtpService.verifyOtp(newUrl, "alice@example.com", "123456");
+
+        assertThat(outcome.success()).isTrue();
+        assertThat(outcome.redirectUrl()).isEqualTo("http://short.ly/otp123");
+    }
 }

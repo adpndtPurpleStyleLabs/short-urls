@@ -3,6 +3,7 @@ package com.preonsurl.apis.link.service;
 import com.preonsurl.apis.link.entity.AccessPolicy;
 import com.preonsurl.apis.link.entity.LinkRecipient;
 import com.preonsurl.apis.link.entity.NewUrl;
+import com.preonsurl.apis.link.enums.LinkMode;
 import com.preonsurl.apis.link.repository.AccessPolicyRepository;
 import com.preonsurl.apis.link.repository.LinkRecipientRepository;
 import com.preonsurl.emailer.EmailService;
@@ -133,9 +134,14 @@ public class LinkOtpService {
         recipient.setOtpCodeHash(null); // One-time use: clear active OTP hash
         linkRecipientRepository.save(recipient);
 
-        log.info("OTP successfully verified for recipient '{}' on shortUrlId={} -> access granted to '{}'",
-                email, shortUrlId, entity.getOriginalUrl());
+        LinkMode mode = entity.getLinkMode() != null ? entity.getLinkMode() : LinkMode.REDIRECT;
+        String destinationUrl = (mode == LinkMode.PROXY || mode == LinkMode.MIRROR)
+                ? (entity.getNewUrl() != null && !entity.getNewUrl().isBlank() ? entity.getNewUrl() : entity.getOriginalUrl())
+                : entity.getOriginalUrl();
 
-        return new VerifyOtpOutcome(true, "Access granted.", entity.getOriginalUrl());
+        log.info("OTP successfully verified for recipient '{}' on shortUrlId={} [mode={}] -> access granted to '{}'",
+                email, shortUrlId, mode, destinationUrl);
+
+        return new VerifyOtpOutcome(true, "Access granted.", destinationUrl);
     }
 }

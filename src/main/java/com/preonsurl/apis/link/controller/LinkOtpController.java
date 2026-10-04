@@ -2,7 +2,9 @@ package com.preonsurl.apis.link.controller;
 
 import com.preonsurl.apis.link.dto.ApiResponse;
 import com.preonsurl.apis.link.entity.NewUrl;
+import com.preonsurl.apis.link.enums.LinkMode;
 import com.preonsurl.apis.link.event.ShortUrlServedEvent;
+import com.preonsurl.apis.link.policy.security.SecurityVerificationService;
 import com.preonsurl.apis.link.repository.NewUrlRepository;
 import com.preonsurl.apis.link.service.LinkOtpService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,14 +31,17 @@ public class LinkOtpController {
     private final LinkOtpService linkOtpService;
     private final NewUrlRepository newUrlRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final SecurityVerificationService securityVerificationService;
 
     public LinkOtpController(
             LinkOtpService linkOtpService,
             NewUrlRepository newUrlRepository,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher,
+            SecurityVerificationService securityVerificationService) {
         this.linkOtpService = linkOtpService;
         this.newUrlRepository = newUrlRepository;
         this.eventPublisher = eventPublisher;
+        this.securityVerificationService = securityVerificationService;
     }
 
     public record RequestOtpPayload(String path, String email) {}
@@ -80,27 +85,45 @@ public class LinkOtpController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(outcome.message()));
         }
 
-        // Set security cookie
-        ResponseCookie cookie = ResponseCookie.from("PREONS_SEC_" + entity.getId(), "VERIFIED")
-                .path("/")
-                .maxAge(600)
-                .httpOnly(true)
-                .build();
+        // Set security cookie using SecurityVerificationService
+        ResponseCookie cookie = securityVerificationService.createVerificationCookie(entity.getId());
 
-        String ipAddress = request.getHeader("X-Forwarded-For");
-        if (ipAddress == null || ipAddress.isBlank()) {
-            ipAddress = request.getRemoteAddr();
-        } else if (ipAddress.contains(",")) {
-            ipAddress = ipAddress.split(",")[0].trim();
+        String cleanPath = payload.path().trim();
+        if (cleanPath.startsWith("/")) {
+            cleanPath = cleanPath.substring(1);
         }
-        String userAgent = request.getHeader("User-Agent");
-        String referer = request.getHeader("Referer");
 
-        eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+        LinkMode mode = entity.getLinkMode() != null ? entity.getLinkMode() : LinkMode.REDIRECT;
+        String targetRedirectUrl;
+
+        if (mode == LinkMode.PROXY || mode == LinkMode.MIRROR) {
+            // For PROXY and MIRROR modes, direct visitor to the short link path so ServingController handles proxying or mirroring.
+            // Do NOT record ShortUrlServedEvent here; ServingController.resolveAndServe will record it when the page is served.
+            targetRedirectUrl = !cleanPath.isBlank() ? ("/" + cleanPath) : entity.getNewUrl();
+        } else {
+            // For REDIRECT mode, direct to the original target URL.
+            targetRedirectUrl = (outcome.redirectUrl() != null && !outcome.redirectUrl().isBlank())
+                    ? outcome.redirectUrl()
+                    : entity.getOriginalUrl();
+
+            String ipAddress = request.getHeader("X-Forwarded-For");
+            if (ipAddress == null || ipAddress.isBlank()) {
+                ipAddress = request.getRemoteAddr();
+            } else if (ipAddress.contains(",")) {
+                ipAddress = ipAddress.split(",")[0].trim();
+            }
+            String userAgent = request.getHeader("User-Agent");
+            String referer = request.getHeader("Referer");
+
+            eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer));
+        }
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(ApiResponse.success(Map.of("redirectUrl", outcome.redirectUrl()), "OTP verified successfully"));
+                .body(ApiResponse.success(Map.of(
+                        "redirectUrl", targetRedirectUrl,
+                        "linkMode", mode.name()
+                ), "OTP verified successfully"));
     }
 
     private Optional<NewUrl> findEntityByPath(String path, HttpServletRequest request) {

@@ -675,10 +675,21 @@
                     return;
                 }
 
-                showAlert("Verification successful! Unlocking destination...", true);
-                verifyBtn.innerHTML = `<span>Redirecting...</span>`;
+                const isSpecialMode = data.data && (data.data.linkMode === 'MIRROR' || data.data.linkMode === 'PROXY');
+                if (isSpecialMode) {
+                    const modeLabel = data.data.linkMode === 'MIRROR' ? 'mirror' : 'proxy';
+                    showAlert(`Verification successful! Loading ${modeLabel} view...`, true);
+                    verifyBtn.innerHTML = `<span>Loading...</span>`;
+                } else {
+                    showAlert("Verification successful! Unlocking destination...", true);
+                    verifyBtn.innerHTML = `<span>Redirecting...</span>`;
+                }
 
-                const redirectUrl = (data.data && data.data.redirectUrl) ? data.data.redirectUrl : ("/" + TARGET_PATH);
+                let redirectUrl = (data.data && data.data.redirectUrl) ? data.data.redirectUrl : ("/" + TARGET_PATH);
+                if (redirectUrl.startsWith("/") && window.location.search && !redirectUrl.includes("?")) {
+                    redirectUrl += window.location.search;
+                }
+
                 setTimeout(() => {
                     window.location.href = redirectUrl;
                 }, 400);
