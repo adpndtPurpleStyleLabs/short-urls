@@ -58,7 +58,7 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
 
     long countByUserId(Long userId);
 
-    @Query("SELECT COUNT(u) FROM NewUrl u WHERE u.userId = :userId AND u.isActive = true AND (u.expireAt IS NULL OR u.expireAt > :now) AND (u.usageLimit IS NULL OR u.clickCount < u.usageLimit)")
+    @Query("SELECT COUNT(u) FROM NewUrl u WHERE u.userId = :userId AND u.isEnable = true AND (u.expireAt IS NULL OR u.expireAt > :now) AND (u.usageLimit IS NULL OR u.clickCount < u.usageLimit)")
     long countActiveByUserId(@Param("userId") Long userId, @Param("now") java.time.Instant now);
 
     @Query("""

@@ -122,4 +122,9 @@ public record UrlListItemResponse(
     ) {
         this(shortLink, originalLink, isEnabled, isExpired, expiredReason, why, timesClicked, createdAt, createdAgo, lastUsedAt, lastUsedAgo, publicId, java.util.List.of());
     }
+
+    @JsonProperty("isEnable")
+    public boolean isEnable() {
+        return isEnabled;
+    }
 }

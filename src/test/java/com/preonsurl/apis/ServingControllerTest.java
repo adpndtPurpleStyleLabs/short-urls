@@ -217,7 +217,7 @@ class ServingControllerTest {
                         .header("User-Agent", "Mozilla/5.0 Chrome/120.0"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("text/html"))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Redirecting in")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Location access required")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("pulsing-icon-wrapper")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("core-black-icon")));
 

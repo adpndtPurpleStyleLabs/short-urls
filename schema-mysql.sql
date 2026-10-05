@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS short_urls (
     expire_at TIMESTAMP NOT NULL,
     usage_limit BIGINT NULL,
     link_mode VARCHAR(20) NOT NULL DEFAULT 'REDIRECT',
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_enable BOOLEAN NOT NULL DEFAULT TRUE,
     note VARCHAR(1024) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS short_urls (
     INDEX idx_short_urls_domain (domain),
     INDEX idx_short_urls_new_url (new_url),
     INDEX idx_short_urls_link_mode (link_mode),
-    INDEX idx_short_urls_is_active (is_active),
+    INDEX idx_short_urls_is_enable (is_enable),
     INDEX idx_short_urls_expire_at (expire_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

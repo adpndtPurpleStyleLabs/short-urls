@@ -59,8 +59,8 @@ import java.time.temporal.ChronoUnit;
                 ),
 
                 @Index(
-                        name = "idx_short_urls_is_active",
-                        columnList = "is_active"
+                        name = "idx_short_urls_is_enable",
+                        columnList = "is_enable"
                 ),
 
                 @Index(
@@ -198,10 +198,10 @@ public class NewUrl {
 
 
     @Column(
-            name = "is_active",
+            name = "is_enable",
             nullable = false
     )
-    private boolean isActive = true;
+    private boolean isEnable = true;
 
 
     @Column(
@@ -398,21 +398,31 @@ public class NewUrl {
 
 
     // =========================================================
-    // ACTIVE
+    // ENABLE / ACTIVE
     // =========================================================
 
-    public boolean isActive() {
-        return isActive;
+    public boolean isEnable() {
+        return isEnable;
     }
 
+    public void setEnable(boolean isEnable) {
+        this.isEnable = isEnable;
+    }
+
+    public void setIsEnable(boolean isEnable) {
+        this.isEnable = isEnable;
+    }
+
+    public boolean isActive() {
+        return isEnable;
+    }
 
     public void setActive(boolean active) {
-        this.isActive = active;
+        this.isEnable = active;
     }
 
-
     public void setIsActive(boolean isActive) {
-        this.isActive = isActive;
+        this.isEnable = isActive;
     }
 
 

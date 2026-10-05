@@ -220,4 +220,9 @@ public record CreateNewUrlResponse(
     public Instant expiresAt() {
         return expireAt;
     }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("isEnable")
+    public Boolean isEnable() {
+        return isActive;
+    }
 }

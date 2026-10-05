@@ -1208,8 +1208,8 @@ class CreateControllerTest {
         assertEquals("REDIRECT", modeLog.getOldValue());
         assertEquals("IFRAME", modeLog.getNewValue());
 
-        // Check is_active log
-        NewUrlChangeLog activeLog = editLogs.stream().filter(l -> "is_active".equals(l.getFieldName())).findFirst().orElseThrow();
+        // Check is_enable / is_active log
+        NewUrlChangeLog activeLog = editLogs.stream().filter(l -> "is_enable".equals(l.getFieldName()) || "is_active".equals(l.getFieldName())).findFirst().orElseThrow();
         assertEquals("true", activeLog.getOldValue());
         assertEquals("false", activeLog.getNewValue());
 

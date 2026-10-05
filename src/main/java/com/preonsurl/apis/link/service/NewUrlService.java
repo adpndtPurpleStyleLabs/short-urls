@@ -1022,13 +1022,14 @@ public class NewUrlService {
             }
         }
 
-        // H. isActive
-        if (request.isActive() != null) {
-            if (entity.isActive() != request.isActive()) {
-                String oldVal = String.valueOf(entity.isActive());
-                String newVal = String.valueOf(request.isActive());
-                entity.setActive(request.isActive());
-                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "is_active", oldVal, newVal));
+        // H. isEnable / isActive
+        Boolean newEnable = request.isEnable() != null ? request.isEnable() : request.isActive();
+        if (newEnable != null) {
+            if (entity.isEnable() != newEnable) {
+                String oldVal = String.valueOf(entity.isEnable());
+                String newVal = String.valueOf(newEnable);
+                entity.setEnable(newEnable);
+                changeLogRepository.save(new NewUrlChangeLog(entity.getId(), userId, "EDITED", "is_enable", oldVal, newVal));
                 modified = true;
             }
         }

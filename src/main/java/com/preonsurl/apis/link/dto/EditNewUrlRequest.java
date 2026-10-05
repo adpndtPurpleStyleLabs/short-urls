@@ -67,9 +67,9 @@ public record EditNewUrlRequest(
         @JsonAlias({"mode", "link_mode"})
         LinkMode linkMode,
 
-        @Schema(description = "Whether the URL is active", example = "true", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        @JsonAlias({"active", "is_active"})
-        Boolean isActive,
+        @Schema(description = "Whether the URL is enabled", example = "true", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        @JsonAlias({"active", "is_active", "isActive", "isEnable", "is_enable", "enabled", "isEnabled"})
+        Boolean isEnable,
 
         @Valid
         @Schema(description = "Updated usage and lifetime policies for the shortened URL", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
@@ -86,6 +86,10 @@ public record EditNewUrlRequest(
         @JsonAlias({"analyticsPreferences", "tracking"})
         AnalyticsPreferences analytics
 ) {
+    public Boolean isActive() {
+        return isEnable;
+    }
+
     public EditNewUrlRequest(
             String newUrl,
             String publicId,
@@ -101,11 +105,11 @@ public record EditNewUrlRequest(
             String notes,
             List<String> tags,
             LinkMode linkMode,
-            Boolean isActive,
+            Boolean isEnable,
             UsagePolicies usagePolicies,
             AccessPolicies accessPolicies
     ) {
-        this(newUrl, publicId, shortCode, originalUrl, customPath, domain, expireAt, clearExpireAt, usageLimit, resetClickCount, clickCount, notes, tags, linkMode, isActive, usagePolicies, accessPolicies, null);
+        this(newUrl, publicId, shortCode, originalUrl, customPath, domain, expireAt, clearExpireAt, usageLimit, resetClickCount, clickCount, notes, tags, linkMode, isEnable, usagePolicies, accessPolicies, null);
     }
 
     public EditNewUrlRequest(
@@ -117,11 +121,11 @@ public record EditNewUrlRequest(
             String notes,
             List<String> tags,
             LinkMode linkMode,
-            Boolean isActive,
+            Boolean isEnable,
             UsagePolicies usagePolicies,
             AccessPolicies accessPolicies
     ) {
-        this(newUrl, null, null, originalUrl, customPath, null, expireAt, null, usageLimit, null, null, notes, tags, linkMode, isActive, usagePolicies, accessPolicies, null);
+        this(newUrl, null, null, originalUrl, customPath, null, expireAt, null, usageLimit, null, null, notes, tags, linkMode, isEnable, usagePolicies, accessPolicies, null);
     }
 
     public EditNewUrlRequest(
@@ -133,9 +137,9 @@ public record EditNewUrlRequest(
             String notes,
             List<String> tags,
             LinkMode linkMode,
-            Boolean isActive
+            Boolean isEnable
     ) {
-        this(newUrl, originalUrl, customPath, expireAt, usageLimit, notes, tags, linkMode, isActive, null, null);
+        this(newUrl, originalUrl, customPath, expireAt, usageLimit, notes, tags, linkMode, isEnable, null, null);
     }
 
     public boolean hasAnalytics() {
