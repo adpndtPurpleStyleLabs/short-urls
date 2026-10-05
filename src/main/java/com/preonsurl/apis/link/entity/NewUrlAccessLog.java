@@ -42,6 +42,9 @@ public class NewUrlAccessLog {
     @Column(name = "longitude")
     private Double longitude;
 
+    @Column(name = "accuracy")
+    private Double accuracy;
+
     @Column(name = "device", length = 64)
     private String device;
 
@@ -164,6 +167,14 @@ public class NewUrlAccessLog {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public Double getAccuracy() {
+        return accuracy;
+    }
+
+    public void setAccuracy(Double accuracy) {
+        this.accuracy = accuracy;
     }
 
     public String getDevice() {

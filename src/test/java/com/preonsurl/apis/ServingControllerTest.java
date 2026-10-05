@@ -203,6 +203,46 @@ class ServingControllerTest {
     }
 
     @Test
+    void servingBrowserHtmlRequestWithoutCoordsLoadsTransitionalPageWithBlackPulsingIcon() throws Exception {
+        NewUrl newUrl = new NewUrl(
+                "geoNavDemo",
+                "https://example.com/geo-nav-destination",
+                "http://localhost/geoNavDemo"
+        );
+        NewUrl saved = shortUrlRepository.save(newUrl);
+
+        // 1. Initial browser navigation (no coordinates yet) -> Returns transitional page
+        mockMvc.perform(get("/geoNavDemo")
+                        .header("Accept", "text/html,application/xhtml+xml")
+                        .header("User-Agent", "Mozilla/5.0 Chrome/120.0"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/html"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Redirecting in")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("pulsing-icon-wrapper")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("core-black-icon")));
+
+        // 2. Browser provides coordinates and navigates with geo_nav=1 -> Resolves, logs, and redirects to destination
+        mockMvc.perform(get("/geoNavDemo")
+                        .header("Accept", "text/html,application/xhtml+xml")
+                        .header("User-Agent", "Mozilla/5.0 Chrome/120.0")
+                        .param("geo_nav", "1")
+                        .param("geo_lat", "19.0760")
+                        .param("geo_lng", "72.8777"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://example.com/geo-nav-destination"));
+
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            List<NewUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
+            assertFalse(logs.isEmpty(), "Access log should be saved");
+            NewUrlAccessLog log = logs.get(0);
+            assertNotNull(log.getLatitude());
+            assertNotNull(log.getLongitude());
+            assertEquals(19.0760, log.getLatitude(), 0.0001);
+            assertEquals(72.8777, log.getLongitude(), 0.0001);
+        });
+    }
+
+    @Test
     void servingNonExistentShortCodeReturns404NotFoundAndDoesNotLog() throws Exception {
         mockMvc.perform(get("/nonexistent123"))
                 .andExpect(status().isNotFound())
@@ -868,5 +908,41 @@ class ServingControllerTest {
             ProxyResourceValidator.allowLoopbackForTesting = false;
             server.stop(0);
         }
+    }
+
+    @Test
+    void servingWithBrowserCoordinatesAndAccuracyInHeadersCapturesLocationAndReturnsAjaxJson() throws Exception {
+        NewUrl newUrl = new NewUrl(
+                "geoAccuracyLink",
+                "https://example.com/geo-accuracy-landing",
+                "http://localhost/geoAccuracyLink"
+        );
+        NewUrl saved = shortUrlRepository.save(newUrl);
+
+        mockMvc.perform(get("/geoAccuracyLink")
+                        .header("X-Browser-Latitude", "19.0760")
+                        .header("X-Browser-Longitude", "72.8777")
+                        .header("X-Browser-Accuracy", "15.5")
+                        .header("Accept", "application/json")
+                        .header("X-Requested-With", "XMLHttpRequest")
+                        .header("User-Agent", "PreonsBrowser/1.0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ALLOWED"))
+                .andExpect(jsonPath("$.linkMode").value("REDIRECT"))
+                .andExpect(jsonPath("$.redirectUrl").value("https://example.com/geo-accuracy-landing"))
+                .andExpect(cookie().exists("PREONS_GEO_COORDS"))
+                .andExpect(cookie().value("PREONS_GEO_COORDS", org.hamcrest.Matchers.containsString("19.076_72.8777_15.5")));
+
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            List<NewUrlAccessLog> logs = accessLogRepository.findByShortUrlIdOrderByAccessedAtDesc(saved.getId());
+            assertEquals(1, logs.size(), "Access log should be saved");
+            NewUrlAccessLog log = logs.get(0);
+            assertNotNull(log.getLatitude(), "Latitude must not be null");
+            assertNotNull(log.getLongitude(), "Longitude must not be null");
+            assertNotNull(log.getAccuracy(), "Accuracy must not be null");
+            assertEquals(19.0760, log.getLatitude(), 0.0001);
+            assertEquals(72.8777, log.getLongitude(), 0.0001);
+            assertEquals(15.5, log.getAccuracy(), 0.0001);
+        });
     }
 }

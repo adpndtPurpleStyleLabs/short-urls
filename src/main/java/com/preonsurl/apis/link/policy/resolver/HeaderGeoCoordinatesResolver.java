@@ -114,21 +114,32 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
             return null;
         }
 
+        // Extract optional accuracy from request headers
+        String headerAccuracy = extractAccuracyHeader(request);
+
+        // Extract optional accuracy from query parameters
+        String paramAccuracy = extractAccuracyParam(request);
+
         // 1. Check browser/client query or form parameters
         for (String[] paramPair : BROWSER_PARAM_PAIRS) {
             String paramLat = request.getParameter(paramPair[0]);
             String paramLng = request.getParameter(paramPair[1]);
-            GeoCoordinates coords = parseCoords(paramLat, paramLng);
+            GeoCoordinates coords = parseCoords(paramLat, paramLng, paramAccuracy);
             if (coords != null) {
                 return coords;
             }
         }
 
-        // Check single combined parameters (e.g. "geo_coords=19.0760,72.8777")
+        // Check single combined parameters (e.g. "geo_coords=19.0760,72.8777,15.5")
         for (String paramName : BROWSER_COMBINED_PARAMS) {
             String combined = request.getParameter(paramName);
             GeoCoordinates coords = parseCombinedCoords(combined);
             if (coords != null) {
+                if (coords.accuracy() == null && paramAccuracy != null) {
+                    try {
+                        coords = new GeoCoordinates(coords.latitude(), coords.longitude(), Double.parseDouble(paramAccuracy));
+                    } catch (Exception ignored) {}
+                }
                 return coords;
             }
         }
@@ -137,7 +148,7 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
         for (String[] headerPair : BROWSER_HEADER_PAIRS) {
             String headerLat = request.getHeader(headerPair[0]);
             String headerLng = request.getHeader(headerPair[1]);
-            GeoCoordinates coords = parseCoords(headerLat, headerLng);
+            GeoCoordinates coords = parseCoords(headerLat, headerLng, headerAccuracy);
             if (coords != null) {
                 return coords;
             }
@@ -147,6 +158,11 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
             String combined = request.getHeader(headerName);
             GeoCoordinates coords = parseCombinedCoords(combined);
             if (coords != null) {
+                if (coords.accuracy() == null && headerAccuracy != null) {
+                    try {
+                        coords = new GeoCoordinates(coords.latitude(), coords.longitude(), Double.parseDouble(headerAccuracy));
+                    } catch (Exception ignored) {}
+                }
                 return coords;
             }
         }
@@ -154,7 +170,7 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
         // 3. Check cookies stored from client-side browser geolocation permission
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
-            // First check combined cookies (e.g. PREONS_GEO_COORDS=19.0760,72.8777)
+            // First check combined cookies (e.g. PREONS_GEO_COORDS=19.0760,72.8777,15.5 or 19.0760_72.8777_15.5)
             for (String cookieName : BROWSER_COMBINED_COOKIE_NAMES) {
                 for (Cookie c : cookies) {
                     if (cookieName.equalsIgnoreCase(c.getName())) {
@@ -178,7 +194,7 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
                     }
                 }
                 if (cLat != null && cLng != null) {
-                    GeoCoordinates coords = parseCoords(cLat, cLng);
+                    GeoCoordinates coords = parseCoords(cLat, cLng, headerAccuracy);
                     if (coords != null) {
                         return coords;
                     }
@@ -186,6 +202,28 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
             }
         }
 
+        return null;
+    }
+
+    private String extractAccuracyHeader(HttpServletRequest request) {
+        if (request == null) return null;
+        for (String name : new String[]{"X-Browser-Accuracy", "X-Client-Accuracy", "X-Device-Accuracy", "X-Geo-Accuracy", "Accuracy"}) {
+            String val = request.getHeader(name);
+            if (val != null && !val.isBlank()) {
+                return val.trim();
+            }
+        }
+        return null;
+    }
+
+    private String extractAccuracyParam(HttpServletRequest request) {
+        if (request == null) return null;
+        for (String name : new String[]{"geo_accuracy", "geo_acc", "accuracy", "acc"}) {
+            String val = request.getParameter(name);
+            if (val != null && !val.isBlank()) {
+                return val.trim();
+            }
+        }
         return null;
     }
 
@@ -197,11 +235,13 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
             return null;
         }
 
+        String edgeAccuracy = extractAccuracyHeader(request);
+
         // 1. Check standard CDN / proxy header pairs
         for (String[] pair : CDN_EDGE_HEADER_PAIRS) {
             String latStr = request.getHeader(pair[0]);
             String lngStr = request.getHeader(pair[1]);
-            GeoCoordinates coords = parseCoords(latStr, lngStr);
+            GeoCoordinates coords = parseCoords(latStr, lngStr, edgeAccuracy);
             if (coords != null) {
                 return coords;
             }
@@ -237,32 +277,41 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
         if (clean.startsWith("\"") && clean.endsWith("\"") && clean.length() > 1) {
             clean = clean.substring(1, clean.length() - 1);
         }
+        String[] parts = null;
         if (clean.contains(",")) {
-            String[] parts = clean.split(",");
-            if (parts.length >= 2) {
-                return parseCoords(parts[0], parts[1]);
-            }
+            parts = clean.split(",");
         } else if (clean.contains("_")) {
-            String[] parts = clean.split("_");
-            if (parts.length >= 2) {
-                return parseCoords(parts[0], parts[1]);
-            }
+            parts = clean.split("_");
         } else if (clean.contains(" ") || clean.contains(";")) {
-            String[] parts = clean.split("[;\\s]+");
-            if (parts.length >= 2) {
-                return parseCoords(parts[0], parts[1]);
-            }
+            parts = clean.split("[;\\s]+");
+        }
+        if (parts != null && parts.length >= 2) {
+            String acc = parts.length >= 3 ? parts[2] : null;
+            return parseCoords(parts[0], parts[1], acc);
         }
         return null;
     }
 
     public GeoCoordinates parseCoords(String latStr, String lngStr) {
+        return parseCoords(latStr, lngStr, null);
+    }
+
+    public GeoCoordinates parseCoords(String latStr, String lngStr, String accuracyStr) {
         if (latStr == null || lngStr == null || latStr.isBlank() || lngStr.isBlank()) {
             return null;
         }
         try {
             double lat = Double.parseDouble(latStr.trim());
             double lng = Double.parseDouble(lngStr.trim());
+            Double accuracy = null;
+            if (accuracyStr != null && !accuracyStr.isBlank()) {
+                try {
+                    accuracy = Double.parseDouble(accuracyStr.trim());
+                    if (accuracy < 0) {
+                        accuracy = null;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
 
             // Auto-correct inverted latitude and longitude if necessary
             if (Math.abs(lat) > 90.0 && Math.abs(lng) <= 90.0) {
@@ -271,7 +320,7 @@ public class HeaderGeoCoordinatesResolver implements GeoCoordinatesResolver {
                 lng = tmp;
             }
 
-            GeoCoordinates coords = new GeoCoordinates(lat, lng);
+            GeoCoordinates coords = new GeoCoordinates(lat, lng, accuracy);
             return coords.isValid() ? coords : null;
         } catch (NumberFormatException e) {
             log.debug("Unparseable coordinates: lat='{}', lng='{}'", latStr, lngStr);

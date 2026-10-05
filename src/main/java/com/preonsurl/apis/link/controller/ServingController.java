@@ -146,7 +146,8 @@ public class ServingController {
         com.preonsurl.apis.link.policy.model.GeoCoordinates clientCoords = extractClientCoordinates(request, null, null);
         Double clientLat = clientCoords != null ? clientCoords.latitude() : null;
         Double clientLng = clientCoords != null ? clientCoords.longitude() : null;
-        ResponseCookie geoCoordsCookie = createGeoCookie(clientLat, clientLng);
+        Double clientAccuracy = clientCoords != null ? clientCoords.accuracy() : null;
+        ResponseCookie geoCoordsCookie = createGeoCookie(clientLat, clientLng, clientAccuracy);
 
         // 1. Check LRU Cache first
         com.preonsurl.apis.link.cache.CachedNewUrlDto cached = servingCacheService.getLruCache().get(fullUrl);
@@ -192,12 +193,33 @@ public class ServingController {
                         .body(linkUiRenderer.renderSecurityChallenge(path, policy != null && policy.hasPin(), policy != null && policy.hasPassword(), policy != null && policy.hasOtp(), null));
             }
 
+            // Transitional interstitial page for browser location permission
+            if (isBrowserHtmlRequest(request) && !isAjaxRequest(request) && !hasBrowserCoordinates(request) && !isGeoNavCompleted(request)) {
+                String modeStr = cached.getLinkMode() != null ? cached.getLinkMode().name() : "REDIRECT";
+                log.info("Loading transitional redirect page for browser location permission: url='{}'", fullUrl);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(linkUiRenderer.renderRedirectInterstitial(path, cached.getOriginalUrl(), modeStr));
+            }
+
             // Serve from cache
             try {
-                Optional<String> originalUrl = servingCacheService.resolveAndServe(fullUrl, ipAddress, userAgent, referer, clientLat, clientLng);
+                Optional<String> originalUrl = servingCacheService.resolveAndServe(fullUrl, ipAddress, userAgent, referer, clientLat, clientLng, clientAccuracy);
                 if (originalUrl.isPresent()) {
                     String target = originalUrl.get();
                     LinkMode mode = cached.getLinkMode() != null ? cached.getLinkMode() : LinkMode.REDIRECT;
+                    if (isAjaxRequest(request)) {
+                        String redirectUrl = (mode == LinkMode.REDIRECT) ? target : (request.getRequestURI() + (request.getQueryString() != null ? "?" + request.getQueryString() : ""));
+                        var ajaxResponse = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON);
+                        if (geoCoordsCookie != null) {
+                            ajaxResponse.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+                        }
+                        return ajaxResponse.body(Map.of(
+                                "status", "ALLOWED",
+                                "linkMode", mode.name(),
+                                "redirectUrl", redirectUrl
+                        ));
+                    }
                     if (mode == LinkMode.PROXY) {
                         log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
                         return attachProxyContextCookie(proxyService.proxyRequest(target, request), path);
@@ -278,6 +300,14 @@ public class ServingController {
                         return ResponseEntity.ok()
                                 .contentType(MediaType.TEXT_HTML)
                                 .body(linkUiRenderer.renderSecurityChallenge(match.prefix(), policy != null && policy.hasPin(), policy != null && policy.hasPassword(), policy != null && policy.hasOtp(), null));
+                    }
+
+                    // Transitional interstitial page for browser location permission
+                    if (isBrowserHtmlRequest(request) && !isAjaxRequest(request) && !hasBrowserCoordinates(request) && !isGeoNavCompleted(request)) {
+                        log.info("Loading transitional redirect page for mirror url='{}'", fullUrl);
+                        return ResponseEntity.ok()
+                                .contentType(MediaType.TEXT_HTML)
+                                .body(linkUiRenderer.renderRedirectInterstitial(match.prefix(), mirrorEntity.getOriginalUrl(), "MIRROR"));
                     }
 
                     try {
@@ -362,14 +392,35 @@ public class ServingController {
                     .body(linkUiRenderer.renderSecurityChallenge(path, policy != null && policy.hasPin(), policy != null && policy.hasPassword(), policy != null && policy.hasOtp(), null));
         }
 
+        // Transitional interstitial page for browser location permission
+        if (isBrowserHtmlRequest(request) && !isAjaxRequest(request) && !hasBrowserCoordinates(request) && !isGeoNavCompleted(request)) {
+            String modeStr = entity.getLinkMode() != null ? entity.getLinkMode().name() : "REDIRECT";
+            log.info("Loading transitional redirect page for browser location permission: url='{}'", fullUrl);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(linkUiRenderer.renderRedirectInterstitial(path, entity.getOriginalUrl(), modeStr));
+        }
+
         // Serve using cache service
         try {
-            Optional<String> originalUrl = servingCacheService.resolveAndServe(entity.getNewUrl(), ipAddress, userAgent, referer, clientLat, clientLng);
+            Optional<String> originalUrl = servingCacheService.resolveAndServe(entity.getNewUrl(), ipAddress, userAgent, referer, clientLat, clientLng, clientAccuracy);
             LinkMode mode = entity.getLinkMode() != null ? entity.getLinkMode() : LinkMode.REDIRECT;
             String mirrorPrefix = (path != null && !path.isBlank()) ? path : (entity.getShortCode() != null ? entity.getShortCode() : "m");
 
             if (originalUrl.isPresent()) {
                 String target = originalUrl.get();
+                if (isAjaxRequest(request)) {
+                    String redirectUrl = (mode == LinkMode.REDIRECT) ? target : (request.getRequestURI() + (request.getQueryString() != null ? "?" + request.getQueryString() : ""));
+                    var ajaxResponse = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON);
+                    if (geoCoordsCookie != null) {
+                        ajaxResponse.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+                    }
+                    return ajaxResponse.body(Map.of(
+                            "status", "ALLOWED",
+                            "linkMode", mode.name(),
+                            "redirectUrl", redirectUrl
+                    ));
+                }
                 if (mode == LinkMode.PROXY) {
                     log.info("Proxying root fullUrl='{}' -> '{}' [IP={}]", fullUrl, target, ipAddress);
                     return attachProxyContextCookie(proxyService.proxyRequest(target, request), mirrorPrefix);
@@ -384,6 +435,19 @@ public class ServingController {
                     redirectResponse.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
                 }
                 return redirectResponse.build();
+            }
+
+            if (isAjaxRequest(request)) {
+                String redirectUrl = (mode == LinkMode.REDIRECT) ? entity.getOriginalUrl() : (request.getRequestURI() + (request.getQueryString() != null ? "?" + request.getQueryString() : ""));
+                var ajaxResponse = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON);
+                if (geoCoordsCookie != null) {
+                    ajaxResponse.header(HttpHeaders.SET_COOKIE, geoCoordsCookie.toString());
+                }
+                return ajaxResponse.body(Map.of(
+                        "status", "ALLOWED",
+                        "linkMode", mode.name(),
+                        "redirectUrl", redirectUrl
+                ));
             }
 
             if (mode == LinkMode.PROXY) {
@@ -729,6 +793,20 @@ public class ServingController {
         return accept != null && accept.contains("text/html");
     }
 
+    private boolean isGeoNavCompleted(HttpServletRequest request) {
+        if (request == null) return false;
+        String geoNav = request.getParameter("geo_nav");
+        return "1".equals(geoNav) || "true".equalsIgnoreCase(geoNav);
+    }
+
+    private boolean hasBrowserCoordinates(HttpServletRequest request) {
+        if (request == null) return false;
+        if (geoCoordinatesResolver instanceof com.preonsurl.apis.link.policy.resolver.HeaderGeoCoordinatesResolver hdrResolver) {
+            return hdrResolver.resolveBrowserCoordinates(request) != null;
+        }
+        return request.getParameter("geo_lat") != null && request.getParameter("geo_lng") != null;
+    }
+
     private String extractClientIp(HttpServletRequest request) {
         return policyService.extractClientIp(request);
     }
@@ -1001,7 +1079,18 @@ public class ServingController {
                 lat = lng;
                 lng = tmp;
             }
-            com.preonsurl.apis.link.policy.model.GeoCoordinates coords = new com.preonsurl.apis.link.policy.model.GeoCoordinates(lat, lng);
+            Double explicitAcc = null;
+            if (request != null) {
+                String accStr = request.getParameter("geo_accuracy");
+                if (accStr == null) accStr = request.getParameter("accuracy");
+                if (accStr == null) accStr = request.getHeader("X-Browser-Accuracy");
+                if (accStr != null) {
+                    try {
+                        explicitAcc = Double.parseDouble(accStr.trim());
+                    } catch (Exception ignored) {}
+                }
+            }
+            com.preonsurl.apis.link.policy.model.GeoCoordinates coords = new com.preonsurl.apis.link.policy.model.GeoCoordinates(lat, lng, explicitAcc);
             if (coords.isValid()) {
                 return coords;
             }
@@ -1015,12 +1104,17 @@ public class ServingController {
         return null;
     }
 
-    private ResponseCookie createGeoCookie(Double lat, Double lng) {
+    private ResponseCookie createGeoCookie(Double lat, Double lng, Double accuracy) {
         if (lat == null || lng == null) return null;
-        return ResponseCookie.from("PREONS_GEO_COORDS", lat + "_" + lng)
+        String val = lat + "_" + lng + (accuracy != null ? "_" + accuracy : "");
+        return ResponseCookie.from("PREONS_GEO_COORDS", val)
                 .path("/")
                 .maxAge(3600)
                 .sameSite("Lax")
                 .build();
+    }
+
+    private ResponseCookie createGeoCookie(Double lat, Double lng) {
+        return createGeoCookie(lat, lng, null);
     }
 }

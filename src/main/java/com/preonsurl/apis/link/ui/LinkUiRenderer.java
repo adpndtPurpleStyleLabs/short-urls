@@ -118,4 +118,15 @@ public class LinkUiRenderer {
                 result.details()
         );
     }
+
+    /**
+     * Renders the transitional redirect interstitial page requesting browser location permission.
+     */
+    public String renderRedirectInterstitial(String targetPath, String destinationUrl, String linkMode) {
+        Context context = new Context();
+        context.setVariable("targetPath", targetPath);
+        context.setVariable("destinationUrl", destinationUrl);
+        context.setVariable("linkMode", linkMode != null ? linkMode : "REDIRECT");
+        return templateEngine.process("redirect-interstitial", context);
+    }
 }

@@ -48,6 +48,7 @@ public class AnalyticsSchemaInitializer implements ApplicationRunner {
                     new ColumnDef("city", "VARCHAR(128) NULL"),
                     new ColumnDef("latitude", "DOUBLE NULL"),
                     new ColumnDef("longitude", "DOUBLE NULL"),
+                    new ColumnDef("accuracy", "DOUBLE NULL"),
                     new ColumnDef("device", "VARCHAR(64) NULL"),
                     new ColumnDef("browser", "VARCHAR(64) NULL"),
                     new ColumnDef("os", "VARCHAR(64) NULL")

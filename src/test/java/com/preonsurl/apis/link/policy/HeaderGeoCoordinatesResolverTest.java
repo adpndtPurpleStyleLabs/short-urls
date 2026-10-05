@@ -191,4 +191,64 @@ class HeaderGeoCoordinatesResolverTest {
         assertEquals(13.0827, coords.latitude(), 0.0001);
         assertEquals(80.2707, coords.longitude(), 0.0001);
     }
+
+    @Test
+    @DisplayName("Resolves latitude, longitude, and accuracy from X-Browser headers")
+    void testBrowserHeadersWithAccuracy() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Browser-Latitude", "19.0760");
+        request.addHeader("X-Browser-Longitude", "72.8777");
+        request.addHeader("X-Browser-Accuracy", "14.5");
+
+        GeoCoordinates coords = resolver.resolveCoordinates(request);
+        assertNotNull(coords);
+        assertEquals(19.0760, coords.latitude(), 0.0001);
+        assertEquals(72.8777, coords.longitude(), 0.0001);
+        assertNotNull(coords.accuracy());
+        assertEquals(14.5, coords.accuracy(), 0.0001);
+    }
+
+    @Test
+    @DisplayName("Resolves latitude, longitude, and accuracy from combined header")
+    void testCombinedBrowserCoordsWithAccuracy() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Browser-GeoCoords", "19.0760,72.8777,12.3");
+
+        GeoCoordinates coords = resolver.resolveCoordinates(request);
+        assertNotNull(coords);
+        assertEquals(19.0760, coords.latitude(), 0.0001);
+        assertEquals(72.8777, coords.longitude(), 0.0001);
+        assertNotNull(coords.accuracy());
+        assertEquals(12.3, coords.accuracy(), 0.0001);
+    }
+
+    @Test
+    @DisplayName("Resolves latitude, longitude, and accuracy from PREONS_GEO_COORDS cookie")
+    void testCookieWithAccuracy() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(new Cookie("PREONS_GEO_COORDS", "19.0760_72.8777_8.5"));
+
+        GeoCoordinates coords = resolver.resolveCoordinates(request);
+        assertNotNull(coords);
+        assertEquals(19.0760, coords.latitude(), 0.0001);
+        assertEquals(72.8777, coords.longitude(), 0.0001);
+        assertNotNull(coords.accuracy());
+        assertEquals(8.5, coords.accuracy(), 0.0001);
+    }
+
+    @Test
+    @DisplayName("Resolves latitude, longitude, and accuracy from query parameters")
+    void testQueryParamsWithAccuracy() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("geo_lat", "19.0760");
+        request.setParameter("geo_lng", "72.8777");
+        request.setParameter("geo_accuracy", "20.0");
+
+        GeoCoordinates coords = resolver.resolveCoordinates(request);
+        assertNotNull(coords);
+        assertEquals(19.0760, coords.latitude(), 0.0001);
+        assertEquals(72.8777, coords.longitude(), 0.0001);
+        assertNotNull(coords.accuracy());
+        assertEquals(20.0, coords.accuracy(), 0.0001);
+    }
 }

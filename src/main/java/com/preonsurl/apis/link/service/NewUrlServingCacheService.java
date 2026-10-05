@@ -37,6 +37,10 @@ public class NewUrlServingCacheService {
     }
 
     public Optional<String> resolveAndServe(String fullUrl, String ipAddress, String userAgent, String referer, Double latitude, Double longitude) {
+        return resolveAndServe(fullUrl, ipAddress, userAgent, referer, latitude, longitude, null);
+    }
+
+    public Optional<String> resolveAndServe(String fullUrl, String ipAddress, String userAgent, String referer, Double latitude, Double longitude, Double accuracy) {
         // 1. Check LRU Cache
         CachedNewUrlDto cached = lruCache.get(fullUrl);
 
@@ -71,7 +75,7 @@ public class NewUrlServingCacheService {
             }
 
             // Trigger background event to update DB click count, access log, and re-verify
-            eventPublisher.publishEvent(new ShortUrlServedEvent(cached.getId(), cached.getNewUrl(), ipAddress, userAgent, referer, latitude, longitude));
+            eventPublisher.publishEvent(new ShortUrlServedEvent(cached.getId(), cached.getNewUrl(), ipAddress, userAgent, referer, latitude, longitude, accuracy));
             return Optional.of(cached.getOriginalUrl());
         }
 
@@ -120,7 +124,7 @@ public class NewUrlServingCacheService {
         }
 
         // Trigger background event
-        eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer, latitude, longitude));
+        eventPublisher.publishEvent(new ShortUrlServedEvent(entity.getId(), entity.getNewUrl(), ipAddress, userAgent, referer, latitude, longitude, accuracy));
         return Optional.of(entity.getOriginalUrl());
     }
 

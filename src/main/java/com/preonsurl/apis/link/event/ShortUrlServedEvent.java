@@ -7,10 +7,15 @@ public record ShortUrlServedEvent(
         String userAgent,
         String referer,
         Double latitude,
-        Double longitude
+        Double longitude,
+        Double accuracy
 ) {
     public ShortUrlServedEvent(Long shortUrlId, String newUrl, String ipAddress, String userAgent, String referer) {
-        this(shortUrlId, newUrl, ipAddress, userAgent, referer, null, null);
+        this(shortUrlId, newUrl, ipAddress, userAgent, referer, null, null, null);
+    }
+
+    public ShortUrlServedEvent(Long shortUrlId, String newUrl, String ipAddress, String userAgent, String referer, Double latitude, Double longitude) {
+        this(shortUrlId, newUrl, ipAddress, userAgent, referer, latitude, longitude, null);
     }
 }
 

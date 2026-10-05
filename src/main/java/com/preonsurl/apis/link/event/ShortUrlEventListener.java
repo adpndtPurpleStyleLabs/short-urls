@@ -163,6 +163,9 @@ public class ShortUrlEventListener {
                     browser,
                     os
             );
+            if (trackLocation && event.accuracy() != null) {
+                accessLog.setAccuracy(event.accuracy());
+            }
             accessLogRepository.save(accessLog);
 
             // 7. Check DB state to verify expiration, usage limit, and active status
