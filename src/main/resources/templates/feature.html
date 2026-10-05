@@ -159,6 +159,109 @@
 .footer{border-top:1px solid var(--line);padding:34px 0;color:#777;font-size:12px}.footer-inner{display:flex;justify-content:space-between;gap:20px}.footer-links{display:flex;gap:20px}.footer-links a:hover{color:#111}
 @media(max-width:900px){.navlinks{display:none}.mobile-menu{display:inline-flex}.feature-grid{grid-template-columns:1fr}.spotlight{grid-template-columns:1fr;gap:40px}}
 @media(max-width:620px){.container{width:min(calc(100% - 28px),var(--max))}.nav{height:64px}.nav-inner{padding:0 16px}.nav-actions .btn:not(.primary){display:none}.free-banner-copy{display:none}.free-banner-inner{justify-content:space-between;min-height:36px;padding:0 14px}.hero{padding:75px 0 60px}.hero h1{font-size:clamp(42px,14vw,62px)}.hero p{font-size:16px}.hero-actions{flex-direction:column}.hero-actions .btn{width:100%}.section{padding:75px 0}.feature-card{min-height:0;padding:25px 22px}.control-body{padding:18px}.control-row{align-items:flex-start;flex-direction:column;gap:10px}.control-value{align-self:flex-start}.cta{border-radius:20px;padding:70px 22px}.footer-inner{flex-direction:column}.footer-links{flex-wrap:wrap}}
+
+/* Deep Analytics Showcase Spotlight */
+.analytics-spotlight {
+    display: grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    gap: 60px;
+    align-items: center;
+}
+.analytics-spotlight .spotlight-copy p {
+    color: #707070;
+    line-height: 1.75;
+    font-size: 15px;
+    margin: 0;
+}
+.analytics-checks {
+    display: grid;
+    gap: 18px;
+    margin-top: 28px;
+}
+.analytics-check-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+.analytics-check-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #111;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.analytics-check-content strong {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 3px;
+}
+.analytics-check-content p {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.55;
+    margin: 0;
+}
+.analytics-preview-frame {
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 24px 60px -15px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.analytics-preview-frame:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 30px 70px -15px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.06);
+}
+.analytics-preview-topbar {
+    padding: 11px 16px;
+    background: #fafafa;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.preview-dots {
+    display: flex;
+    gap: 6px;
+}
+.preview-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ddd;
+}
+.preview-url-badge {
+    font-size: 11px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 600;
+    color: #64748b;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    padding: 2px 10px;
+    border-radius: 999px;
+}
+.analytics-preview-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+@media (max-width: 960px) {
+    .analytics-spotlight {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+}
 </style>
 </head>
 <body>
@@ -172,7 +275,7 @@
 <!--<div class="eyebrow"><span class="dot"></span> More than a short link</div>-->
 <h1><span>Links with</span><span class="muted">control built in.</span></h1>
 <p>Create links that do more than redirect. Protect access, control usage, define when a link works, and put your brand behind every destination.</p>
-<div class="hero-actions"><a class="btn primary" href="/register">Start for free →</a><a class="btn" href="#features">Explore features</a></div>
+<div class="hero-actions"><a class="btn primary" href="/register">Start for free →</a><a class="btn" href="#features">Explore features</a><a class="btn" href="#deep-analytics">Deep Analytics</a></div>
 </div></section>
 
 <section class="section" id="features"><div class="container">
@@ -339,12 +442,85 @@
 <td class="feature-quote">“Keep sensitive links behind a login.”</td>
 <td><span class="check-mark">✓</span></td>
 </tr>
+<tr>
+<td>
+    <div class="feature-name">
+        <span class="feature-num">11</span>
+        <span class="feature-name-text">
+            <span>Deep Link Analytics</span>
+            <span class="feature-premium"><sup>*</sup> Live</span>
+        </span>
+    </div>
+</td>
+<td>TELEMETRY</td>
+<td>Geographic points of access, device breakdowns, and complete request logs.</td>
+<td class="feature-quote">“Know exactly who, where, and when each link is visited.”</td>
+<td><span class="check-mark">✓</span></td>
+</tr>
 </tbody>
 </table>
 </div>
 </div></section>
 
-<section class="section alt"><div class="container"><div class="spotlight">
+<!-- Deep Analytics Showcase Spotlight Section -->
+<section class="section alt" id="deep-analytics">
+<div class="container">
+    <div class="analytics-spotlight">
+        <div class="spotlight-copy">
+            <div class="kicker">Real-Time Telemetry &amp; Link Intelligence</div>
+            <h2>Deep analytics for each URL.</h2>
+            <p>Every link includes full-fidelity telemetry right out of the box. Gain instant visibility into visitor engagement, geo-distribution, client platforms, and individual request logs without setting up complex third-party tracking scripts.</p>
+            <div class="analytics-checks">
+                <div class="analytics-check-item">
+                    <div class="analytics-check-icon">✓</div>
+                    <div class="analytics-check-content">
+                        <strong>Live Click &amp; Traffic Trends</strong>
+                        <p>Track click trajectories and volume patterns across 7, 30, and 90-day timeframes with precision bar metrics.</p>
+                    </div>
+                </div>
+                <div class="analytics-check-item">
+                    <div class="analytics-check-icon">✓</div>
+                    <div class="analytics-check-content">
+                        <strong>Points of Access on Interactive Map</strong>
+                        <p>Real-time geographic distribution of link access points plotted dynamically with pinpoint coordinates and city data.</p>
+                    </div>
+                </div>
+                <div class="analytics-check-item">
+                    <div class="analytics-check-icon">✓</div>
+                    <div class="analytics-check-content">
+                        <strong>Devices, Platforms &amp; Referrers</strong>
+                        <p>Accurate distribution breakdowns across Chrome, Safari, macOS, iOS, Android, and direct or social sources.</p>
+                    </div>
+                </div>
+                <div class="analytics-check-item">
+                    <div class="analytics-check-icon">✓</div>
+                    <div class="analytics-check-content">
+                        <strong>Audit-Ready Access Logs</strong>
+                        <p>Inspect every single request with exact timestamps, client IP addresses, city coordinates, device badges, and user agents.</p>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 32px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <a class="btn primary" href="/register">Start tracking free →</a>
+                <a class="btn" href="/#pricing">Explore plans</a>
+            </div>
+        </div>
+        <div class="analytics-preview-frame">
+            <div class="analytics-preview-topbar">
+                <div class="preview-dots">
+                    <span class="preview-dot"></span>
+                    <span class="preview-dot"></span>
+                    <span class="preview-dot"></span>
+                </div>
+                <span class="preview-url-badge">analytics • https://s.surls.me/5T5PowHTGlP</span>
+            </div>
+            <img src="https://ik.imagekit.io/blogImages/SecureUrls/url-analytics.png" alt="Deep URL Analytics Dashboard showcasing click trends, devices, interactive world map, and access logs" class="analytics-preview-img" loading="lazy" />
+        </div>
+    </div>
+</div>
+</section>
+
+<section class="section"><div class="container"><div class="spotlight">
 <div class="spotlight-copy"><div class="kicker">One link. Multiple controls.</div><h2>Build the access rules your link needs.</h2><p>Start with a simple short URL, then add the controls that match the situation. A private resource can require authentication. A temporary resource can expire. A sensitive share can be limited to one successful visit.</p><div class="checks">
 <div class="check"><b>✓</b><span>Protect access with a password or PIN.</span></div>
 <div class="check"><b>✓</b><span>Define exactly when the link remains available.</span></div>
