@@ -85,5 +85,18 @@ public interface NewUrlRepository extends JpaRepository<NewUrl, Long> {
     boolean existsByPublicId(String publicId);
 
     List<NewUrl> findAllByPublicIdIsNull();
+
+    @Query("""
+            SELECT u FROM NewUrl u
+            WHERE u.userId = :userId
+              AND (:start IS NULL OR u.createdAt >= :start)
+              AND (:end IS NULL OR u.createdAt <= :end)
+            ORDER BY u.createdAt DESC
+            """)
+    List<NewUrl> findAllByUserIdAndOptionalCreatedAtRange(
+            @Param("userId") Long userId,
+            @Param("start") java.time.Instant start,
+            @Param("end") java.time.Instant end
+    );
 }
 

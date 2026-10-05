@@ -31,5 +31,44 @@ public interface NewUrlAccessLogRepository extends JpaRepository<NewUrlAccessLog
 
     @Query("SELECT l.shortUrlId, MAX(l.accessedAt) FROM NewUrlAccessLog l WHERE l.shortUrlId IN :shortUrlIds GROUP BY l.shortUrlId")
     List<Object[]> findLatestAccessTimesByShortUrlIdIn(@Param("shortUrlIds") List<Long> shortUrlIds);
+
+    @Query("""
+            SELECT l FROM NewUrlAccessLog l, NewUrl u
+            WHERE l.shortUrlId = u.id AND u.userId = :userId
+              AND (:start IS NULL OR l.accessedAt >= :start)
+              AND (:end IS NULL OR l.accessedAt <= :end)
+            ORDER BY l.accessedAt DESC
+            """)
+    List<NewUrlAccessLog> findAllByUserIdAndOptionalAccessedAtRange(
+            @Param("userId") Long userId,
+            @Param("start") java.time.LocalDateTime start,
+            @Param("end") java.time.LocalDateTime end
+    );
+
+    @Query("""
+            SELECT l FROM NewUrlAccessLog l
+            WHERE l.shortUrlId = :shortUrlId
+              AND (:start IS NULL OR l.accessedAt >= :start)
+              AND (:end IS NULL OR l.accessedAt <= :end)
+            ORDER BY l.accessedAt DESC
+            """)
+    List<NewUrlAccessLog> findByShortUrlIdAndOptionalAccessedAtRange(
+            @Param("shortUrlId") Long shortUrlId,
+            @Param("start") java.time.LocalDateTime start,
+            @Param("end") java.time.LocalDateTime end
+    );
+
+    @Query("""
+            SELECT l FROM NewUrlAccessLog l
+            WHERE l.shortUrlId IN :shortUrlIds
+              AND (:start IS NULL OR l.accessedAt >= :start)
+              AND (:end IS NULL OR l.accessedAt <= :end)
+            ORDER BY l.accessedAt DESC
+            """)
+    List<NewUrlAccessLog> findByShortUrlIdInAndOptionalAccessedAtRange(
+            @Param("shortUrlIds") List<Long> shortUrlIds,
+            @Param("start") java.time.LocalDateTime start,
+            @Param("end") java.time.LocalDateTime end
+    );
 }
 

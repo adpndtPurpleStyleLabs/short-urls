@@ -1552,10 +1552,67 @@
             margin-right: 1px;
         }
 
+        .table-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .links-header-filter-tabs {
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+
+        .table-bar-divider {
+            width: 1px;
+            height: 16px;
+            background: var(--border, #e2e8f0);
+            flex-shrink: 0;
+        }
+
+        .btn-table-bar-refresh {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            height: 26px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: var(--text, #0f172a);
+            background: #ffffff;
+            border: 1px solid var(--border, #cbd5e1);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s ease;
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            white-space: nowrap;
+        }
+
+        .btn-table-bar-refresh:hover {
+            background: var(--surface-soft, #f8fafc);
+            border-color: #0f172a;
+            color: #000000;
+        }
+
+        .btn-table-bar-refresh:active {
+            transform: translateY(1px);
+        }
+
+        .btn-table-bar-refresh.is-refreshing {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn-table-bar-refresh.is-refreshing .refresh-icon {
+            animation: refreshSpin 0.75s linear infinite;
+        }
+
+        @keyframes refreshSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .tbl-filter-pill {
@@ -3614,6 +3671,65 @@
             color: #111827;
             background: #f3f4f6;
             border-color: #e5e7eb;
+        }
+
+        .link-modal-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-edit-toggle-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            transition: all 0.2s ease;
+        }
+
+        .header-edit-toggle-wrap:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
+        /* Grayed out & disabled state for edit link modal content */
+        .modal-content.is-link-disabled {
+            position: relative;
+        }
+
+        .modal-content.is-link-disabled .url-preview-bar,
+        .modal-content.is-link-disabled .modal-body-layout {
+            opacity: 0.38;
+            filter: grayscale(85%);
+            pointer-events: none;
+            user-select: none;
+            cursor: not-allowed !important;
+            transition: opacity 0.22s ease, filter 0.22s ease;
+        }
+
+        .modal-content.is-link-disabled .modal-form-scroll * {
+            cursor: not-allowed !important;
+        }
+
+        .link-disabled-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: #fef2f2;
+            border-bottom: 1px solid #fee2e2;
+            color: #991b1b;
+            font-size: 12.5px;
+            font-weight: 500;
+            animation: fadeInDisabledBanner 0.2s ease;
+        }
+
+        @keyframes fadeInDisabledBanner {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* URL Preview Bar - Minimal Grade */
@@ -7419,6 +7535,313 @@
         }
 
         /* ============================================================
+           PAGE: EXTRACT DATA & MODAL (MONOCHROME BLACK & WHITE THEME)
+        ============================================================ */
+        .extract-card-container {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .extract-table-header {
+            display: flex;
+            align-items: center;
+            padding: 11px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            letter-spacing: 0.04em;
+        }
+
+        .extract-row {
+            display: flex;
+            align-items: center;
+            padding: 13px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            background: #ffffff;
+            transition: background 0.12s ease;
+            font-size: 12px;
+        }
+
+        .extract-row:hover {
+            background: #f8fafc;
+        }
+
+        .extract-row:last-child {
+            border-bottom: none;
+        }
+
+        .col-ext-file { flex: 1.5; min-width: 0; }
+        .col-ext-type { width: 140px; flex-shrink: 0; }
+        .col-ext-fmt { width: 80px; flex-shrink: 0; }
+        .col-ext-records { width: 90px; flex-shrink: 0; }
+        .col-ext-size { width: 85px; flex-shrink: 0; }
+        .col-ext-status { width: 130px; flex-shrink: 0; }
+        .col-ext-date { width: 150px; flex-shrink: 0; color: #64748b; font-size: 11.5px; }
+        .col-ext-actions { width: 100px; text-align: right; flex-shrink: 0; }
+
+        .extract-type-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+        }
+
+        .extract-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 600;
+        }
+
+        .extract-status-badge.completed {
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+        }
+
+        .extract-status-badge.processing {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px dashed #94a3b8;
+        }
+
+        .extract-status-badge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .modal-dialog.extract-modal-dialog {
+            width: min(840px, calc(100vw - 32px)) !important;
+            max-width: 840px !important;
+            min-height: 520px;
+        }
+
+        .extract-option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .extract-option-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .extract-option-card:hover {
+            border-color: #0f172a;
+            background: #f8fafc;
+        }
+
+        .extract-option-card.selected {
+            border-color: #000000;
+            background: #f8fafc;
+            box-shadow: 0 0 0 1.5px #000000;
+        }
+
+        .extract-option-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .extract-option-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .extract-option-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .extract-option-desc {
+            font-size: 11.5px;
+            color: #64748b;
+            line-height: 1.45;
+            margin: 0;
+        }
+
+        .btn-quick-range {
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #0f172a;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+
+        .btn-quick-range:hover {
+            background: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+
+        .extract-search-box {
+            display: flex;
+            align-items: center;
+            height: 36px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 0 10px;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .extract-search-box:focus-within {
+            border-color: #0f172a;
+            box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+        }
+
+        .extract-search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 12px;
+            color: #0f172a;
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .extract-links-scroll {
+            max-height: 140px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #ffffff;
+        }
+
+        .extract-link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.12s ease;
+            font-size: 12px;
+            user-select: none;
+        }
+
+        .extract-link-item:hover {
+            background: #f8fafc;
+        }
+
+        .extract-link-item:last-child {
+            border-bottom: none;
+        }
+
+        .extract-link-checkbox {
+            accent-color: #0f172a;
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .extract-selected-chips-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+            max-height: 52px;
+            overflow-y: auto;
+        }
+
+        .extract-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #0f172a;
+        }
+
+        .extract-chip-remove {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 13px;
+            line-height: 1;
+            padding: 0;
+            margin-left: 2px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .extract-chip-remove:hover {
+            color: #0f172a;
+        }
+
+        .extract-summary-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .extract-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .extract-summary-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .extract-summary-val {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* ============================================================
            MONOCHROME 3-STEP ADD DOMAIN MODAL (BLACK & WHITE LUXURY)
         ============================================================ */
         .modal-dialog.add-domain-dialog {
@@ -7430,7 +7853,7 @@
             padding: 0 !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 16px !important;
+            border-radius: var(--radius-sm);
             box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25), 0 0 1px rgba(15, 23, 42, 0.1) !important;
             overflow: hidden !important;
             display: flex !important;
@@ -8526,6 +8949,15 @@
                         </svg> PRO</span>
                 </button>
 
+                <button class="nav-item" id="navExtractData" data-page="extract-data" type="button">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Extract Data</span>
+                </button>
+
                 <button class="nav-item" id="navApiKeys" data-page="api-keys" type="button">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="7.5" cy="15.5" r="5.5" />
@@ -8940,6 +9372,8 @@
                                         <span class="filter-pill-count" id="countInactive">0</span>
                                     </button>
                                 </div>
+                                <div class="table-bar-divider"></div>
+                                <button type="button" class="btn-table-bar-refresh" id="btnRefreshLinksList" title="Refresh links list" aria-label="Refresh links list">Refresh</button>
                             </div>
                         </div>
 
@@ -9118,6 +9552,102 @@
                                     aria-label="Next page">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2.5">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- =========================
+                 PAGE: EXTRACT DATA
+            ========================= -->
+                <section class="page-view" id="pageExtractData">
+                    <div class="page-header"
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                        <div>
+                            <h1 class="page-title"
+                                style="font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Extract Data
+                            </h1>
+                            <p class="page-subtitle" style="color: #64748b; font-size: 13px;">Generate and download exports for links and link analytics in CSV or JSON.</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="btn btn-secondary" id="btnRefreshExtractJobs" type="button" title="Refresh extraction list"
+                                style="border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; cursor: pointer; transition: all 0.15s ease;">Refresh</button>
+                            <button class="btn btn-primary" id="btnOpenExtractModal" type="button" onclick="openExtractModal()"
+                                style="background: #000000; color: #ffffff; border-radius: 6px; padding: 7px 14px; font-weight: 600; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span> Extract Data</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Extraction Table Card -->
+                    <div class="extract-card-container">
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border); background: #ffffff;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0;">Recently Extracted</h3>
+                                <span id="extractJobsCount" style="font-size: 11px; padding: 1px 7px; border-radius: 999px; background: #f1f5f9; color: #475569; font-weight: 600;">0 reports</span>
+                            </div>
+                            <span style="font-size: 11px; color: #94a3b8;">Background tasks update automatically</span>
+                        </div>
+
+                        <div class="extract-table-header">
+                            <div class="col-ext-file">EXPORT REPORT / FILE</div>
+                            <div class="col-ext-type">DATA TYPE</div>
+                            <div class="col-ext-fmt">FORMAT</div>
+                            <div class="col-ext-records">RECORDS</div>
+                            <div class="col-ext-size">SIZE</div>
+                            <div class="col-ext-status">STATUS</div>
+                            <div class="col-ext-date">CREATED</div>
+                            <div class="col-ext-actions">ACTION</div>
+                        </div>
+
+                        <div class="extract-list" id="extractJobsListContainer">
+                            <div class="domains-loading-state" id="extractLoadingState" style="padding: 40px 20px;">
+                                <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" style="color: #000000;">
+                                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                                </svg>
+                                <span>Loading extraction reports...</span>
+                            </div>
+                        </div>
+
+                        <div class="domains-empty-state" id="extractEmptyState" style="display: none; padding: 48px 20px;">
+                            <div style="width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9; color: #0f172a; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                            </div>
+                            <strong style="color: #0f172a; font-size: 13.5px;">No extractions yet</strong>
+                            <p style="color: #64748b; font-size: 12px; margin: 0; max-width: 380px;">Click the "+ Extract Data" button to generate your first link catalog or analytics dataset export.</p>
+                            <button class="btn btn-primary" type="button" onclick="openExtractModal()" style="margin-top: 12px; background: #000000; color: #ffffff; border-radius: 6px; padding: 6px 14px; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span>Extract Data</span>
+                            </button>
+                        </div>
+
+                        <!-- Extraction Table Pagination Footer -->
+                        <div class="links-card-footer" id="extractPaginationBar" style="border-top: 1px solid var(--border); padding: 9px 16px;">
+                            <span class="pagination-count-text" id="extractPaginationInfo">Showing 0 of 0 reports</span>
+                            <div class="pagination-controls-right">
+                                <button class="btn-page-nav" id="extractPrevPageBtn" type="button" aria-label="Previous page" disabled>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                </button>
+                                <span class="pagination-page-label" id="extractPageLabel">Page 1 of 1</span>
+                                <button class="btn-page-nav" id="extractNextPageBtn" type="button" aria-label="Next page" disabled>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <polyline points="9 18 15 12 9 6"></polyline>
                                     </svg>
                                 </button>
@@ -9458,14 +9988,37 @@
             </div>
 
             <div class="modal-header link-modal-header">
-                <h2 id="linkModalTitle">Create a new link</h2>
-                <div id="linkModalKicker" style="display:none;"></div>
-                <p id="linkModalSubtitle" style="display:none;"></p>
-                <button class="modal-close-btn" id="linkModalCloseBtn" type="button"
-                    aria-label="Close modal">&times;</button>
+                <div class="link-modal-header-left" style="display: flex; align-items: center; gap: 10px;">
+                    <h2 id="linkModalTitle">Create a new link</h2>
+                    <div id="linkModalKicker" style="display:none;"></div>
+                    <p id="linkModalSubtitle" style="display:none;"></p>
+                </div>
+
+                <div class="link-modal-header-actions">
+                    <!-- Enable / Disable URL Slider in Header (Edit Mode only) -->
+                    <div class="header-edit-toggle-wrap" id="editActiveToggleRow" style="display:none;" title="Toggle link enabled state">
+                        <span style="font-size: 11px; font-weight: 600; color: #64748b;">Status:</span>
+                        <span id="modalLinkStatusBadge" class="status-pill-chip active" style="font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600;">Enabled</span>
+                        <label class="switch-toggle" style="cursor: pointer; margin: 0;" title="Toggle link status">
+                            <input type="checkbox" id="modalLinkActive" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <button class="modal-close-btn" id="linkModalCloseBtn" type="button"
+                        aria-label="Close modal">&times;</button>
+                </div>
             </div>
 
             <div class="modal-content" id="linkModalContent">
+                <!-- Disabled Link Notice Banner -->
+                <div id="modalLinkDisabledBanner" class="link-disabled-banner" style="display: none;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                    </svg>
+                    <span>This link is currently <strong>Disabled</strong>. Visitors cannot access it, and editing is locked. Toggle the switch above to re-enable.</span>
+                </div>
                 <!-- URL Preview Header -->
                 <div class="url-preview-bar">
                     <div class="url-preview-top-row">
@@ -9646,7 +10199,6 @@
                                     </div>
                                     <span class="field-help">The generated short URL key cannot be modified.</span>
                                 </div>
-
                                 <!-- Domain Selection -->
                                 <div class="field-group" id="modalDomainGroup">
                                     <label for="modalDomainSelect">Domain</label>
@@ -9706,18 +10258,6 @@
                                     </div>
                                     <label class="switch-toggle" id="modalAddShortCodeLabel">
                                         <input type="checkbox" id="modalAddShortCode" checked>
-                                        <span class="switch-slider"></span>
-                                    </label>
-                                </div>
-
-                                <!-- Link Active Toggle (Edit Mode only) -->
-                                <div class="setting-toggle-row" id="editActiveToggleRow" style="display:none;">
-                                    <div class="setting-toggle-info">
-                                        <strong>Link Active</strong>
-                                        <span>Enable or disable visitors from accessing this link.</span>
-                                    </div>
-                                    <label class="switch-toggle">
-                                        <input type="checkbox" id="modalLinkActive" checked>
                                         <span class="switch-slider"></span>
                                     </label>
                                 </div>
@@ -12413,6 +12953,314 @@
     </div>
 
     <!-- ============================================================
+         EXTRACT DATA MULTI-STEP MODAL (MONOCHROME LUXURY)
+    ============================================================ -->
+    <div class="modal" id="extractModal" aria-hidden="true">
+        <div class="modal-backdrop" id="extractModalBackdrop" onclick="closeExtractModal()"></div>
+        <div class="modal-dialog add-domain-dialog extract-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="extractWizardTitle">
+            <!-- Left Sidebar Stepper -->
+            <aside class="domain-wizard-sidebar">
+                <div class="wizard-stepper">
+                    <!-- Step 1: Data Type -->
+                    <div class="wizard-step-item active" id="extractStepNav-1" onclick="goToExtractStep(1)">
+                        <div class="wizard-step-circle" id="extractStepCircle-1">1</div>
+                        <div class="wizard-step-meta">
+                            <span class="wizard-step-title">Data Type</span>
+                            <span class="wizard-step-sub" id="extractStepSub-1">Link or Analytics</span>
+                        </div>
+                    </div>
+
+                    <div class="wizard-step-line" id="extractStepLine-1"></div>
+
+                    <!-- Step 2: Filters -->
+                    <div class="wizard-step-item" id="extractStepNav-2" onclick="goToExtractStep(2)">
+                        <div class="wizard-step-circle" id="extractStepCircle-2">2</div>
+                        <div class="wizard-step-meta">
+                            <span class="wizard-step-title">Filters</span>
+                            <span class="wizard-step-sub" id="extractStepSub-2">Target &amp; Date range</span>
+                        </div>
+                    </div>
+
+                    <div class="wizard-step-line" id="extractStepLine-2"></div>
+
+                    <!-- Step 3: Report Type -->
+                    <div class="wizard-step-item" id="extractStepNav-3" onclick="goToExtractStep(3)">
+                        <div class="wizard-step-circle" id="extractStepCircle-3">3</div>
+                        <div class="wizard-step-meta">
+                            <span class="wizard-step-title">Report Format</span>
+                            <span class="wizard-step-sub" id="extractStepSub-3">CSV or JSON</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Benefit Card -->
+                <div class="domain-wizard-brand-box">
+                    <div class="brand-box-header">
+                        <span class="brand-box-check">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <strong>Export Engine</strong>
+                    </div>
+                    <ul class="brand-box-list">
+                        <li>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Background file dump</span>
+                        </li>
+                        <li>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>CSV RFC4180 &amp; JSON</span>
+                        </li>
+                        <li>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Direct file download</span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Right Main Area -->
+            <div class="domain-wizard-main">
+                <button class="domain-wizard-close-btn" id="extractModalCloseBtn" type="button" aria-label="Close modal" onclick="closeExtractModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+
+                <!-- Modal Header -->
+                <div class="domain-wizard-header">
+                    <div class="domain-wizard-icon-box">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="domain-wizard-title" id="extractWizardTitle">Extract Data</h2>
+                        <p class="domain-wizard-desc" id="extractWizardDesc">Select your data source, filter by link or date range, and export to CSV or JSON.</p>
+                    </div>
+                </div>
+
+                <!-- STEP 1: Select Data Type -->
+                <div class="domain-wizard-pane active" id="extractWizardPane1">
+                    <label class="domain-label">Select Data Type</label>
+                    <div class="extract-option-grid">
+                        <div class="extract-option-card selected" id="optTypeLink" data-type="LINK" onclick="selectExtractType('LINK')">
+                            <div class="extract-option-header">
+                                <div class="extract-option-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                    </svg>
+                                </div>
+                                <span class="extract-check-indicator" id="checkTypeLink">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                            <h4 class="extract-option-title">Link</h4>
+                            <p class="extract-option-desc">Export short link entries, target destination URLs, custom domains, enabled status, creation timestamps, and tags.</p>
+                        </div>
+
+                        <div class="extract-option-card" id="optTypeAnalytics" data-type="LINK_ANALYTICS" onclick="selectExtractType('LINK_ANALYTICS')">
+                            <div class="extract-option-header">
+                                <div class="extract-option-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                                    </svg>
+                                </div>
+                                <span class="extract-check-indicator" id="checkTypeAnalytics" style="display:none;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                            <h4 class="extract-option-title">Link Analytics</h4>
+                            <p class="extract-option-desc">Export click access logs, timestamps, referrers, device/browser details, country, city, and resolved IP addresses.</p>
+                        </div>
+                    </div>
+
+                    <div class="domain-wizard-footer">
+                        <button class="btn-wizard-sec" type="button" onclick="closeExtractModal()">Cancel</button>
+                        <button class="btn-wizard-prim" type="button" onclick="goToExtractStep(2)">Next Step &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Filters -->
+                <div class="domain-wizard-pane" id="extractWizardPane2">
+                    <!-- Specific Link Selector (Shown when LINK_ANALYTICS is selected) -->
+                    <div id="extractLinkScopeSection" style="display: none; margin-bottom: 16px;">
+                        <label class="domain-label">Analytics Link Scope</label>
+                        <div style="display: flex; gap: 14px; margin-bottom: 10px;">
+                            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #0f172a; cursor: pointer;">
+                                <input type="radio" name="extractScopeRadio" id="extractScopeAll" value="ALL" checked onchange="toggleExtractScope()" style="accent-color: #0f172a;">
+                                <span>All My Links</span>
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #0f172a; cursor: pointer;">
+                                <input type="radio" name="extractScopeRadio" id="extractScopeSpecific" value="SPECIFIC" onchange="toggleExtractScope()" style="accent-color: #0f172a;">
+                                <span>Specific Link</span>
+                            </label>
+                        </div>
+                        <div id="extractSpecificLinkWrapper" style="display: none;">
+                            <!-- Search & Quick Selection Controls -->
+                            <div class="extract-search-box">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" style="flex-shrink: 0;">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" id="extractLinkSearchInput" class="extract-search-input"
+                                    placeholder="Search by title, short slug, or destination URL..." oninput="filterExtractLinksList()">
+                                <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                                    <button type="button" class="btn-quick-range" onclick="selectAllFilteredExtractLinks()" title="Select all filtered links">Select All</button>
+                                    <button type="button" class="btn-quick-range" onclick="clearSelectedExtractLinks()" title="Clear selection">Clear</button>
+                                </div>
+                            </div>
+
+                            <!-- Scrollable Checkbox List -->
+                            <div class="extract-links-scroll" id="extractLinksCheckboxContainer">
+                                <div style="padding: 18px 12px; text-align: center; color: #64748b; font-size: 11.5px;">
+                                    Loading your links...
+                                </div>
+                            </div>
+
+                            <!-- Selected Chips Bar & Counter -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                                <span id="extractSelectedLinksCountText" style="font-size: 11px; font-weight: 600; color: #0f172a;">0 links selected</span>
+                                <span class="domain-sub-hint" style="margin: 0; font-size: 11px;">Check one or more links above</span>
+                            </div>
+                            <div class="extract-selected-chips-bar" id="extractSelectedChipsContainer" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Date & Time Range -->
+                    <div class="domain-input-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label class="domain-label" style="margin-bottom: 0;">Date &amp; Time Range</label>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="btn-quick-range" onclick="setExtractPreset('all')">All Time</button>
+                                <button type="button" class="btn-quick-range" onclick="setExtractPreset('today')">Today</button>
+                                <button type="button" class="btn-quick-range" onclick="setExtractPreset('7d')">Last 7d</button>
+                                <button type="button" class="btn-quick-range" onclick="setExtractPreset('30d')">Last 30d</button>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">FROM (START)</label>
+                                <input type="datetime-local" id="extractStartDate"
+                                    style="width: 100%; height: 40px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 12px; padding: 0 10px; color: #0f172a; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">TO (END)</label>
+                                <input type="datetime-local" id="extractEndDate"
+                                    style="width: 100%; height: 40px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 12px; padding: 0 10px; color: #0f172a; box-sizing: border-box;">
+                            </div>
+                        </div>
+                        <p class="domain-sub-hint" id="extractDateHint" style="margin-top: 6px;">
+                            Filter by creation date (for Links) or access timestamp (for Link Analytics). Leave blank to export all records.
+                        </p>
+                    </div>
+
+                    <div class="domain-wizard-footer space-between">
+                        <button class="btn-wizard-sec" type="button" onclick="goToExtractStep(1)">&larr; Back</button>
+                        <button class="btn-wizard-prim" type="button" onclick="goToExtractStep(3)">Next: Report Format &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Report Format & Submit -->
+                <div class="domain-wizard-pane" id="extractWizardPane3">
+                    <label class="domain-label">Select Report Format</label>
+                    <div class="extract-option-grid">
+                        <div class="extract-option-card selected" id="optFormatCsv" data-format="CSV" onclick="selectExtractFormat('CSV')">
+                            <div class="extract-option-header">
+                                <div class="extract-option-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="8" y1="13" x2="16" y2="13"></line>
+                                        <line x1="8" y1="17" x2="16" y2="17"></line>
+                                    </svg>
+                                </div>
+                                <span class="extract-check-indicator" id="checkFormatCsv">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                            <h4 class="extract-option-title">CSV (.csv)</h4>
+                            <p class="extract-option-desc">Comma-delimited RFC 4180 format. Opens directly in Microsoft Excel, Google Sheets, or Apple Numbers.</p>
+                        </div>
+
+                        <div class="extract-option-card" id="optFormatJson" data-format="JSON" onclick="selectExtractFormat('JSON')">
+                            <div class="extract-option-header">
+                                <div class="extract-option-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="extract-check-indicator" id="checkFormatJson" style="display:none;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                            <h4 class="extract-option-title">JSON (.json)</h4>
+                            <p class="extract-option-desc">Structured JSON payload with complete field schema. Ideal for API pipelines, analytics scripts, and databases.</p>
+                        </div>
+                    </div>
+
+                    <!-- Summary Box -->
+                    <div class="extract-summary-box">
+                        <div class="extract-summary-row">
+                            <span class="extract-summary-label">Extraction Target:</span>
+                            <span class="extract-summary-val" id="summaryExtractType">Link</span>
+                        </div>
+                        <div class="extract-summary-row" id="summaryRowScope" style="display: none;">
+                            <span class="extract-summary-label">Specific Link:</span>
+                            <span class="extract-summary-val" id="summaryExtractScope">All Links</span>
+                        </div>
+                        <div class="extract-summary-row">
+                            <span class="extract-summary-label">Date Range:</span>
+                            <span class="extract-summary-val" id="summaryExtractRange">All Time</span>
+                        </div>
+                        <div class="extract-summary-row">
+                            <span class="extract-summary-label">Report Format:</span>
+                            <span class="extract-summary-val" id="summaryExtractFormat">CSV (.csv)</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-wizard-footer space-between">
+                        <button class="btn-wizard-sec" type="button" onclick="goToExtractStep(2)">&larr; Back</button>
+                        <button class="btn-wizard-prim" id="btnSubmitExtractJob" type="button" onclick="submitExtractionJob()">
+                            <span id="extractSubmitSpinner" style="display:none;">
+                                <svg class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" style="color: #ffffff;">
+                                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                                </svg>
+                            </span>
+                            <span id="extractSubmitText">Generate &rarr;</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
      TOAST CONTAINER
 ============================================================ -->
     <div class="toast-container" id="toastContainer" aria-live="polite"></div>
@@ -12703,6 +13551,67 @@
             if (navBilling) {
                 navBilling.addEventListener("click", () => navigateTo("billing"));
             }
+            const navExtractData = document.getElementById("navExtractData");
+            if (navExtractData) {
+                navExtractData.addEventListener("click", () => navigateTo("extract-data"));
+            }
+            const btnOpenExtractModal = document.getElementById("btnOpenExtractModal");
+            if (btnOpenExtractModal) {
+                btnOpenExtractModal.addEventListener("click", openExtractModal);
+            }
+            const btnRefreshExtractJobs = document.getElementById("btnRefreshExtractJobs");
+            if (btnRefreshExtractJobs) {
+                btnRefreshExtractJobs.addEventListener("click", async () => {
+                    if (btnRefreshExtractJobs.dataset.loading === "true") return;
+                    btnRefreshExtractJobs.dataset.loading = "true";
+                    btnRefreshExtractJobs.disabled = true;
+                    btnRefreshExtractJobs.textContent = "Refreshing...";
+                    try {
+                        await loadExtractionJobs(true, extractState.page || 0);
+                    } catch (e) {
+                        console.error("Failed to refresh extraction jobs:", e);
+                    } finally {
+                        setTimeout(() => {
+                            btnRefreshExtractJobs.textContent = "Refresh";
+                            btnRefreshExtractJobs.disabled = false;
+                            delete btnRefreshExtractJobs.dataset.loading;
+                        }, 300);
+                    }
+                });
+            }
+
+            const extractPrevPageBtn = document.getElementById("extractPrevPageBtn");
+            if (extractPrevPageBtn) {
+                extractPrevPageBtn.addEventListener("click", () => {
+                    if (extractState.page > 0) {
+                        loadExtractionJobs(false, extractState.page - 1);
+                    }
+                });
+            }
+
+            const extractNextPageBtn = document.getElementById("extractNextPageBtn");
+            if (extractNextPageBtn) {
+                extractNextPageBtn.addEventListener("click", () => {
+                    if (extractState.page < extractState.totalPages - 1) {
+                        loadExtractionJobs(false, extractState.page + 1);
+                    }
+                });
+            }
+
+            const extractBackdrop = document.getElementById("extractModalBackdrop");
+            if (extractBackdrop) extractBackdrop.addEventListener("click", closeExtractModal);
+
+            const extractCloseBtn = document.getElementById("extractModalCloseBtn");
+            if (extractCloseBtn) extractCloseBtn.addEventListener("click", closeExtractModal);
+
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    const extractModal = document.getElementById("extractModal");
+                    if (extractModal && extractModal.classList.contains("open")) {
+                        closeExtractModal();
+                    }
+                }
+            });
             document.getElementById("navApiDocs").addEventListener("click", openApiDocs);
 
             const headerCreateBtn = document.getElementById("headerCreateLinkBtn");
@@ -12826,6 +13735,8 @@
                 }
             } else if (path.startsWith("/console/billing")) {
                 navigateTo("billing", false);
+            } else if (path.startsWith("/console/extract-data") || path.startsWith("/console/extract")) {
+                navigateTo("extract-data", false);
             } else {
                 navigateTo("home", false);
             }
@@ -12851,6 +13762,8 @@
             document.getElementById("pageApiKeys").classList.toggle("active", page === "api-keys");
             const pageBilling = document.getElementById("pageBilling");
             if (pageBilling) pageBilling.classList.toggle("active", page === "billing");
+            const pageExtractData = document.getElementById("pageExtractData");
+            if (pageExtractData) pageExtractData.classList.toggle("active", page === "extract-data");
 
             const targetUrl = page === "home" ? "/console" : `/console/${page}`;
             if (pushHistory && window.location.pathname !== targetUrl) {
@@ -12878,6 +13791,8 @@
                 loadApiKey();
             } else if (page === "billing") {
                 loadBillingData();
+            } else if (page === "extract-data") {
+                loadExtractionJobs();
             }
         }
 
@@ -14485,6 +15400,32 @@
                     }
                     updateSortHeaders();
                     renderLinksList();
+                });
+            }
+
+            // Refresh button in table top bar
+            const btnRefreshLinks = document.getElementById("btnRefreshLinksList");
+            if (btnRefreshLinks) {
+                btnRefreshLinks.addEventListener("click", async () => {
+                    if (btnRefreshLinks.classList.contains("is-refreshing")) return;
+                    btnRefreshLinks.classList.add("is-refreshing");
+                    btnRefreshLinks.textContent = "Refreshing...";
+                    try {
+                        await loadLinks(appState.linksPage || 0);
+                        if (typeof showToast === "function") {
+                            showToast("success", "Refreshed", "Links list updated.");
+                        }
+                    } catch (e) {
+                        console.error("Failed to refresh links:", e);
+                        if (typeof showToast === "function") {
+                            showToast("error", "Refresh Failed", "Could not reload links.");
+                        }
+                    } finally {
+                        setTimeout(() => {
+                            btnRefreshLinks.textContent = "Refresh";
+                            btnRefreshLinks.classList.remove("is-refreshing");
+                        }, 400);
+                    }
                 });
             }
         }
@@ -17684,6 +18625,10 @@
                     e.target.checked ? "block" : "none";
             });
 
+            document.getElementById("modalLinkActive")?.addEventListener("change", (e) => {
+                updateModalLinkStatusBadge(e.target.checked);
+            });
+
             document.getElementById("modalAccessMode")?.addEventListener("change", (e) => {
                 const isSecured = e.target.value === "SECURED";
                 const secEl = document.getElementById("modalSecuritySettings");
@@ -18247,6 +19192,9 @@
             });
             resetModalCorsUI();
 
+            document.getElementById("modalLinkActive").checked = true;
+            updateModalLinkStatusBadge(true);
+
             // Activate first tab
             switchModalTab("general");
             applyPlanUiRestrictions(appState.plan);
@@ -18257,6 +19205,70 @@
             modal.setAttribute("aria-hidden", "false");
             document.body.style.overflow = "hidden";
             setTimeout(() => document.getElementById("modalDestUrl").focus(), 100);
+        }
+
+        function updateModalLinkStatusBadge(isEnabled) {
+            const badge = document.getElementById("modalLinkStatusBadge");
+            if (badge) {
+                if (isEnabled) {
+                    badge.textContent = "Enabled";
+                    badge.className = "status-pill-chip active";
+                    badge.style.background = "#dcfce7";
+                    badge.style.color = "#15803d";
+                    badge.style.border = "1px solid #bbf7d0";
+                } else {
+                    badge.textContent = "Disabled";
+                    badge.className = "status-pill-chip inactive";
+                    badge.style.background = "#fee2e2";
+                    badge.style.color = "#b91c1c";
+                    badge.style.border = "1px solid #fecaca";
+                }
+            }
+
+            const contentEl = document.getElementById("linkModalContent");
+            const bannerEl = document.getElementById("modalLinkDisabledBanner");
+            if (appState.modalMode === "edit") {
+                if (contentEl) {
+                    contentEl.classList.toggle("is-link-disabled", !isEnabled);
+                    const formElements = contentEl.querySelectorAll(".modal-form-scroll input, .modal-form-scroll select, .modal-form-scroll textarea, .modal-form-scroll button");
+                    formElements.forEach(el => {
+                        el.disabled = !isEnabled;
+                    });
+                    const navBtns = contentEl.querySelectorAll(".modal-nav-sidebar .modal-nav-btn");
+                    navBtns.forEach(btn => {
+                        btn.disabled = !isEnabled;
+                        btn.style.pointerEvents = isEnabled ? "" : "none";
+                    });
+                }
+                if (bannerEl) {
+                    bannerEl.style.display = isEnabled ? "none" : "flex";
+                }
+
+                const submitBtn = document.getElementById("modalSubmitBtn");
+                const prevBtn = document.getElementById("modalPrevBtn");
+                if (submitBtn) {
+                    if (!isEnabled) {
+                        submitBtn.textContent = "Save changes";
+                        if (prevBtn) prevBtn.style.display = "none";
+                    } else {
+                        updateModalFooterButtons();
+                    }
+                }
+            } else {
+                if (contentEl) {
+                    contentEl.classList.remove("is-link-disabled");
+                    const formElements = contentEl.querySelectorAll(".modal-form-scroll input, .modal-form-scroll select, .modal-form-scroll textarea, .modal-form-scroll button");
+                    formElements.forEach(el => {
+                        el.disabled = false;
+                    });
+                    const navBtns = contentEl.querySelectorAll(".modal-nav-sidebar .modal-nav-btn");
+                    navBtns.forEach(btn => {
+                        btn.disabled = false;
+                        btn.style.pointerEvents = "";
+                    });
+                }
+                if (bannerEl) bannerEl.style.display = "none";
+            }
         }
 
         async function openEditModal(newUrlToEdit, publicId) {
@@ -18323,6 +19335,7 @@
                             tags: [],
                             usageLimit: null,
                             isActive: true,
+                            isEnable: true,
                             expireAt: null,
                             linkMode: "REDIRECT"
                         };
@@ -18341,7 +19354,9 @@
                     }
                     document.getElementById("modalNotes").value = data.notes || "";
                     SecurityChipManager.set("tags", Array.isArray(data.tags) ? data.tags : []);
-                    document.getElementById("modalLinkActive").checked = data.isActive !== false;
+                    const isLinkEnabled = (data.isEnable !== undefined) ? (data.isEnable !== false) : ((data.isActive !== undefined) ? (data.isActive !== false) : true);
+                    document.getElementById("modalLinkActive").checked = isLinkEnabled;
+                    updateModalLinkStatusBadge(isLinkEnabled);
 
                     // 1. Usage Policies
                     const up = data.usagePolicies;
@@ -18457,6 +19472,11 @@
             modal.classList.remove("open");
             modal.setAttribute("aria-hidden", "true");
             document.body.style.overflow = "";
+
+            const contentEl = document.getElementById("linkModalContent");
+            if (contentEl) contentEl.classList.remove("is-link-disabled");
+            const bannerEl = document.getElementById("modalLinkDisabledBanner");
+            if (bannerEl) bannerEl.style.display = "none";
 
             const successQrImg = document.getElementById("createdSuccessQrImg");
             if (successQrImg && successQrImg.src && successQrImg.src.startsWith("blob:")) {
@@ -18687,8 +19707,9 @@
         async function handleModalSubmit() {
             const currentIndex = MODAL_TABS.indexOf(currentModalTab);
             const isLastTab = (currentModalTab === "meta");
+            const isLinkDisabled = (appState.modalMode === "edit" && !document.getElementById("modalLinkActive")?.checked);
 
-            if (!isLastTab) {
+            if (!isLastTab && !isLinkDisabled) {
                 // Validate step before advancing
                 if (currentModalTab === "general") {
                     const url = document.getElementById("modalDestUrl").value.trim();
@@ -19079,6 +20100,7 @@
                 tags,
                 linkMode,
                 isActive,
+                isEnable: isActive,
                 expireAt: expireAtVal ? new Date(expireAtVal).toISOString() : null,
                 usageLimit: usageType === "USAGE_LIMIT" ? Number(usageLimitValue) : (usageType === "ONE_TIME" ? 1 : null),
                 usagePolicies: {
@@ -20663,6 +21685,721 @@
                 if (btn.dataset.prevText) {
                     btn.innerHTML = btn.dataset.prevText;
                 }
+            }
+        }
+        /* ============================================================
+           DATA EXTRACTION MODULE (MONOCHROME BLACK & WHITE THEME)
+        ============================================================ */
+        const extractState = {
+            currentStep: 1,
+            dataType: "LINK",
+            reportType: "CSV",
+            scope: "ALL",
+            pollTimer: null,
+            cachedUserLinks: [],
+            selectedLinkIds: new Set(),
+            searchFilter: "",
+            page: 0,
+            pageSize: 10,
+            totalPages: 1,
+            totalElements: 0
+        };
+
+        function openExtractModal() {
+            extractState.currentStep = 1;
+            extractState.dataType = "LINK";
+            extractState.reportType = "CSV";
+            extractState.scope = "ALL";
+            extractState.selectedLinkIds.clear();
+            extractState.searchFilter = "";
+
+            // Reset inputs
+            const startInput = document.getElementById("extractStartDate");
+            const endInput = document.getElementById("extractEndDate");
+            if (startInput) startInput.value = "";
+            if (endInput) endInput.value = "";
+            const scopeAll = document.getElementById("extractScopeAll");
+            if (scopeAll) scopeAll.checked = true;
+            const searchInput = document.getElementById("extractLinkSearchInput");
+            if (searchInput) searchInput.value = "";
+
+            selectExtractType("LINK");
+            selectExtractFormat("CSV");
+            toggleExtractScope();
+            goToExtractStep(1);
+            updateExtractSelectedChipsUI();
+
+            const modal = document.getElementById("extractModal");
+            if (modal) {
+                modal.classList.add("open");
+                modal.setAttribute("aria-hidden", "false");
+            }
+            document.body.style.overflow = "hidden";
+
+            // Load user's links for multi-select list
+            loadUserLinksForExtract();
+        }
+
+        function closeExtractModal() {
+            const modal = document.getElementById("extractModal");
+            if (modal) {
+                modal.classList.remove("open");
+                modal.setAttribute("aria-hidden", "true");
+            }
+            document.body.style.overflow = "";
+        }
+
+        async function loadUserLinksForExtract() {
+            const container = document.getElementById("extractLinksCheckboxContainer");
+            if (!container) return;
+            if (extractState.cachedUserLinks && extractState.cachedUserLinks.length > 0) {
+                renderExtractLinksCheckboxes(extractState.cachedUserLinks);
+                return;
+            }
+
+            try {
+                const res = await authenticatedFetch("/link/list?page=0&size=100&sort=createdAt,desc");
+                if (res.ok) {
+                    const json = await parseResponse(res);
+                    const links = (json && json.data && json.data.content) ? json.data.content : [];
+                    extractState.cachedUserLinks = links;
+                    renderExtractLinksCheckboxes(links);
+                }
+            } catch (e) {
+                container.innerHTML = '<div style="padding: 16px 12px; text-align: center; color: #ef4444; font-size: 11.5px;">Failed to load links</div>';
+            }
+        }
+
+        function filterExtractLinksList() {
+            const searchInput = document.getElementById("extractLinkSearchInput");
+            const filter = (searchInput?.value || "").trim().toLowerCase();
+            extractState.searchFilter = filter;
+
+            const allLinks = extractState.cachedUserLinks || [];
+            if (!filter) {
+                renderExtractLinksCheckboxes(allLinks);
+                return;
+            }
+
+            const filtered = allLinks.filter(l => {
+                const short = String(l.customUrl || l.shortLink || (l.domain ? `${l.domain}/${l.hash}` : "")).toLowerCase();
+                const orig = String(l.originalLink || "").toLowerCase();
+                const title = String(l.title || "").toLowerCase();
+                return short.includes(filter) || orig.includes(filter) || title.includes(filter);
+            });
+
+            renderExtractLinksCheckboxes(filtered);
+        }
+
+        function renderExtractLinksCheckboxes(links) {
+            const container = document.getElementById("extractLinksCheckboxContainer");
+            if (!container) return;
+            if (!links || links.length === 0) {
+                container.innerHTML = '<div style="padding: 16px 12px; text-align: center; color: #64748b; font-size: 11.5px;">No links match your search.</div>';
+                return;
+            }
+
+            container.innerHTML = links.map(link => {
+                const isChecked = extractState.selectedLinkIds.has(link.id);
+                const label = link.customUrl || link.shortLink || (link.domain ? `${link.domain}/${link.hash}` : `Link #${link.id}`);
+                const orig = link.originalLink || '';
+                return `
+                    <div class="extract-link-item ${isChecked ? 'selected' : ''}" onclick="toggleExtractLinkItem(${link.id}, event)">
+                        <input type="checkbox" class="extract-link-checkbox" data-id="${link.id}" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleExtractLinkItem(${link.id}, event)">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${escapeHtml(label)}
+                            </div>
+                            ${orig ? `<div style="font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeAttribute(orig)}">&rarr; ${escapeHtml(orig)}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleExtractLinkItem(linkId, event) {
+            if (extractState.selectedLinkIds.has(linkId)) {
+                extractState.selectedLinkIds.delete(linkId);
+            } else {
+                extractState.selectedLinkIds.add(linkId);
+            }
+
+            // Sync checkbox in container
+            const cb = document.querySelector(`.extract-link-checkbox[data-id="${linkId}"]`);
+            if (cb) {
+                cb.checked = extractState.selectedLinkIds.has(linkId);
+                const parentRow = cb.closest(".extract-link-item");
+                if (parentRow) parentRow.classList.toggle("selected", cb.checked);
+            }
+
+            updateExtractSelectedChipsUI();
+        }
+
+        function selectAllFilteredExtractLinks() {
+            const allLinks = extractState.cachedUserLinks || [];
+            const filter = extractState.searchFilter;
+            const targetLinks = filter ? allLinks.filter(l => {
+                const short = String(l.customUrl || l.shortLink || (l.domain ? `${l.domain}/${l.hash}` : "")).toLowerCase();
+                const orig = String(l.originalLink || "").toLowerCase();
+                const title = String(l.title || "").toLowerCase();
+                return short.includes(filter) || orig.includes(filter) || title.includes(filter);
+            }) : allLinks;
+
+            targetLinks.forEach(l => extractState.selectedLinkIds.add(l.id));
+            renderExtractLinksCheckboxes(targetLinks);
+            updateExtractSelectedChipsUI();
+        }
+
+        function clearSelectedExtractLinks() {
+            extractState.selectedLinkIds.clear();
+            const searchInput = document.getElementById("extractLinkSearchInput");
+            const filter = (searchInput?.value || "").trim().toLowerCase();
+            const allLinks = extractState.cachedUserLinks || [];
+            const targetLinks = filter ? allLinks.filter(l => {
+                const short = String(l.customUrl || l.shortLink || (l.domain ? `${l.domain}/${l.hash}` : "")).toLowerCase();
+                const orig = String(l.originalLink || "").toLowerCase();
+                return short.includes(filter) || orig.includes(filter);
+            }) : allLinks;
+
+            renderExtractLinksCheckboxes(targetLinks);
+            updateExtractSelectedChipsUI();
+        }
+
+        function updateExtractSelectedChipsUI() {
+            const countText = document.getElementById("extractSelectedLinksCountText");
+            const chipsContainer = document.getElementById("extractSelectedChipsContainer");
+            const count = extractState.selectedLinkIds.size;
+
+            if (countText) {
+                countText.textContent = `${count} link${count === 1 ? '' : 's'} selected`;
+            }
+
+            if (!chipsContainer) return;
+            if (count === 0) {
+                chipsContainer.style.display = "none";
+                chipsContainer.innerHTML = "";
+                return;
+            }
+
+            chipsContainer.style.display = "flex";
+            const chipsHtml = Array.from(extractState.selectedLinkIds).map(id => {
+                const link = (extractState.cachedUserLinks || []).find(l => l.id === id);
+                const label = link ? (link.customUrl || link.shortLink || (link.domain ? `${link.domain}/${link.hash}` : `#${id}`)) : `#${id}`;
+                const display = label.length > 25 ? label.substring(0, 22) + "..." : label;
+                return `
+                    <span class="extract-chip" title="${escapeAttribute(label)}">
+                        <span>${escapeHtml(display)}</span>
+                        <button type="button" class="extract-chip-remove" onclick="removeExtractChip(${id}, event)" title="Remove link">&times;</button>
+                    </span>
+                `;
+            }).join("");
+            chipsContainer.innerHTML = chipsHtml;
+        }
+
+        function removeExtractChip(id, event) {
+            if (event) event.stopPropagation();
+            extractState.selectedLinkIds.delete(id);
+
+            const cb = document.querySelector(`.extract-link-checkbox[data-id="${id}"]`);
+            if (cb) {
+                cb.checked = false;
+                const parentRow = cb.closest(".extract-link-item");
+                if (parentRow) parentRow.classList.remove("selected");
+            }
+
+            updateExtractSelectedChipsUI();
+        }
+
+        function selectExtractType(type) {
+            extractState.dataType = type;
+            const optLink = document.getElementById("optTypeLink");
+            const optAnalytics = document.getElementById("optTypeAnalytics");
+            const checkLink = document.getElementById("checkTypeLink");
+            const checkAnalytics = document.getElementById("checkTypeAnalytics");
+            const scopeSection = document.getElementById("extractLinkScopeSection");
+            const dateHint = document.getElementById("extractDateHint");
+
+            if (type === "LINK") {
+                if (optLink) optLink.classList.add("selected");
+                if (optAnalytics) optAnalytics.classList.remove("selected");
+                if (checkLink) checkLink.style.display = "block";
+                if (checkAnalytics) checkAnalytics.style.display = "none";
+                if (scopeSection) scopeSection.style.display = "none";
+                if (dateHint) dateHint.textContent = "Filter links by creation timestamp. Leave blank to export all historical links.";
+            } else {
+                if (optLink) optLink.classList.remove("selected");
+                if (optAnalytics) optAnalytics.classList.add("selected");
+                if (checkLink) checkLink.style.display = "none";
+                if (checkAnalytics) checkAnalytics.style.display = "block";
+                if (scopeSection) scopeSection.style.display = "block";
+                if (dateHint) dateHint.textContent = "Filter access logs by click timestamp. Leave blank to export all historical logs.";
+            }
+        }
+
+        function toggleExtractScope() {
+            const specificRadio = document.getElementById("extractScopeSpecific");
+            const isSpecific = specificRadio && specificRadio.checked;
+            extractState.scope = isSpecific ? "SPECIFIC" : "ALL";
+            const wrapper = document.getElementById("extractSpecificLinkWrapper");
+            if (wrapper) wrapper.style.display = isSpecific ? "block" : "none";
+        }
+
+        function selectExtractFormat(format) {
+            extractState.reportType = format;
+            const optCsv = document.getElementById("optFormatCsv");
+            const optJson = document.getElementById("optFormatJson");
+            const checkCsv = document.getElementById("checkFormatCsv");
+            const checkJson = document.getElementById("checkFormatJson");
+
+            if (format === "CSV") {
+                if (optCsv) optCsv.classList.add("selected");
+                if (optJson) optJson.classList.remove("selected");
+                if (checkCsv) checkCsv.style.display = "block";
+                if (checkJson) checkJson.style.display = "none";
+            } else {
+                if (optCsv) optCsv.classList.remove("selected");
+                if (optJson) optJson.classList.add("selected");
+                if (checkCsv) checkCsv.style.display = "none";
+                if (checkJson) checkJson.style.display = "block";
+            }
+        }
+
+        function setExtractPreset(preset) {
+            const startInput = document.getElementById("extractStartDate");
+            const endInput = document.getElementById("extractEndDate");
+            if (!startInput || !endInput) return;
+
+            if (preset === "all") {
+                startInput.value = "";
+                endInput.value = "";
+                return;
+            }
+
+            const now = new Date();
+            const pad = n => String(n).padStart(2, "0");
+            const formatForInput = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+            endInput.value = formatForInput(now);
+
+            let start = new Date(now);
+            if (preset === "today") {
+                start.setHours(0, 0, 0, 0);
+            } else if (preset === "7d") {
+                start.setDate(start.getDate() - 7);
+            } else if (preset === "30d") {
+                start.setDate(start.getDate() - 30);
+            }
+            startInput.value = formatForInput(start);
+        }
+
+        function goToExtractStep(step) {
+            extractState.currentStep = step;
+
+            // Update Stepper Navigation
+            for (let i = 1; i <= 3; i++) {
+                const navItem = document.getElementById(`extractStepNav-${i}`);
+                const pane = document.getElementById(`extractWizardPane${i}`);
+                if (navItem) {
+                    navItem.classList.toggle("active", i === step);
+                    navItem.classList.toggle("completed", i < step);
+                }
+                if (pane) {
+                    pane.classList.toggle("active", i === step);
+                }
+            }
+
+            // Update Lines
+            const line1 = document.getElementById("extractStepLine-1");
+            const line2 = document.getElementById("extractStepLine-2");
+            if (line1) line1.classList.toggle("completed", step > 1);
+            if (line2) line2.classList.toggle("completed", step > 2);
+
+            // If Step 3: Populate summary
+            if (step === 3) {
+                const summaryType = document.getElementById("summaryExtractType");
+                const summaryRowScope = document.getElementById("summaryRowScope");
+                const summaryScope = document.getElementById("summaryExtractScope");
+                const summaryRange = document.getElementById("summaryExtractRange");
+                const summaryFormat = document.getElementById("summaryExtractFormat");
+
+                if (summaryType) {
+                    summaryType.textContent = extractState.dataType === "LINK" ? "Link" : "Link Analytics";
+                }
+
+                if (extractState.dataType === "LINK_ANALYTICS" && extractState.scope === "SPECIFIC") {
+                    if (summaryRowScope) summaryRowScope.style.display = "flex";
+                    const count = extractState.selectedLinkIds.size;
+                    if (count === 0) {
+                        summaryScope.textContent = "All Links (None selected)";
+                    } else if (count === 1) {
+                        const id = Array.from(extractState.selectedLinkIds)[0];
+                        const link = (extractState.cachedUserLinks || []).find(l => l.id === id);
+                        const label = link ? (link.customUrl || link.shortLink || `#${id}`) : `#${id}`;
+                        summaryScope.textContent = label;
+                    } else {
+                        summaryScope.textContent = `${count} specific links selected`;
+                    }
+                } else {
+                    if (summaryRowScope) summaryRowScope.style.display = "none";
+                }
+
+                const sVal = document.getElementById("extractStartDate")?.value;
+                const eVal = document.getElementById("extractEndDate")?.value;
+                if (summaryRange) {
+                    if (!sVal && !eVal) {
+                        summaryRange.textContent = "All Time";
+                    } else {
+                        const sStr = sVal ? new Date(sVal).toLocaleDateString() : "Beginning";
+                        const eStr = eVal ? new Date(eVal).toLocaleDateString() : "Now";
+                        summaryRange.textContent = `${sStr} — ${eStr}`;
+                    }
+                }
+
+                if (summaryFormat) {
+                    summaryFormat.textContent = extractState.reportType === "CSV" ? "CSV (.csv)" : "JSON (.json)";
+                }
+            }
+        }
+
+        async function submitExtractionJob() {
+            const btn = document.getElementById("btnSubmitExtractJob");
+            const spinner = document.getElementById("extractSubmitSpinner");
+            const text = document.getElementById("extractSubmitText");
+
+            if (btn) btn.disabled = true;
+            if (spinner) spinner.style.display = "inline-block";
+            if (text) text.textContent = "Processing...";
+
+            try {
+                const sVal = document.getElementById("extractStartDate")?.value;
+                const eVal = document.getElementById("extractEndDate")?.value;
+
+                let shortUrlIds = null;
+                let shortUrlId = null;
+                if (extractState.dataType === "LINK_ANALYTICS" && extractState.scope === "SPECIFIC") {
+                    const ids = Array.from(extractState.selectedLinkIds);
+                    if (ids.length === 1) {
+                        shortUrlId = ids[0];
+                        shortUrlIds = [ids[0]];
+                    } else if (ids.length > 1) {
+                        shortUrlIds = ids;
+                    }
+                }
+
+                const payload = {
+                    dataType: extractState.dataType,
+                    reportType: extractState.reportType,
+                    shortUrlId: shortUrlId,
+                    shortUrlIds: shortUrlIds,
+                    startDate: sVal ? new Date(sVal).toISOString() : null,
+                    endDate: eVal ? new Date(eVal).toISOString() : null
+                };
+
+                const res = await authenticatedFetch("/api/extract", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await parseResponse(res);
+                if (res.ok && result.success) {
+                    showToast("success", "Export Initiated", "Your data extraction job is running in the background.");
+                    closeExtractModal();
+                    loadExtractionJobs(false, 0);
+                } else {
+                    showToast("error", "Extraction Failed", result.message || "Could not start extraction.");
+                }
+            } catch (err) {
+                showToast("error", "Error", err.message || "Failed to trigger data extraction.");
+            } finally {
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.style.display = "none";
+                if (text) text.textContent = "Generate \u2192";
+            }
+        }
+
+        async function loadExtractionJobs(showToastFeedback = false, page = extractState.page) {
+            const container = document.getElementById("extractJobsListContainer");
+            const emptyState = document.getElementById("extractEmptyState");
+            const countBadge = document.getElementById("extractJobsCount");
+            if (!container) return;
+
+            extractState.page = Number(page || 0);
+
+            // Add loading spinner state inside table container
+            container.innerHTML = `
+                <div class="domains-loading-state" id="extractLoadingState" style="padding: 44px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #64748b; font-size: 12.5px;">
+                    <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" style="color: #000000;">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                    </svg>
+                    <span>Loading extraction reports...</span>
+                </div>
+            `;
+            if (emptyState) emptyState.style.display = "none";
+
+            const prevBtn = document.getElementById("extractPrevPageBtn");
+            const nextBtn = document.getElementById("extractNextPageBtn");
+            if (prevBtn) prevBtn.disabled = true;
+            if (nextBtn) nextBtn.disabled = true;
+
+            try {
+                const res = await authenticatedFetch(`/api/extract/jobs?page=${extractState.page}&size=${extractState.pageSize || 10}&sort=createdAt,desc`);
+                if (!res.ok) {
+                    throw new Error("Failed to fetch extraction jobs");
+                }
+                const result = await parseResponse(res);
+                let jobs = [];
+                let pageData = null;
+
+                if (result && result.data) {
+                    if (Array.isArray(result.data)) {
+                        jobs = result.data;
+                        pageData = {
+                            content: jobs,
+                            totalElements: jobs.length,
+                            totalPages: 1,
+                            number: 0,
+                            size: jobs.length,
+                            first: true,
+                            last: true
+                        };
+                    } else if (Array.isArray(result.data.content)) {
+                        jobs = result.data.content;
+                        pageData = result.data;
+                    }
+                }
+
+                const totalElements = pageData ? Number(pageData.totalElements ?? jobs.length) : jobs.length;
+                const totalPages = pageData ? Math.max(1, Number(pageData.totalPages || 1)) : 1;
+                const currentPage = pageData ? Number(pageData.number || 0) : extractState.page;
+
+                extractState.totalElements = totalElements;
+                extractState.totalPages = totalPages;
+                extractState.page = currentPage;
+
+                if (countBadge) {
+                    countBadge.textContent = `${totalElements} report${totalElements === 1 ? '' : 's'}`;
+                }
+
+                if (!jobs.length) {
+                    container.innerHTML = "";
+                    if (emptyState) emptyState.style.display = "flex";
+                    updateExtractPaginationUI(pageData || { number: 0, totalPages: 1, totalElements: 0, first: true, last: true });
+                    return;
+                }
+
+                if (emptyState) emptyState.style.display = "none";
+
+                let hasProcessing = false;
+                const rowsHtml = jobs.map(job => {
+                    if (job.status === "PROCESSING") hasProcessing = true;
+                    return renderExtractionJobRow(job);
+                }).join("");
+
+                container.innerHTML = rowsHtml;
+                updateExtractPaginationUI(pageData);
+
+                // If any job is currently processing, poll every 3 seconds to update the UI
+                if (extractState.pollTimer) clearTimeout(extractState.pollTimer);
+                if (hasProcessing) {
+                    extractState.pollTimer = setTimeout(() => {
+                        if (appState.currentPage === "extract-data") {
+                            loadExtractionJobs(false, extractState.page);
+                        }
+                    }, 3000);
+                }
+
+                if (showToastFeedback) {
+                    showToast("success", "Refreshed", "Extraction reports updated.");
+                }
+            } catch (err) {
+                container.innerHTML = `
+                    <div style="padding: 24px 20px; text-align: center; color: #ef4444; font-size: 12px;">
+                        Failed to load extractions: ${escapeHtml(err.message)}
+                    </div>
+                `;
+            }
+        }
+
+        function updateExtractPaginationUI(pageData) {
+            const paginationBar = document.getElementById("extractPaginationBar");
+            const infoText = document.getElementById("extractPaginationInfo");
+            const pageLabel = document.getElementById("extractPageLabel");
+            const prevBtn = document.getElementById("extractPrevPageBtn");
+            const nextBtn = document.getElementById("extractNextPageBtn");
+
+            if (!pageData) {
+                if (paginationBar) paginationBar.style.display = "none";
+                return;
+            }
+
+            if (paginationBar) paginationBar.style.display = "flex";
+
+            const pageNumber = Number(pageData.number || 0);
+            const totalPages = Math.max(1, Number(pageData.totalPages || 1));
+            const pageSize = Number(pageData.size || extractState.pageSize || 10);
+            const total = Number(pageData.totalElements || 0);
+
+            if (total === 0) {
+                if (infoText) infoText.textContent = "Showing 0 of 0 reports";
+                if (pageLabel) pageLabel.textContent = "Page 1 of 1";
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
+                return;
+            }
+
+            const from = pageNumber * pageSize + 1;
+            const to = Math.min((pageNumber + 1) * pageSize, total);
+
+            if (infoText) {
+                infoText.textContent = `Showing ${from}–${to} of ${total} reports`;
+            }
+            if (pageLabel) {
+                pageLabel.textContent = `Page ${pageNumber + 1} of ${totalPages}`;
+            }
+
+            const isFirst = pageData.first !== undefined ? pageData.first : pageNumber <= 0;
+            const isLast = pageData.last !== undefined ? pageData.last : pageNumber >= totalPages - 1;
+
+            if (prevBtn) prevBtn.disabled = isFirst;
+            if (nextBtn) nextBtn.disabled = isLast;
+        }
+
+        function renderExtractionJobRow(job) {
+            const isCompleted = job.status === "COMPLETED";
+            const isProcessing = job.status === "PROCESSING";
+            const isFailed = job.status === "FAILED";
+
+            let statusClass = "completed";
+            let statusText = "Completed";
+            let statusIcon = '<polyline points="20 6 9 17 4 12"></polyline>';
+
+            if (isProcessing) {
+                statusClass = "processing";
+                statusText = "Processing...";
+                statusIcon = '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>';
+            } else if (isFailed) {
+                statusClass = "failed";
+                statusText = "Failed";
+                statusIcon = '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>';
+            }
+
+            const typeLabel = job.dataType === "LINK_ANALYTICS" ? "Link Analytics" : "Link";
+            const recordsDisplay = job.recordCount !== null && job.recordCount !== undefined ? formatNumber(job.recordCount) : "—";
+            const sizeDisplay = job.fileSizeBytes ? formatFileSize(job.fileSizeBytes) : "—";
+            const createdDisplay = job.createdAt ? formatDate(job.createdAt) : "—";
+            const fileNameDisplay = job.fileName || `export_${job.publicId}.${(job.reportType || "csv").toLowerCase()}`;
+
+            let actionHtml = '';
+            if (isCompleted) {
+                actionHtml = `
+                    <button type="button" class="btn" onclick="downloadExtractJob('${job.publicId}', '${escapeAttribute(fileNameDisplay)}')"
+                        style="padding: 4px 10px; font-size: 11px; font-weight: 600; background: #0f172a; color: #ffffff; border: 1px solid #0f172a; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.12s;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Download</span>
+                    </button>
+                `;
+            } else if (isProcessing) {
+                actionHtml = `
+                    <span style="font-size: 11px; color: #64748b; display: inline-flex; align-items: center; gap: 4px;">
+                        <svg class="spin-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                        </svg>
+                        <span>Generating...</span>
+                    </span>
+                `;
+            } else {
+                actionHtml = `
+                    <span style="font-size: 11px; color: #ef4444;" title="${escapeAttribute(job.errorMessage || 'Export failed')}">
+                        Failed
+                    </span>
+                `;
+            }
+
+            return `
+                <div class="extract-row">
+                    <div class="col-ext-file" style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 28px; height: 28px; border-radius: 6px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #0f172a;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                        </div>
+                        <div style="min-width: 0;">
+                            <div style="font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeAttribute(fileNameDisplay)}">
+                                ${escapeHtml(fileNameDisplay)}
+                            </div>
+                            ${job.shortUrlDisplay ? `<div style="font-size: 10.5px; color: #64748b;">Link: ${escapeHtml(job.shortUrlDisplay)}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="col-ext-type">
+                        <span class="extract-type-pill">
+                            ${typeLabel}
+                        </span>
+                    </div>
+                    <div class="col-ext-fmt">
+                        <span style="font-family: monospace; font-size: 11px; font-weight: 600; color: #0f172a; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                            ${escapeHtml(job.reportType)}
+                        </span>
+                    </div>
+                    <div class="col-ext-records" style="font-weight: 500; color: #334155;">
+                        ${recordsDisplay}
+                    </div>
+                    <div class="col-ext-size" style="color: #64748b; font-size: 11.5px;">
+                        ${sizeDisplay}
+                    </div>
+                    <div class="col-ext-status">
+                        <span class="extract-status-badge ${statusClass}">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                ${statusIcon}
+                            </svg>
+                            <span>${statusText}</span>
+                        </span>
+                    </div>
+                    <div class="col-ext-date">
+                        ${createdDisplay}
+                    </div>
+                    <div class="col-ext-actions">
+                        ${actionHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes || bytes <= 0) return "0 B";
+            const units = ["B", "KB", "MB", "GB"];
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + " " + units[i];
+        }
+
+        async function downloadExtractJob(publicId, fileName) {
+            try {
+                showToast("info", "Starting Download", "Preparing your file for download...");
+                const res = await authenticatedFetch(`/api/extract/download/${publicId}`);
+                if (!res.ok) {
+                    throw new Error("Unable to download file");
+                }
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = fileName || `export_${publicId}`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }, 1000);
+                showToast("success", "Download Complete", fileName || "File exported successfully.");
+            } catch (err) {
+                showToast("error", "Download Failed", err.message || "Could not download export file.");
             }
         }
     </script>

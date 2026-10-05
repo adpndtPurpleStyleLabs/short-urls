@@ -187,3 +187,27 @@ CREATE TABLE IF NOT EXISTS custom_domains (
     INDEX idx_custom_domains_user_id (user_id),
     INDEX idx_custom_domains_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. Table for asynchronous data extractions (Link, Link Analytics)
+CREATE TABLE IF NOT EXISTS data_extraction_jobs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    public_id VARCHAR(36) NOT NULL UNIQUE,
+    user_id BIGINT NOT NULL,
+    data_type VARCHAR(32) NOT NULL,
+    report_type VARCHAR(16) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PROCESSING',
+    start_date_time DATETIME NULL,
+    end_date_time DATETIME NULL,
+    target_short_url_id BIGINT NULL,
+    target_short_url VARCHAR(512) NULL,
+    file_name VARCHAR(255) NULL,
+    file_path VARCHAR(512) NULL,
+    file_content LONGTEXT NULL,
+    file_size_bytes BIGINT DEFAULT 0,
+    record_count INT DEFAULT 0,
+    error_message TEXT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME NULL,
+    INDEX idx_dej_user_created (user_id, created_at DESC),
+    INDEX idx_dej_public_id (public_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
