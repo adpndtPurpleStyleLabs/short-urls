@@ -4,24 +4,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting... — SecureURLs.me</title>
+
+    <title>Location Required — SecureURLs.me</title>
+
     <meta name="robots" content="noindex, nofollow">
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet">
+
     <style>
+
         :root {
             --bg-page: #f8fafc;
             --card-bg: #ffffff;
+
             --text-primary: #0f172a;
             --text-secondary: #64748b;
             --text-muted: #94a3b8;
+
             --border-light: #e2e8f0;
+
             --black-solid: #000000;
+
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+
+            --button-bg: #0f172a;
+            --button-hover: #1e293b;
         }
 
         * {
@@ -31,66 +50,126 @@
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family:
+                    'Plus Jakarta Sans',
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    'Segoe UI',
+                    Roboto,
+                    sans-serif;
+
             background-color: var(--bg-page);
             color: var(--text-primary);
+
             min-height: 100vh;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             padding: 24px 16px;
+
             background-image:
-                radial-gradient(circle at 15% 20%, rgba(226, 232, 240, 0.6) 0%, transparent 45%),
-                radial-gradient(circle at 85% 80%, rgba(226, 232, 240, 0.6) 0%, transparent 45%);
-            overflow: hidden;
+                    radial-gradient(
+                            circle at 15% 20%,
+                            rgba(226, 232, 240, 0.6) 0%,
+                            transparent 45%
+                    ),
+                    radial-gradient(
+                            circle at 85% 80%,
+                            rgba(226, 232, 240, 0.6) 0%,
+                            transparent 45%
+                    );
+
+            overflow: auto;
         }
 
         .ambient-grid {
             position: fixed;
             inset: 0;
+
             pointer-events: none;
+
             background-image:
-                linear-gradient(to right, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+                    linear-gradient(
+                            to right,
+                            rgba(0, 0, 0, 0.035) 1px,
+                            transparent 1px
+                    ),
+                    linear-gradient(
+                            to bottom,
+                            rgba(0, 0, 0, 0.035) 1px,
+                            transparent 1px
+                    );
+
             background-size: 48px 48px;
-            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
-            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+
+            -webkit-mask-image:
+                    radial-gradient(
+                            circle at center,
+                            black 40%,
+                            transparent 80%
+                    );
+
+            mask-image:
+                    radial-gradient(
+                            circle at center,
+                            black 40%,
+                            transparent 80%
+                    );
+
             z-index: 0;
         }
 
         .interstitial-card {
             position: relative;
             z-index: 1;
+
             width: 100%;
-            max-width: 440px;
+            max-width: 460px;
+
             background: var(--card-bg);
+
             border: 1px solid var(--border-light);
+
             border-radius: 16px;
+
             padding: 42px 32px 36px 32px;
+
             text-align: center;
+
             box-shadow:
-                0 20px 40px -15px rgba(15, 23, 42, 0.08),
-                0 0 0 1px rgba(15, 23, 42, 0.03);
+                    0 20px 40px -15px rgba(15, 23, 42, 0.08),
+                    0 0 0 1px rgba(15, 23, 42, 0.03);
+
             animation: cardFadeIn 0.35s ease-out;
         }
 
         @keyframes cardFadeIn {
+
             from {
                 opacity: 0;
                 transform: translateY(12px) scale(0.98);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
         }
 
-        /* Pulsing icon in the center */
+        /* ==============================
+           ICON
+           ============================== */
+
         .pulsing-icon-wrapper {
             position: relative;
+
             width: 90px;
             height: 90px;
+
             margin: 0 auto 28px auto;
+
             display: flex;
             align-items: center;
             justify-content: center;
@@ -98,13 +177,24 @@
 
         .pulse-wave {
             position: absolute;
+
             top: 50%;
             left: 50%;
+
             transform: translate(-50%, -50%);
+
             border-radius: 50%;
+
             background: rgba(0, 0, 0, 0.07);
+
             border: 1.5px solid rgba(0, 0, 0, 0.15);
-            animation: pulseWaveAnim 2.2s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+
+            animation:
+                    pulseWaveAnim
+                    2.2s
+                    cubic-bezier(0.165, 0.84, 0.44, 1)
+                    infinite;
+
             pointer-events: none;
         }
 
@@ -121,41 +211,66 @@
         }
 
         @keyframes pulseWaveAnim {
+
             0% {
                 width: 64px;
                 height: 64px;
+
                 opacity: 0.8;
-                transform: translate(-50%, -50%) scale(1);
+
+                transform:
+                        translate(-50%, -50%)
+                        scale(1);
             }
-            85%, 100% {
+
+            85%,
+            100% {
                 width: 140px;
                 height: 140px;
+
                 opacity: 0;
-                transform: translate(-50%, -50%) scale(1.6);
+
+                transform:
+                        translate(-50%, -50%)
+                        scale(1.6);
             }
         }
 
         .core-black-icon {
             position: relative;
             z-index: 2;
+
             width: 64px;
             height: 64px;
+
             border-radius: 50%;
+
             background: var(--black-solid);
+
             color: #ffffff;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             box-shadow:
-                0 10px 25px -4px rgba(0, 0, 0, 0.35),
-                0 0 0 1px rgba(0, 0, 0, 0.1);
-            animation: iconBreathAnim 2.2s ease-in-out infinite;
+                    0 10px 25px -4px rgba(0, 0, 0, 0.35),
+                    0 0 0 1px rgba(0, 0, 0, 0.1);
+
+            animation:
+                    iconBreathAnim
+                    2.2s
+                    ease-in-out
+                    infinite;
         }
 
         @keyframes iconBreathAnim {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
             }
+
             50% {
                 transform: scale(1.05);
             }
@@ -166,53 +281,93 @@
             height: 28px;
         }
 
-        /* Status & Text */
+        /* ==============================
+           TEXT
+           ============================== */
+
         .redirect-title {
             font-size: 20px;
+
             font-weight: 800;
+
             letter-spacing: -0.02em;
+
             color: var(--text-primary);
+
             line-height: 1.3;
+
             margin-bottom: 8px;
-            min-height: 26px;
         }
 
         .redirect-subtitle {
             font-size: 13px;
+
             font-weight: 500;
+
             color: var(--text-secondary);
-            line-height: 1.5;
+
+            line-height: 1.6;
+
             margin-bottom: 22px;
-            min-height: 38px;
         }
 
-        /* Status badge */
+        /* ==============================
+           STATUS
+           ============================== */
+
         .status-badge {
             display: inline-flex;
+
             align-items: center;
+            justify-content: center;
+
             gap: 7px;
-            padding: 5px 12px;
+
+            padding: 6px 13px;
+
             border-radius: 9999px;
+
             font-size: 11.5px;
+
             font-weight: 600;
+
             background: #f1f5f9;
+
             color: #334155;
+
             border: 1px solid #e2e8f0;
+
             margin-bottom: 24px;
-            transition: all 0.25s ease;
+
+            transition:
+                    all 0.25s ease;
         }
 
         .status-dot {
             width: 7px;
             height: 7px;
+
             border-radius: 50%;
+
             background: #0f172a;
-            animation: dotBlink 1.4s infinite ease-in-out;
+
+            animation:
+                    dotBlink
+                    1.4s
+                    infinite
+                    ease-in-out;
         }
 
         @keyframes dotBlink {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         .status-badge.verified {
@@ -226,333 +381,1262 @@
             animation: none;
         }
 
-        /* Progress track */
+        .status-badge.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .status-badge.error .status-dot {
+            background: #dc2626;
+            animation: none;
+        }
+
+        /* ==============================
+           PROGRESS
+           ============================== */
+
         .progress-track {
             width: 100%;
+
             height: 4px;
+
             background: #f1f5f9;
+
             border-radius: 9999px;
+
             overflow: hidden;
-            margin-bottom: 20px;
+
+            margin-bottom: 24px;
         }
 
         .progress-fill {
             height: 100%;
-            width: 0%;
+
+            width: 25%;
+
             background: var(--black-solid);
+
             border-radius: 9999px;
-            transition: width 0.3s ease;
+
+            transition:
+                    width 0.3s ease;
         }
 
-        /* Skip button */
-        .skip-btn {
-            background: none;
-            border: none;
-            font-family: inherit;
+        /* ==============================
+           HELP
+           ============================== */
+
+        .permission-help {
+            display: none;
+
+            text-align: left;
+
+            margin-top: 8px;
+            margin-bottom: 22px;
+
+            padding: 16px;
+
+            background: #f8fafc;
+
+            border: 1px solid var(--border-light);
+
+            border-radius: 10px;
+        }
+
+        .permission-help.visible {
+            display: block;
+        }
+
+        .permission-help-title {
             font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 6px;
-            transition: color 0.15s ease, background 0.15s ease;
-            text-decoration: none;
-            display: inline-block;
+
+            font-weight: 700;
+
+            color: var(--text-primary);
+
+            margin-bottom: 8px;
         }
 
-        .skip-btn:hover {
-            color: var(--text-primary);
-            background: #f1f5f9;
+        .permission-help-text {
+            font-size: 11.5px;
+
+            line-height: 1.6;
+
+            color: var(--text-secondary);
         }
+
+        .permission-help-text strong {
+            color: var(--text-primary);
+        }
+
+        /* ==============================
+           RETRY
+           ============================== */
+
+        .retry-btn {
+            display: none;
+
+            width: 100%;
+
+            border: none;
+
+            border-radius: 9px;
+
+            background: var(--button-bg);
+
+            color: #ffffff;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            padding: 11px 16px;
+
+            cursor: pointer;
+
+            transition:
+                    background 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .retry-btn.visible {
+            display: block;
+        }
+
+        .retry-btn:hover {
+            background: var(--button-hover);
+        }
+
+        .retry-btn:active {
+            transform: scale(0.98);
+        }
+
+        .retry-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ==============================
+           HTTPS WARNING
+           ============================== */
+
+        .secure-warning {
+            display: none;
+
+            margin-top: 10px;
+
+            padding: 12px;
+
+            border-radius: 9px;
+
+            background: #fff7ed;
+
+            border: 1px solid #fed7aa;
+
+            color: #9a3412;
+
+            font-size: 11.5px;
+
+            line-height: 1.6;
+
+            text-align: left;
+        }
+
+        .secure-warning.visible {
+            display: block;
+        }
+
+        /* ==============================
+           FOOTER
+           ============================== */
+
+        .security-note {
+            margin-top: 18px;
+
+            font-size: 10.5px;
+
+            line-height: 1.5;
+
+            color: var(--text-muted);
+        }
+
+        /* ==============================
+           MOBILE
+           ============================== */
+
+        @media (max-width: 480px) {
+
+            body {
+                padding: 16px;
+            }
+
+            .interstitial-card {
+                padding:
+                        34px
+                        22px
+                        28px;
+            }
+
+            .redirect-title {
+                font-size: 19px;
+            }
+        }
+
     </style>
 </head>
 
+
 <body>
-    <div class="ambient-grid"></div>
 
-    <main class="interstitial-card" role="main">
-        <!-- Center black pulsing icon -->
-        <div class="pulsing-icon-wrapper" aria-hidden="true">
-            <div class="pulse-wave"></div>
-            <div class="pulse-wave"></div>
-            <div class="pulse-wave"></div>
-            <div class="core-black-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-                </svg>
-            </div>
+<div class="ambient-grid"></div>
+
+
+<main
+        class="interstitial-card"
+        role="main"
+        aria-live="polite">
+
+
+    <!-- ==============================
+         LOCATION ICON
+         ============================== -->
+
+    <div
+            class="pulsing-icon-wrapper"
+            aria-hidden="true">
+
+        <div class="pulse-wave"></div>
+        <div class="pulse-wave"></div>
+        <div class="pulse-wave"></div>
+
+        <div class="core-black-icon">
+
+            <!-- Location icon -->
+
+            <svg
+                    id="locationIcon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+
+                <path
+                        d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z">
+                </path>
+
+                <circle
+                        cx="12"
+                        cy="10"
+                        r="2.5">
+                </circle>
+
+            </svg>
+
         </div>
 
-        <!-- Heading text -->
-        <h1 class="redirect-title" id="redirectHeading">
-            Redirecting in <span id="countdownNumber">1</span> sec...
-        </h1>
+    </div>
 
-        <!-- Subtitle message -->
-        <p class="redirect-subtitle" id="redirectSubtitle">
-            Connecting and verifying location permission...
-        </p>
 
-        <!-- Status badge -->
-        <div class="status-badge" id="statusBadge">
-            <span class="status-dot" id="statusDot"></span>
-            <span id="badgeText">Requesting location...</span>
+    <!-- ==============================
+         HEADING
+         ============================== -->
+
+    <h1
+            class="redirect-title"
+            id="redirectHeading">
+
+        Location access required
+
+    </h1>
+
+
+    <!-- ==============================
+         SUBTITLE
+         ============================== -->
+
+    <p
+            class="redirect-subtitle"
+            id="redirectSubtitle">
+
+        Please allow location access in your browser
+        to continue.
+
+    </p>
+
+
+    <!-- ==============================
+         STATUS BADGE
+         ============================== -->
+
+    <div
+            class="status-badge"
+            id="statusBadge">
+
+        <span
+                class="status-dot"
+                id="statusDot">
+        </span>
+
+        <span
+                id="badgeText">
+
+            Requesting location...
+
+        </span>
+
+    </div>
+
+
+    <!-- ==============================
+         PROGRESS
+         ============================== -->
+
+    <div
+            class="progress-track"
+            aria-hidden="true">
+
+        <div
+                class="progress-fill"
+                id="progressFill">
         </div>
 
-        <!-- Subtle progress bar -->
-        <div class="progress-track" aria-hidden="true">
-            <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+
+    <!-- ==============================
+         HTTPS WARNING
+         ============================== -->
+
+    <div
+            class="secure-warning"
+            id="secureWarning">
+
+        <strong>Secure connection required.</strong><br>
+
+        Location access only works on secure HTTPS
+        websites. Please open this link using HTTPS
+        and try again.
+
+    </div>
+
+
+    <!-- ==============================
+         BROWSER HELP
+         ============================== -->
+
+    <div
+            class="permission-help"
+            id="permissionHelp">
+
+        <div
+                class="permission-help-title"
+                id="permissionHelpTitle">
+
+            How to allow location
+
         </div>
 
-        <!-- Direct skip link in case user wants immediate continuation -->
-        <div>
-            <button type="button" class="skip-btn" id="manualSkipBtn">
-                Click here if you are not redirected &rarr;
-            </button>
+        <div
+                class="permission-help-text"
+                id="permissionHelpText">
+
+            Please allow location access from your
+            browser's site permissions and then try again.
+
         </div>
-    </main>
 
-    <script th:inline="javascript">
-        (function() {
-            let hasRedirected = false;
-            let locationResolved = false;
-            let capturedLat = null;
-            let capturedLng = null;
-            let capturedAccuracy = null;
-            let countdownSeconds = 1;
+    </div>
 
-            const headingEl = document.getElementById("redirectHeading");
-            const countdownEl = document.getElementById("countdownNumber");
-            const subtitleEl = document.getElementById("redirectSubtitle");
-            const statusBadgeEl = document.getElementById("statusBadge");
-            const badgeTextEl = document.getElementById("badgeText");
-            const progressFillEl = document.getElementById("progressFill");
-            const manualSkipBtn = document.getElementById("manualSkipBtn");
 
-            // Build target URL keeping existing query params while attaching geo parameters
-            function buildRedirectUrl(lat, lng, accuracy) {
-                const url = new URL(window.location.href);
-                if (lat != null && lng != null) {
-                    url.searchParams.set("geo_lat", lat);
-                    url.searchParams.set("geo_lng", lng);
-                    if (accuracy != null) {
-                        url.searchParams.set("geo_accuracy", accuracy);
-                    }
-                }
-                url.searchParams.set("geo_nav", "1");
-                return url.toString();
+    <!-- ==============================
+         RETRY BUTTON
+         ============================== -->
+
+    <button
+            type="button"
+            class="retry-btn"
+            id="retryBtn">
+
+        Allow location and try again
+
+    </button>
+
+
+    <div class="security-note">
+
+        Your location is requested only to verify
+        access to this secure link.
+
+    </div>
+
+
+</main>
+
+
+<script th:inline="javascript">
+
+    (function () {
+
+        "use strict";
+
+
+        // =========================================================
+        // STATE
+        // =========================================================
+
+        let hasRedirected = false;
+
+        let capturedLat = null;
+        let capturedLng = null;
+        let capturedAccuracy = null;
+
+
+        // =========================================================
+        // ELEMENTS
+        // =========================================================
+
+        const headingEl =
+            document.getElementById(
+                "redirectHeading"
+            );
+
+        const subtitleEl =
+            document.getElementById(
+                "redirectSubtitle"
+            );
+
+        const statusBadgeEl =
+            document.getElementById(
+                "statusBadge"
+            );
+
+        const badgeTextEl =
+            document.getElementById(
+                "badgeText"
+            );
+
+        const progressFillEl =
+            document.getElementById(
+                "progressFill"
+            );
+
+        const retryBtn =
+            document.getElementById(
+                "retryBtn"
+            );
+
+        const permissionHelp =
+            document.getElementById(
+                "permissionHelp"
+            );
+
+        const permissionHelpTitle =
+            document.getElementById(
+                "permissionHelpTitle"
+            );
+
+        const permissionHelpText =
+            document.getElementById(
+                "permissionHelpText"
+            );
+
+        const secureWarning =
+            document.getElementById(
+                "secureWarning"
+            );
+
+
+        // =========================================================
+        // BROWSER DETECTION
+        // =========================================================
+
+        function detectBrowser() {
+
+            const ua =
+                navigator.userAgent.toLowerCase();
+
+
+            if (
+                ua.includes("edg/")
+            ) {
+
+                return "edge";
             }
 
-            function triggerRedirect(lat, lng, accuracy) {
-                if (hasRedirected) return;
-                hasRedirected = true;
 
-                if (progressFillEl) progressFillEl.style.width = "100%";
-                if (headingEl) headingEl.textContent = "Redirecting now...";
-                if (subtitleEl) {
-                    if (lat != null && lng != null && accuracy != null) {
-                        subtitleEl.textContent = "Location verified (~" + Math.round(accuracy) + "m accuracy). Transferring to destination...";
-                    } else {
-                        subtitleEl.textContent = "Transferring to your destination...";
-                    }
-                }
+            if (
+                ua.includes("chrome") &&
+                !ua.includes("edg/")
+            ) {
 
-                // Save cookie if coordinates available
-                if (lat != null && lng != null) {
-                    try {
-                        const cookieVal = lat + "_" + lng + (accuracy != null ? "_" + accuracy : "");
-                        document.cookie = "PREONS_GEO_COORDS=" + cookieVal + "; path=/; max-age=3600; SameSite=Lax";
-                    } catch (e) {}
-                }
-
-                const fallbackUrl = buildRedirectUrl(lat, lng, accuracy);
-
-                // Fetch with lat, long, accuracy in header to record client location on server
-                if (lat != null && lng != null) {
-                    const fetchHeaders = {
-                        'X-Browser-Latitude': String(lat),
-                        'X-Browser-Longitude': String(lng),
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    };
-                    if (accuracy != null) {
-                        fetchHeaders['X-Browser-Accuracy'] = String(accuracy);
-                    }
-                    fetchHeaders['X-Browser-GeoCoords'] = lat + ',' + lng + (accuracy != null ? ',' + accuracy : '');
-
-                    // Safety fallback timer in case fetch is delayed
-                    const safetyTimer = setTimeout(function() {
-                        window.location.replace(fallbackUrl);
-                    }, 3000);
-
-                    fetch(window.location.href, {
-                        method: 'GET',
-                        headers: fetchHeaders,
-                        credentials: 'same-origin'
-                    })
-                    .then(function(res) {
-                        if (res.ok) {
-                            return res.json().catch(function() { return null; });
-                        }
-                        return null;
-                    })
-                    .then(function(data) {
-                        clearTimeout(safetyTimer);
-                        if (data && data.redirectUrl) {
-                            window.location.replace(data.redirectUrl);
-                        } else {
-                            window.location.replace(fallbackUrl);
-                        }
-                    })
-                    .catch(function(err) {
-                        clearTimeout(safetyTimer);
-                        window.location.replace(fallbackUrl);
-                    });
-                } else {
-                    window.location.replace(fallbackUrl);
-                }
+                return "chrome";
             }
 
-            // Fallback immediately if user clicks skip
-            if (manualSkipBtn) {
-                manualSkipBtn.addEventListener("click", function() {
-                    triggerRedirect(capturedLat, capturedLng, capturedAccuracy);
-                });
+
+            if (
+                ua.includes("firefox")
+            ) {
+
+                return "firefox";
             }
 
-            // Animate progress fill
-            if (progressFillEl) {
-                setTimeout(function() {
-                    progressFillEl.style.width = "50%";
-                }, 100);
+
+            if (
+                ua.includes("safari") &&
+                !ua.includes("chrome") &&
+                !ua.includes("android")
+            ) {
+
+                return "safari";
             }
 
-            console.log("Geolocation supported:", !!navigator.geolocation);
-            console.log("Secure context:", window.isSecureContext);
-            console.log("Origin:", window.location.origin);
 
-            if (!navigator.geolocation) {
+            if (
+                ua.includes("iphone") ||
+                ua.includes("ipad") ||
+                ua.includes("ipod")
+            ) {
 
-                console.error("Geolocation is not supported");
+                return "ios";
+            }
+
+
+            return "other";
+        }
+
+
+        // =========================================================
+        // BROWSER PERMISSION INSTRUCTIONS
+        // =========================================================
+
+        function showPermissionInstructions() {
+
+            const browser =
+                detectBrowser();
+
+
+            permissionHelp.classList.add(
+                "visible"
+            );
+
+
+            if (browser === "chrome") {
+
+                permissionHelpTitle.textContent =
+                    "Allow location in Chrome";
+
+                permissionHelpText.innerHTML =
+                    "Click the <strong>site settings / lock icon</strong> " +
+                    "next to the address bar, open <strong>Site settings</strong>, " +
+                    "set <strong>Location</strong> to <strong>Allow</strong>, " +
+                    "then reload this page.";
+
+            } else if (browser === "edge") {
+
+                permissionHelpTitle.textContent =
+                    "Allow location in Edge";
+
+                permissionHelpText.innerHTML =
+                    "Click the <strong>lock icon</strong> next to the address bar, " +
+                    "open <strong>Permissions for this site</strong>, " +
+                    "set <strong>Location</strong> to <strong>Allow</strong>, " +
+                    "then reload this page.";
+
+            } else if (browser === "firefox") {
+
+                permissionHelpTitle.textContent =
+                    "Allow location in Firefox";
+
+                permissionHelpText.innerHTML =
+                    "Click the <strong>permission / lock icon</strong> next to " +
+                    "the address bar and allow <strong>Location</strong>. " +
+                    "If it was previously blocked, remove the blocked permission " +
+                    "and reload this page.";
+
+            } else if (browser === "safari" || browser === "ios") {
+
+                permissionHelpTitle.textContent =
+                    "Allow location in Safari";
+
+                permissionHelpText.innerHTML =
+                    "Open Safari's website settings for this page and set " +
+                    "<strong>Location</strong> to <strong>Allow</strong>. " +
+                    "Then reload this page.";
 
             } else {
 
-                navigator.geolocation.getCurrentPosition(
+                permissionHelpTitle.textContent =
+                    "Allow location access";
 
-                    function (position) {
+                permissionHelpText.innerHTML =
+                    "Open your browser's site permissions for this website, " +
+                    "set <strong>Location</strong> to <strong>Allow</strong>, " +
+                    "then reload this page.";
+            }
+        }
 
-                        console.log("LOCATION SUCCESS:", position);
 
-                        locationResolved = true;
+        // =========================================================
+        // UI: WAITING
+        // =========================================================
 
-                        capturedLat = position.coords.latitude;
-                        capturedLng = position.coords.longitude;
-                        capturedAccuracy = position.coords.accuracy;
+        function showWaiting() {
 
-                        console.log("Latitude:", capturedLat);
-                        console.log("Longitude:", capturedLng);
-                        console.log("Accuracy:", capturedAccuracy);
+            headingEl.textContent =
+                "Location access required";
 
-                        if (statusBadgeEl) {
-                            statusBadgeEl.classList.add("verified");
-                        }
+            subtitleEl.textContent =
+                "Please allow location access in your browser to continue.";
 
-                        if (badgeTextEl) {
-                            badgeTextEl.textContent = "Location verified";
-                        }
+            badgeTextEl.textContent =
+                "Requesting location...";
 
-                        if (headingEl) {
-                            headingEl.textContent = "Redirecting now...";
-                        }
+            statusBadgeEl.classList.remove(
+                "error",
+                "verified"
+            );
 
-                        triggerRedirect(
-                            capturedLat,
-                            capturedLng,
-                            capturedAccuracy
-                        );
-                    },
+            progressFillEl.style.width =
+                "35%";
 
-                    function (error) {
+            secureWarning.classList.remove(
+                "visible"
+            );
 
-                        console.error(
-                            "GEOLOCATION ERROR",
-                            "code =", error.code,
-                            "message =", error.message
-                        );
+            permissionHelp.classList.remove(
+                "visible"
+            );
 
-                        /*
-                         * 1 = PERMISSION_DENIED
-                         * 2 = POSITION_UNAVAILABLE
-                         * 3 = TIMEOUT
-                         */
+            retryBtn.classList.remove(
+                "visible"
+            );
+        }
 
-                        if (error.code === 1) {
 
-                            if (badgeTextEl) {
-                                badgeTextEl.textContent = "Location permission required";
-                            }
+        // =========================================================
+        // UI: SUCCESS
+        // =========================================================
 
-                            if (subtitleEl) {
-                                subtitleEl.textContent =
-                                    "Please allow location access in your browser settings.";
-                            }
+        function showSuccess() {
 
-                        } else if (error.code === 2) {
+            statusBadgeEl.classList.remove(
+                "error"
+            );
 
-                            if (badgeTextEl) {
-                                badgeTextEl.textContent = "Location unavailable";
-                            }
+            statusBadgeEl.classList.add(
+                "verified"
+            );
 
-                        } else if (error.code === 3) {
 
-                            if (badgeTextEl) {
-                                badgeTextEl.textContent = "Location request timed out";
-                            }
-                        }
+            badgeTextEl.textContent =
+                "Location verified";
 
-                        // IMPORTANT:
-                        // Don't automatically redirect if location is required.
-                        locationResolved = false;
-                    },
 
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 15000,
-                        maximumAge: 0
-                    }
+            headingEl.textContent =
+                "Redirecting now...";
+
+
+            subtitleEl.textContent =
+                "Location verified (~" +
+                Math.round(
+                    capturedAccuracy || 0
+                ) +
+                "m accuracy).";
+
+
+            progressFillEl.style.width =
+                "100%";
+
+
+            retryBtn.classList.remove(
+                "visible"
+            );
+
+            permissionHelp.classList.remove(
+                "visible"
+            );
+        }
+
+
+        // =========================================================
+        // UI: ERROR
+        // =========================================================
+
+        function showError(error) {
+
+            statusBadgeEl.classList.remove(
+                "verified"
+            );
+
+            statusBadgeEl.classList.add(
+                "error"
+            );
+
+
+            progressFillEl.style.width =
+                "15%";
+
+
+            retryBtn.classList.add(
+                "visible"
+            );
+
+
+            // =====================================================
+            // PERMISSION DENIED
+            // =====================================================
+
+            if (error.code === 1) {
+
+                headingEl.textContent =
+                    "Location access required";
+
+
+                badgeTextEl.textContent =
+                    "Location permission denied";
+
+
+                if (!window.isSecureContext) {
+
+                    subtitleEl.textContent =
+                        "This page is not using a secure HTTPS connection.";
+
+                    secureWarning.classList.add(
+                        "visible"
+                    );
+
+                } else {
+
+                    subtitleEl.textContent =
+                        "Location permission is required to continue.";
+
+                    secureWarning.classList.remove(
+                        "visible"
+                    );
+                }
+
+
+                showPermissionInstructions();
+
+                return;
+            }
+
+
+            // =====================================================
+            // POSITION UNAVAILABLE
+            // =====================================================
+
+            if (error.code === 2) {
+
+                headingEl.textContent =
+                    "Unable to determine location";
+
+
+                badgeTextEl.textContent =
+                    "Location unavailable";
+
+
+                subtitleEl.textContent =
+                    "Please enable location services on your device and try again.";
+
+
+                secureWarning.classList.remove(
+                    "visible"
+                );
+
+
+                showPermissionInstructions();
+
+                return;
+            }
+
+
+            // =====================================================
+            // TIMEOUT
+            // =====================================================
+
+            if (error.code === 3) {
+
+                headingEl.textContent =
+                    "Location request timed out";
+
+
+                badgeTextEl.textContent =
+                    "Location timeout";
+
+
+                subtitleEl.textContent =
+                    "We could not determine your location. Please try again.";
+
+
+                secureWarning.classList.remove(
+                    "visible"
+                );
+
+
+                permissionHelp.classList.add(
+                    "visible"
+                );
+
+
+                permissionHelpTitle.textContent =
+                    "Check your location settings";
+
+
+                permissionHelpText.innerHTML =
+                    "Make sure location services are enabled on your device " +
+                    "and that this website is allowed to access your location.";
+
+                return;
+            }
+
+
+            // =====================================================
+            // UNKNOWN ERROR
+            // =====================================================
+
+            headingEl.textContent =
+                "Location access required";
+
+
+            badgeTextEl.textContent =
+                "Unable to get location";
+
+
+            subtitleEl.textContent =
+                "Please check your browser location permissions and try again.";
+
+
+            showPermissionInstructions();
+        }
+
+
+        // =========================================================
+        // BUILD REDIRECT URL
+        // =========================================================
+
+        function buildRedirectUrl(
+            lat,
+            lng,
+            accuracy
+        ) {
+
+            const url =
+                new URL(
+                    window.location.href
+                );
+
+
+            if (
+                lat != null &&
+                lng != null
+            ) {
+
+                url.searchParams.set(
+                    "geo_lat",
+                    lat
+                );
+
+                url.searchParams.set(
+                    "geo_lng",
+                    lng
+                );
+
+
+                if (accuracy != null) {
+
+                    url.searchParams.set(
+                        "geo_accuracy",
+                        accuracy
+                    );
+                }
+            }
+
+
+            url.searchParams.set(
+                "geo_nav",
+                "1"
+            );
+
+
+            return url.toString();
+        }
+
+
+        // =========================================================
+        // SEND LOCATION + REDIRECT
+        // =========================================================
+
+        function triggerRedirect(
+            lat,
+            lng,
+            accuracy
+        ) {
+
+            // Absolutely require coordinates
+            if (
+                lat == null ||
+                lng == null
+            ) {
+
+                console.warn(
+                    "Redirect blocked: location not available"
+                );
+
+                return;
+            }
+
+
+            if (hasRedirected) {
+                return;
+            }
+
+
+            hasRedirected = true;
+
+
+            showSuccess();
+
+
+            // =====================================================
+            // COOKIE
+            // =====================================================
+
+            try {
+
+                const cookieVal =
+                    lat +
+                    "_" +
+                    lng +
+                    (
+                        accuracy != null
+                            ? "_" + accuracy
+                            : ""
+                    );
+
+
+                document.cookie =
+                    "PREONS_GEO_COORDS=" +
+                    cookieVal +
+                    "; path=/; max-age=3600; SameSite=Lax";
+
+            } catch (e) {
+
+                console.warn(
+                    "Could not save location cookie",
+                    e
                 );
             }
 
-            // Countdown timer (starts at 1s)
-            const timer = setInterval(function() {
-                countdownSeconds--;
-                if (countdownSeconds <= 0) {
-                    clearInterval(timer);
 
-                    // If location is already resolved (either granted or denied), redirect immediately
-                    if (locationResolved) {
-                        triggerRedirect(capturedLat, capturedLng, capturedAccuracy);
-                    } else {
-                        // Still waiting on browser permission prompt: update UI so user knows to click Allow
-                        if (headingEl) headingEl.textContent = "Please allow location permission...";
-                        if (subtitleEl) subtitleEl.textContent = "Waiting for browser permission response to complete redirect...";
-                        if (badgeTextEl) badgeTextEl.textContent = "Waiting for permission...";
-                        if (progressFillEl) progressFillEl.style.width = "85%";
+            const fallbackUrl =
+                buildRedirectUrl(
+                    lat,
+                    lng,
+                    accuracy
+                );
 
-                        // Safety timeout: if user leaves prompt open without answering for 8 seconds, don't trap them
-                        setTimeout(function() {
-                            if (!hasRedirected) {
-                                triggerRedirect(capturedLat, capturedLng, capturedAccuracy);
-                            }
-                        }, 7000);
-                    }
-                } else {
-                    if (countdownEl) countdownEl.textContent = countdownSeconds;
+
+            // =====================================================
+            // HEADERS
+            // =====================================================
+
+            const fetchHeaders = {
+
+                "X-Browser-Latitude":
+                    String(lat),
+
+                "X-Browser-Longitude":
+                    String(lng),
+
+                "Accept":
+                    "application/json",
+
+                "X-Requested-With":
+                    "XMLHttpRequest"
+            };
+
+
+            if (accuracy != null) {
+
+                fetchHeaders[
+                    "X-Browser-Accuracy"
+                    ] =
+                    String(accuracy);
+
+
+                fetchHeaders[
+                    "X-Browser-GeoCoords"
+                    ] =
+                    lat +
+                    "," +
+                    lng +
+                    "," +
+                    accuracy;
+            }
+
+
+            // =====================================================
+            // SERVER REQUEST
+            // =====================================================
+
+            fetch(
+                window.location.href,
+                {
+                    method: "GET",
+
+                    headers: fetchHeaders,
+
+                    credentials: "same-origin"
                 }
-            }, 1000);
+            )
+                .then(function (response) {
 
-        })();
-    </script>
+                    if (!response.ok) {
+
+                        throw new Error(
+                            "HTTP " +
+                            response.status
+                        );
+                    }
+
+
+                    return response
+                        .json()
+                        .catch(function () {
+
+                            return null;
+                        });
+                })
+                .then(function (data) {
+
+                    if (
+                        data &&
+                        data.redirectUrl
+                    ) {
+
+                        window.location.replace(
+                            data.redirectUrl
+                        );
+
+                    } else {
+
+                        window.location.replace(
+                            fallbackUrl
+                        );
+                    }
+                })
+                .catch(function (error) {
+
+                    console.error(
+                        "Location redirect request failed:",
+                        error
+                    );
+
+
+                    // Location WAS already obtained,
+                    // so fallback redirect is safe.
+
+                    window.location.replace(
+                        fallbackUrl
+                    );
+                });
+        }
+
+
+        // =========================================================
+        // REQUEST LOCATION
+        // =========================================================
+
+        function requestLocation() {
+
+            showWaiting();
+
+
+            console.log(
+                "Geolocation supported:",
+                !!navigator.geolocation
+            );
+
+
+            console.log(
+                "Secure context:",
+                window.isSecureContext
+            );
+
+
+            console.log(
+                "Origin:",
+                window.location.origin
+            );
+
+
+            // =====================================================
+            // HTTPS CHECK
+            // =====================================================
+
+            if (!window.isSecureContext) {
+
+                const error = {
+                    code: 1,
+                    message:
+                        "Only secure origins are allowed"
+                };
+
+
+                showError(error);
+
+                return;
+            }
+
+
+            // =====================================================
+            // GEOLOCATION SUPPORT
+            // =====================================================
+
+            if (!navigator.geolocation) {
+
+                showError({
+                    code: 2,
+                    message:
+                        "Geolocation is not supported"
+                });
+
+                return;
+            }
+
+
+            // =====================================================
+            // REQUEST
+            // =====================================================
+
+            navigator.geolocation.getCurrentPosition(
+
+                function (position) {
+
+                    console.log(
+                        "LOCATION SUCCESS:",
+                        position
+                    );
+
+
+                    capturedLat =
+                        position.coords.latitude;
+
+
+                    capturedLng =
+                        position.coords.longitude;
+
+
+                    capturedAccuracy =
+                        position.coords.accuracy;
+
+
+                    console.log(
+                        "Latitude:",
+                        capturedLat
+                    );
+
+
+                    console.log(
+                        "Longitude:",
+                        capturedLng
+                    );
+
+
+                    console.log(
+                        "Accuracy:",
+                        capturedAccuracy
+                    );
+
+
+                    triggerRedirect(
+                        capturedLat,
+                        capturedLng,
+                        capturedAccuracy
+                    );
+                },
+
+
+                function (error) {
+
+                    console.error(
+                        "GEOLOCATION ERROR",
+                        "code =",
+                        error.code,
+                        "message =",
+                        error.message
+                    );
+
+
+                    // IMPORTANT:
+                    // Never redirect on error.
+
+                    hasRedirected = false;
+
+                    showError(error);
+                },
+
+
+                {
+                    enableHighAccuracy: true,
+
+                    timeout: 15000,
+
+                    maximumAge: 0
+                }
+            );
+        }
+
+
+        // =========================================================
+        // RETRY
+        // =========================================================
+
+        retryBtn.addEventListener(
+            "click",
+            function () {
+
+                retryBtn.disabled = true;
+
+                retryBtn.textContent =
+                    "Requesting location...";
+
+
+                setTimeout(
+                    function () {
+
+                        retryBtn.disabled =
+                            false;
+
+                        retryBtn.textContent =
+                            "Allow location and try again";
+
+                    },
+                    1000
+                );
+
+
+                requestLocation();
+            }
+        );
+
+
+        // =========================================================
+        // INITIAL REQUEST
+        // =========================================================
+
+        requestLocation();
+
+    })();
+
+</script>
+
 </body>
 
 </html>
