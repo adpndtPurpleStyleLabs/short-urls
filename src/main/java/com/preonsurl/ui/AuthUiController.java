@@ -41,6 +41,12 @@ public class AuthUiController {
     @GetMapping("/register")
     public String showRegisterPage(Model model) {return "register";}
 
+    @GetMapping("/terms")
+    public String showtermsPage(Model model) {return "terms";}
+
+    @GetMapping("/privacy")
+    public String showPrivacyPage(Model model) {return "privacy";}
+
     @GetMapping("/features")
     public String showfeaturesPage(Model model) {return "feature";}
 

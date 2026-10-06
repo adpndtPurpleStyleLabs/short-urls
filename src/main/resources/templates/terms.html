@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <th:block th:replace="~{fragments/seo :: seo(
+    title='Terms of Service — SURLS.me',
+    description='Read the SURLS.me Terms of Service covering accounts, secure links, files, acceptable use, subscriptions, intellectual property, availability, liability, and termination.',
+    canonical='https://surls.me/terms',
+    robots='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    ogType='website',
+    ogImage='https://adpndt.sirv.com/Images/logo_full_black.png'
+  )}"></th:block>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#fff;--surface:#fafafa;--surface-2:#f4f4f4;--text:#111;--muted:#6b6b6b;--line:#e8e8e8;--line-dark:#d7d7d7;--accent:#111;--max:1180px;--radius:18px;--shadow:0 18px 60px rgba(0,0,0,.07)}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:"Manrope",sans-serif;font-weight:500;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}
+    .container{width:min(calc(100% - 40px),var(--max));margin:auto}
+    .nav{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;position:sticky;top:0;background:rgba(255,255,255,.9);backdrop-filter:blur(18px);z-index:20}
+    .nav-inner{width:100%;height:100%;padding:0 60px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:24px}
+    .brand{justify-self:start;display:flex;align-items:center;flex-shrink:0}.brand-logo{display:block;width:145px;height:auto;max-height:50px;object-fit:contain}
+    .navlinks{justify-self:center;display:flex;align-items:center;gap:28px;color:#555;font-size:14px;white-space:nowrap}.navlinks a:hover{color:#111}
+    .nav-actions{justify-self:end;display:flex;align-items:center;gap:10px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 17px;border:1px solid var(--line-dark);border-radius:10px;font-size:14px;font-weight:650;cursor:pointer;transition:.2s ease;background:#fff}.btn:hover{transform:translateY(-1px);border-color:#aaa}.btn.primary{background:#111;color:#fff;border-color:#111}.btn.primary:hover{background:#252525}
+    .btn.to-console-btn{border-radius:10px;padding:0 18px;background:#111;color:#fff;font-weight:650;letter-spacing:-.01em;box-shadow:0 2px 8px rgba(0,0,0,.08);display:inline-flex;align-items:center;gap:6px;text-decoration:none}.btn.to-console-btn:hover{background:#252525;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.16)}
+    .free-banner{border-bottom:1px solid var(--line);background:#fafafa;font-size:12px}.free-banner-inner{min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:20px}.free-banner a{font-weight:700}.free-banner a:hover{text-decoration:underline}.free-banner-copy{color:#777;margin-left:6px}
+    .ambient-grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(0,0,0,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.03) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(circle at center,black 40%,transparent 80%);mask-image:radial-gradient(circle at center,black 40%,transparent 80%);z-index:0}
+    main,footer{position:relative;z-index:1}
+    .legal-hero{padding:82px 0 54px;border-bottom:1px solid var(--line)}.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:#555;font-size:12px;font-weight:650;margin-bottom:22px}.dot{width:6px;height:6px;background:#111;border-radius:50%}
+    .legal-hero h1{margin:0;max-width:900px;font-size:clamp(48px,7vw,82px);line-height:.98;letter-spacing:-.065em;font-weight:760}.legal-hero p{max-width:720px;margin:24px 0 0;color:var(--muted);font-size:18px;line-height:1.65}.updated{margin-top:20px;color:#888;font-size:12px}
+    .legal-layout{display:grid;grid-template-columns:240px minmax(0,760px);gap:80px;padding:72px 0 110px;align-items:start}.legal-nav{position:sticky;top:105px;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:18px}.legal-nav strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}.legal-nav a{display:block;padding:8px 0;color:#666;font-size:13px}.legal-nav a:hover{color:#111}.legal-nav a.active{color:#111;font-weight:800}.legal-nav a.active::before{content:"";display:inline-block;width:4px;height:4px;background:#111;border-radius:50%;margin:0 7px 2px 0}.legal-content h2{font-size:28px;line-height:1.2;letter-spacing:-.035em;margin:0 0 14px;font-weight:760}.legal-content h3{font-size:18px;line-height:1.35;margin:28px 0 10px;font-weight:700}.legal-content p,.legal-content li{font-size:15px;line-height:1.8;color:#444}.legal-content p{margin:0 0 18px}.legal-content ul{margin:8px 0 24px;padding-left:22px}.legal-content li{margin:7px 0}.legal-section{padding-top:8px;margin-bottom:52px}.legal-section + .legal-section{border-top:1px solid var(--line);padding-top:48px}.callout{border:1px solid var(--line-dark);border-radius:16px;background:var(--surface);padding:22px;margin:24px 0}.callout strong{display:block;margin-bottom:6px;font-size:14px}.callout p{margin:0;font-size:14px}.footer{border-top:1px solid var(--line);padding:35px 0;background:#fff}.footer-inner{display:flex;justify-content:space-between;gap:30px;align-items:center;color:#777;font-size:12px}.footer-links{display:flex;gap:20px}.footer-links a:hover{color:#111}
+    @media(max-width:900px){.navlinks{display:none}.legal-layout{grid-template-columns:1fr;gap:35px}.legal-nav{position:static}.legal-nav a{display:inline-block;margin-right:18px}}
+    @media(max-width:620px){.container{width:min(calc(100% - 28px),var(--max))}.nav{height:64px}.nav-inner{padding:0 14px;gap:12px}.brand-logo{width:125px;max-height:34px}.nav-actions .btn:not(.primary){display:none}.free-banner-copy{display:none}.free-banner-inner{min-height:36px}.legal-hero{padding:65px 0 45px}.legal-hero h1{font-size:clamp(40px,14vw,62px)}.legal-hero p{font-size:16px}.legal-layout{padding:52px 0 80px}.legal-content h2{font-size:24px}.legal-content p,.legal-content li{font-size:14px;line-height:1.75}.footer-inner{flex-direction:column;align-items:flex-start}.footer-links{flex-wrap:wrap;gap:14px}}
+  </style>
+</head>
+<body>
+<div class="ambient-grid" aria-hidden="true"></div>
+<div class="free-banner" role="note"><div class="container free-banner-inner"><span><strong>Always Free</strong><span class="free-banner-copy">1 million redirects + default domain included.</span></span><a href="/register">Sign up now <span aria-hidden="true">→</span></a></div></div>
+<header th:replace="~{fragment/header :: header}"></header>
+<main>
+  <section class="legal-hero">
+    <div class="container">
+      <div class="eyebrow"><span class="dot"></span> Terms of Service</div>
+      <h1>Rules for using SURLS.me.</h1>
+      <p>These Terms of Service explain the rules that apply when you access or use SURLS.me, including our link shortening, secure-link, file-link, analytics, API, and related services.</p>
+      <div class="updated">Effective date: October 6, 2026</div>
+    </div>
+  </section>
+
+  <section class="container legal-layout">
+    <aside class="legal-nav" aria-label="Terms navigation">
+      <strong>On this page</strong>
+      <a href="#acceptance">Acceptance</a><a href="#accounts">Accounts</a><a href="#service">Service</a><a href="#content">Content</a><a href="#acceptable-use">Acceptable use</a><a href="#security">Security</a><a href="#payments">Plans & payments</a><a href="#ip">Intellectual property</a><a href="#availability">Availability</a><a href="#termination">Termination</a><a href="#liability">Liability</a><a href="#contact">Contact</a>
+    </aside>
+
+    <article class="legal-content">
+      <section class="legal-section" id="acceptance">
+        <h2>1. Acceptance of these Terms</h2>
+        <p>By accessing or using SURLS.me, you agree to these Terms of Service and our Privacy Policy. If you use SURLS.me on behalf of a company, organization, or another person, you represent that you have authority to bind that party to these Terms.</p>
+        <p>If you do not agree with these Terms, do not access or use the service.</p>
+      </section>
+
+      <section class="legal-section" id="accounts">
+        <h2>2. Accounts and responsibilities</h2>
+        <p>Some SURLS.me features require an account. You are responsible for providing accurate information, maintaining the confidentiality of your credentials, and all activity performed through your account.</p>
+        <ul><li>You must keep your login credentials secure and notify us if you believe your account has been compromised.</li><li>You may not create an account using false identity information or impersonate another person or organization.</li><li>You are responsible for ensuring that your use of SURLS.me complies with applicable laws and regulations.</li><li>Where your organization controls an account or workspace, the organization may be responsible for activity performed through it.</li></ul>
+      </section>
+
+      <section class="legal-section" id="service">
+        <h2>3. The SURLS.me service</h2>
+        <p>SURLS.me provides infrastructure for creating, managing, securing, redirecting, delivering, and analyzing links. Depending on your plan and configuration, this may include short URLs, custom domains, expiration, usage limits, password or PIN protection, OTP protection, country or IP restrictions, device and referrer controls, analytics, APIs, and links that point to webpages or files.</p>
+        <p>Features, limits, supported integrations, and availability may change as the service evolves. We may introduce new features, modify existing features, or discontinue features when reasonably necessary.</p>
+      </section>
+
+      <section class="legal-section" id="content">
+        <h2>4. Your content and links</h2>
+        <p>You retain ownership of content you submit to SURLS.me, including destination URLs, files, metadata, branding, and other materials you provide, subject to the rights necessary for us to operate the service.</p>
+        <p>You grant SURLS.me a limited, non-exclusive, worldwide license to host, process, transmit, cache, display, and otherwise handle your content solely as necessary to provide, secure, maintain, and improve the service.</p>
+        <div class="callout"><strong>You are responsible for your destinations.</strong><p>A shortened or protected link does not transfer responsibility for the destination to SURLS.me. You must have the rights and permissions necessary to use, distribute, or link to the content you submit.</p></div>
+      </section>
+
+      <section class="legal-section" id="acceptable-use">
+        <h2>5. Acceptable use</h2>
+        <p>You may not use SURLS.me to create, distribute, facilitate, or conceal activity that violates applicable law or infringes the rights of others.</p>
+        <p>Prohibited uses include, without limitation:</p>
+        <ul><li>phishing, credential theft, malware distribution, ransomware, malicious code, or other harmful activity;</li><li>fraud, scams, impersonation, deceptive schemes, or unauthorized financial activity;</li><li>distribution of content that unlawfully infringes intellectual property, privacy, publicity, or other rights;</li><li>unlawful harassment, threats, exploitation, or abuse;</li><li>attempts to bypass security controls, access accounts or systems without authorization, or interfere with the service;</li><li>mass abuse, spam, automated activity intended to evade limits, or use that materially harms service availability or other customers; and</li><li>any other use prohibited by applicable law.</li></ul>
+        <p>We may restrict, suspend, or remove links, files, domains, or accounts when we reasonably believe they violate these Terms, applicable law, or the security of the service or its users.</p>
+      </section>
+
+      <section class="legal-section" id="security">
+        <h2>6. Security and access controls</h2>
+        <p>SURLS.me provides security controls such as passwords, PINs, OTPs, expiration, usage limits, and access restrictions. These controls reduce risk but do not guarantee that a link, destination, file, account, or credential can never be accessed, copied, intercepted, or misused.</p>
+        <p>You are responsible for choosing appropriate security settings and protecting any credentials, secrets, API keys, or access codes associated with your account and links.</p>
+      </section>
+
+      <section class="legal-section" id="payments">
+        <h2>7. Plans, usage limits, and payments</h2>
+        <p>SURLS.me may offer free and paid plans. Plan limits, included usage, features, pricing, billing periods, and overage rules are described on the applicable pricing or order page.</p>
+        <p>Paid services must be paid when due. Unless required by applicable law or expressly stated otherwise, fees already paid are non-refundable. Taxes, duties, or similar charges may apply based on your location and applicable law.</p>
+        <p>We may change pricing for future billing periods with reasonable notice. Continued use of a paid service after a pricing change takes effect constitutes acceptance of the new price, subject to applicable law.</p>
+      </section>
+
+      <section class="legal-section" id="ip">
+        <h2>8. Intellectual property</h2>
+        <p>SURLS.me and its software, interfaces, branding, designs, documentation, and underlying technology are owned by or licensed to the service operator and are protected by applicable intellectual-property laws.</p>
+        <p>Except as expressly permitted by these Terms, you may not copy, modify, reverse engineer, decompile, sell, sublicense, distribute, or create derivative works from the service or its proprietary components.</p>
+        <p>You may use SURLS.me branding and generated links only in accordance with the service's published features and any applicable brand guidelines.</p>
+      </section>
+
+      <section class="legal-section" id="availability">
+        <h2>9. Availability and changes</h2>
+        <p>We aim to provide a reliable service, but SURLS.me is provided over networks and infrastructure that can experience outages, maintenance, congestion, attacks, provider failures, or other events outside our reasonable control.</p>
+        <p>We do not promise that the service will be uninterrupted, error-free, or available at every location or at every time. We may perform maintenance or make changes that temporarily affect availability.</p>
+      </section>
+
+      <section class="legal-section" id="termination">
+        <h2>10. Suspension and termination</h2>
+        <p>You may stop using SURLS.me at any time. We may suspend or terminate access when reasonably necessary to protect the service, users, third parties, or our legal rights, including where there is a violation of these Terms, suspected abuse, security risk, non-payment, or a legal requirement.</p>
+        <p>After termination, access to your account, links, files, analytics, or other data may no longer be available. You are responsible for maintaining appropriate copies of information you need before terminating your account.</p>
+      </section>
+
+      <section class="legal-section" id="liability">
+        <h2>11. Disclaimers and limitation of liability</h2>
+        <p>To the maximum extent permitted by applicable law, SURLS.me is provided on an “as is” and “as available” basis without warranties of any kind, whether express, implied, or statutory, including implied warranties of merchantability, fitness for a particular purpose, title, and non-infringement.</p>
+        <p>To the maximum extent permitted by applicable law, SURLS.me and its operators, affiliates, suppliers, and service providers will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for loss of profits, revenue, data, goodwill, or business opportunities arising from or related to your use of the service.</p>
+        <p>Where liability cannot legally be excluded, it will be limited to the maximum extent permitted by applicable law. Nothing in these Terms excludes liability that cannot lawfully be excluded or limited.</p>
+      </section>
+
+      <section class="legal-section" id="indemnity">
+        <h2>12. Indemnification</h2>
+        <p>To the extent permitted by applicable law, you agree to defend, indemnify, and hold harmless SURLS.me and its operators, affiliates, suppliers, and service providers from claims, liabilities, damages, losses, and reasonable expenses arising from your unlawful use of the service, your violation of these Terms, or your infringement of another person's rights.</p>
+      </section>
+
+      <section class="legal-section" id="changes">
+        <h2>13. Changes to these Terms</h2>
+        <p>We may update these Terms from time to time. When changes are material, we will take reasonable steps to provide notice through the service or another appropriate channel. The updated Terms become effective on the stated effective date. Your continued use of SURLS.me after that date means you accept the updated Terms, to the extent permitted by law.</p>
+      </section>
+
+      <section class="legal-section" id="contact">
+        <h2>14. Contact</h2>
+        <p>If you have questions about these Terms, please contact us through the <a href="/contact" style="text-decoration:underline;text-underline-offset:3px">SURLS.me contact page</a>.</p>
+      </section>
+    </article>
+  </section>
+</main>
+<footer class="footer"><div class="container footer-inner"><div>© 2026 SecureURLs.me. Secure link infrastructure.</div><div class="footer-links"><a href="/faq">FAQ</a><a href="/api-documentation">API docs</a><a href="/status">Status</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div></div></footer>
+
+<script>
+  (function () {
+    const links = Array.from(document.querySelectorAll('.legal-nav a[href^="#"]'));
+    const sections = links.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+    if (!links.length || !sections.length) return;
+
+    function setActive(id) {
+      links.forEach(link => link.classList.toggle('active', link.getAttribute('href') === '#' + id));
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+              .filter(entry => entry.isIntersecting)
+              .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible.length) setActive(visible[0].target.id);
+    }, {
+      root: null,
+      rootMargin: '-115px 0px -65% 0px',
+      threshold: 0
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    links.forEach(link => {
+      link.addEventListener('click', () => setActive(link.getAttribute('href').substring(1)));
+    });
+
+    setActive(sections[0].id);
+  })();
+</script>
+</body>
+</html>

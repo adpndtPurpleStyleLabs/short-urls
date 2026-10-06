@@ -73,6 +73,8 @@ public class SecurityConfig {
                                 "/contact",
                                 "/status",
                                 "/uptime",
+                                "/privacy",
+                                "/terms",
                                 "/uptime/**",
                                 "/api/contact/**",
                                 "/create",

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <th:block th:replace="~{fragments/seo :: seo(
+    title='Privacy Policy — SURLS.me',
+    description='Read the SURLS.me Privacy Policy covering account information, link and usage data, cookies, security, retention, sharing, rights, and contact information.',
+    canonical='https://surls.me/privacy',
+    robots='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    ogType='website',
+    ogImage='https://adpndt.sirv.com/Images/logo_full_black.png'
+  )}"></th:block>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#fff;--surface:#fafafa;--surface-2:#f4f4f4;--text:#111;--muted:#6b6b6b;--line:#e8e8e8;--line-dark:#d7d7d7;--accent:#111;--max:1180px;--radius:18px;--shadow:0 18px 60px rgba(0,0,0,.07)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"Manrope",sans-serif;font-weight:500;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.container{width:min(calc(100% - 40px),var(--max));margin:auto}
+    .nav{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;position:sticky;top:0;background:rgba(255,255,255,.9);backdrop-filter:blur(18px);z-index:20}.nav-inner{width:100%;height:100%;padding:0 60px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:24px}.brand{justify-self:start;display:flex;align-items:center;flex-shrink:0}.brand-logo{display:block;width:145px;height:auto;max-height:50px;object-fit:contain}.navlinks{justify-self:center;display:flex;align-items:center;gap:28px;color:#555;font-size:14px;white-space:nowrap}.navlinks a:hover{color:#111}.nav-actions{justify-self:end;display:flex;align-items:center;gap:10px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 17px;border:1px solid var(--line-dark);border-radius:10px;font-size:14px;font-weight:650;cursor:pointer;transition:.2s ease;background:#fff}.btn:hover{transform:translateY(-1px);border-color:#aaa}.btn.primary{background:#111;color:#fff;border-color:#111}.btn.primary:hover{background:#252525}.btn.to-console-btn{border-radius:10px;padding:0 18px;background:#111;color:#fff;font-weight:650;letter-spacing:-.01em;box-shadow:0 2px 8px rgba(0,0,0,.08);display:inline-flex;align-items:center;gap:6px}.btn.to-console-btn:hover{background:#252525;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.16)}
+    .free-banner{border-bottom:1px solid var(--line);background:#fafafa;font-size:12px}.free-banner-inner{min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:20px}.free-banner a{font-weight:700}.free-banner a:hover{text-decoration:underline}.free-banner-copy{color:#777;margin-left:6px}.ambient-grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(0,0,0,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.03) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(circle at center,black 40%,transparent 80%);mask-image:radial-gradient(circle at center,black 40%,transparent 80%);z-index:0}main,footer{position:relative;z-index:1}
+    .legal-hero{padding:82px 0 54px;border-bottom:1px solid var(--line)}.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:#555;font-size:12px;font-weight:650;margin-bottom:22px}.dot{width:6px;height:6px;background:#111;border-radius:50%}.legal-hero h1{margin:0;max-width:900px;font-size:clamp(48px,7vw,82px);line-height:.98;letter-spacing:-.065em;font-weight:760}.legal-hero p{max-width:720px;margin:24px 0 0;color:var(--muted);font-size:18px;line-height:1.65}.updated{margin-top:20px;color:#888;font-size:12px}
+    .legal-layout{display:grid;grid-template-columns:240px minmax(0,760px);gap:80px;padding:72px 0 110px;align-items:start}.legal-nav{position:sticky;top:105px;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:18px}.legal-nav strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}.legal-nav a{display:block;padding:8px 0;color:#666;font-size:13px}.legal-nav a:hover{color:#111}.legal-content h2{font-size:28px;line-height:1.2;letter-spacing:-.035em;margin:0 0 14px;font-weight:760}.legal-content h3{font-size:18px;line-height:1.35;margin:28px 0 10px;font-weight:700}.legal-content p,.legal-content li{font-size:15px;line-height:1.8;color:#444}.legal-content p{margin:0 0 18px}.legal-content ul{margin:8px 0 24px;padding-left:22px}.legal-content li{margin:7px 0}.legal-section{padding-top:8px;margin-bottom:52px}.legal-section + .legal-section{border-top:1px solid var(--line);padding-top:48px}.callout{border:1px solid var(--line-dark);border-radius:16px;background:var(--surface);padding:22px;margin:24px 0}.callout strong{display:block;margin-bottom:6px;font-size:14px}.callout p{margin:0;font-size:14px}.footer{border-top:1px solid var(--line);padding:35px 0;background:#fff}.footer-inner{display:flex;justify-content:space-between;gap:30px;align-items:center;color:#777;font-size:12px}.footer-links{display:flex;gap:20px}.footer-links a:hover{color:#111}
+    @media(max-width:900px){.navlinks{display:none}.legal-layout{grid-template-columns:1fr;gap:35px}.legal-nav{position:static}.legal-nav a{display:inline-block;margin-right:18px}}@media(max-width:620px){.container{width:min(calc(100% - 28px),var(--max))}.nav{height:64px}.nav-inner{padding:0 14px;gap:12px}.brand-logo{width:125px;max-height:34px}.nav-actions .btn:not(.primary){display:none}.free-banner-copy{display:none}.free-banner-inner{min-height:36px}.legal-hero{padding:65px 0 45px}.legal-hero h1{font-size:clamp(40px,14vw,62px)}.legal-hero p{font-size:16px}.legal-layout{padding:52px 0 80px}.legal-content h2{font-size:24px}.legal-content p,.legal-content li{font-size:14px;line-height:1.75}.footer-inner{flex-direction:column;align-items:flex-start}.footer-links{flex-wrap:wrap;gap:14px}}
+
+    .legal-nav a{position:relative;transition:color .2s ease,font-weight .2s ease,padding-left .2s ease}
+    .legal-nav a.active{color:#111;font-weight:800;padding-left:12px}
+    .legal-nav a.active::before{content:"";position:absolute;left:0;top:50%;width:4px;height:18px;border-radius:999px;background:#111;transform:translateY(-50%)}
+  </style>
+</head>
+<body>
+<div class="ambient-grid" aria-hidden="true"></div>
+<div class="free-banner" role="note"><div class="container free-banner-inner"><span><strong>Always Free</strong><span class="free-banner-copy">1 million redirects + default domain included.</span></span><a href="/register">Sign up now <span aria-hidden="true">→</span></a></div></div>
+<header th:replace="~{fragment/header :: header}"></header>
+<main>
+  <section class="legal-hero">
+    <div class="container">
+      <div class="eyebrow"><span class="dot"></span> Privacy Policy</div>
+      <h1>Privacy without the mystery.</h1>
+      <p>This Privacy Policy explains what information SURLS.me may collect, why we use it, how we protect it, when it may be shared, and the choices available to you.</p>
+      <div class="updated">Effective date: October 6, 2026</div>
+    </div>
+  </section>
+
+  <section class="container legal-layout">
+    <aside class="legal-nav" aria-label="Privacy navigation">
+      <strong>On this page</strong>
+      <a href="#scope">Scope</a><a href="#collect">Information</a><a href="#use">How we use it</a><a href="#links">Links & analytics</a><a href="#cookies">Cookies</a><a href="#sharing">Sharing</a><a href="#retention">Retention</a><a href="#security">Security</a><a href="#rights">Your rights</a><a href="#children">Children</a><a href="#changes">Changes</a><a href="#contact">Contact</a>
+    </aside>
+
+    <article class="legal-content">
+      <section class="legal-section" id="scope"><h2>1. Scope</h2><p>This Privacy Policy applies to SURLS.me websites, applications, APIs, link infrastructure, and related services that link to or reference this Policy. It describes how information is handled when you visit our website, create or use an account, create or access links, use our APIs, or otherwise interact with the service.</p><p>SURLS.me is designed to provide secure link infrastructure. Some customers may use the service to process links or files on behalf of their own users. In those situations, the customer may have additional privacy responsibilities for the data they control.</p></section>
+
+      <section class="legal-section" id="collect"><h2>2. Information we may collect</h2><h3>Account information</h3><p>When you create an account, we may collect information such as your name, email address, authentication information, organization or workspace information, and account preferences.</p><h3>Link and service data</h3><p>Depending on the features you use, we may process destination URLs, short codes, custom domains, link settings, expiration times, usage limits, access-control settings, files or file references, API configuration, and other information needed to provide the service.</p><h3>Usage and technical information</h3><p>We may collect technical information associated with requests and service usage, such as IP address, browser or user-agent information, device information, timestamps, referring URL, approximate geographic information, request status, and security events. The exact information collected depends on the feature and configuration involved.</p><h3>Payment information</h3><p>If you purchase a paid service, payment information may be processed by our payment providers. We may receive transaction identifiers, billing status, plan information, and limited billing details needed to manage your account, but payment-card information may be handled directly by the payment provider.</p></section>
+
+      <section class="legal-section" id="use"><h2>3. How we use information</h2><p>We may use information to:</p><ul><li>create and administer accounts;</li><li>create, redirect, protect, deliver, and analyze links;</li><li>provide requested webpages, files, APIs, analytics, and other features;</li><li>authenticate users and enforce passwords, PINs, OTPs, expiration, usage limits, and access rules;</li><li>detect fraud, abuse, malicious activity, security incidents, and violations of our Terms;</li><li>operate, maintain, troubleshoot, monitor, and improve the service;</li><li>process payments and manage subscriptions;</li><li>communicate with you about service operation, security, support, and material changes; and</li><li>comply with applicable legal obligations and respond to lawful requests.</li></ul></section>
+
+      <section class="legal-section" id="links"><h2>4. Link access, analytics, and security data</h2><p>SURLS.me may process request information when someone opens a link. Depending on the link configuration and enabled analytics, this can include timestamp, IP address, user-agent or device information, referrer, approximate location, country, access result, and other technical request data.</p><p>These signals can be used to provide analytics and to enforce security controls such as country restrictions, IP restrictions, device rules, referrer rules, expiration, and usage limits.</p><div class="callout"><strong>Security controls are part of the service.</strong><p>If you create a protected link, information required to enforce that protection may necessarily be processed. For example, an OTP or password-protected request must be evaluated before access can be granted.</p></div></section>
+
+      <section class="legal-section" id="cookies"><h2>5. Cookies and similar technologies</h2><p>SURLS.me may use cookies, local storage, and similar technologies to keep the service working, maintain sessions, remember preferences, protect against abuse, and understand service usage.</p><p>Some cookies may be essential to authentication or security and cannot be disabled without affecting functionality. Where non-essential cookies or similar technologies are used, applicable consent or preference mechanisms may be provided based on your location and legal requirements.</p></section>
+
+      <section class="legal-section" id="sharing"><h2>6. When information may be shared</h2><p>We do not sell personal information to third parties as a business model. We may share information in the following circumstances:</p><ul><li><strong>Service providers:</strong> with vendors that provide infrastructure, hosting, storage, analytics, email, payments, security, monitoring, or other services necessary to operate SURLS.me.</li><li><strong>Customer-directed processing:</strong> where a customer uses SURLS.me to process data or links for its own users, as necessary to provide that customer's configured service.</li><li><strong>Legal and safety reasons:</strong> when reasonably necessary to comply with law, legal process, enforce our Terms, investigate abuse, protect users, or protect the rights, safety, and security of SURLS.me.</li><li><strong>Business transfers:</strong> in connection with a merger, acquisition, financing, reorganization, sale of assets, or similar transaction, subject to applicable law.</li><li><strong>With your direction:</strong> when you ask or authorize us to share information.</li></ul></section>
+
+      <section class="legal-section" id="retention"><h2>7. Data retention and deletion</h2><p>We retain information for as long as reasonably necessary to provide the service, maintain security, meet contractual and legal obligations, resolve disputes, and enforce our agreements. Retention periods vary depending on the type of information and how the service is used.</p><p>When information is no longer required, we may delete it, anonymize it, or securely isolate it according to our operational and legal requirements. Cached, backup, logging, or security records may persist for a limited period after primary deletion where technically or legally necessary.</p></section>
+
+      <section class="legal-section" id="security"><h2>8. Security</h2><p>We use reasonable technical and organizational measures designed to protect information against unauthorized access, loss, misuse, alteration, and disclosure. These measures may include access controls, encryption where appropriate, logging, monitoring, infrastructure security, and secure development practices.</p><p>No internet service can guarantee absolute security. You are responsible for protecting your account credentials, API keys, passwords, PINs, OTPs, and other secrets you control.</p></section>
+
+      <section class="legal-section" id="rights"><h2>9. Your privacy rights and choices</h2><p>Depending on where you live and subject to applicable law, you may have rights to request access to, correction of, deletion of, restriction of, or portability of certain personal information, or to object to or withdraw consent for certain processing.</p><p>You may also have the right to lodge a complaint with a relevant data-protection or privacy authority. We may need to verify your identity before completing a request and may retain information where required or permitted by law.</p><p>To make a privacy request, contact us through the <a href="/contact" style="text-decoration:underline;text-underline-offset:3px">SURLS.me contact page</a>.</p></section>
+
+      <section class="legal-section" id="children"><h2>10. Children's privacy</h2><p>SURLS.me is not directed to children who are below the minimum age required to use the service under applicable law. We do not knowingly seek to collect personal information from children who are not permitted to use the service. If you believe a child has provided personal information to us improperly, please contact us so we can review and take appropriate action.</p></section>
+
+      <section class="legal-section" id="international"><h2>11. International processing</h2><p>SURLS.me and its service providers may process information in countries other than the country where you live. Where required by applicable law, we use appropriate safeguards for international transfers of personal information.</p></section>
+
+      <section class="legal-section" id="changes"><h2>12. Changes to this Privacy Policy</h2><p>We may update this Privacy Policy as our service, technology, or legal obligations change. If we make material changes, we will take reasonable steps to provide notice through the service or another appropriate channel. The updated Policy will be effective on the date stated at the top of the page.</p></section>
+
+      <section class="legal-section" id="contact"><h2>13. Contact</h2><p>If you have a privacy question, want to exercise a privacy right, or believe your information has been handled improperly, please contact us through the <a href="/contact" style="text-decoration:underline;text-underline-offset:3px">SURLS.me contact page</a>.</p></section>
+    </article>
+  </section>
+</main>
+<footer class="footer"><div class="container footer-inner"><div>© 2026 SecureURLs.me. Secure link infrastructure.</div><div class="footer-links"><a href="/faq">FAQ</a><a href="/api-documentation">API docs</a><a href="/status">Status</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div></div></footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const links = Array.from(document.querySelectorAll(".legal-nav a"));
+    const sections = links
+            .map(link => document.querySelector(link.getAttribute("href")))
+            .filter(Boolean);
+
+    const setActive = (id) => {
+      links.forEach(link => {
+        const active = link.getAttribute("href") === `#${id}`;
+        link.classList.toggle("active", active);
+        link.setAttribute("aria-current", active ? "location" : "false");
+      });
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+              .filter(entry => entry.isIntersecting)
+              .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+      if (visible.length) setActive(visible[0].target.id);
+    }, {
+      rootMargin: "-120px 0px -55% 0px",
+      threshold: [0, 0.15, 0.35, 0.6]
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    const initial = sections.find(section => {
+      const rect = section.getBoundingClientRect();
+      return rect.top >= 0 && rect.top < window.innerHeight * 0.55;
+    });
+    if (initial) setActive(initial.id);
+  });
+</script>
+</body>
+</html>
