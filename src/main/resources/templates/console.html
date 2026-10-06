@@ -15985,20 +15985,6 @@
                     <div class="link-item-main">
                         <div class="link-item-title-row">
                             <span class="link-short-url" title="${escapeAttribute(displayShortUrl)}">${escapeHtml(displayShortUrl)}</span>
-                            <button type="button" class="btn-copy-short-url" data-url="${escapeAttribute(fullShortUrl)}" title="Copy short link">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                </svg>
-                            </button>
-                            <button type="button" class="btn-copy-short-url btn-qr-action" data-public-id="${escapeAttribute(publicId)}" data-url="${escapeAttribute(fullShortUrl)}" title="View QR Code">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                                </svg>
-                            </button>
                         </div>
                         <div class="link-dest-url" title="${escapeAttribute(originalUrl)}">
                             ${escapeHtml(originalUrl)}
@@ -16117,7 +16103,7 @@
             // Click row to view analytics
             container.querySelectorAll(".link-item-row").forEach(row => {
                 row.addEventListener("click", (e) => {
-                    if (e.target.closest(".btn-copy-short-url") || e.target.closest(".btn-qr-action") || e.target.closest(".btn-row-share") || e.target.closest(".link-item-actions") || e.target.closest(".link-tag-pill")) {
+                    if (e.target.closest(".btn-row-share") || e.target.closest(".link-item-actions") || e.target.closest(".link-tag-pill")) {
                         return;
                     }
                     const shortUrl = row.getAttribute("data-short-url");
@@ -16141,35 +16127,6 @@
                     updateTagsFilterUI();
                     renderTagsFilterMenu();
                     renderLinksList();
-                });
-            });
-
-            // Inline copy icon button
-            container.querySelectorAll(".btn-copy-short-url:not(.btn-qr-action)").forEach(btn => {
-                btn.addEventListener("click", async (e) => {
-                    e.stopPropagation();
-                    const url = btn.getAttribute("data-url");
-                    if (url) {
-                        const ok = await copyToClipboard(url);
-                        if (ok) {
-                            showToast("success", "Copied", "Short URL copied to clipboard.");
-                            const origSvg = btn.innerHTML;
-                            btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
-                            setTimeout(() => { btn.innerHTML = origSvg; }, 1500);
-                        } else {
-                            showToast("error", "Copy failed", "Could not copy short URL to clipboard.");
-                        }
-                    }
-                });
-            });
-
-            // Inline QR icon button
-            container.querySelectorAll(".btn-qr-action").forEach(btn => {
-                btn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    const pubId = btn.getAttribute("data-public-id");
-                    const url = btn.getAttribute("data-url");
-                    openQrCodeModal(pubId, url);
                 });
             });
 
