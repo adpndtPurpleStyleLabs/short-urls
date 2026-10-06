@@ -33,6 +33,11 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+import com.preonsurl.apis.audit.enums.AuditAction;
+import com.preonsurl.apis.audit.enums.AuditResourceType;
+import com.preonsurl.apis.audit.event.AuditPublisher;
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Slf4j
 @Service
 public class DataExtractionService {
@@ -42,6 +47,9 @@ public class DataExtractionService {
     private final NewUrlAccessLogRepository accessLogRepository;
     private final ObjectMapper objectMapper;
     private final Path exportStorageDir;
+
+    @Autowired(required = false)
+    private AuditPublisher auditPublisher;
 
     public DataExtractionService(
             DataExtractionJobRepository jobRepository,
@@ -119,6 +127,11 @@ public class DataExtractionService {
         DataExtractionJob saved = jobRepository.save(job);
         log.info("Created data extraction job: id={}, publicId={}, user={}, type={}, format={}",
                 saved.getId(), saved.getPublicId(), userId, saved.getDataType(), saved.getReportType());
+
+        if (auditPublisher != null) {
+            String details = String.format("{\"dataType\":\"%s\",\"reportType\":\"%s\"}", request.dataType(), request.reportType());
+            auditPublisher.publish(userId, null, null, AuditAction.DATA_EXTRACTION_CREATE, AuditResourceType.DATA_EXTRACTION, saved.getPublicId(), details);
+        }
 
         // Process in background asynchronously
         processJobAsync(saved.getId());

@@ -9,6 +9,11 @@ import com.preonsurl.apis.auth.cache.UserCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.preonsurl.apis.audit.enums.AuditAction;
+import com.preonsurl.apis.audit.enums.AuditResourceType;
+import com.preonsurl.apis.audit.event.AuditPublisher;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -25,6 +30,9 @@ public class ApiKeyService {
     private final APIKeyCache apiKeyCache;
     private final UserCache userCache;
     private final SecureRandom secureRandom = new SecureRandom();
+
+    @Autowired(required = false)
+    private AuditPublisher auditPublisher;
 
     public ApiKeyService(
             ApiKeyRepository apiKeyRepository,
@@ -99,7 +107,8 @@ public class ApiKeyService {
 
         // 1. Enforce strictly 1 active key: deactivate and evict any existing active keys for this user
         List<ApiKey> existingActiveKeys = apiKeyRepository.findAllByUserIdAndActiveTrue(userId);
-        if (!existingActiveKeys.isEmpty()) {
+        boolean wasRotated = !existingActiveKeys.isEmpty();
+        if (wasRotated) {
             for (ApiKey oldKey : existingActiveKeys) {
                 oldKey.setActive(false);
                 apiKeyCache.remove(oldKey.getApiKeyHash());
@@ -122,6 +131,18 @@ public class ApiKeyService {
 
         // 3. Put into cache
         apiKeyCache.put(saved);
+
+        if (auditPublisher != null) {
+            User user = userCache.get(userId);
+            if (user == null) {
+                user = userRepository.findById(userId).orElse(null);
+            }
+            String username = user != null ? user.getUsername() : null;
+            Long tenantId = user != null ? user.getTenantId() : null;
+            AuditAction action = wasRotated ? AuditAction.API_KEY_ROTATE : AuditAction.API_KEY_CREATE;
+            String details = wasRotated ? "Rotated API Key: " + saved.getName() : "Created API Key: " + saved.getName();
+            auditPublisher.publish(userId, username, tenantId, action, AuditResourceType.API_KEY, String.valueOf(saved.getId()), details);
+        }
 
         return new CreateApiKeyResponse(
                 saved.getId(),
@@ -151,6 +172,17 @@ public class ApiKeyService {
             apiKeyCache.remove(key.getApiKeyHash());
         }
         apiKeyRepository.saveAll(activeKeys);
+
+        if (auditPublisher != null) {
+            User user = userCache.get(userId);
+            if (user == null) {
+                user = userRepository.findById(userId).orElse(null);
+            }
+            String username = user != null ? user.getUsername() : null;
+            Long tenantId = user != null ? user.getTenantId() : null;
+            auditPublisher.publish(userId, username, tenantId, AuditAction.API_KEY_DELETE, AuditResourceType.API_KEY, null, "Deleted active API key");
+        }
+
         return true;
     }
 
@@ -168,6 +200,15 @@ public class ApiKeyService {
                     key.setActive(false);
                     apiKeyRepository.save(key);
                     apiKeyCache.remove(key.getApiKeyHash());
+                    if (auditPublisher != null) {
+                        User user = userCache.get(userId);
+                        if (user == null) {
+                            user = userRepository.findById(userId).orElse(null);
+                        }
+                        String username = user != null ? user.getUsername() : null;
+                        Long tenantId = user != null ? user.getTenantId() : null;
+                        auditPublisher.publish(userId, username, tenantId, AuditAction.API_KEY_DELETE, AuditResourceType.API_KEY, String.valueOf(key.getId()), "Deleted API key: " + key.getName());
+                    }
                     return true;
                 })
                 .orElse(false);

@@ -3,6 +3,7 @@ package com.preonsurl.apis.domain.service;
 import com.preonsurl.apis.domain.dto.CustomDomainResponse;
 import com.preonsurl.apis.domain.dto.DnsInstructionDto;
 import com.preonsurl.apis.domain.dto.DomainVerificationResponse;
+import com.preonsurl.apis.domain.dto.DomainAvailabilityResponse;
 import com.preonsurl.apis.domain.entity.CustomDomain;
 import com.preonsurl.apis.domain.entity.DomainStatus;
 import com.preonsurl.apis.domain.repository.CustomDomainRepository;
@@ -14,7 +15,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.preonsurl.apis.domain.dto.DomainAvailabilityResponse;
+import com.preonsurl.apis.audit.enums.AuditAction;
+import com.preonsurl.apis.audit.enums.AuditResourceType;
+import com.preonsurl.apis.audit.event.AuditPublisher;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +32,9 @@ public class CustomDomainService {
     private final CustomDomainRepository customDomainRepository;
     private final DnsVerificationService dnsVerificationService;
     private final String defaultServeDomain;
+
+    @Autowired(required = false)
+    private AuditPublisher auditPublisher;
 
     public CustomDomainService(
             CustomDomainRepository customDomainRepository,
@@ -78,6 +86,9 @@ public class CustomDomainService {
         }
 
         CustomDomain saved = customDomainRepository.save(domain);
+        if (auditPublisher != null) {
+            auditPublisher.publish(userId, null, null, AuditAction.DOMAIN_CREATE, AuditResourceType.DOMAIN, String.valueOf(saved.getId()), "Added domain: " + saved.getDomain() + " (status: " + saved.getStatus() + ")");
+        }
         return toResponse(saved, false);
     }
 
@@ -160,6 +171,9 @@ public class CustomDomainService {
             domain.setVerificationError(null);
             customDomainRepository.save(domain);
             log.info("Domain '{}' (ID {}) verified successfully for user {}", domain.getDomain(), domainId, userId);
+            if (auditPublisher != null) {
+                auditPublisher.publish(userId, null, null, AuditAction.DOMAIN_VERIFY, AuditResourceType.DOMAIN, String.valueOf(domain.getId()), "Domain verified successfully: " + domain.getDomain());
+            }
             return new DomainVerificationResponse(true, domain.getDomain(), DomainStatus.ACTIVE, "Domain verified successfully!");
         } else {
             domain.setStatus(DomainStatus.VERIFICATION_REQUIRED);
@@ -169,6 +183,9 @@ public class CustomDomainService {
             domain.setVerificationError(errorMsg);
             customDomainRepository.save(domain);
             log.warn("Domain '{}' (ID {}) verification failed for user {}: {}", domain.getDomain(), domainId, userId, errorMsg);
+            if (auditPublisher != null) {
+                auditPublisher.publish(userId, null, null, AuditAction.DOMAIN_VERIFY, AuditResourceType.DOMAIN, String.valueOf(domain.getId()), "Domain verification failed for " + domain.getDomain() + ": " + errorMsg);
+            }
             return new DomainVerificationResponse(false, domain.getDomain(), DomainStatus.VERIFICATION_REQUIRED, errorMsg);
         }
     }
@@ -179,6 +196,9 @@ public class CustomDomainService {
                 .map(domain -> {
                     customDomainRepository.delete(domain);
                     log.info("Domain '{}' (ID {}) deleted by user {}", domain.getDomain(), domainId, userId);
+                    if (auditPublisher != null) {
+                        auditPublisher.publish(userId, null, null, AuditAction.DOMAIN_DELETE, AuditResourceType.DOMAIN, String.valueOf(domain.getId()), "Deleted domain: " + domain.getDomain());
+                    }
                     return true;
                 })
                 .orElse(false);

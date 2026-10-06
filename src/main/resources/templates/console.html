@@ -7625,6 +7625,159 @@
             border: 1px solid #fecaca;
         }
 
+        /* ==========================================================================
+           AUDIT LOGS STYLING (Compliance & Monochrome Design)
+           ========================================================================== */
+        .audit-card-container {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .audit-filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 12px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .audit-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .audit-filter-input, .audit-filter-select {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.15s ease;
+            font-family: inherit;
+        }
+
+        .audit-filter-input:focus, .audit-filter-select:focus {
+            border-color: #000000;
+        }
+
+        .audit-filter-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .audit-table-header {
+            display: flex;
+            align-items: center;
+            padding: 11px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            letter-spacing: 0.04em;
+        }
+
+        .audit-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            background: #ffffff;
+            transition: background 0.12s ease;
+            font-size: 12px;
+        }
+
+        .audit-row:hover {
+            background: #f8fafc;
+        }
+
+        .audit-row:last-child {
+            border-bottom: none;
+        }
+
+        .col-audit-time { width: 175px; flex-shrink: 0; color: #0f172a; font-size: 11.5px; line-height: 1.35; font-variant-numeric: tabular-nums; }
+        .col-audit-action { width: 140px; flex-shrink: 0; }
+        .col-audit-resource { width: 125px; flex-shrink: 0; }
+        .col-audit-details { flex: 1.5; min-width: 0; padding-right: 12px; word-break: break-word; }
+        .col-audit-status { width: 85px; flex-shrink: 0; }
+        .col-audit-client { width: 225px; flex-shrink: 0; }
+
+        .audit-client-chips {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 3px;
+        }
+
+        .audit-client-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+
+        .audit-client-chip.device {
+            background: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+            font-weight: 600;
+        }
+
+        .audit-action-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+        }
+
+        .audit-status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 600;
+        }
+
+        .audit-status-badge.success {
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+        }
+
+        .audit-status-badge.failure {
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #000000;
+        }
+
         .modal-dialog.extract-modal-dialog {
             width: min(840px, calc(100vw - 32px)) !important;
             max-width: 840px !important;
@@ -8972,6 +9125,17 @@
                         </svg> PRO</span>
                 </button>
 
+                <button class="nav-item" id="navAuditLogs" data-page="audit-logs" type="button">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    <span>Audit Logs</span>
+                </button>
+
                 <button class="nav-item" id="navBilling" data-page="billing" type="button">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="5" width="20" height="14" rx="2" />
@@ -9758,6 +9922,132 @@
                                     <label>Last Used</label>
                                     <span id="apiKeyLastUsedAt">Never</span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- =========================
+                 PAGE: AUDIT LOGS (Compliance & Security)
+            ========================= -->
+                <section class="page-view" id="pageAuditLogs">
+                    <div class="page-header"
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                        <div>
+                            <h1 class="page-title"
+                                style="font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Audit Logs
+                            </h1>
+                            <p class="page-subtitle" style="color: #64748b; font-size: 13px;">Compliance and security activity trails for logins, links, API keys, domains, and data extractions.</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="btn btn-secondary" id="btnRefreshAuditLogs" type="button" title="Refresh audit logs"
+                                style="border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; cursor: pointer; transition: all 0.15s ease;">Refresh</button>
+                            <button class="btn btn-primary" id="btnExportAuditCsv" type="button" title="Extract audit logs to CSV"
+                                style="background: #000000; color: #ffffff; border-radius: 6px; padding: 7px 14px; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>Extract CSV</span>
+                            </button>
+                            <button class="btn btn-secondary" id="btnExportAuditJson" type="button" title="Extract audit logs to JSON"
+                                style="border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; cursor: pointer;">
+                                <span>Extract JSON</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Audit Log Filters and Table Card -->
+                    <div class="audit-card-container">
+                        <!-- Filter Bar -->
+                        <div class="audit-filter-bar">
+                            <div class="audit-filter-group">
+                                <span class="audit-filter-label">From:</span>
+                                <input type="datetime-local" class="audit-filter-input" id="auditFilterStart" title="Start date & time">
+                                <span class="audit-filter-label" style="margin-left: 4px;">To:</span>
+                                <input type="datetime-local" class="audit-filter-input" id="auditFilterEnd" title="End date & time">
+                            </div>
+                            <div class="audit-filter-group">
+                                <select class="audit-filter-select" id="auditFilterAction" title="Filter by Action">
+                                    <option value="">All Actions</option>
+                                    <option value="USER_LOGIN">USER_LOGIN</option>
+                                    <option value="USER_LOGOUT">USER_LOGOUT</option>
+                                    <option value="USER_REGISTER">USER_REGISTER</option>
+                                    <option value="LINK_CREATE">LINK_CREATE</option>
+                                    <option value="LINK_UPDATE">LINK_UPDATE</option>
+                                    <option value="LINK_DELETE">LINK_DELETE</option>
+                                    <option value="API_KEY_CREATE">API_KEY_CREATE</option>
+                                    <option value="API_KEY_ROTATE">API_KEY_ROTATE</option>
+                                    <option value="API_KEY_DELETE">API_KEY_DELETE</option>
+                                    <option value="DOMAIN_CREATE">DOMAIN_CREATE</option>
+                                    <option value="DOMAIN_VERIFY">DOMAIN_VERIFY</option>
+                                    <option value="DOMAIN_DELETE">DOMAIN_DELETE</option>
+                                    <option value="DATA_EXTRACTION_CREATE">DATA_EXTRACTION_CREATE</option>
+                                </select>
+                                <select class="audit-filter-select" id="auditFilterResource" title="Filter by Resource">
+                                    <option value="">All Resources</option>
+                                    <option value="AUTH">AUTH</option>
+                                    <option value="LINK">LINK</option>
+                                    <option value="API_KEY">API_KEY</option>
+                                    <option value="DOMAIN">DOMAIN</option>
+                                    <option value="DATA_EXTRACTION">DATA_EXTRACTION</option>
+                                </select>
+                                <button class="btn btn-secondary" id="btnApplyAuditFilter" type="button"
+                                    style="border: 1px solid #0f172a; background: #0f172a; color: #ffffff; border-radius: 6px; padding: 6px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer;">Filter</button>
+                                <button class="btn btn-secondary" id="btnResetAuditFilter" type="button"
+                                    style="border: 1px solid #cbd5e1; background: #ffffff; color: #64748b; border-radius: 6px; padding: 6px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer;">Clear</button>
+                            </div>
+                        </div>
+
+                        <!-- Table Header -->
+                        <div class="audit-table-header">
+                            <div class="col-audit-time">TIMESTAMP</div>
+                            <div class="col-audit-action">ACTION</div>
+                            <div class="col-audit-resource">RESOURCE</div>
+                            <div class="col-audit-details">DETAILS &amp; CHANGES</div>
+                            <div class="col-audit-status">STATUS</div>
+                            <div class="col-audit-client">IP &amp; CLIENT</div>
+                        </div>
+
+                        <!-- Table Rows Container -->
+                        <div id="auditLogsListContainer" style="min-height: 200px;">
+                            <div class="domains-loading-state" id="auditLoadingState" style="padding: 44px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #64748b; font-size: 12.5px;">
+                                <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" style="color: #000000;">
+                                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                                </svg>
+                                <span>Loading audit trail...</span>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div class="domains-empty-state" id="auditEmptyState" style="display: none; padding: 48px 20px;">
+                            <div style="width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9; color: #0f172a; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                            </div>
+                            <strong style="color: #0f172a; font-size: 13.5px;">No audit records found</strong>
+                            <p style="color: #64748b; font-size: 12px; margin: 0; max-width: 380px;">No audit trail events match the selected filter criteria or time frame.</p>
+                        </div>
+
+                        <!-- Pagination Footer -->
+                        <div class="links-card-footer" id="auditPaginationBar" style="border-top: 1px solid var(--border); padding: 9px 16px;">
+                            <span class="pagination-count-text" id="auditPaginationInfo">Showing 0 of 0 logs</span>
+                            <div class="pagination-controls-right">
+                                <button class="btn-page-nav" id="auditPrevPageBtn" type="button" aria-label="Previous page" disabled>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                </button>
+                                <span class="pagination-page-label" id="auditPageLabel">Page 1 of 1</span>
+                                <button class="btn-page-nav" id="auditNextPageBtn" type="button" aria-label="Next page" disabled>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -13598,6 +13888,84 @@
                 });
             }
 
+            const navAuditLogs = document.getElementById("navAuditLogs");
+            if (navAuditLogs) {
+                navAuditLogs.addEventListener("click", () => navigateTo("audit-logs"));
+            }
+
+            const btnRefreshAuditLogs = document.getElementById("btnRefreshAuditLogs");
+            if (btnRefreshAuditLogs) {
+                btnRefreshAuditLogs.addEventListener("click", async () => {
+                    if (btnRefreshAuditLogs.dataset.loading === "true") return;
+                    btnRefreshAuditLogs.dataset.loading = "true";
+                    btnRefreshAuditLogs.disabled = true;
+                    btnRefreshAuditLogs.textContent = "Refreshing...";
+                    try {
+                        await loadAuditLogs(true, auditState.page || 0);
+                    } catch (e) {
+                        console.error("Failed to refresh audit logs:", e);
+                    } finally {
+                        setTimeout(() => {
+                            btnRefreshAuditLogs.textContent = "Refresh";
+                            btnRefreshAuditLogs.disabled = false;
+                            delete btnRefreshAuditLogs.dataset.loading;
+                        }, 300);
+                    }
+                });
+            }
+
+            const btnApplyAuditFilter = document.getElementById("btnApplyAuditFilter");
+            if (btnApplyAuditFilter) {
+                btnApplyAuditFilter.addEventListener("click", () => {
+                    auditState.page = 0;
+                    loadAuditLogs(false, 0);
+                });
+            }
+
+            const btnResetAuditFilter = document.getElementById("btnResetAuditFilter");
+            if (btnResetAuditFilter) {
+                btnResetAuditFilter.addEventListener("click", () => {
+                    const s = document.getElementById("auditFilterStart");
+                    const e = document.getElementById("auditFilterEnd");
+                    const a = document.getElementById("auditFilterAction");
+                    const r = document.getElementById("auditFilterResource");
+                    if (s) s.value = "";
+                    if (e) e.value = "";
+                    if (a) a.value = "";
+                    if (r) r.value = "";
+                    auditState.page = 0;
+                    loadAuditLogs(false, 0);
+                });
+            }
+
+            const auditPrevPageBtn = document.getElementById("auditPrevPageBtn");
+            if (auditPrevPageBtn) {
+                auditPrevPageBtn.addEventListener("click", () => {
+                    if (auditState.page > 0) {
+                        loadAuditLogs(false, auditState.page - 1);
+                    }
+                });
+            }
+
+            const auditNextPageBtn = document.getElementById("auditNextPageBtn");
+            if (auditNextPageBtn) {
+                auditNextPageBtn.addEventListener("click", () => {
+                    if (auditState.page < auditState.totalPages - 1) {
+                        loadAuditLogs(false, auditState.page + 1);
+                    }
+                });
+            }
+
+            const btnExportAuditCsv = document.getElementById("btnExportAuditCsv");
+            if (btnExportAuditCsv) {
+                btnExportAuditCsv.addEventListener("click", () => exportAuditLogs("csv"));
+            }
+
+            const btnExportAuditJson = document.getElementById("btnExportAuditJson");
+            if (btnExportAuditJson) {
+                btnExportAuditJson.addEventListener("click", () => exportAuditLogs("json"));
+            }
+
             const extractBackdrop = document.getElementById("extractModalBackdrop");
             if (extractBackdrop) extractBackdrop.addEventListener("click", closeExtractModal);
 
@@ -13737,6 +14105,8 @@
                 navigateTo("billing", false);
             } else if (path.startsWith("/console/extract-data") || path.startsWith("/console/extract")) {
                 navigateTo("extract-data", false);
+            } else if (path.startsWith("/console/audit-logs") || path.startsWith("/console/audit")) {
+                navigateTo("audit-logs", false);
             } else {
                 navigateTo("home", false);
             }
@@ -13760,6 +14130,8 @@
             const pageDomains = document.getElementById("pageDomains");
             if (pageDomains) pageDomains.classList.toggle("active", page === "domains");
             document.getElementById("pageApiKeys").classList.toggle("active", page === "api-keys");
+            const pageAuditLogs = document.getElementById("pageAuditLogs");
+            if (pageAuditLogs) pageAuditLogs.classList.toggle("active", page === "audit-logs");
             const pageBilling = document.getElementById("pageBilling");
             if (pageBilling) pageBilling.classList.toggle("active", page === "billing");
             const pageExtractData = document.getElementById("pageExtractData");
@@ -13789,6 +14161,8 @@
                     return;
                 }
                 loadApiKey();
+            } else if (page === "audit-logs") {
+                loadAuditLogs();
             } else if (page === "billing") {
                 loadBillingData();
             } else if (page === "extract-data") {
@@ -13802,6 +14176,16 @@
 
         function logout(reason) {
             if (sessionExpiryTimer) clearTimeout(sessionExpiryTimer);
+            const curToken = localStorage.getItem("preonsurl_token") || localStorage.getItem("preons_token");
+            if (curToken) {
+                try {
+                    fetch("/api/auth/logout", {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${curToken}` },
+                        keepalive: true
+                    }).catch(() => {});
+                } catch (e) {}
+            }
             localStorage.removeItem("preonsurl_token");
             localStorage.removeItem("preonsurl_username");
             localStorage.removeItem("preons_token");
@@ -22400,6 +22784,336 @@
                 showToast("success", "Download Complete", fileName || "File exported successfully.");
             } catch (err) {
                 showToast("error", "Download Failed", err.message || "Could not download export file.");
+            }
+        }
+
+        /* ============================================================
+           AUDIT LOGS MODULE (COMPLIANCE & MONOCHROME BLACK & WHITE THEME)
+        ============================================================ */
+        const auditState = {
+            page: 0,
+            pageSize: 20,
+            totalPages: 1,
+            totalElements: 0
+        };
+
+        async function loadAuditLogs(showToastFeedback = false, page = auditState.page) {
+            const container = document.getElementById("auditLogsListContainer");
+            const emptyState = document.getElementById("auditEmptyState");
+            if (!container) return;
+
+            auditState.page = Number(page || 0);
+
+            container.innerHTML = `
+                <div class="domains-loading-state" id="auditLoadingState" style="padding: 44px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #64748b; font-size: 12.5px;">
+                    <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" style="color: #000000;">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                    </svg>
+                    <span>Loading audit trail...</span>
+                </div>
+            `;
+            if (emptyState) emptyState.style.display = "none";
+
+            const prevBtn = document.getElementById("auditPrevPageBtn");
+            const nextBtn = document.getElementById("auditNextPageBtn");
+            if (prevBtn) prevBtn.disabled = true;
+            if (nextBtn) nextBtn.disabled = true;
+
+            const startVal = document.getElementById("auditFilterStart")?.value || "";
+            const endVal = document.getElementById("auditFilterEnd")?.value || "";
+            const actionVal = document.getElementById("auditFilterAction")?.value || "";
+            const resourceVal = document.getElementById("auditFilterResource")?.value || "";
+
+            const params = new URLSearchParams();
+            params.set("page", auditState.page);
+            params.set("size", auditState.pageSize);
+            if (actionVal) params.set("action", actionVal);
+            if (resourceVal) params.set("resourceType", resourceVal);
+            if (startVal) params.set("startDateTime", startVal);
+            if (endVal) params.set("endDateTime", endVal);
+
+            try {
+                const res = await authenticatedFetch(`/api/audit/logs?${params.toString()}`);
+                if (!res.ok) {
+                    throw new Error("Failed to fetch audit logs");
+                }
+                const result = await parseResponse(res);
+                let logs = [];
+                let pageData = null;
+
+                if (result && result.data) {
+                    if (Array.isArray(result.data)) {
+                        logs = result.data;
+                        pageData = {
+                            content: logs,
+                            totalElements: logs.length,
+                            totalPages: 1,
+                            number: 0,
+                            size: logs.length,
+                            first: true,
+                            last: true
+                        };
+                    } else if (Array.isArray(result.data.content)) {
+                        logs = result.data.content;
+                        pageData = result.data;
+                    }
+                }
+
+                const totalElements = pageData ? Number(pageData.totalElements ?? logs.length) : logs.length;
+                const totalPages = pageData ? Math.max(1, Number(pageData.totalPages || 1)) : 1;
+                const currentPage = pageData ? Number(pageData.number || 0) : auditState.page;
+
+                auditState.totalElements = totalElements;
+                auditState.totalPages = totalPages;
+                auditState.page = currentPage;
+
+                if (!logs.length) {
+                    container.innerHTML = "";
+                    if (emptyState) emptyState.style.display = "flex";
+                    updateAuditPaginationUI(pageData || { number: 0, totalPages: 1, totalElements: 0, first: true, last: true });
+                    return;
+                }
+
+                if (emptyState) emptyState.style.display = "none";
+
+                container.innerHTML = logs.map(log => renderAuditLogRow(log)).join("");
+                updateAuditPaginationUI(pageData);
+
+                if (showToastFeedback) {
+                    showToast("success", "Refreshed", "Audit logs updated.");
+                }
+            } catch (err) {
+                container.innerHTML = `
+                    <div style="padding: 24px 20px; text-align: center; color: #ef4444; font-size: 12px;">
+                        Failed to load audit trail: ${escapeHtml(err.message)}
+                    </div>
+                `;
+            }
+        }
+
+        function formatAuditTimestamp(raw) {
+            if (!raw) return '<span style="color:#94a3b8;">—</span>';
+            try {
+                let d;
+                if (typeof raw === "string") {
+                    if (!raw.endsWith("Z") && !raw.includes("+") && !raw.match(/-\d\d:\d\d$/)) {
+                        d = new Date(raw);
+                        if (isNaN(d.getTime())) {
+                            d = new Date(raw + "Z");
+                        }
+                    } else {
+                        d = new Date(raw);
+                    }
+                } else {
+                    d = new Date(raw);
+                }
+
+                if (isNaN(d.getTime())) {
+                    return `<span style="font-weight: 500; color: #0f172a;">${escapeHtml(String(raw))}</span>`;
+                }
+
+                const dateStr = d.toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit'
+                });
+                const timeStr = d.toLocaleTimeString(undefined, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+
+                return `
+                    <div style="font-weight: 600; color: #0f172a; font-size: 11.5px; white-space: nowrap;">${dateStr}</div>
+                    <div style="font-size: 10.5px; color: #64748b; font-family: monospace; white-space: nowrap;">${timeStr}</div>
+                `;
+            } catch (e) {
+                return `<span style="color:#0f172a;">${escapeHtml(String(raw))}</span>`;
+            }
+        }
+
+        function parseUserAgentClient(userAgent) {
+            if (!userAgent || typeof userAgent !== "string" || !userAgent.trim()) {
+                return { device: "Unknown", browser: "Unknown", os: "Unknown" };
+            }
+            const ua = userAgent.toLowerCase();
+
+            // 1. Device
+            let device = "Desktop";
+            if (ua.includes("mobile") || ua.includes("iphone") || (ua.includes("android") && !ua.includes("tablet"))) {
+                device = "Mobile";
+            } else if (ua.includes("ipad") || ua.includes("tablet") || (ua.includes("android") && ua.includes("tablet"))) {
+                device = "Tablet";
+            } else if (ua.includes("bot") || ua.includes("crawler") || ua.includes("spider") || ua.includes("curl") || ua.includes("postman")) {
+                device = "Bot";
+            }
+
+            // 2. Browser
+            let browser = "Other";
+            if (ua.includes("edg/") || ua.includes("edge/")) {
+                browser = "Edge";
+            } else if (ua.includes("opr/") || ua.includes("opera/")) {
+                browser = "Opera";
+            } else if (ua.includes("samsungbrowser")) {
+                browser = "Samsung";
+            } else if (ua.includes("chrome/") || ua.includes("crios/")) {
+                browser = "Chrome";
+            } else if (ua.includes("firefox/") || ua.includes("fxios/")) {
+                browser = "Firefox";
+            } else if (ua.includes("safari/") && !ua.includes("chrome") && !ua.includes("android")) {
+                browser = "Safari";
+            } else if (ua.includes("msie") || ua.includes("trident/")) {
+                browser = "IE";
+            }
+
+            // 3. Operating System
+            let os = "Other";
+            if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) {
+                os = "iOS";
+            } else if (ua.includes("android")) {
+                os = "Android";
+            } else if (ua.includes("macintosh") || ua.includes("mac os") || ua.includes("darwin")) {
+                os = "macOS";
+            } else if (ua.includes("windows")) {
+                os = "Windows";
+            } else if (ua.includes("cros")) {
+                os = "ChromeOS";
+            } else if (ua.includes("linux")) {
+                os = "Linux";
+            }
+
+            return { device, browser, os };
+        }
+
+        function renderAuditLogRow(log) {
+            const rawTime = log.timestamp || log.createdAt;
+            const timeHtml = formatAuditTimestamp(rawTime);
+
+            const action = escapeHtml(log.action || "UNKNOWN");
+            const resource = escapeHtml(log.resourceType || "—");
+            const resId = log.resourceId ? ` <span style="color:#64748b;font-size:11px;">(#${escapeHtml(log.resourceId)})</span>` : "";
+            const status = (log.status || "SUCCESS").toUpperCase();
+            const statusClass = status === "SUCCESS" ? "success" : "failure";
+            const details = escapeHtml(log.details || "—");
+            const ip = escapeHtml(log.ipAddress || "—");
+
+            const parsedUa = parseUserAgentClient(log.userAgent);
+            const device = log.device || parsedUa.device;
+            const browser = log.browser || parsedUa.browser;
+            const os = log.os || parsedUa.os;
+
+            const fullClientTooltip = (log.ipAddress ? 'IP: ' + log.ipAddress : '') +
+                (device || browser || os ? ` • (${device} ${browser} ${os})` : '') +
+                (log.userAgent ? `\nUser-Agent: ` + log.userAgent : '');
+
+            return `
+                <div class="audit-row">
+                    <div class="col-audit-time">${timeHtml}</div>
+                    <div class="col-audit-action">
+                        <span class="audit-action-badge">${action}</span>
+                    </div>
+                    <div class="col-audit-resource">
+                        <span style="font-weight: 600; color: #0f172a; font-size: 11.5px;">${resource}</span>${resId}
+                    </div>
+                    <div class="col-audit-details" title="${escapeAttribute(log.details || '')}">
+                        <span style="color: #334155;">${details}</span>
+                    </div>
+                    <div class="col-audit-status">
+                        <span class="audit-status-badge ${statusClass}">${status}</span>
+                    </div>
+                    <div class="col-audit-client" title="${escapeAttribute(fullClientTooltip)}">
+                        <div style="font-weight: 600; color: #0f172a; font-size: 11.5px; font-family: monospace;">${ip}</div>
+                        <div class="audit-client-chips">
+                            <span class="audit-client-chip device" title="Device: ${escapeAttribute(device)}">${escapeHtml(device)}</span>
+                            <span class="audit-client-chip" title="Browser: ${escapeAttribute(browser)}">${escapeHtml(browser)}</span>
+                            <span class="audit-client-chip" title="OS: ${escapeAttribute(os)}">${escapeHtml(os)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAuditPaginationUI(pageData) {
+            const paginationBar = document.getElementById("auditPaginationBar");
+            const infoText = document.getElementById("auditPaginationInfo");
+            const pageLabel = document.getElementById("auditPageLabel");
+            const prevBtn = document.getElementById("auditPrevPageBtn");
+            const nextBtn = document.getElementById("auditNextPageBtn");
+
+            if (!pageData) {
+                if (paginationBar) paginationBar.style.display = "none";
+                return;
+            }
+
+            if (paginationBar) paginationBar.style.display = "flex";
+
+            const pageNumber = Number(pageData.number || 0);
+            const totalPages = Math.max(1, Number(pageData.totalPages || 1));
+            const pageSize = Number(pageData.size || auditState.pageSize || 20);
+            const total = Number(pageData.totalElements || 0);
+
+            if (total === 0) {
+                if (infoText) infoText.textContent = "Showing 0 of 0 logs";
+                if (pageLabel) pageLabel.textContent = "Page 1 of 1";
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
+                return;
+            }
+
+            const startIdx = pageNumber * pageSize + 1;
+            const endIdx = Math.min((pageNumber + 1) * pageSize, total);
+
+            if (infoText) {
+                infoText.textContent = `Showing ${startIdx}–${endIdx} of ${total} log${total === 1 ? '' : 's'}`;
+            }
+            if (pageLabel) {
+                pageLabel.textContent = `Page ${pageNumber + 1} of ${totalPages}`;
+            }
+
+            if (prevBtn) prevBtn.disabled = pageNumber <= 0;
+            if (nextBtn) nextBtn.disabled = pageNumber >= totalPages - 1;
+        }
+
+        async function exportAuditLogs(format = "csv") {
+            try {
+                showToast("info", "Extracting Logs", `Preparing ${format.toUpperCase()} audit log export...`);
+
+                const startVal = document.getElementById("auditFilterStart")?.value || "";
+                const endVal = document.getElementById("auditFilterEnd")?.value || "";
+                const actionVal = document.getElementById("auditFilterAction")?.value || "";
+                const resourceVal = document.getElementById("auditFilterResource")?.value || "";
+
+                const params = new URLSearchParams();
+                params.set("format", format);
+                if (actionVal) params.set("action", actionVal);
+                if (resourceVal) params.set("resourceType", resourceVal);
+                if (startVal) params.set("startDateTime", startVal);
+                if (endVal) params.set("endDateTime", endVal);
+
+                const res = await authenticatedFetch(`/api/audit/export?${params.toString()}`);
+                if (!res.ok) {
+                    throw new Error("Unable to export audit logs");
+                }
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                const timestampStr = new Date().toISOString().replace(/[:.]/g, "-");
+                a.download = `audit-logs-${timestampStr}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }, 1000);
+
+                showToast("success", "Extraction Complete", `Audit logs exported to ${format.toUpperCase()}.`);
+            } catch (err) {
+                showToast("error", "Extraction Failed", err.message || "Could not export audit logs.");
             }
         }
     </script>

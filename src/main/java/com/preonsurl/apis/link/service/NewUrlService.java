@@ -60,6 +60,9 @@ import com.preonsurl.apis.link.dto.LinkRecipientDto;
 import com.preonsurl.apis.link.entity.LinkRecipient;
 import com.preonsurl.apis.link.repository.LinkRecipientRepository;
 import com.preonsurl.emailer.EmailService;
+import com.preonsurl.apis.audit.enums.AuditAction;
+import com.preonsurl.apis.audit.enums.AuditResourceType;
+import com.preonsurl.apis.audit.event.AuditPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.UUID;
 
@@ -101,6 +104,7 @@ public class NewUrlService {
     private final LinkRecipientRepository linkRecipientRepository;
     private final EmailService emailService;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final AuditPublisher auditPublisher;
     public String domain = "";
 
     public NewUrlService(NewUrlRepository repository,
@@ -116,7 +120,8 @@ public class NewUrlService {
                           LinkRecipientRepository linkRecipientRepository,
                          @Autowired(required = false) EmailService emailService,
                          @Autowired(required = false) com.fasterxml.jackson.databind.ObjectMapper objectMapper,
-                         CoreConfigService coreConfigService) {
+                         CoreConfigService coreConfigService,
+                         @Autowired(required = false) AuditPublisher auditPublisher) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
         this.tagRepository = tagRepository;
@@ -131,6 +136,7 @@ public class NewUrlService {
         this.emailService = emailService;
         this.objectMapper = objectMapper != null ? objectMapper : new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
         this.domain = coreConfigService.get(CoreConfigKeys.App.SECURE_URL);
+        this.auditPublisher = auditPublisher;
     }
 
     private record EffectiveDomain(String domainName, String baseUrl) {}
@@ -357,6 +363,11 @@ public class NewUrlService {
                 List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
                 savePolicies(saved.getId(), request, saved.getExpireAt());
 
+                if (auditPublisher != null && userId != null) {
+                    auditPublisher.publish(userId, null, null, AuditAction.LINK_CREATE, AuditResourceType.LINK,
+                            saved.getShortCode(), "Created short link: " + saved.getNewUrl() + " -> " + saved.getOriginalUrl());
+                }
+
                 return new CreateNewUrlResponse(
                         saved.getNewUrl(),
                         saved.getOriginalUrl(),
@@ -395,6 +406,11 @@ public class NewUrlService {
 
             List<String> savedTags = saveTags(saved.getId(), userId, request.tags());
             savePolicies(saved.getId(), request, saved.getExpireAt());
+
+            if (auditPublisher != null && userId != null) {
+                auditPublisher.publish(userId, null, null, AuditAction.LINK_CREATE, AuditResourceType.LINK,
+                        saved.getShortCode(), "Created short link: " + saved.getNewUrl() + " -> " + saved.getOriginalUrl());
+            }
 
             return new CreateNewUrlResponse(
                     saved.getNewUrl(),
@@ -1060,6 +1076,10 @@ public class NewUrlService {
         if (modified) {
             entity = repository.save(entity);
             lruCache.remove(entity.getNewUrl());
+            if (auditPublisher != null && userId != null) {
+                auditPublisher.publish(userId, null, null, AuditAction.LINK_UPDATE, AuditResourceType.LINK,
+                        entity.getShortCode(), "Updated link parameters for " + entity.getNewUrl());
+            }
         }
 
         List<String> finalTags = tagRepository.findByUrlId(entity.getId()).stream()
@@ -1505,6 +1525,33 @@ public class NewUrlService {
        return repository
                 .findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException("Link not found"));
+    }
+
+    @Transactional
+    public boolean deleteLink(String publicId, Long userId) {
+        if (userId == null || publicId == null || publicId.isBlank()) {
+            return false;
+        }
+        String trimmed = publicId.trim();
+        Optional<NewUrl> opt = repository.findByPublicIdAndUserId(trimmed, userId);
+        if (opt.isEmpty()) {
+            opt = repository.findByShortCodeAndUserId(trimmed, userId);
+        }
+        if (opt.isPresent()) {
+            NewUrl entity = opt.get();
+            String code = entity.getShortCode();
+            String origUrl = entity.getOriginalUrl();
+            tagRepository.deleteByUrlId(entity.getId());
+            linkRecipientRepository.deleteByShortUrlId(entity.getId());
+            repository.delete(entity);
+            lruCache.remove(entity.getNewUrl());
+            if (auditPublisher != null) {
+                auditPublisher.publish(userId, null, null, AuditAction.LINK_DELETE, AuditResourceType.LINK,
+                        code, "Deleted short link pointing to " + origUrl);
+            }
+            return true;
+        }
+        return false;
     }
 
     @Async

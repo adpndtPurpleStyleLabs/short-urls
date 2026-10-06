@@ -10,15 +10,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
+import com.preonsurl.apis.audit.enums.AuditAction;
+import com.preonsurl.apis.audit.enums.AuditResourceType;
+import com.preonsurl.apis.audit.event.AuditPublisher;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 @Tag(name = "Authentication", description = "Endpoints for user registration, verification, and JWT login")
 @RequestMapping("/api/auth")
 @RestController
 public class AuthController {
 
     private final AuthService authService;
+    private final AuditPublisher auditPublisher;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AuditPublisher auditPublisher) {
         this.authService = authService;
+        this.auditPublisher = auditPublisher;
     }
 
     @Operation(summary = "Register a new user", description = "Creates a new user and tenant account, and sends email verification code")
@@ -44,6 +51,16 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(e.getMessage()));
         }
+    }
+
+    @Operation(summary = "Logout user", description = "Logs out authenticated user and audits the event")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Boolean>> logout(@AuthenticationPrincipal AuthenticatedUser user) {
+        if (user != null) {
+            auditPublisher.publish(user.userId(), user.username(), user.tenantId(),
+                    AuditAction.USER_LOGOUT, AuditResourceType.AUTH, user.username(), "User signed out");
+        }
+        return ResponseEntity.ok(ApiResponse.success(true, "Logged out successfully"));
     }
 
     @Operation(summary = "Verify email with 6-digit code", description = "Validates the 6-digit verification code and activates user account")

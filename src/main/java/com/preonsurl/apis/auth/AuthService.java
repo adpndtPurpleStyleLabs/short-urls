@@ -10,6 +10,9 @@ import com.preonsurl.apis.auth.entity.User;
 import com.preonsurl.apis.auth.repository.TenantRepository;
 import com.preonsurl.apis.auth.repository.UserRepository;
 import com.preonsurl.emailer.EmailService;
+import com.preonsurl.apis.audit.enums.AuditAction;
+import com.preonsurl.apis.audit.enums.AuditResourceType;
+import com.preonsurl.apis.audit.event.AuditPublisher;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,19 +36,22 @@ public class AuthService {
     private final EmailService emailService;
     private final SecureRandom secureRandom = new SecureRandom();
     private final UserCache userCache;
+    private final AuditPublisher auditPublisher;
 
     public AuthService(TenantRepository tenantRepository,
                        UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        UserCache userCache,
-                       EmailService emailService) {
+                       EmailService emailService,
+                       AuditPublisher auditPublisher) {
         this.passwordEncoder = passwordEncoder;
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.emailService = emailService;
         this.userCache = userCache;
+        this.auditPublisher = auditPublisher;
     }
 
     private String generate6DigitCode() {
@@ -86,6 +92,9 @@ public class AuthService {
         // Dispatch verification code via Mailtrap emailer
         emailService.sendVerificationCode(user.getEmail(), verificationCode, user.getFullName());
 
+        auditPublisher.publish(user.getId(), user.getUsername(), user.getTenantId(),
+                AuditAction.USER_REGISTER, AuditResourceType.AUTH, user.getUsername(), "Registered new account");
+
         return new RegisterResponse(user.getUsername(), user.getEmail(), false, true);
     }
 
@@ -103,11 +112,17 @@ public class AuthService {
         if (user == null) {
             user = userRepository
                     .findByUsernameOrEmail(identifier, identifier)
-                    .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
+                    .orElse(null);
+            if (user == null) {
+                auditPublisher.publish(null, identifier, null, AuditAction.USER_LOGIN, AuditResourceType.AUTH,
+                        identifier, "Failed login attempt (user not found)", "FAILURE");
+                throw new BadCredentialsException("Invalid username or password");
+            }
         }
 
-
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            auditPublisher.publish(user.getId(), user.getUsername(), user.getTenantId(), AuditAction.USER_LOGIN,
+                    AuditResourceType.AUTH, user.getUsername(), "Failed login attempt (bad password)", "FAILURE");
             throw new BadCredentialsException("Invalid username or password");
         }
 
@@ -117,6 +132,10 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
         userCache.put(user);
+
+        auditPublisher.publish(user.getId(), user.getUsername(), user.getTenantId(),
+                AuditAction.USER_LOGIN, AuditResourceType.AUTH, user.getUsername(), "User signed in successfully");
+
         return new LoginResponse(token, "Bearer", jwtService.getExpirationSeconds(), true, user.getEmail(), user.getPlan(), user.getFullName());
     }
 

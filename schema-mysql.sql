@@ -211,3 +211,24 @@ CREATE TABLE IF NOT EXISTS data_extraction_jobs (
     INDEX idx_dej_user_created (user_id, created_at DESC),
     INDEX idx_dej_public_id (public_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 12. Table for Compliance Audit Logs
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NULL,
+    username VARCHAR(128) NULL,
+    tenant_id BIGINT NULL,
+    action VARCHAR(64) NOT NULL,
+    resource_type VARCHAR(64) NOT NULL,
+    resource_id VARCHAR(255) NULL,
+    details TEXT NULL,
+    ip_address VARCHAR(64) NULL,
+    user_agent VARCHAR(512) NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'SUCCESS',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_audit_user_created (user_id, created_at DESC),
+    INDEX idx_audit_created (created_at DESC),
+    INDEX idx_audit_action (action),
+    INDEX idx_audit_resource (resource_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

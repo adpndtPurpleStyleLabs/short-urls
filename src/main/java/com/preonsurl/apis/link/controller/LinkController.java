@@ -358,6 +358,39 @@ public class LinkController {
         }
     }
 
+    @Operation(
+            summary = "Delete new URL",
+            description = "Deletes a new URL by public ID or short code. Requires authentication.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+    @DeleteMapping(value = "/{publicId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<Void>> deleteLink(
+            @PathVariable("publicId") String publicId,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        try {
+            AuthenticatedUser user = resolveUser(currentUser);
+            if (user == null || user.userId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Authentication required: user ID not found"));
+            }
+
+            boolean deleted = newUrlService.deleteLink(publicId, user.userId());
+            if (deleted) {
+                return ResponseEntity.ok(ApiResponse.success(null, "Link deleted successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Link not found or access denied"));
+            }
+        } catch (Exception e) {
+            log.error("Failed to delete link {}: {}", publicId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal Server Error"));
+        }
+    }
+
     private AuthenticatedUser resolveUser(AuthenticatedUser user) {
         if (user != null) {
             return user;
