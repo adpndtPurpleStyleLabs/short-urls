@@ -3,7 +3,7 @@
 
 <head>
   <th:block th:replace="~{fragments/seo :: seo(
-    title='SecureURLs.me — Secure Short Links &amp; URL Protection',
+    title='SecureURLs.me — Secure Short Links &amp; URL Protection for Webpages & File',
     description='Create secure short links with password protection, expiration, access controls, analytics, and custom domains with SecureURLs.me.',
     canonical='https://surls.me/',
     robots='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
@@ -435,7 +435,7 @@
     /* Protection methods strip */
 
     .protection-strip {
-      border-top:1px solid var(--line);
+      border-top: 1px solid var(--line);
       background: rgba(250, 250, 250, 0.72);
     }
 
@@ -1578,10 +1578,10 @@
   <section class="hero">
     <div class="container">
       <!--      <div class="eyebrow"><span class="dot"></span> Secure link infrastructure</div>-->
-      <h1 class="hero-title" aria-label="Secure gateway to your URL. Secure short links with control built in.">
+      <h1 class="hero-title" aria-label="Secure, simple, short. Webpages, files, and control. Share with confidence.">
         <span class="hero-animated-text" aria-hidden="true">
           <span class="hero-animation-line hero-gateway-line">
-            SECURE GATEWAY TO YOUR URL
+            SECURE. SIMPLE. SHORT.
           </span>
 
           <span class="hero-animation-line hero-secure-line">
@@ -1593,13 +1593,17 @@
                 <path class="lock-stem" d="M15.5 21.7v3" />
               </svg>
             </span>
-            <span class="hero-animation-copy">SECURE SHORT LINKS WITH CONTROL BUILT IN.</span>
+            <span class="hero-animation-copy">CONTROL EVERY CLICK.</span>
+          </span>
+
+          <span class="hero-animation-line hero-share-line">
+            SHARE WITH CONFIDENCE
           </span>
         </span>
       </h1>
-      <p> Create branded, programmable links that do more than redirect. Control access, limit usage, expire links, manage domains, and understand every click. </p>
-      <div class="hero-actions"> <a class="btn primary" href="/create">Create your first link →</a> <a class="btn" href="/features">Explore features</a> </div>
-      <div class="trust">Built for developers, products, campaigns, and business-critical links.</div>
+      <p>Create secure links for webpages and files. Protect access with passwords, PINs, OTPs, expiration, usage limits, and access rules — then understand every click.</p>
+      <div class="hero-actions"> <a class="btn primary" href="/create">Create a secure link →</a> <a class="btn" href="/features">Explore features</a> </div>
+      <div class="trust">Secure • Simple • Short — for webpages, files, products, campaigns, and business-critical links.</div>
       <div class="stats">
         <div class="stat"><strong>100M</strong><span>codes benchmarked</span></div>
         <div class="stat"><strong>3.27M/s</strong><span>peak generated codes / sec</span></div>
@@ -2635,12 +2639,7 @@
 <footer class="footer">
   <div class="container footer-inner">
     <div>© 2026 SecureURLs.me. Secure link infrastructure.</div>
-    <div class="footer-links">
-      <a href="/faq">FAQ</a>
-      <a href="/api-documentation">API docs</a>
-      <a href="/status">Status</a>
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a> </div>
+    <div class="footer-links"> <a href="/faq">FAQ</a> <a href="/api-documentation">API docs</a> <a href="/status">Status</a> <a href="/privacy">Privacy</a> <a href="/terms">Terms</a> </div>
   </div>
 </footer>
 <script>
@@ -2650,11 +2649,13 @@
       if(!root) return;
       const gateway = root.querySelector('.hero-gateway-line');
       const secure = root.querySelector('.hero-secure-line');
+      const share = root.querySelector('.hero-share-line');
       const secureCopy = root.querySelector('.hero-animation-copy');
       const lock = root.querySelector('.hero-animation-lock');
-      if(!gateway || !secure || !secureCopy) return;
-      const GATEWAY_TEXT = 'SECURE GATEWAY TO UR URL';
-      const SECURE_TEXT = 'SECURE SHORT LINKS      CONTROL BUILT IN.';
+      if(!gateway || !secure || !share || !secureCopy) return;
+      const GATEWAY_TEXT = 'SECURE. SIMPLE. SHORT.';
+      const SECURE_TEXT = 'SECURE. WEBPAGES. FILES.';
+      const SHARE_TEXT = 'SHARE WITH CONFIDENCE.';
       const LETTER_STEP = 80;
       const HOLD_TIME = 2000;
       const REVERSE_STEP = 42;
@@ -2678,12 +2679,15 @@
       }
       const gatewayChars = buildLine(gateway, GATEWAY_TEXT);
       const secureChars = buildLine(secureCopy, SECURE_TEXT);
+      const shareChars = buildLine(share, SHARE_TEXT);
 
       function reset() {
         gateway.classList.remove('is-current');
         secure.classList.remove('is-current');
+        share.classList.remove('is-current');
         gatewayChars.forEach((char) => char.classList.remove('is-visible'));
         secureChars.forEach((char) => char.classList.remove('is-visible'));
+        shareChars.forEach((char) => char.classList.remove('is-visible'));
         if(lock) lock.classList.remove('is-visible');
       }
       async function showChars(chars) {
@@ -2726,6 +2730,7 @@
         while(document.body.contains(root)) {
           await play(gateway, gatewayChars, false);
           await play(secure, secureChars, true);
+          await play(share, shareChars, false);
         }
       })();
     }
