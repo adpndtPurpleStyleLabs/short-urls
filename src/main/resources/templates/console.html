@@ -7791,9 +7791,9 @@
         .col-audit-time { width: 175px; flex-shrink: 0; color: #0f172a; font-size: 11.5px; line-height: 1.35; font-variant-numeric: tabular-nums; }
         .col-audit-action { width: 140px; flex-shrink: 0; }
         .col-audit-resource { width: 125px; flex-shrink: 0; }
-        .col-audit-details { flex: 1.5; min-width: 0; padding-right: 12px; word-break: break-word; }
-        .col-audit-status { width: 85px; flex-shrink: 0; }
-        .col-audit-client { width: 225px; flex-shrink: 0; }
+        .col-audit-details { flex: 2; min-width: 0; padding-right: 14px; word-break: break-word; }
+        .col-audit-status { display: none !important; }
+        .col-audit-client { width: 235px; flex-shrink: 0; }
 
         .audit-client-chips {
             display: flex;
@@ -10107,7 +10107,6 @@
                             <div class="col-audit-action">ACTION</div>
                             <div class="col-audit-resource">RESOURCE</div>
                             <div class="col-audit-details">DETAILS &amp; CHANGES</div>
-                            <div class="col-audit-status">STATUS</div>
                             <div class="col-audit-client">IP &amp; CLIENT</div>
                         </div>
 
@@ -14027,12 +14026,36 @@
                 });
             }
 
+            const triggerAuditFilter = () => {
+                auditState.page = 0;
+                loadAuditLogs(false, 0);
+            };
+
             const btnApplyAuditFilter = document.getElementById("btnApplyAuditFilter");
             if (btnApplyAuditFilter) {
-                btnApplyAuditFilter.addEventListener("click", () => {
-                    auditState.page = 0;
-                    loadAuditLogs(false, 0);
-                });
+                btnApplyAuditFilter.addEventListener("click", triggerAuditFilter);
+            }
+
+            const auditFilterStart = document.getElementById("auditFilterStart");
+            if (auditFilterStart) {
+                auditFilterStart.addEventListener("change", triggerAuditFilter);
+                auditFilterStart.addEventListener("keydown", (e) => { if (e.key === "Enter") triggerAuditFilter(); });
+            }
+
+            const auditFilterEnd = document.getElementById("auditFilterEnd");
+            if (auditFilterEnd) {
+                auditFilterEnd.addEventListener("change", triggerAuditFilter);
+                auditFilterEnd.addEventListener("keydown", (e) => { if (e.key === "Enter") triggerAuditFilter(); });
+            }
+
+            const auditFilterAction = document.getElementById("auditFilterAction");
+            if (auditFilterAction) {
+                auditFilterAction.addEventListener("change", triggerAuditFilter);
+            }
+
+            const auditFilterResource = document.getElementById("auditFilterResource");
+            if (auditFilterResource) {
+                auditFilterResource.addEventListener("change", triggerAuditFilter);
             }
 
             const btnResetAuditFilter = document.getElementById("btnResetAuditFilter");
@@ -22908,8 +22931,14 @@
             params.set("size", auditState.pageSize);
             if (actionVal) params.set("action", actionVal);
             if (resourceVal) params.set("resourceType", resourceVal);
-            if (startVal) params.set("startDateTime", startVal);
-            if (endVal) params.set("endDateTime", endVal);
+            if (startVal) {
+                params.set("startDate", startVal);
+                params.set("startDateTime", startVal);
+            }
+            if (endVal) {
+                params.set("endDate", endVal);
+                params.set("endDateTime", endVal);
+            }
 
             try {
                 const res = await authenticatedFetch(`/api/audit/logs?${params.toString()}`);
@@ -23065,16 +23094,58 @@
             return { device, browser, os };
         }
 
+        function sanitizeAuditDetails(action, details, resourceType) {
+            if (!details) return "—";
+            let text = String(details).trim();
+
+            // 1. Hide user login / registration / logout sub-information (usernames, email addresses)
+            if (resourceType === "AUTH" || action === "USER_LOGIN" || action === "USER_LOGOUT" || action === "USER_REGISTER") {
+                if (action === "USER_LOGIN" || text.toLowerCase().includes("signed in") || text.toLowerCase().includes("logged in")) {
+                    if (text.toLowerCase().includes("failed")) {
+                        return "Failed login attempt";
+                    }
+                    return "User signed in successfully";
+                }
+                if (action === "USER_LOGOUT" || text.toLowerCase().includes("logged out") || text.toLowerCase().includes("signed out")) {
+                    return "User signed out";
+                }
+                if (action === "USER_REGISTER" || text.toLowerCase().includes("registered")) {
+                    return "New account registered";
+                }
+                return "Authentication activity";
+            }
+
+            // 2. Hide created / deleted / modified link URLs and destinations
+            if (resourceType === "LINK" || action === "LINK_CREATE" || action === "LINK_UPDATE" || action === "LINK_DELETE") {
+                if (action === "LINK_CREATE" || text.toLowerCase().startsWith("created short link")) {
+                    return "Short link created";
+                }
+                if (action === "LINK_DELETE" || text.toLowerCase().startsWith("deleted short link")) {
+                    return "Short link deleted";
+                }
+                if (action === "LINK_UPDATE" || text.toLowerCase().startsWith("updated link")) {
+                    return "Short link updated";
+                }
+                return "Link activity";
+            }
+
+            return text;
+        }
+
         function renderAuditLogRow(log) {
             const rawTime = log.timestamp || log.createdAt;
             const timeHtml = formatAuditTimestamp(rawTime);
 
             const action = escapeHtml(log.action || "UNKNOWN");
             const resource = escapeHtml(log.resourceType || "—");
-            const resId = log.resourceId ? ` <span style="color:#64748b;font-size:11px;">(#${escapeHtml(log.resourceId)})</span>` : "";
-            const status = (log.status || "SUCCESS").toUpperCase();
-            const statusClass = status === "SUCCESS" ? "success" : "failure";
-            const details = escapeHtml(log.details || "—");
+
+            // Hide sensitive sub-information like user identities, usernames, or link paths in resource column
+            let resId = "";
+            if (log.resourceType !== "AUTH" && log.resourceType !== "LINK" && log.resourceId) {
+                resId = ` <span style="color:#64748b;font-size:11px;">(#${escapeHtml(log.resourceId)})</span>`;
+            }
+
+            const cleanDetails = escapeHtml(sanitizeAuditDetails(log.action, log.details, log.resourceType));
             const ip = escapeHtml(log.ipAddress || "—");
 
             const parsedUa = parseUserAgentClient(log.userAgent);
@@ -23095,11 +23166,8 @@
                     <div class="col-audit-resource">
                         <span style="font-weight: 600; color: #0f172a; font-size: 11.5px;">${resource}</span>${resId}
                     </div>
-                    <div class="col-audit-details" title="${escapeAttribute(log.details || '')}">
-                        <span style="color: #334155;">${details}</span>
-                    </div>
-                    <div class="col-audit-status">
-                        <span class="audit-status-badge ${statusClass}">${status}</span>
+                    <div class="col-audit-details" title="${escapeAttribute(cleanDetails)}">
+                        <span style="color: #334155;">${cleanDetails}</span>
                     </div>
                     <div class="col-audit-client" title="${escapeAttribute(fullClientTooltip)}">
                         <div style="font-weight: 600; color: #0f172a; font-size: 11.5px; font-family: monospace;">${ip}</div>
@@ -23167,8 +23235,14 @@
                 params.set("format", format);
                 if (actionVal) params.set("action", actionVal);
                 if (resourceVal) params.set("resourceType", resourceVal);
-                if (startVal) params.set("startDateTime", startVal);
-                if (endVal) params.set("endDateTime", endVal);
+                if (startVal) {
+                    params.set("startDate", startVal);
+                    params.set("startDateTime", startVal);
+                }
+                if (endVal) {
+                    params.set("endDate", endVal);
+                    params.set("endDateTime", endVal);
+                }
 
                 const res = await authenticatedFetch(`/api/audit/export?${params.toString()}`);
                 if (!res.ok) {

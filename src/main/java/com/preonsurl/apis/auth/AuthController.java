@@ -58,7 +58,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Boolean>> logout(@AuthenticationPrincipal AuthenticatedUser user) {
         if (user != null) {
             auditPublisher.publish(user.userId(), user.username(), user.tenantId(),
-                    AuditAction.USER_LOGOUT, AuditResourceType.AUTH, user.username(), "User signed out");
+                    AuditAction.USER_LOGOUT, AuditResourceType.AUTH, null, "User signed out");
         }
         return ResponseEntity.ok(ApiResponse.success(true, "Logged out successfully"));
     }

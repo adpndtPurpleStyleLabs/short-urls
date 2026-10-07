@@ -365,7 +365,7 @@ public class NewUrlService {
 
                 if (auditPublisher != null && userId != null) {
                     auditPublisher.publish(userId, null, null, AuditAction.LINK_CREATE, AuditResourceType.LINK,
-                            saved.getShortCode(), "Created short link: " + saved.getNewUrl() + " -> " + saved.getOriginalUrl());
+                            null, "Created short link");
                 }
 
                 return new CreateNewUrlResponse(
@@ -409,7 +409,7 @@ public class NewUrlService {
 
             if (auditPublisher != null && userId != null) {
                 auditPublisher.publish(userId, null, null, AuditAction.LINK_CREATE, AuditResourceType.LINK,
-                        saved.getShortCode(), "Created short link: " + saved.getNewUrl() + " -> " + saved.getOriginalUrl());
+                        null, "Created short link");
             }
 
             return new CreateNewUrlResponse(
@@ -1078,7 +1078,7 @@ public class NewUrlService {
             lruCache.remove(entity.getNewUrl());
             if (auditPublisher != null && userId != null) {
                 auditPublisher.publish(userId, null, null, AuditAction.LINK_UPDATE, AuditResourceType.LINK,
-                        entity.getShortCode(), "Updated link parameters for " + entity.getNewUrl());
+                        null, "Updated link parameters");
             }
         }
 
@@ -1547,7 +1547,7 @@ public class NewUrlService {
             lruCache.remove(entity.getNewUrl());
             if (auditPublisher != null) {
                 auditPublisher.publish(userId, null, null, AuditAction.LINK_DELETE, AuditResourceType.LINK,
-                        code, "Deleted short link pointing to " + origUrl);
+                        null, "Deleted short link");
             }
             return true;
         }

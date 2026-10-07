@@ -93,7 +93,7 @@ public class AuthService {
         emailService.sendVerificationCode(user.getEmail(), verificationCode, user.getFullName());
 
         auditPublisher.publish(user.getId(), user.getUsername(), user.getTenantId(),
-                AuditAction.USER_REGISTER, AuditResourceType.AUTH, user.getUsername(), "Registered new account");
+                AuditAction.USER_REGISTER, AuditResourceType.AUTH, null, "Registered new account");
 
         return new RegisterResponse(user.getUsername(), user.getEmail(), false, true);
     }
@@ -114,15 +114,15 @@ public class AuthService {
                     .findByUsernameOrEmail(identifier, identifier)
                     .orElse(null);
             if (user == null) {
-                auditPublisher.publish(null, identifier, null, AuditAction.USER_LOGIN, AuditResourceType.AUTH,
-                        identifier, "Failed login attempt (user not found)", "FAILURE");
+                auditPublisher.publish(null, null, null, AuditAction.USER_LOGIN, AuditResourceType.AUTH,
+                        null, "Failed login attempt (user not found)", "FAILURE");
                 throw new BadCredentialsException("Invalid username or password");
             }
         }
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            auditPublisher.publish(user.getId(), user.getUsername(), user.getTenantId(), AuditAction.USER_LOGIN,
-                    AuditResourceType.AUTH, user.getUsername(), "Failed login attempt (bad password)", "FAILURE");
+            auditPublisher.publish(user.getId(), null, user.getTenantId(), AuditAction.USER_LOGIN,
+                    AuditResourceType.AUTH, null, "Failed login attempt (bad password)", "FAILURE");
             throw new BadCredentialsException("Invalid username or password");
         }
 
@@ -134,7 +134,7 @@ public class AuthService {
         userCache.put(user);
 
         auditPublisher.publish(user.getId(), user.getUsername(), user.getTenantId(),
-                AuditAction.USER_LOGIN, AuditResourceType.AUTH, user.getUsername(), "User signed in successfully");
+                AuditAction.USER_LOGIN, AuditResourceType.AUTH, null, "User signed in successfully");
 
         return new LoginResponse(token, "Bearer", jwtService.getExpirationSeconds(), true, user.getEmail(), user.getPlan(), user.getFullName());
     }

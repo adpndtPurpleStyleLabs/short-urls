@@ -182,4 +182,39 @@ public class AuditLogControllerTest {
         assertTrue(jsonContent.contains("USER_LOGOUT"));
         assertTrue(jsonContent.contains("AUTH"));
     }
+
+    @Test
+    void testFilterAuditLogsByDateRange() throws Exception {
+        auditPublisher.publish(testUser.getId(), testUser.getUsername(), testUser.getTenantId(),
+                AuditAction.LINK_CREATE, AuditResourceType.LINK, null, "Created short link");
+
+        Thread.sleep(300);
+
+        String today = java.time.LocalDate.now().toString(); // "YYYY-MM-DD"
+        String nowTime = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+
+        // Match with startDate and endDate
+        mockMvc.perform(get("/api/audit/logs")
+                        .param("startDate", today)
+                        .param("endDate", today)
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+
+        // Match with startDateTime and endDateTime aliases
+        mockMvc.perform(get("/api/audit/logs")
+                        .param("startDateTime", nowTime)
+                        .param("endDateTime", nowTime)
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+
+        // Non-matching past date
+        mockMvc.perform(get("/api/audit/logs")
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2020-01-02")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
 }

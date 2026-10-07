@@ -129,19 +129,52 @@ public class AuditLogService {
     private LocalDateTime parseDateTime(String input, boolean isStart) {
         if (input == null || input.isBlank()) return null;
         String trimmed = input.trim();
-        try {
-            if (trimmed.length() == 10) {
-                LocalDate date = LocalDate.parse(trimmed, DateTimeFormatter.ISO_LOCAL_DATE);
-                return isStart ? date.atStartOfDay() : date.atTime(23, 59, 59);
-            }
-            return LocalDateTime.parse(trimmed, DateTimeFormatter.ISO_DATE_TIME);
-        } catch (DateTimeParseException e) {
+
+        // 1. Date only: yyyy-MM-dd
+        if (trimmed.length() == 10 && trimmed.charAt(4) == '-' && trimmed.charAt(7) == '-') {
             try {
-                return LocalDateTime.parse(trimmed, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
-            } catch (Exception ex) {
-                log.warn("Could not parse audit log date parameter: {}", input);
-                return null;
+                LocalDate date = LocalDate.parse(trimmed, DateTimeFormatter.ISO_LOCAL_DATE);
+                return isStart ? date.atStartOfDay() : date.atTime(23, 59, 59, 999_999_999);
+            } catch (Exception ignored) {}
+        }
+
+        // 2. Normalize space to 'T' (e.g. "2026-10-07 18:00")
+        if (trimmed.length() >= 16 && trimmed.charAt(10) == ' ') {
+            trimmed = trimmed.substring(0, 10) + "T" + trimmed.substring(11);
+        }
+
+        // 3. Offset or UTC: e.g. "2026-10-07T18:00:00Z"
+        if (trimmed.endsWith("Z") || trimmed.contains("+") || trimmed.matches(".*-\\d{2}:\\d{2}$")) {
+            try {
+                return java.time.OffsetDateTime.parse(trimmed).toLocalDateTime();
+            } catch (Exception ignored) {}
+            try {
+                return java.time.Instant.parse(trimmed).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+            } catch (Exception ignored) {}
+        }
+
+        // 4. ISO Local Date Time / datetime-local input: "yyyy-MM-ddTHH:mm" or "yyyy-MM-ddTHH:mm:ss"
+        try {
+            LocalDateTime dt = LocalDateTime.parse(trimmed, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            if (!isStart && trimmed.length() == 16) {
+                return dt.withSecond(59).withNano(999_999_999);
             }
+            return dt;
+        } catch (Exception ignored) {}
+
+        try {
+            LocalDateTime dt = LocalDateTime.parse(trimmed, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+            if (!isStart) {
+                return dt.withSecond(59).withNano(999_999_999);
+            }
+            return dt;
+        } catch (Exception ignored) {}
+
+        try {
+            return LocalDateTime.parse(trimmed, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
+        } catch (Exception ex) {
+            log.warn("Could not parse audit log date parameter: {}", input);
+            return null;
         }
     }
 

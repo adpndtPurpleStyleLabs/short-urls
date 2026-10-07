@@ -40,7 +40,9 @@ public class AuditLogController {
             @RequestParam(value = "action", required = false) String action,
             @RequestParam(value = "resourceType", required = false) String resourceType,
             @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "startDateTime", required = false) String startDateTime,
             @RequestParam(value = "endDate", required = false) String endDate,
+            @RequestParam(value = "endDateTime", required = false) String endDateTime,
             @PageableDefault(page = 0, size = 15, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         AuthenticatedUser currentUser = resolveUser(user);
@@ -48,8 +50,11 @@ public class AuditLogController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("User not authenticated"));
         }
 
+        String effectiveStart = (startDate != null && !startDate.isBlank()) ? startDate : startDateTime;
+        String effectiveEnd = (endDate != null && !endDate.isBlank()) ? endDate : endDateTime;
+
         Page<AuditLogResponse> logs = auditLogService.getLogs(
-                currentUser.userId(), action, resourceType, startDate, endDate, pageable);
+                currentUser.userId(), action, resourceType, effectiveStart, effectiveEnd, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(logs, "Audit logs retrieved successfully"));
     }
@@ -61,7 +66,9 @@ public class AuditLogController {
             @RequestParam(value = "action", required = false) String action,
             @RequestParam(value = "resourceType", required = false) String resourceType,
             @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "startDateTime", required = false) String startDateTime,
             @RequestParam(value = "endDate", required = false) String endDate,
+            @RequestParam(value = "endDateTime", required = false) String endDateTime,
             @RequestParam(value = "format", defaultValue = "CSV") String format) {
 
         AuthenticatedUser currentUser = resolveUser(user);
@@ -69,8 +76,11 @@ public class AuditLogController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        String effectiveStart = (startDate != null && !startDate.isBlank()) ? startDate : startDateTime;
+        String effectiveEnd = (endDate != null && !endDate.isBlank()) ? endDate : endDateTime;
+
         AuditLogService.DownloadResult result = auditLogService.exportLogs(
-                currentUser.userId(), action, resourceType, startDate, endDate, format);
+                currentUser.userId(), action, resourceType, effectiveStart, effectiveEnd, format);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + result.fileName() + "\"")
