@@ -228,20 +228,36 @@
         }
 
         .sidebar-nav {
-            padding: 16px 12px;
+            padding: 10px 12px 14px;
             display: flex;
             flex-direction: column;
             gap: 2px;
             flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .nav-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            padding: 16px 12px 6px 12px;
+            user-select: none;
+        }
+
+        .nav-section-title:first-of-type {
+            padding-top: 4px;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 9px 12px;
+            padding: 8px 12px;
             border-radius: var(--radius-sm);
-            color: var(--muted);
+            color: #475569;
             font-size: 13px;
             font-weight: 500;
             border: none;
@@ -249,6 +265,7 @@
             width: 100%;
             text-align: left;
             transition: all 0.15s ease;
+            cursor: pointer;
         }
 
         .nav-item:hover {
@@ -263,17 +280,80 @@
         }
 
         .nav-icon {
-            width: 18px;
-            height: 18px;
+            width: 17px;
+            height: 17px;
             flex-shrink: 0;
             stroke-width: 2;
         }
 
-        .sidebar-footer {
-            padding: 16px 20px;
+        .sidebar-help-container {
+            padding: 12px 12px 16px;
+            margin-top: auto;
             border-top: 1px solid var(--border-subtle);
-            font-size: 11px;
-            color: var(--muted);
+        }
+
+        .sidebar-help-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .sidebar-help-card:hover {
+            background: var(--surface-soft);
+            border-color: #cbd5e1;
+        }
+
+        .sidebar-help-icon {
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-help-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-help-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.3;
+        }
+
+        .sidebar-help-desc {
+            font-size: 10.5px;
+            color: #64748b;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-help-arrow {
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.15s ease;
+        }
+
+        .sidebar-help-card:hover .sidebar-help-arrow {
+            transform: translateX(2px);
+        }
+
+        .sidebar-footer {
+            display: none;
         }
 
         /* =========================
@@ -9070,6 +9150,8 @@
             </a>
 
             <nav class="sidebar-nav">
+                <!-- OVERVIEW -->
+                <div class="nav-section-title">OVERVIEW</div>
                 <button class="nav-item active" id="navHome" data-page="home" type="button">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -9078,6 +9160,8 @@
                     <span>Home</span>
                 </button>
 
+                <!-- LINKS -->
+                <div class="nav-section-title">LINKS</div>
                 <button class="nav-item" id="navLinks" data-page="links" type="button">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -9102,6 +9186,17 @@
                         </svg> PRO</span>
                 </button>
 
+                <!-- INSIGHTS -->
+                <div class="nav-section-title">INSIGHTS</div>
+                <button class="nav-item" id="navAnalytics" data-page="analytics" type="button">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" stroke-linecap="round" />
+                        <line x1="12" y1="20" x2="12" y2="4" stroke-linecap="round" />
+                        <line x1="6" y1="20" x2="6" y2="14" stroke-linecap="round" />
+                    </svg>
+                    <span>Analytics</span>
+                </button>
+
                 <button class="nav-item" id="navExtractData" data-page="extract-data" type="button">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -9111,6 +9206,19 @@
                     <span>Extract Data</span>
                 </button>
 
+                <button class="nav-item" id="navAuditLogs" data-page="audit-logs" type="button">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    <span>Audit Logs</span>
+                </button>
+
+                <!-- DEVELOPER -->
+                <div class="nav-section-title">DEVELOPER</div>
                 <button class="nav-item" id="navApiKeys" data-page="api-keys" type="button">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="7.5" cy="15.5" r="5.5" />
@@ -9125,25 +9233,6 @@
                         </svg> PRO</span>
                 </button>
 
-                <button class="nav-item" id="navAuditLogs" data-page="audit-logs" type="button">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <polyline points="10 9 9 9 8 9" />
-                    </svg>
-                    <span>Audit Logs</span>
-                </button>
-
-                <button class="nav-item" id="navBilling" data-page="billing" type="button">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="5" width="20" height="14" rx="2" />
-                        <line x1="2" y1="10" x2="22" y2="10" />
-                    </svg>
-                    <span>Billing</span>
-                </button>
-
                 <button class="nav-item" id="navApiDocs" type="button">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -9151,30 +9240,42 @@
                     </svg>
                     <span>API Docs</span>
                 </button>
+
+                <!-- ACCOUNT -->
+                <div class="nav-section-title">ACCOUNT</div>
+                <button class="nav-item" id="navBilling" data-page="billing" type="button">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                    <span>Billing</span>
+                </button>
             </nav>
 
-            <div class="sidebar-promo-card sidebar-upgrade-card" id="sidebarUpgradeCard" role="button" tabindex="0">
-                <div class="sidebar-promo-title">
-                    <span>Upgrade to Pro</span>
-                    <span class="promo-badge-pro">PRO</span>
-                </div>
-                <div class="sidebar-promo-desc">
-                    <span>Unlimited URLs, custom domains &amp; analytics.</span>
-                    <span class="promo-arrow">&rarr;</span>
+            <div class="sidebar-help-container">
+                <div class="sidebar-help-card" id="sidebarHelpCard" role="button" tabindex="0">
+                    <div class="sidebar-help-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <div class="sidebar-help-content">
+                        <div class="sidebar-help-title">Help &amp; Support</div>
+                        <div class="sidebar-help-desc">Get help or contact us</div>
+                    </div>
+                    <div class="sidebar-help-arrow">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
                 </div>
             </div>
 
-            <div class="sidebar-promo-card" id="sidebarPromoCard" role="button" tabindex="0">
-                <div class="sidebar-promo-title">Build more with our API</div>
-                <div class="sidebar-promo-desc">
-                    <span>Integrate and automate your links at scale.</span>
-                    <span class="promo-arrow">&rarr;</span>
-                </div>
-            </div>
-
-            <div class="sidebar-footer">
-                <span>SecureURLs.me Platform &bull; v1.0</span>
-            </div>
+            <div id="sidebarUpgradeCard" style="display:none;"></div>
+            <div id="sidebarPromoCard" style="display:none;"></div>
         </aside>
 
         <!-- =========================
@@ -13893,6 +13994,18 @@
                 navAuditLogs.addEventListener("click", () => navigateTo("audit-logs"));
             }
 
+            const navAnalytics = document.getElementById("navAnalytics");
+            if (navAnalytics) {
+                navAnalytics.addEventListener("click", () => navigateTo("analytics"));
+            }
+
+            const sidebarHelpCard = document.getElementById("sidebarHelpCard");
+            if (sidebarHelpCard) {
+                sidebarHelpCard.addEventListener("click", () => {
+                    window.location.href = "mailto:support@secureurls.me?subject=SecureURLs.me Support Request";
+                });
+            }
+
             const btnRefreshAuditLogs = document.getElementById("btnRefreshAuditLogs");
             if (btnRefreshAuditLogs) {
                 btnRefreshAuditLogs.addEventListener("click", async () => {
@@ -14107,6 +14220,8 @@
                 navigateTo("extract-data", false);
             } else if (path.startsWith("/console/audit-logs") || path.startsWith("/console/audit")) {
                 navigateTo("audit-logs", false);
+            } else if (path.startsWith("/console/analytics")) {
+                navigateTo("analytics", false);
             } else {
                 navigateTo("home", false);
             }
@@ -14125,7 +14240,7 @@
             });
 
             // Update Pages
-            document.getElementById("pageHome").classList.toggle("active", page === "home");
+            document.getElementById("pageHome").classList.toggle("active", page === "home" || page === "analytics");
             document.getElementById("pageLinks").classList.toggle("active", page === "links");
             const pageDomains = document.getElementById("pageDomains");
             if (pageDomains) pageDomains.classList.toggle("active", page === "domains");
@@ -14143,8 +14258,14 @@
             }
 
             // Trigger page loads
-            if (page === "home") {
+            if (page === "home" || page === "analytics") {
                 loadOverallAnalytics();
+                if (page === "analytics") {
+                    setTimeout(() => {
+                        const chartEl = document.getElementById("homeChartSection") || document.querySelector(".home-overview-card") || document.querySelector(".home-stats-grid");
+                        if (chartEl) chartEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 100);
+                }
             } else if (page === "links") {
                 loadLinks(0);
             } else if (page === "domains") {
