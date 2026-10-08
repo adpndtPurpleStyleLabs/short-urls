@@ -54,6 +54,14 @@ public class AnalyticsSchemaInitializer implements ApplicationRunner {
                     new ColumnDef("os", "VARCHAR(64) NULL")
             );
 
+            // 3. Verify and update link_recipients table for 1px email open IP & location tracking
+            ensureColumns(connection, metaData, "link_recipients",
+                    new ColumnDef("opened_ip", "VARCHAR(64) NULL"),
+                    new ColumnDef("opened_country", "VARCHAR(128) NULL"),
+                    new ColumnDef("opened_city", "VARCHAR(128) NULL"),
+                    new ColumnDef("opened_user_agent", "VARCHAR(512) NULL")
+            );
+
             log.info("Analytics schema verification completed successfully.");
         } catch (Exception e) {
             log.warn("Analytics schema verification warning (tables may already be current): {}", e.getMessage());

@@ -57,6 +57,7 @@ import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.PinPolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.AccessPolicies.ReferrerPolicy;
 import com.preonsurl.apis.link.dto.CreateRequest.UsagePolicies.AccessSchedule;
 import com.preonsurl.apis.link.dto.LinkRecipientDto;
+import com.preonsurl.apis.link.dto.ShareLinkEmailRequest;
 import com.preonsurl.apis.link.entity.LinkRecipient;
 import com.preonsurl.apis.link.repository.LinkRecipientRepository;
 import com.preonsurl.emailer.EmailService;
@@ -1332,6 +1333,9 @@ public class NewUrlService {
                     r.getEmailSentAt(),
                     r.isEmailOpened(),
                     r.getEmailOpenedAt(),
+                    r.getOpenedIp(),
+                    r.getOpenedCountry(),
+                    r.getOpenedCity(),
                     r.isOtpRequested(),
                     r.getOtpRequestedAt(),
                     r.isPageOpened(),
@@ -1340,6 +1344,104 @@ public class NewUrlService {
                     r.getCreatedAt()
             );
         }).toList();
+    }
+
+    @Transactional
+    public List<LinkRecipientDto> shareTrackedEmail(Long userId, String publicId, ShareLinkEmailRequest request) {
+        if (publicId == null || publicId.isBlank()) {
+            throw new IllegalArgumentException("Link identifier cannot be empty");
+        }
+        if (request == null || request.recipientEmail() == null || request.recipientEmail().isBlank()) {
+            throw new IllegalArgumentException("Recipient email is required");
+        }
+
+        String trimmedPublicId = publicId.trim();
+        Optional<NewUrl> found = repository.findByPublicIdAndUserId(trimmedPublicId, userId);
+        if (found.isEmpty()) {
+            found = repository.findByShortCodeAndUserId(trimmedPublicId, userId);
+        }
+        if (found.isEmpty()) {
+            if (repository.findByPublicId(trimmedPublicId).isPresent() || repository.findByShortCode(trimmedPublicId).isPresent()) {
+                throw new AccessDeniedException("Access denied: You do not own this link");
+            }
+            throw new UrlNotFoundException("Link not found: " + publicId);
+        }
+
+        NewUrl entity = found.get();
+        Long shortUrlId = entity.getId();
+        String linkUrl = (entity.getNewUrl() != null && !entity.getNewUrl().isBlank())
+                ? entity.getNewUrl()
+                : (this.domain + "/" + entity.getShortCode());
+
+        String rawEmails = request.recipientEmail();
+        List<String> targetEmails = new java.util.ArrayList<>(Arrays.stream(rawEmails.split("[,;\\s]+"))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .filter(e -> !e.isEmpty() && e.contains("@"))
+                .distinct()
+                .toList());
+
+        if (request.ccEmail() != null && !request.ccEmail().isBlank()) {
+            List<String> ccEmails = Arrays.stream(request.ccEmail().split("[,;\\s]+"))
+                    .map(String::trim)
+                    .map(String::toLowerCase)
+                    .filter(e -> !e.isEmpty() && e.contains("@"))
+                    .distinct()
+                    .toList();
+            for (String cc : ccEmails) {
+                if (!targetEmails.contains(cc)) {
+                    targetEmails.add(cc);
+                }
+            }
+        }
+
+        if (targetEmails.isEmpty()) {
+            throw new IllegalArgumentException("Please provide at least one valid recipient email address");
+        }
+
+        String senderName = (request.senderName() != null && !request.senderName().isBlank())
+                ? request.senderName().trim()
+                : "A user";
+        String subject = (request.subject() != null && !request.subject().isBlank())
+                ? request.subject().trim()
+                : senderName + " is sharing a secured url";
+        String message = (request.message() != null && !request.message().isBlank())
+                ? request.message().trim()
+                : null;
+
+        for (String email : targetEmails) {
+            Optional<LinkRecipient> existing = linkRecipientRepository.findByShortUrlIdAndEmailIgnoreCase(shortUrlId, email);
+            LinkRecipient recipient;
+            if (existing.isPresent()) {
+                recipient = existing.get();
+                if (recipient.getTrackingToken() == null || recipient.getTrackingToken().isBlank()) {
+                    recipient.setTrackingToken(UUID.randomUUID().toString().replace("-", ""));
+                }
+            } else {
+                String token = UUID.randomUUID().toString().replace("-", "");
+                recipient = new LinkRecipient(shortUrlId, email, token);
+            }
+
+            String trackingPixelUrl = this.domain + "/api/track/email-open/" + recipient.getTrackingToken();
+
+            if (emailService != null) {
+                try {
+                    emailService.sendSecuredLinkInvitation(email, linkUrl, trackingPixelUrl, senderName, subject, message);
+                    recipient.setEmailSent(true);
+                    recipient.setEmailSentAt(Instant.now());
+                } catch (Exception e) {
+                    log.warn("Failed to dispatch tracked share email to '{}': {}", email, e.getMessage());
+                }
+            } else {
+                log.info("EmailService unavailable, logging invitation to '{}' with tracking url '{}'", email, trackingPixelUrl);
+                recipient.setEmailSent(true);
+                recipient.setEmailSentAt(Instant.now());
+            }
+
+            linkRecipientRepository.save(recipient);
+        }
+
+        return getLinkRecipients(userId, publicId);
     }
 
     public Optional<AccessPolicy> getAccessPolicy(Long shortUrlId) {

@@ -371,6 +371,7 @@
             height: var(--header-height);
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -379,6 +380,16 @@
             position: sticky;
             top: 0;
             z-index: 30;
+            transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-bottom-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .app-header.scrolled,
+        .app-header.is-scrolled,
+        .app-header.has-shadow,
+        .app-header.header-shadow {
+            box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+            border-bottom-color: rgba(226, 232, 240, 0.9);
+            background: rgba(255, 255, 255, 0.98);
         }
 
         .header-left {
@@ -2127,10 +2138,10 @@
         }
 
         .btn-row-share:hover {
-            background: #f0fdf4;
-            border-color: #86efac;
-            color: #166534;
-            box-shadow: 0 2px 6px rgba(34, 197, 94, 0.12);
+            background: #f3f3f3;
+            border-color: #c4c4c4;
+            color: #444;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.09);
             transform: translateY(-1px);
         }
 
@@ -3622,7 +3633,6 @@
 
         .modal-dialog:not(.celebrate-dialog):not(.add-domain-dialog) {
             position: relative;
-            width: min(880px, calc(100vw - 32px));
             max-height: calc(100vh - 48px);
             display: flex;
             flex-direction: column;
@@ -4069,6 +4079,193 @@
         .field-group .optional {
             font-weight: 400;
             color: var(--muted);
+        }
+
+        /* Label Info Tooltip with crisp 12px SVG icon */
+        .label-info-tip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            color: #94a3b8;
+            cursor: help;
+            user-select: none;
+            transition: color 0.15s ease;
+            margin-left: 5px;
+            vertical-align: middle;
+            text-transform: none;
+            flex-shrink: 0;
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+
+        .label-info-tip:hover,
+        .label-info-tip:focus-visible {
+            color: #0f172a;
+            outline: none;
+        }
+
+        .label-info-tip .info-svg {
+            width: 12px;
+            height: 12px;
+            display: block;
+            flex-shrink: 0;
+            transition: transform 0.15s ease, stroke 0.15s ease;
+        }
+
+        .label-info-tip:hover .info-svg {
+            transform: scale(1.1);
+            stroke: #0f172a;
+        }
+
+        .label-info-tip .label-info-popover {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: -8px;
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 450;
+            line-height: 1.38;
+            white-space: normal;
+            width: max-content;
+            max-width: 250px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 99999;
+            pointer-events: none;
+            transform: translateY(3px);
+            transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s;
+            text-align: left;
+        }
+
+        .label-info-tip .label-info-popover::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 13px;
+            border-width: 4px;
+            border-style: solid;
+            border-color: #0f172a transparent transparent transparent;
+        }
+
+        .label-info-tip:hover .label-info-popover,
+        .label-info-tip:focus-visible .label-info-popover {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Dedicated Production-Grade Email Chip Input */
+        .email-chip-input-box {
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+            min-height: 38px;
+            max-height: 105px;
+            overflow-y: auto;
+            padding: 4px 8px 4px 34px;
+            background: #ffffff;
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: 8px;
+            cursor: text;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .email-chip-input-box:focus-within {
+            border-color: #0f172a;
+            box-shadow: 0 0 0 1px #0f172a;
+        }
+
+        .email-chip-input-box .input-icon-prefix {
+            position: absolute;
+            left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            pointer-events: none;
+            transition: color 0.15s ease;
+            z-index: 1;
+        }
+
+        .email-chip-input-box:focus-within .input-icon-prefix {
+            color: #0f172a;
+        }
+
+        .email-chip-input-box .chip-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px 2px 8px;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #0f172a;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            line-height: 1.4;
+            user-select: none;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            max-width: 100%;
+            word-break: break-all;
+        }
+
+        .email-chip-input-box .chip-item:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        .email-chip-input-box .chip-remove-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0;
+            transition: all 0.15s ease;
+            margin-left: 2px;
+            flex-shrink: 0;
+        }
+
+        .email-chip-input-box .chip-remove-btn:hover {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .email-chip-input-box .chip-inline-input {
+            flex: 1 1 120px;
+            min-width: 120px;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 2px 4px !important;
+            font-size: 12.5px !important;
+            color: #0f172a !important;
+            height: 26px !important;
+            box-sizing: border-box;
+        }
+
+        .email-chip-input-box .chip-inline-input::placeholder {
+            color: #94a3b8;
+            font-size: 12px;
         }
 
         .form-input,
@@ -6153,6 +6350,10 @@
             border-bottom: 1px solid #f1f5f9;
         }
 
+        .link-modal-dialog.is-quick-share .create-success-header {
+            display: none !important;
+        }
+
         .create-success-header-left {
             display: flex;
             align-items: center;
@@ -7118,6 +7319,60 @@
             display: flex;
             gap: 10px;
             justify-content: center;
+        }
+
+        .log-table-switcher {
+            display: inline-flex;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 7px;
+            border: 1px solid #e2e8f0;
+            gap: 2px;
+        }
+
+        .analytics-tab-btn,
+        .log-switch-btn {
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .analytics-tab-btn:hover,
+        .log-switch-btn:hover {
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .analytics-tab-btn.active,
+        .log-switch-btn.active {
+            background: #000000 !important;
+            color: #ffffff !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .send-email-modal-dialog {
+            max-width: 500px;
+            width: 100%;
+            overflow: visible !important;
+        }
+
+        .send-email-modal-dialog .modal-header {
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        }
+
+        .send-email-modal-dialog .modal-content {
+            overflow: visible !important;
         }
 
         /* =========================
@@ -9283,7 +9538,7 @@
     ========================= -->
         <div class="main-wrapper">
             <!-- HEADER -->
-            <header class="app-header">
+            <header class="app-header" id="appHeader">
                 <div class="header-left">
                     <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Toggle menu">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -11799,9 +12054,7 @@
             aria-labelledby="analyticsTitle">
             <div class="modal-header">
                 <div>
-<!--                    <div class="modal-kicker">URL ANALYTICS</div>-->
                     <h2 id="analyticsTitle">URL Analytics</h2>
-                    <p id="analyticsSubtitle">Detailed click metrics and access log.</p>
                 </div>
                 <button class="modal-close-btn" id="urlAnalyticsCloseBtn" type="button"
                     aria-label="Close modal">&times;</button>
@@ -12016,7 +12269,7 @@
                                 <tr>
                                     <th>Recipient Email</th>
                                     <th>Email Sent</th>
-                                    <th>Email Opened (1px Beacon)</th>
+                                    <th>Email Opened</th>
                                     <th>OTP Requested</th>
                                     <th>Page Access Granted</th>
                                 </tr>
@@ -12059,48 +12312,100 @@
                     </div>
                 </div>
 
-                <!-- Access Log Card -->
-                <div class="card" style="min-height: 220px;">
-                    <div class="analytics-card-header">
-                        <div>
-                            <h3 class="analytics-card-title">Access Log</h3>
-                            <p class="page-subtitle">Recent visitor requests recorded for this URL.</p>
+                <!-- Access Log & Email Logs Card with Table Switcher -->
+                <div class="card" id="analyticsLogsCard" style="min-height: 220px;">
+                    <div class="analytics-card-header" style="flex-wrap: wrap; gap: 8px; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <div class="log-table-switcher" role="tablist">
+                                <button type="button" class="analytics-tab-btn active" id="btnSwitchAccessLogTab" data-view="access">
+                                    Access Log
+                                </button>
+                                <button type="button" class="analytics-tab-btn" id="btnSwitchEmailLogTab" data-view="email">
+                                    Email Logs
+                                </button>
+                            </div>
+                            <p class="page-subtitle" id="analyticsLogsSubtitle" style="margin:0;">Recent visitor requests recorded for this URL.</p>
                         </div>
-                        <button class="btn btn-secondary" id="refreshAccessLogsBtn" type="button"
-                            style="height:28px; font-size:11.5px; font-weight:600; padding:0 10px; border-radius:6px;">Refresh</button>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button class="btn btn-secondary" id="analyticsSendTrackedEmailBtn" type="button"
+                                style="height:28px; font-size:11.5px; font-weight:600; padding:0 10px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                Send Tracked Email
+                            </button>
+                            <button class="btn btn-secondary" id="refreshAccessLogsBtn" type="button"
+                                style="height:28px; font-size:11.5px; font-weight:600; padding:0 10px; border-radius:6px;">Refresh</button>
+                        </div>
                     </div>
-                    <div class="table-wrapper" style="min-height: 160px;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Accessed At</th>
-                                    <th>IP Address</th>
-                                    <th>Location</th>
-                                    <th>Device &amp; Browser</th>
-                                    <th>Referrer</th>
-                                </tr>
-                            </thead>
-                            <tbody id="accessLogsTableBody">
-                                <tr>
-                                    <td colspan="5" class="table-empty-state" style="padding:22px 12px;">
-                                        <div class="loading-state-box" style="padding:0;">
-                                            <svg class="spin-icon" width="20" height="20" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="2.5"
-                                                style="color:#000000;">
-                                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                                            </svg>
-                                            <span style="font-weight:500;">Loading access logs...</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <!-- View 1: Access Logs View -->
+                    <div id="analyticsAccessLogsView">
+                        <div class="table-wrapper" style="min-height: 160px;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Accessed At</th>
+                                        <th>IP Address</th>
+                                        <th>Location</th>
+                                        <th>Device &amp; Browser</th>
+                                        <th>Referrer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accessLogsTableBody">
+                                    <tr>
+                                        <td colspan="5" class="table-empty-state" style="padding:22px 12px;">
+                                            <div class="loading-state-box" style="padding:0;">
+                                                <svg class="spin-icon" width="20" height="20" viewBox="0 0 24 24"
+                                                    fill="none" stroke="currentColor" stroke-width="2.5"
+                                                    style="color:#000000;">
+                                                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                                </svg>
+                                                <span style="font-weight:500;">Loading access logs...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-pagination">
+                            <span id="accessLogsPaginationInfo" style="font-weight:500;">Loading...</span>
+                            <div class="pagination-actions">
+                                <button class="pagination-btn" id="accessLogsPrevBtn" type="button">← Previous</button>
+                                <button class="pagination-btn" id="accessLogsNextBtn" type="button">Next →</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="table-pagination">
-                        <span id="accessLogsPaginationInfo" style="font-weight:500;">Loading...</span>
-                        <div class="pagination-actions">
-                            <button class="pagination-btn" id="accessLogsPrevBtn" type="button">← Previous</button>
-                            <button class="pagination-btn" id="accessLogsNextBtn" type="button">Next →</button>
+
+                    <!-- View 2: Email Logs View -->
+                    <div id="analyticsEmailLogsView" style="display:none;">
+                        <div class="table-wrapper" style="min-height: 160px;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Recipient Email</th>
+                                        <th>Email Delivery</th>
+                                        <th>Email Opened</th>
+                                        <th>Opened IP &amp; Location</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analyticsEmailLogsTableBody">
+                                    <tr>
+                                        <td colspan="5" class="table-empty-state" style="padding:22px 12px;">
+                                            <div class="loading-state-box" style="padding:0;">
+                                                <svg class="spin-icon" width="20" height="20" viewBox="0 0 24 24"
+                                                    fill="none" stroke="currentColor" stroke-width="2.5"
+                                                    style="color:#000000;">
+                                                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                                </svg>
+                                                <span style="font-weight:500;">Loading email logs...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -12108,25 +12413,19 @@
         </div>
     </div>
 
-    <!-- ============================================================
-     QR CODE MODAL
-    ============================================================ -->
+
+    <!--     QR CODE MODAL-->
     <div class="modal" id="qrCodeModal" aria-hidden="true">
         <div class="modal-backdrop" id="qrCodeModalBackdrop"></div>
         <div class="modal-dialog qr-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="qrCodeModalTitle">
             <div class="modal-header">
                 <div>
-                    <div class="modal-kicker">QR Code</div>
                     <h2 id="qrCodeModalTitle">Link QR Code</h2>
-                    <p id="qrCodeModalSubtitle" style="word-break: break-all; margin-top: 2px;">Scan with phone camera
-                        to open short link</p>
                 </div>
-                <button class="modal-close-btn" id="qrCodeModalCloseBtn" type="button"
-                    aria-label="Close modal">&times;</button>
+                <button class="modal-close-btn" id="qrCodeModalCloseBtn" type="button" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-content qr-modal-content">
                 <div class="qr-code-display-card">
-                    <!-- Loading state -->
                     <div class="qr-state-box" id="qrModalLoading">
                         <svg class="spin-icon" width="30" height="30" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2.5" style="color:#0f172a;">
@@ -12134,8 +12433,6 @@
                         </svg>
                         <span>Generating high-res QR code...</span>
                     </div>
-
-                    <!-- Error state -->
                     <div class="qr-state-box qr-error-box" id="qrModalError" style="display:none;">
                         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
                             <circle cx="12" cy="12" r="10" />
@@ -12146,13 +12443,10 @@
                         <button type="button" class="btn btn-secondary btn-sm" id="qrModalRetryBtn"
                             style="margin-top:4px; height:32px; padding:0 12px; font-size:12px;">Try Again</button>
                     </div>
-
-                    <!-- QR Image View -->
                     <div class="qr-image-container" id="qrModalImageContainer" style="display:none;">
                         <img id="qrModalImg" src="" alt="QR Code" class="qr-code-img" />
                     </div>
                 </div>
-
                 <div class="qr-url-box">
                     <input type="text" id="qrModalUrlInput" class="form-input mono" readonly />
                     <button type="button" class="btn btn-secondary" id="qrModalCopyUrlBtn" title="Copy URL">
@@ -12187,6 +12481,130 @@
                         <span>Share</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+     CUSTOM SEND TRACKED EMAIL MODAL
+    ============================================================ -->
+    <div class="modal" id="sendTrackedEmailModal" aria-hidden="true">
+        <div class="modal-backdrop" id="sendTrackedEmailModalBackdrop"></div>
+        <div class="modal-dialog send-email-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="sendTrackedEmailModalTitle" style="max-width: 500px; width: 100%; overflow: visible !important;">
+            <div class="modal-header" style="padding: 18px 24px 15px; border-bottom: 1px solid #f1f5f9;">
+                <div>
+                    <h2 class="modal-title" id="sendTrackedEmailModalTitle" style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0;">Send Tracked Email</h2>
+                </div>
+                <button class="modal-close-btn" id="sendTrackedEmailModalCloseBtn" type="button" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-content" style="padding: 18px 24px 22px; overflow: visible !important;">
+                <!-- Email Dispatch Form -->
+                <form id="sendTrackedEmailForm" onsubmit="return false;">
+                    <input type="hidden" id="sendTrackedEmailPublicId" value="" />
+                    <input type="hidden" id="sendTrackedEmailUrl" value="" />
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                            <label class="form-label" for="sendTrackedRecipientInput" style="font-weight: 600; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; margin: 0;">
+                                <span>Recipient Email <span style="color: #ef4444;">*</span></span>
+                                <span class="label-info-tip" tabindex="0" role="tooltip" aria-label="Recipient Email Info">
+                                    <svg class="info-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                    <span class="label-info-popover">Primary recipient(s) receiving individual emails with 1px open tracking. Press Enter or comma to add.</span>
+                                </span>
+                            </label>
+                            <span style="font-size: 10.5px; color: #94a3b8; font-weight: 400;">Press Enter to add</span>
+                        </div>
+                        <div class="email-chip-input-box" id="sendTrackedRecipientBox">
+                            <div class="input-icon-prefix">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                </svg>
+                            </div>
+                            <div class="chip-items-list" id="sendTrackedRecipientChips"></div>
+                            <input type="email" class="chip-inline-input" id="sendTrackedRecipientInput" placeholder="recipient@company.com" autocomplete="off" />
+                        </div>
+                        <input type="hidden" id="sendTrackedEmailRecipient" value="" />
+                    </div>
+
+                    <!-- CC Email -->
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                            <label class="form-label" for="sendTrackedCcInput" style="font-weight: 600; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; margin: 0;">
+                                <span>CC Email <span style="font-size: 11px; font-weight: 400; color: #64748b;">(Optional)</span></span>
+                                <span class="label-info-tip" tabindex="0" role="tooltip" aria-label="CC Email Info">
+                                    <svg class="info-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                    <span class="label-info-popover">Carbon-copy recipient(s) who will also receive the tracked link invitation. Press Enter or comma to add.</span>
+                                </span>
+                            </label>
+                            <span style="font-size: 10.5px; color: #94a3b8; font-weight: 400;">Optional</span>
+                        </div>
+                        <div class="email-chip-input-box" id="sendTrackedCcBox">
+                            <div class="input-icon-prefix">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </div>
+                            <div class="chip-items-list" id="sendTrackedCcChips"></div>
+                            <input type="email" class="chip-inline-input" id="sendTrackedCcInput" placeholder="colleague@company.com" autocomplete="off" />
+                        </div>
+                        <input type="hidden" id="sendTrackedEmailCc" value="" />
+                    </div>
+
+                    <!-- Subject -->
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label class="form-label" for="sendTrackedEmailSubject" style="font-weight: 600; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; margin-bottom: 5px;">
+                            <span>Subject</span>
+                            <span class="label-info-tip" tabindex="0" role="tooltip" aria-label="Subject Info">
+                                <svg class="info-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <span class="label-info-popover">The email subject line shown to recipients. You can customize this or keep the prefilled subject.</span>
+                            </span>
+                        </label>
+                        <input type="text" id="sendTrackedEmailSubject" class="form-input" placeholder="Subject" style="height: 38px; border-radius: 8px; font-size: 12.5px;" />
+                    </div>
+
+                    <!-- Body -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="form-label" for="sendTrackedEmailMessage" style="font-weight: 600; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; margin-bottom: 5px;">
+                            <span>Body</span>
+                            <span class="label-info-tip" tabindex="0" role="tooltip" aria-label="Body Info">
+                                <svg class="info-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <span class="label-info-popover">Optional message or context displayed inside the email body above the secure link button.</span>
+                            </span>
+                        </label>
+                        <textarea id="sendTrackedEmailMessage" class="form-input" rows="3" style="border-radius: 8px; font-size: 12.5px; line-height: 1.5; resize: vertical; min-height: 74px;" placeholder="Write your email body or optional note..."></textarea>
+                    </div>
+
+                    <!-- Footer Action Buttons -->
+                    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+                        <button class="btn btn-secondary" id="sendTrackedEmailCancelBtn" type="button" style="height: 36px; font-size: 12.5px; font-weight: 500; border-radius: 8px; padding: 0 16px;">Cancel</button>
+                        <button class="btn btn-primary" id="sendTrackedEmailSubmitBtn" type="submit" style="height: 36px; font-size: 12.5px; background: #0f172a; color: #ffffff; border: 1px solid #0f172a; font-weight: 600; padding: 0 18px; border-radius: 8px; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                            <span>Send Tracked Email</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -13918,6 +14336,27 @@
                     backdrop.classList.remove("show");
                 });
             }
+
+            // Sticky Header Scroll Border-Shadow
+            const appHeader = document.getElementById("appHeader") || document.querySelector(".app-header");
+            if (appHeader) {
+                const handleHeaderScroll = () => {
+                    const scrollY = window.scrollY
+                        || document.documentElement.scrollTop
+                        || document.body.scrollTop
+                        || (document.querySelector(".console-content")?.scrollTop)
+                        || 0;
+                    if (scrollY > 2) {
+                        appHeader.classList.add("scrolled");
+                    } else {
+                        appHeader.classList.remove("scrolled");
+                    }
+                };
+
+                window.addEventListener("scroll", handleHeaderScroll, { passive: true });
+                document.addEventListener("scroll", handleHeaderScroll, { passive: true, capture: true });
+                handleHeaderScroll();
+            }
         }
 
         function setupNavigation() {
@@ -14315,7 +14754,7 @@
         }
 
         function openApiDocs() {
-            window.location.href = "/api-documentation";
+            window.open('/api-documentation', '_blank', 'noopener,noreferrer');
         }
 
         function logout(reason) {
@@ -16400,14 +16839,12 @@
             const modal = document.getElementById("qrCodeModal");
             if (!modal) return;
 
-            const subtitleEl = document.getElementById("qrCodeModalSubtitle");
             const urlInput = document.getElementById("qrModalUrlInput");
             const loadingState = document.getElementById("qrModalLoading");
             const errorState = document.getElementById("qrModalError");
             const imgContainer = document.getElementById("qrModalImageContainer");
             const imgEl = document.getElementById("qrModalImg");
 
-            if (subtitleEl) subtitleEl.textContent = shortUrl || "Scan with phone camera to open short link";
             if (urlInput) urlInput.value = shortUrl || "";
 
             // Reset states
@@ -16621,8 +17058,22 @@
             // Initialize or prepare world map immediately
             initOrGetAnalyticsWorldMap();
 
+            // Reset table switcher to Access Log view by default
+            currentAnalyticsLogView = "access";
+            const btnAccessTab = document.getElementById("btnSwitchAccessLogTab");
+            const btnEmailTab = document.getElementById("btnSwitchEmailLogTab");
+            const vAccess = document.getElementById("analyticsAccessLogsView");
+            const vEmail = document.getElementById("analyticsEmailLogsView");
+            const lSubtitle = document.getElementById("analyticsLogsSubtitle");
+            if (btnAccessTab) btnAccessTab.classList.add("active");
+            if (btnEmailTab) btnEmailTab.classList.remove("active");
+            if (vAccess) vAccess.style.display = "block";
+            if (vEmail) vEmail.style.display = "none";
+            if (lSubtitle) lSubtitle.textContent = "Recent visitor requests recorded for this URL.";
+
             loadUrlAnalyticsData();
             loadAccessLogsData();
+            loadAnalyticsEmailLogsData(appState.selectedPublicId);
             loadOtpRecipientsData();
 
             setTimeout(() => {
@@ -16703,11 +17154,49 @@
             loadUrlAnalyticsData();
         });
 
+        let currentAnalyticsLogView = "access";
+
+        const btnSwitchAccess = document.getElementById("btnSwitchAccessLogTab");
+        const btnSwitchEmail = document.getElementById("btnSwitchEmailLogTab");
+        const viewAccessLogs = document.getElementById("analyticsAccessLogsView");
+        const viewEmailLogs = document.getElementById("analyticsEmailLogsView");
+        const logsSubtitle = document.getElementById("analyticsLogsSubtitle");
+
+        btnSwitchAccess?.addEventListener("click", () => {
+            currentAnalyticsLogView = "access";
+            btnSwitchAccess.classList.add("active");
+            btnSwitchEmail?.classList.remove("active");
+            if (viewAccessLogs) viewAccessLogs.style.display = "block";
+            if (viewEmailLogs) viewEmailLogs.style.display = "none";
+            if (logsSubtitle) logsSubtitle.textContent = "Recent visitor requests recorded for this URL.";
+            loadAccessLogsData();
+        });
+
+        btnSwitchEmail?.addEventListener("click", () => {
+            currentAnalyticsLogView = "email";
+            btnSwitchEmail.classList.add("active");
+            btnSwitchAccess?.classList.remove("active");
+            if (viewEmailLogs) viewEmailLogs.style.display = "block";
+            if (viewAccessLogs) viewAccessLogs.style.display = "none";
+            if (logsSubtitle) logsSubtitle.textContent = "Real-time delivery status and 1px tracking beacon opens for shared emails.";
+            const pubId = appState.selectedPublicId || (appState.currentLinksData || []).find(l => l.shortLink === appState.selectedUrl)?.publicId;
+            if (pubId) loadAnalyticsEmailLogsData(pubId);
+        });
+
+        document.getElementById("analyticsSendTrackedEmailBtn")?.addEventListener("click", () => {
+            openSendTrackedEmailModal(appState.selectedUrl, appState.selectedPublicId);
+        });
+
         document.getElementById("refreshAccessLogsBtn").addEventListener("click", async () => {
             const btn = document.getElementById("refreshAccessLogsBtn");
             setLoading(btn, true, "Refreshing...");
             try {
-                await loadAccessLogsData();
+                if (currentAnalyticsLogView === "email") {
+                    const pubId = appState.selectedPublicId || (appState.currentLinksData || []).find(l => l.shortLink === appState.selectedUrl)?.publicId;
+                    if (pubId) await loadAnalyticsEmailLogsData(pubId);
+                } else {
+                    await loadAccessLogsData();
+                }
             } finally {
                 setLoading(btn, false, "Refresh");
             }
@@ -17261,7 +17750,6 @@
                                 <span class="badge" style="background:#f1f5f9; color:#334155; font-size:10px; padding:1px 6px; border-radius:4px; font-weight:600;">${escapeHtml(browserLabel)}</span>
                                 <span class="badge" style="background:#f8fafc; border:1px solid #e2e8f0; color:#64748b; font-size:10px; padding:1px 6px; border-radius:4px;">${escapeHtml(osLabel)}</span>
                             </div>
-                            ${log.userAgent ? `<div style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; color:#94a3b8;" title="${escapeAttribute(log.userAgent)}">${escapeHtml(log.userAgent)}</div>` : ''}
                         </div>
                     `;
                 }
@@ -17366,7 +17854,13 @@
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                 Opened (1px)
                                </span>
-                               <span style="font-size:11px; color:#64748b; margin-left:6px;">${formatTimestamp(r.emailOpenedAt)}</span>`
+                               <span style="font-size:11px; color:#64748b; margin-left:6px;">${formatTimestamp(r.emailOpenedAt)}</span>
+                               ${(r.openedCountry || r.openedCity || r.openedIp) ? `
+                                   <div style="margin-top:4px; font-size:11.5px; color:#334155; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                                       ${(r.openedCountry || r.openedCity) ? `<span style="font-weight:600; color:#0f172a;">📍 ${escapeHtml((r.openedCity ? r.openedCity + ', ' : '') + (r.openedCountry || ''))}</span>` : ''}
+                                       ${r.openedIp ? `<code style="font-size:10.5px; color:#475569; background:#f1f5f9; padding:1px 5px; border-radius:4px; border:1px solid #e2e8f0;">IP: ${escapeHtml(r.openedIp)}</code>` : ''}
+                                   </div>
+                               ` : ''}`
                     : `<span style="color:#94a3b8; font-size:11.5px;">Unopened</span>`
                 }
                     </td>
@@ -17399,6 +17893,356 @@
             } finally {
                 setLoading(btn, false, "Refresh Tracking");
             }
+        });
+
+        async function loadAnalyticsEmailLogsData(pubId) {
+            const tbody = document.getElementById("analyticsEmailLogsTableBody");
+            if (!tbody) return;
+            const targetPubId = pubId || appState.selectedPublicId || (appState.currentLinksData || []).find(l => l.shortLink === appState.selectedUrl)?.publicId;
+            if (!targetPubId) {
+                tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No link selected.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state" style="padding:32px 16px;">${getSpinnerHtml(20, "Loading email logs...")}</td></tr>`;
+
+            try {
+                const response = await authenticatedFetch(`/link/${encodeURIComponent(targetPubId)}/recipients`);
+                const result = await parseResponse(response);
+
+                if (response.ok && result.success && Array.isArray(result.data)) {
+                    const recipients = result.data;
+                    if (recipients.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="table-empty-state" style="padding:32px 16px;">
+                                    <div style="font-weight:600; color:#0f172a; margin-bottom:4px;">No tracked emails sent for this link yet</div>
+                                    <div style="font-size:12px; color:#64748b; margin-bottom:12px;">Share this link using a tracked email to monitor delivery, 1px opens, IP, and location.</div>
+                                    <button class="btn btn-secondary" id="emptySendTrackedEmailBtn" type="button" style="height:30px; font-size:12px; font-weight:600; padding:0 12px; border-radius:6px;">
+                                        Send Tracked Email
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        document.getElementById("emptySendTrackedEmailBtn")?.addEventListener("click", () => {
+                            openSendTrackedEmailModal(appState.selectedUrl, appState.selectedPublicId);
+                        });
+                        return;
+                    }
+
+                    tbody.innerHTML = recipients.map(r => `
+                        <tr>
+                            <td>
+                                <div style="font-weight:600; color:#0f172a; font-size:13px;">${escapeHtml(r.email)}</div>
+                            </td>
+                            <td>
+                                ${r.emailSent
+                                    ? `<span class="badge" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;">Delivered</span>
+                                       <span style="font-size:11px; color:#64748b; margin-left:6px;">${formatTimestamp(r.emailSentAt)}</span>`
+                                    : `<span style="color:#94a3b8; font-size:11.5px;">Pending</span>`}
+                            </td>
+                            <td>
+                                ${r.emailOpened
+                                    ? `<span class="badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        Opened (1px)
+                                       </span>
+                                       <span style="font-size:11px; color:#64748b; margin-left:6px;">${formatTimestamp(r.emailOpenedAt)}</span>`
+                                    : `<span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-size:11px; font-weight:500; padding:2px 8px; border-radius:6px;">Unopened</span>`}
+                            </td>
+                            <td>
+                                ${(r.openedCountry || r.openedCity || r.openedIp) ? `
+                                    <div style="font-size:11.5px; color:#334155; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                                        ${(r.openedCountry || r.openedCity) ? `<span style="font-weight:600; color:#0f172a;">📍 ${escapeHtml((r.openedCity ? r.openedCity + ', ' : '') + (r.openedCountry || ''))}</span>` : ''}
+                                        ${r.openedIp ? `<code style="font-size:10.5px; color:#475569; background:#f1f5f9; padding:1px 5px; border-radius:4px; border:1px solid #e2e8f0;">IP: ${escapeHtml(r.openedIp)}</code>` : ''}
+                                    </div>
+                                ` : `<span style="color:#94a3b8; font-size:11.5px;">—</span>`}
+                            </td>
+                            <td>
+                                <span class="badge" style="background:#f8fafc; color:#0f172a; border:1px solid #e2e8f0; font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;">
+                                    ${escapeHtml(r.status || (r.emailOpened ? 'Opened' : (r.emailSent ? 'Delivered' : 'Pending')))}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join("");
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No email logs found.</td></tr>`;
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">Unable to load email logs.</td></tr>`;
+            }
+        }
+
+        /*
+         * SEND TRACKED EMAIL MODAL FUNCTIONS & CHIP INPUTS
+         */
+        const sendTrackedEmailChips = {
+            recipients: [],
+            cc: [],
+
+            init() {
+                this.setupChipBox("recipients", "sendTrackedRecipientBox", "sendTrackedRecipientInput", "sendTrackedRecipientChips", "sendTrackedEmailRecipient");
+                this.setupChipBox("cc", "sendTrackedCcBox", "sendTrackedCcInput", "sendTrackedCcChips", "sendTrackedEmailCc");
+            },
+
+            setupChipBox(key, boxId, inputId, chipsContainerId, hiddenId) {
+                const box = document.getElementById(boxId);
+                const input = document.getElementById(inputId);
+                const chipsEl = document.getElementById(chipsContainerId);
+                const hidden = document.getElementById(hiddenId);
+                if (!box || !input || !chipsEl) return;
+
+                box.addEventListener("click", (e) => {
+                    if (!e.target.closest(".chip-remove-btn")) {
+                        input.focus();
+                    }
+                });
+
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === "," || e.key === ";" || (e.key === " " && input.value.trim())) {
+                        e.preventDefault();
+                        this.commitInput(key, input, hidden, chipsEl);
+                    } else if (e.key === "Backspace" && !input.value) {
+                        this.removeLast(key, hidden, chipsEl);
+                    }
+                });
+
+                input.addEventListener("paste", (e) => {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData("text");
+                    if (!text) return;
+                    const tokens = text.split(/[,;\s]+/).map(t => t.trim().toLowerCase()).filter(Boolean);
+                    tokens.forEach(tok => this.add(key, tok, hidden, chipsEl));
+                    input.value = "";
+                });
+
+                input.addEventListener("blur", () => {
+                    this.commitInput(key, input, hidden, chipsEl);
+                });
+            },
+
+            commitInput(key, input, hidden, chipsEl) {
+                const val = input.value.trim();
+                if (!val) return;
+                const tokens = val.split(/[,;\s]+/).map(t => t.trim().toLowerCase()).filter(Boolean);
+                tokens.forEach(tok => this.add(key, tok, hidden, chipsEl));
+                input.value = "";
+            },
+
+            add(key, rawEmail, hidden, chipsEl) {
+                if (!rawEmail) return;
+                const email = rawEmail.trim().toLowerCase();
+                if (!email.includes("@")) return;
+
+                if (this[key].includes(email)) {
+                    const existingChip = Array.from(chipsEl.children).find(c => c.dataset.value === email);
+                    if (existingChip) {
+                        existingChip.classList.remove("chip-item-highlight");
+                        void existingChip.offsetWidth;
+                        existingChip.classList.add("chip-item-highlight");
+                    }
+                    return;
+                }
+
+                this[key].push(email);
+                this.renderChip(key, email, hidden, chipsEl);
+                this.syncHidden(key, hidden);
+            },
+
+            remove(key, email, hidden, chipsEl) {
+                this[key] = this[key].filter(e => e !== email);
+                Array.from(chipsEl.children).forEach(child => {
+                    if (child.dataset.value === email) child.remove();
+                });
+                this.syncHidden(key, hidden);
+            },
+
+            removeLast(key, hidden, chipsEl) {
+                if (!this[key].length) return;
+                const last = this[key][this[key].length - 1];
+                this.remove(key, last, hidden, chipsEl);
+            },
+
+            renderChip(key, email, hidden, chipsEl) {
+                const chip = document.createElement("span");
+                chip.className = "chip-item";
+                chip.dataset.value = email;
+                chip.innerHTML = `
+                    <span class="chip-item-text" title="${escapeHtml(email)}">${escapeHtml(email)}</span>
+                    <button type="button" class="chip-remove-btn" title="Remove ${escapeHtml(email)}" aria-label="Remove ${escapeHtml(email)}">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                `;
+                chip.querySelector(".chip-remove-btn").addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    this.remove(key, email, hidden, chipsEl);
+                });
+                chipsEl.appendChild(chip);
+            },
+
+            syncHidden(key, hidden) {
+                if (hidden) {
+                    hidden.value = this[key].join(", ");
+                }
+            },
+
+            clear(key) {
+                this[key] = [];
+                const chipsContainerId = key === "recipients" ? "sendTrackedRecipientChips" : "sendTrackedCcChips";
+                const inputId = key === "recipients" ? "sendTrackedRecipientInput" : "sendTrackedCcInput";
+                const hiddenId = key === "recipients" ? "sendTrackedEmailRecipient" : "sendTrackedEmailCc";
+
+                const chipsEl = document.getElementById(chipsContainerId);
+                const input = document.getElementById(inputId);
+                const hidden = document.getElementById(hiddenId);
+
+                if (chipsEl) chipsEl.innerHTML = "";
+                if (input) input.value = "";
+                if (hidden) hidden.value = "";
+            },
+
+            clearAll() {
+                this.clear("recipients");
+                this.clear("cc");
+            },
+
+            commitPending() {
+                const rInput = document.getElementById("sendTrackedRecipientInput");
+                const rHidden = document.getElementById("sendTrackedEmailRecipient");
+                const rChips = document.getElementById("sendTrackedRecipientChips");
+                if (rInput && rInput.value.trim()) {
+                    this.commitInput("recipients", rInput, rHidden, rChips);
+                }
+
+                const cInput = document.getElementById("sendTrackedCcInput");
+                const cHidden = document.getElementById("sendTrackedEmailCc");
+                const cChips = document.getElementById("sendTrackedCcChips");
+                if (cInput && cInput.value.trim()) {
+                    this.commitInput("cc", cInput, cHidden, cChips);
+                }
+            }
+        };
+
+        // Initialize chip inputs for Send Tracked Email
+        sendTrackedEmailChips.init();
+
+        function openSendTrackedEmailModal(url, publicId) {
+            const modal = document.getElementById("sendTrackedEmailModal");
+            if (!modal) return;
+
+            const targetUrl = url || appState.selectedUrl || "";
+            const targetPubId = publicId || appState.selectedPublicId || (appState.currentLinksData || []).find(l => l.shortLink === targetUrl)?.publicId || "";
+
+            const pubIdInput = document.getElementById("sendTrackedEmailPublicId");
+            const urlInput = document.getElementById("sendTrackedEmailUrl");
+            const previewEl = document.getElementById("sendTrackedEmailPreviewLink");
+            const subjectInput = document.getElementById("sendTrackedEmailSubject");
+            const messageInput = document.getElementById("sendTrackedEmailMessage");
+
+            if (pubIdInput) pubIdInput.value = targetPubId;
+            if (urlInput) urlInput.value = targetUrl;
+            if (previewEl) previewEl.textContent = targetUrl || "—";
+            if (messageInput) messageInput.value = "";
+
+            sendTrackedEmailChips.clearAll();
+
+            const yourName = (appState.fullName && appState.fullName.trim() !== "User")
+                ? appState.fullName.trim()
+                : ((appState.username && appState.username.trim() !== "User")
+                    ? appState.username.trim()
+                    : (localStorage.getItem("preonsurl_username") || "Someone"));
+            if (subjectInput) subjectInput.value = `${yourName} is sharing a secured url`;
+
+            modal.classList.add("open");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.style.overflow = "hidden";
+
+            setTimeout(() => {
+                document.getElementById("sendTrackedRecipientInput")?.focus();
+            }, 60);
+        }
+
+        function closeSendTrackedEmailModal() {
+            const modal = document.getElementById("sendTrackedEmailModal");
+            if (!modal) return;
+            modal.classList.remove("open");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = "";
+        }
+
+        async function handleSendTrackedEmailSubmit() {
+            const pubId = document.getElementById("sendTrackedEmailPublicId")?.value;
+            sendTrackedEmailChips.commitPending();
+
+            const recipients = sendTrackedEmailChips.recipients;
+            const cc = sendTrackedEmailChips.cc;
+            const subject = document.getElementById("sendTrackedEmailSubject")?.value?.trim();
+            const message = document.getElementById("sendTrackedEmailMessage")?.value?.trim();
+            const btn = document.getElementById("sendTrackedEmailSubmitBtn");
+
+            if (!pubId) {
+                showToast("error", "Missing Link", "Could not identify the link to share.");
+                return;
+            }
+            if (recipients.length === 0) {
+                showToast("warning", "Recipient Required", "Please enter at least one valid recipient email address.");
+                document.getElementById("sendTrackedRecipientInput")?.focus();
+                return;
+            }
+
+            const yourName = (appState.fullName && appState.fullName.trim() !== "User")
+                ? appState.fullName.trim()
+                : ((appState.username && appState.username.trim() !== "User")
+                    ? appState.username.trim()
+                    : (localStorage.getItem("preonsurl_username") || "Someone"));
+
+            setLoading(btn, true, "Sending...");
+            try {
+                const response = await authenticatedFetch(`/link/${encodeURIComponent(pubId)}/share-email`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        recipientEmail: recipients.join(", "),
+                        ccEmail: cc.length > 0 ? cc.join(", ") : null,
+                        subject: subject || `${yourName} is sharing a secured url`,
+                        message: message || null,
+                        senderName: yourName
+                    })
+                });
+                const result = await parseResponse(response);
+
+                if (response.ok && result.success) {
+                    showToast("success", "Tracked Email Sent", "1px tracking beacon embedded. Opens, IP, and location will be logged.");
+                    sendTrackedEmailChips.clearAll();
+                    const msgField = document.getElementById("sendTrackedEmailMessage");
+                    if (msgField) msgField.value = "";
+
+                    closeSendTrackedEmailModal();
+
+                    if (document.getElementById("urlAnalyticsModal")?.classList.contains("open")) {
+                        loadAnalyticsEmailLogsData(pubId);
+                    }
+                } else {
+                    showToast("error", "Failed to Send", result.message || "Could not dispatch tracked email.");
+                }
+            } catch (err) {
+                showToast("error", "Error", "An unexpected error occurred while sending the email.");
+            } finally {
+                setLoading(btn, false, "Send Tracked Email");
+            }
+        }
+
+        // Setup send tracked email modal listeners
+        document.getElementById("sendTrackedEmailModalCloseBtn")?.addEventListener("click", closeSendTrackedEmailModal);
+        document.getElementById("sendTrackedEmailModalBackdrop")?.addEventListener("click", closeSendTrackedEmailModal);
+        document.getElementById("sendTrackedEmailCancelBtn")?.addEventListener("click", closeSendTrackedEmailModal);
+        document.getElementById("sendTrackedEmailSubmitBtn")?.addEventListener("click", handleSendTrackedEmailSubmit);
+        document.getElementById("sendTrackedEmailForm")?.addEventListener("submit", (e) => {
+            e.preventDefault();
+            handleSendTrackedEmailSubmit();
         });
 
         /*
@@ -19041,6 +19885,22 @@
             document.getElementById("modalSuccessCloseBtn")?.addEventListener("click", finishLinkCreation);
 
             // Share options handlers
+            function getEmailShareData() {
+                const urlField = document.getElementById("createdShortUrlField");
+                const url = urlField?.value || "";
+                if (!url) return null;
+                const pubId = (typeof currentSuccessPublicId !== "undefined" && currentSuccessPublicId) || urlField?.dataset?.publicId || "";
+                const shortCode = url.split("/").filter(Boolean).pop() || "";
+                const yourName = (appState.fullName && appState.fullName.trim() !== "User")
+                    ? appState.fullName.trim()
+                    : ((appState.username && appState.username.trim() !== "User")
+                        ? appState.username.trim()
+                        : (localStorage.getItem("preonsurl_username") || "Someone"));
+                const subject = `${yourName} is sharing a secured url`;
+                const bodyText = `${yourName} is sharing a secured url: ${url}`;
+                return { url, pubId, shortCode, yourName, subject, bodyText };
+            }
+
             document.getElementById("shareWhatsAppBtn")?.addEventListener("click", () => {
                 const url = document.getElementById("createdShortUrlField")?.value;
                 if (!url) return;
@@ -19054,22 +19914,27 @@
             });
 
             document.getElementById("shareGmailBtn")?.addEventListener("click", () => {
-                const url = document.getElementById("createdShortUrlField")?.value;
-                if (!url) return;
-                window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("Shared Link")}&body=${encodeURIComponent("Here is the short link: " + url)}`, "_blank", "noopener,noreferrer");
+                const data = getEmailShareData();
+                if (!data) return;
+                window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.bodyText)}`, "_blank", "noopener,noreferrer");
             });
 
             document.getElementById("shareOutlookBtn")?.addEventListener("click", () => {
-                const url = document.getElementById("createdShortUrlField")?.value;
-                if (!url) return;
-                window.open(`https://outlook.live.com/mail/0/deeplink/compose?subject=${encodeURIComponent("Shared Link")}&body=${encodeURIComponent("Here is the short link: " + url)}`, "_blank", "noopener,noreferrer");
+                const data = getEmailShareData();
+                if (!data) return;
+                window.open(`https://outlook.live.com/mail/0/deeplink/compose?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.bodyText)}`, "_blank", "noopener,noreferrer");
             });
 
             document.getElementById("shareTrackedEmailAppBtn")?.addEventListener("click", () => {
-                const url = document.getElementById("createdShortUrlField")?.value;
-                if (!url) return;
-                window.location.href = `mailto:?subject=${encodeURIComponent("Shared Link")}&body=${encodeURIComponent("Here is the short link: " + url)}`;
-                showToast("info", "Tracked Email", "Email client opened. Recipient clicks will be logged in your console analytics.");
+                const data = getEmailShareData();
+                if (!data) return;
+                window.location.href = `mailto:?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.bodyText)}`;
+            });
+
+            document.getElementById("shareTrackedEmailBtn")?.addEventListener("click", () => {
+                const data = getEmailShareData();
+                if (!data) return;
+                openSendTrackedEmailModal(data.url, data.pubId);
             });
 
             // QR Code download handler
@@ -19617,7 +20482,12 @@
             appState.editingOriginalNewUrl = null;
 
             const dialog = document.querySelector(".link-modal-dialog");
-            if (dialog) dialog.classList.remove("is-success");
+            if (dialog) {
+                dialog.classList.remove("is-success");
+                dialog.classList.remove("is-quick-share");
+            }
+            const successHeader = document.querySelector(".create-success-header");
+            if (successHeader) successHeader.style.display = "";
 
             document.getElementById("linkModalKicker").textContent = "NEW LINK";
             document.getElementById("linkModalTitle").textContent = "Create a new link";
@@ -19771,7 +20641,12 @@
             }
 
             const dialog = document.querySelector(".link-modal-dialog");
-            if (dialog) dialog.classList.remove("is-success");
+            if (dialog) {
+                dialog.classList.remove("is-success");
+                dialog.classList.remove("is-quick-share");
+            }
+            const successHeader = document.querySelector(".create-success-header");
+            if (successHeader) successHeader.style.display = "";
 
             document.getElementById("linkModalKicker").textContent = "EDIT LINK";
             document.getElementById("linkModalTitle").textContent = "Edit link";
@@ -19944,6 +20819,7 @@
         }
 
         let currentSuccessQrBlob = null;
+        let currentSuccessPublicId = null;
 
         function closeLinkModal() {
             resetModalCorsUI();
@@ -19953,7 +20829,12 @@
             GeoFenceStudio.close();
             const modal = document.getElementById("linkModal");
             const dialog = document.querySelector(".link-modal-dialog");
-            if (dialog) dialog.classList.remove("is-success");
+            if (dialog) {
+                dialog.classList.remove("is-success");
+                dialog.classList.remove("is-quick-share");
+            }
+            const successHeader = document.querySelector(".create-success-header");
+            if (successHeader) successHeader.style.display = "";
             modal.classList.remove("open");
             modal.setAttribute("aria-hidden", "true");
             document.body.style.overflow = "";
@@ -19973,15 +20854,26 @@
         function openShareModal(url, publicId) {
             const modal = document.getElementById("linkModal");
             const dialog = document.querySelector(".link-modal-dialog");
-            if (dialog) dialog.classList.add("is-success");
+            if (dialog) {
+                dialog.classList.add("is-success");
+                dialog.classList.add("is-quick-share");
+            }
+
+            const kickerEl = document.getElementById("linkModalKicker");
+            if (kickerEl) kickerEl.style.display = "none";
+            const subEl = document.getElementById("linkModalSubtitle");
+            if (subEl) subEl.style.display = "none";
+            const toggleRow = document.getElementById("editActiveToggleRow");
+            if (toggleRow) toggleRow.style.display = "none";
+
+            const linkModalTitle = document.getElementById("linkModalTitle");
+            if (linkModalTitle) linkModalTitle.textContent = "Quick Share";
+
+            const successHeader = document.querySelector(".create-success-header");
+            if (successHeader) successHeader.style.display = "none";
 
             document.getElementById("linkModalContent").style.display = "none";
             document.getElementById("modalSuccessPanel").style.display = "flex";
-
-            const titleEl = document.getElementById("modalSuccessTitle");
-            const descEl = document.getElementById("modalSuccessDesc");
-            if (titleEl) titleEl.textContent = "Share link";
-            if (descEl) descEl.textContent = "Your short URL is live, protected, and ready to share.";
 
             modal.classList.add("open");
             modal.setAttribute("aria-hidden", "false");
@@ -19991,8 +20883,12 @@
         }
 
         async function setupCreateSuccessModal(generatedUrl, publicId) {
+            currentSuccessPublicId = publicId || "";
             const field = document.getElementById("createdShortUrlField");
-            if (field) field.value = generatedUrl || "";
+            if (field) {
+                field.value = generatedUrl || "";
+                field.dataset.publicId = publicId || "";
+            }
 
             const dialog = document.querySelector(".link-modal-dialog");
             if (dialog) dialog.classList.add("is-success");
@@ -20453,6 +21349,12 @@
                 // SUCCESS: Show success panel inside modal (Share options, QR Code, URL copy)
                 const generatedUrl = result.data?.newUrl || "";
                 const publicId = result.data?.publicId || "";
+                const dialog = document.querySelector(".link-modal-dialog");
+                if (dialog) dialog.classList.remove("is-quick-share");
+                const modalTitle = document.getElementById("linkModalTitle");
+                if (modalTitle) modalTitle.textContent = "Link Created";
+                const successHeader = document.querySelector(".create-success-header");
+                if (successHeader) successHeader.style.display = "flex";
                 const titleEl = document.getElementById("modalSuccessTitle");
                 const descEl = document.getElementById("modalSuccessDesc");
                 if (titleEl) titleEl.textContent = "Link created successfully";

@@ -31,6 +31,7 @@ import org.springframework.data.web.PageableDefault;
 import com.preonsurl.apis.link.dto.UrlListItemResponse;
 import com.preonsurl.apis.link.dto.LinkAccessLogResponse;
 import com.preonsurl.apis.link.dto.LinkRecipientDto;
+import com.preonsurl.apis.link.dto.ShareLinkEmailRequest;
 import com.preonsurl.apis.link.dto.CorsCheckRequest;
 import com.preonsurl.apis.link.dto.CorsCheckResult;
 import com.preonsurl.apis.link.service.CorsCheckerService;
@@ -285,6 +286,50 @@ public class LinkController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("Failed to get link recipients: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal Server Error"));
+        }
+    }
+
+    @Operation(
+            summary = "Share link via tracked email",
+            description = "Dispatches a secured link invitation containing a 1px tracking beacon to track recipient opens, IP address, and location.",
+            security = {
+                    @SecurityRequirement(name = OpenApiConfig.API_KEY_SCHEME),
+                    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+            }
+    )
+    @PostMapping(value = "/{id}/share-email", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<List<LinkRecipientDto>>> shareTrackedEmail(
+            @PathVariable("id") String publicId,
+            @Valid @RequestBody ShareLinkEmailRequest request,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        try {
+            AuthenticatedUser user = resolveUser(currentUser);
+            if (user == null || user.userId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Authentication required: user ID not found"));
+            }
+            if (publicId == null || publicId.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("ID parameter 'id' cannot be empty"));
+            }
+
+            List<LinkRecipientDto> response = newUrlService.shareTrackedEmail(user.userId(), publicId, request);
+            log.info("Shared tracked email for userId={}, publicId='{}', recipient='{}': count={}",
+                    user.userId(), publicId, request.recipientEmail(), response.size());
+            return ResponseEntity.ok(ApiResponse.success(response, "Tracked email dispatched successfully"));
+        } catch (UrlNotFoundException e) {
+            log.warn("Link not found for share-email: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for share-email: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid share-email request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to share tracked email: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Internal Server Error"));
         }

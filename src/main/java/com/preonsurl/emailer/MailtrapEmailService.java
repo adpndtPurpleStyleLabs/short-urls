@@ -568,15 +568,31 @@ public class MailtrapEmailService implements EmailService {
 
     @Override
     public void sendSecuredLinkInvitation(String toEmail, String linkUrl, String trackingPixelUrl) {
+        sendSecuredLinkInvitation(toEmail, linkUrl, trackingPixelUrl, null, null, null);
+    }
+
+    @Override
+    public void sendSecuredLinkInvitation(
+            String toEmail,
+            String linkUrl,
+            String trackingPixelUrl,
+            String senderName,
+            String customSubject,
+            String customMessage
+    ) {
         if (toEmail == null || toEmail.isBlank()) {
             log.warn("PREONS-EMAILER: Cannot send secured link invitation because recipient email is blank.");
             return;
         }
 
-        String subject = "You've received a secure link";
-        String htmlContent = buildInvitationEmailHtml(toEmail, linkUrl, trackingPixelUrl);
-        String textContent = "You have received a secured link on PreonsURL:\n\n" + linkUrl +
-                "\n\nAn email OTP verification will be required upon opening.";
+        String displayName = (senderName != null && !senderName.isBlank()) ? senderName.trim() : "Someone";
+        String subject = (customSubject != null && !customSubject.isBlank())
+                ? customSubject.trim()
+                : displayName + " is sharing a secured url";
+
+        String htmlContent = buildInvitationEmailHtml(toEmail, linkUrl, trackingPixelUrl, displayName, customMessage);
+        String textContent = displayName + " is sharing a secured url:\n\n" + linkUrl +
+                (customMessage != null && !customMessage.isBlank() ? "\n\nNote: " + customMessage : "");
 
         log.info("PREONS-EMAILER [Mailtrap API] Dispatching secured link invitation to '{}' (link: '{}')", toEmail, linkUrl);
 
@@ -592,7 +608,7 @@ public class MailtrapEmailService implements EmailService {
                 return;
             }
 
-            Address from = new Address(senderEmail, senderName);
+            Address from = new Address(senderEmail, senderName != null && !senderName.isBlank() ? senderName : this.senderName);
             Address to = new Address(toEmail, toEmail);
 
             MailtrapMail mail = MailtrapMail.builder()
@@ -616,6 +632,23 @@ public class MailtrapEmailService implements EmailService {
             String linkUrl,
             String trackingPixelUrl
     ) {
+        return buildInvitationEmailHtml(toEmail, linkUrl, trackingPixelUrl, null, null);
+    }
+
+    private String buildInvitationEmailHtml(
+            String toEmail,
+            String linkUrl,
+            String trackingPixelUrl,
+            String senderName,
+            String customMessage
+    ) {
+        String headingTitle = (senderName != null && !senderName.isBlank())
+                ? senderName + " Shared a Secured Link"
+                : "Secure Link Access Granted";
+        String noteHtml = (customMessage != null && !customMessage.isBlank())
+                ? "<div style=\"background:#f8fafc; border-left:3px solid #000000; padding:12px 16px; margin:0 auto 24px; max-width:440px; text-align:left; font-size:13px; color:#334155; border-radius:4px;\"><strong style=\"color:#0f172a;\">Note:</strong> " + customMessage.replace("<", "&lt;").replace(">", "&gt;") + "</div>"
+                : "";
+
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -1063,16 +1096,16 @@ public class MailtrapEmailService implements EmailService {
                             </p>
 
                             <h1 class="title">
-                                Secure Link Access Granted
+                                %s
                             </h1>
 
                             <p class="description">
                                 You have been granted confidential access to a secured
                                 link. To open the destination, click the button below.
-                                You will be prompted to authenticate with an email OTP
-                                code sent to
-                                <span class="recipient">%s</span>.
+                                <br><span style="font-size:12.5px; color:#71717a;">Recipient: <strong class="recipient">%s</strong></span>
                             </p>
+
+                            %s
 
                             <!-- ================================
                                  CTA
@@ -1163,7 +1196,9 @@ public class MailtrapEmailService implements EmailService {
 
             </html>
             """.formatted(
+                headingTitle,
                 toEmail,
+                noteHtml,
                 linkUrl,
                 linkUrl,
                 linkUrl,

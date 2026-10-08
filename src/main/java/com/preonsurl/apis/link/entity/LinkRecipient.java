@@ -43,6 +43,18 @@ public class LinkRecipient {
     @Column(name = "email_opened_at")
     private Instant emailOpenedAt;
 
+    @Column(name = "opened_ip", length = 64)
+    private String openedIp;
+
+    @Column(name = "opened_country", length = 128)
+    private String openedCountry;
+
+    @Column(name = "opened_city", length = 128)
+    private String openedCity;
+
+    @Column(name = "opened_user_agent", length = 512)
+    private String openedUserAgent;
+
     @Column(name = "otp_requested", nullable = false)
     private boolean otpRequested = false;
 

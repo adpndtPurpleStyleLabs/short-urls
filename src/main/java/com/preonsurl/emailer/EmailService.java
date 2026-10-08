@@ -57,6 +57,28 @@ public interface EmailService {
     void sendSecuredLinkInvitation(String toEmail, String linkUrl, String trackingPixelUrl);
 
     /**
+     * Dispatches an invitation email for a secured link with an embedded 1px open-tracking pixel,
+     * custom subject, sender display name, and optional personal message.
+     *
+     * @param toEmail          recipient email address
+     * @param linkUrl          the created shortened URL
+     * @param trackingPixelUrl the tracking pixel URL for open detection
+     * @param senderName       the name of the sender sharing the link
+     * @param customSubject    optional custom subject line
+     * @param customMessage    optional personal message or note
+     */
+    default void sendSecuredLinkInvitation(
+            String toEmail,
+            String linkUrl,
+            String trackingPixelUrl,
+            String senderName,
+            String customSubject,
+            String customMessage
+    ) {
+        sendSecuredLinkInvitation(toEmail, linkUrl, trackingPixelUrl);
+    }
+
+    /**
      * Dispatches an OTP verification code email to authorize access to a secured link.
      *
      * @param toEmail   recipient email address
