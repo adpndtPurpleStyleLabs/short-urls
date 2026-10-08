@@ -19,9 +19,17 @@ public record ShareLinkEmailRequest(
         String message,
 
         @Schema(description = "Optional sender display name", example = "Alex")
-        String senderName
+        String senderName,
+
+        @Schema(description = "Send individual emails to each recipient (true) or a single email to all recipients at once (false)", example = "true")
+        Boolean sendIndividually
 ) {
     public ShareLinkEmailRequest(String recipientEmail, String subject, String message, String senderName) {
-        this(recipientEmail, null, subject, message, senderName);
+        this(recipientEmail, null, subject, message, senderName, true);
+    }
+
+    public ShareLinkEmailRequest(String recipientEmail, String ccEmail, String subject, String message, String senderName) {
+        this(recipientEmail, ccEmail, subject, message, senderName, true);
     }
 }
+

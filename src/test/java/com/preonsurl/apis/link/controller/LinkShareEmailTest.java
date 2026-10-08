@@ -59,6 +59,35 @@ class LinkShareEmailTest {
     }
 
     @Test
+    @DisplayName("shareTrackedEmail endpoint dispatches single group email when sendIndividually is false")
+    void testShareTrackedEmailGroupMode() {
+        AuthenticatedUser user = new AuthenticatedUser(1L, 1L, "testuser");
+        ShareLinkEmailRequest req = new ShareLinkEmailRequest("user1@example.com, user2@example.com", "cc@example.com", "Subject", "Note", "Test User", false);
+
+        LinkRecipientDto dto1 = new LinkRecipientDto(
+                10L, 100L, "user1@example.com", "tok1",
+                true, null, false, null, null, null, null,
+                false, null, false, null, "Email Delivered", null
+        );
+        LinkRecipientDto dto2 = new LinkRecipientDto(
+                11L, 100L, "user2@example.com", "tok2",
+                true, null, false, null, null, null, null,
+                false, null, false, null, "Email Delivered", null
+        );
+        when(newUrlService.shareTrackedEmail(eq(1L), eq("pub-123"), any(ShareLinkEmailRequest.class)))
+                .thenReturn(List.of(dto1, dto2));
+
+        ResponseEntity<ApiResponse<List<LinkRecipientDto>>> response =
+                linkController.shareTrackedEmail("pub-123", req, user);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().success()).isTrue();
+        assertThat(response.getBody().data()).hasSize(2);
+        assertThat(req.sendIndividually()).isFalse();
+    }
+
+    @Test
     @DisplayName("shareTrackedEmail endpoint returns unauthorized when user is missing")
     void testShareTrackedEmailUnauthorized() {
         ShareLinkEmailRequest req = new ShareLinkEmailRequest("recipient@example.com", "Subject", "Note", "Test User");

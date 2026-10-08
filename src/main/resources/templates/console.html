@@ -12195,96 +12195,6 @@
                     </div>
                 </div>
 
-                <!-- Recipient OTP & Email Delivery Tracking Card -->
-                <div class="card" id="analyticsOtpTrackingCard" style="display:none; margin-top: 2px;">
-                    <div class="analytics-card-header" style="flex-wrap: wrap; gap: 8px;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <h3 class="analytics-card-title">Recipient OTP &amp; Email Delivery Tracking</h3>
-                                <span class="pro-tag-badge"
-                                    style="background:#000000; color:#ffffff; border-color:#000000; display:inline-flex; font-size:9.5px; padding:2px 6px;">
-                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2.5">
-                                        <rect width="20" height="16" x="2" y="4" rx="2" />
-                                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                                    </svg>
-                                    OTP Protected
-                                </span>
-                            </div>
-                            <p class="page-subtitle">Real-time status of individual invitations, 1px tracking beacon
-                                opens, OTP requests, and page access.</p>
-                        </div>
-                        <button class="btn btn-secondary" id="refreshOtpRecipientsBtn" type="button"
-                            style="height:28px; font-size:11.5px; font-weight:600; padding:0 10px; border-radius:6px;">Refresh</button>
-                    </div>
-
-                    <!-- Metric summary chips -->
-                    <div
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 10px; padding: 10px 14px 0 14px;">
-                        <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
-                            <div
-                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
-                                Total Recipients</div>
-                            <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 3px;"
-                                id="otpMetricTotal">0</div>
-                        </div>
-                        <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
-                            <div
-                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
-                                Emails Sent</div>
-                            <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 3px;"
-                                id="otpMetricSent">0</div>
-                        </div>
-                        <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
-                            <div
-                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
-                                Email Opened (1px)</div>
-                            <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 3px;"
-                                id="otpMetricOpened">0</div>
-                        </div>
-                        <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
-                            <div
-                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
-                                OTP Called</div>
-                            <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 3px;"
-                                id="otpMetricOtpCalled">0</div>
-                        </div>
-                        <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
-                            <div
-                                style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
-                                Page Opened</div>
-                            <div style="font-size: 18px; font-weight: 800; color: #16a34a; margin-top: 3px;"
-                                id="otpMetricPageOpened">0</div>
-                        </div>
-                    </div>
-
-                    <div class="table-wrapper" style="padding: 0 14px 10px 14px;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Recipient Email</th>
-                                    <th>Email Sent</th>
-                                    <th>Email Opened</th>
-                                    <th>OTP Requested</th>
-                                    <th>Page Access Granted</th>
-                                </tr>
-                            </thead>
-                            <tbody id="otpRecipientsTableBody">
-                                <tr>
-                                    <td colspan="5" class="table-empty-state" style="padding:18px 12px;">
-                                        <span style="color:#64748b;">No OTP recipients tracked for this URL.</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
                 <!-- Points of Access (World Map) Card -->
                 <div class="card" id="analyticsMapCard" style="min-height: 320px;">
                     <div class="analytics-card-header" style="flex-wrap: wrap; gap: 8px;">
@@ -12300,7 +12210,6 @@
                                     WORLD MAP
                                 </span>
                             </div>
-                            <p class="page-subtitle">Real-time geographic distribution of link access points plotted on an interactive world map.</p>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span id="mapPointCountBadge" style="font-size:11px; font-weight:700; color:#0f172a; background:#f1f5f9; padding:3px 8px; border-radius:5px; border:1px solid #e2e8f0;">0 Points Plotted</span>
@@ -12324,7 +12233,6 @@
                                     Email Logs
                                 </button>
                             </div>
-                            <p class="page-subtitle" id="analyticsLogsSubtitle" style="margin:0;">Recent visitor requests recorded for this URL.</p>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <button class="btn btn-secondary" id="analyticsSendTrackedEmailBtn" type="button"
@@ -12528,6 +12436,29 @@
                             <input type="email" class="chip-inline-input" id="sendTrackedRecipientInput" placeholder="recipient@company.com" autocomplete="off" />
                         </div>
                         <input type="hidden" id="sendTrackedEmailRecipient" value="" />
+
+                        <!-- Delivery Mode Checkbox -->
+                        <div style="margin-top: 8px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0; user-select: none;">
+                                <input type="checkbox" id="sendIndividuallyCheckbox" checked style="margin-top: 2px; width: 15px; height: 15px; accent-color: #0f172a; cursor: pointer;" />
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span id="sendModeCheckboxTitle" style="font-size: 12px; font-weight: 600; color: #1e293b;">Send individual emails to each recipient</span>
+                                        <span class="label-info-tip" tabindex="0" role="tooltip" aria-label="Delivery Mode Info">
+                                            <svg class="info-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                            </svg>
+                                            <span class="label-info-popover">Checked: Dispatches separate individual emails to each recipient with private addresses. Unchecked: Sends a single email to all recipients at once.</span>
+                                        </span>
+                                    </div>
+                                    <p id="sendModeCheckboxDesc" style="margin: 2px 0 0; font-size: 11px; color: #64748b; line-height: 1.35;">
+                                        Each recipient receives their own email. Recipient addresses stay private from each other.
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- CC Email -->
@@ -12544,7 +12475,6 @@
                                     <span class="label-info-popover">Carbon-copy recipient(s) who will also receive the tracked link invitation. Press Enter or comma to add.</span>
                                 </span>
                             </label>
-                            <span style="font-size: 10.5px; color: #94a3b8; font-weight: 400;">Optional</span>
                         </div>
                         <div class="email-chip-input-box" id="sendTrackedCcBox">
                             <div class="input-icon-prefix">
@@ -17069,12 +16999,11 @@
             if (btnEmailTab) btnEmailTab.classList.remove("active");
             if (vAccess) vAccess.style.display = "block";
             if (vEmail) vEmail.style.display = "none";
-            if (lSubtitle) lSubtitle.textContent = "Recent visitor requests recorded for this URL.";
+            if (lSubtitle) lSubtitle.textContent = "";
 
             loadUrlAnalyticsData();
             loadAccessLogsData();
             loadAnalyticsEmailLogsData(appState.selectedPublicId);
-            loadOtpRecipientsData();
 
             setTimeout(() => {
                 if (analyticsWorldMap) {
@@ -17168,7 +17097,7 @@
             btnSwitchEmail?.classList.remove("active");
             if (viewAccessLogs) viewAccessLogs.style.display = "block";
             if (viewEmailLogs) viewEmailLogs.style.display = "none";
-            if (logsSubtitle) logsSubtitle.textContent = "Recent visitor requests recorded for this URL.";
+            if (logsSubtitle) logsSubtitle.textContent = "";
             loadAccessLogsData();
         });
 
@@ -17178,7 +17107,7 @@
             btnSwitchAccess?.classList.remove("active");
             if (viewEmailLogs) viewEmailLogs.style.display = "block";
             if (viewAccessLogs) viewAccessLogs.style.display = "none";
-            if (logsSubtitle) logsSubtitle.textContent = "Real-time delivery status and 1px tracking beacon opens for shared emails.";
+            if (logsSubtitle) logsSubtitle.textContent = "";
             const pubId = appState.selectedPublicId || (appState.currentLinksData || []).find(l => l.shortLink === appState.selectedUrl)?.publicId;
             if (pubId) loadAnalyticsEmailLogsData(pubId);
         });
@@ -17783,117 +17712,7 @@
             }
         });
 
-        async function loadOtpRecipientsData() {
-            const pubId = appState.selectedPublicId;
-            const card = document.getElementById("analyticsOtpTrackingCard");
-            const tbody = document.getElementById("otpRecipientsTableBody");
-            if (!pubId) {
-                if (card) card.style.display = "none";
-                return;
-            }
 
-            try {
-                const response = await authenticatedFetch(`/link/${encodeURIComponent(pubId)}/recipients`);
-                const result = await parseResponse(response);
-
-                if (response.ok && result.success && Array.isArray(result.data)) {
-                    const recipients = result.data;
-                    if (recipients.length === 0) {
-                        if (card) card.style.display = "none";
-                        return;
-                    }
-
-                    if (card) card.style.display = "block";
-                    renderOtpRecipients(recipients);
-                } else {
-                    if (card) card.style.display = "none";
-                }
-            } catch (err) {
-                console.error("Failed to load OTP recipients", err);
-                if (card) card.style.display = "none";
-            }
-        }
-
-        function renderOtpRecipients(recipients) {
-            const tbody = document.getElementById("otpRecipientsTableBody");
-            if (!tbody) return;
-
-            const total = recipients.length;
-            const sentCount = recipients.filter(r => r.emailSent).length;
-            const openedCount = recipients.filter(r => r.emailOpened).length;
-            const otpCalledCount = recipients.filter(r => r.otpRequested).length;
-            const pageOpenedCount = recipients.filter(r => r.pageOpened).length;
-
-            const totalEl = document.getElementById("otpMetricTotal");
-            const sentEl = document.getElementById("otpMetricSent");
-            const openedEl = document.getElementById("otpMetricOpened");
-            const otpCalledEl = document.getElementById("otpMetricOtpCalled");
-            const pageOpenedEl = document.getElementById("otpMetricPageOpened");
-
-            if (totalEl) totalEl.textContent = total;
-            if (sentEl) sentEl.textContent = sentCount;
-            if (openedEl) openedEl.textContent = openedCount;
-            if (otpCalledEl) otpCalledEl.textContent = otpCalledCount;
-            if (pageOpenedEl) pageOpenedEl.textContent = pageOpenedCount;
-
-            tbody.innerHTML = recipients.map(r => `
-                <tr>
-                    <td>
-                        <div style="font-weight:600; color:#0f172a; font-size:13px;">${escapeHtml(r.email)}</div>
-                    </td>
-                    <td>
-                        ${r.emailSent
-                    ? `<span class="badge" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;">Sent</span>
-                               <span style="font-size:11px; color:#64748b; margin-left:6px;">${formatTimestamp(r.emailSentAt)}</span>`
-                    : `<span style="color:#94a3b8; font-size:11.5px;">Not sent</span>`
-                }
-                    </td>
-                    <td>
-                        ${r.emailOpened
-                    ? `<span class="badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                Opened (1px)
-                               </span>
-                               <span style="font-size:11px; color:#64748b; margin-left:6px;">${formatTimestamp(r.emailOpenedAt)}</span>
-                               ${(r.openedCountry || r.openedCity || r.openedIp) ? `
-                                   <div style="margin-top:4px; font-size:11.5px; color:#334155; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-                                       ${(r.openedCountry || r.openedCity) ? `<span style="font-weight:600; color:#0f172a;">📍 ${escapeHtml((r.openedCity ? r.openedCity + ', ' : '') + (r.openedCountry || ''))}</span>` : ''}
-                                       ${r.openedIp ? `<code style="font-size:10.5px; color:#475569; background:#f1f5f9; padding:1px 5px; border-radius:4px; border:1px solid #e2e8f0;">IP: ${escapeHtml(r.openedIp)}</code>` : ''}
-                                   </div>
-                               ` : ''}`
-                    : `<span style="color:#94a3b8; font-size:11.5px;">Unopened</span>`
-                }
-                    </td>
-                    <td>
-                        ${r.otpRequested
-                    ? `<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;">Requested</span>
-                               <span style="font-size:11px; color:#64748b; margin-left:6px;">${formatTimestamp(r.otpRequestedAt)}</span>`
-                    : `<span style="color:#94a3b8; font-size:11.5px;">Not called</span>`
-                }
-                    </td>
-                    <td>
-                        ${r.pageOpened
-                    ? `<span class="badge" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                Opened
-                               </span>
-                               <span style="font-size:11px; color:#64748b; margin-left:6px;">${formatTimestamp(r.pageOpenedAt)}</span>`
-                    : `<span style="color:#94a3b8; font-size:11.5px;">Pending</span>`
-                }
-                    </td>
-                </tr>
-            `).join("");
-        }
-
-        document.getElementById("refreshOtpRecipientsBtn")?.addEventListener("click", async () => {
-            const btn = document.getElementById("refreshOtpRecipientsBtn");
-            setLoading(btn, true, "Refreshing...");
-            try {
-                await loadOtpRecipientsData();
-            } finally {
-                setLoading(btn, false, "Refresh Tracking");
-            }
-        });
 
         async function loadAnalyticsEmailLogsData(pubId) {
             const tbody = document.getElementById("analyticsEmailLogsTableBody");
@@ -18156,6 +17975,15 @@
                     : (localStorage.getItem("preonsurl_username") || "Someone"));
             if (subjectInput) subjectInput.value = `${yourName} is sharing a secured url`;
 
+            const individualCb = document.getElementById("sendIndividuallyCheckbox");
+            if (individualCb) {
+                individualCb.checked = true;
+                const titleEl = document.getElementById("sendModeCheckboxTitle");
+                const descEl = document.getElementById("sendModeCheckboxDesc");
+                if (titleEl) titleEl.textContent = "Send individual emails to each recipient";
+                if (descEl) descEl.textContent = "Each recipient receives their own email. Recipient addresses stay private from each other.";
+            }
+
             modal.classList.add("open");
             modal.setAttribute("aria-hidden", "false");
             document.body.style.overflow = "hidden";
@@ -18199,6 +18027,8 @@
                     ? appState.username.trim()
                     : (localStorage.getItem("preonsurl_username") || "Someone"));
 
+            const sendIndividually = document.getElementById("sendIndividuallyCheckbox") ? document.getElementById("sendIndividuallyCheckbox").checked : true;
+
             setLoading(btn, true, "Sending...");
             try {
                 const response = await authenticatedFetch(`/link/${encodeURIComponent(pubId)}/share-email`, {
@@ -18209,7 +18039,8 @@
                         ccEmail: cc.length > 0 ? cc.join(", ") : null,
                         subject: subject || `${yourName} is sharing a secured url`,
                         message: message || null,
-                        senderName: yourName
+                        senderName: yourName,
+                        sendIndividually: sendIndividually
                     })
                 });
                 const result = await parseResponse(response);
@@ -18243,6 +18074,17 @@
         document.getElementById("sendTrackedEmailForm")?.addEventListener("submit", (e) => {
             e.preventDefault();
             handleSendTrackedEmailSubmit();
+        });
+        document.getElementById("sendIndividuallyCheckbox")?.addEventListener("change", (e) => {
+            const titleEl = document.getElementById("sendModeCheckboxTitle");
+            const descEl = document.getElementById("sendModeCheckboxDesc");
+            if (e.target.checked) {
+                if (titleEl) titleEl.textContent = "Send individual emails to each recipient";
+                if (descEl) descEl.textContent = "Each recipient receives their own email. Recipient addresses stay private from each other.";
+            } else {
+                if (titleEl) titleEl.textContent = "Send a single email to all recipients at once";
+                if (descEl) descEl.textContent = "All recipients will receive the same email message together at once.";
+            }
         });
 
         /*

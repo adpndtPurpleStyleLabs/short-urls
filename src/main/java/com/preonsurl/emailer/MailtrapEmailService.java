@@ -627,6 +627,90 @@ public class MailtrapEmailService implements EmailService {
         }
     }
 
+    @Override
+    public void sendSecuredLinkInvitationToMultiple(
+            List<String> toEmails,
+            List<String> ccEmails,
+            String linkUrl,
+            String trackingPixelUrl,
+            String senderName,
+            String customSubject,
+            String customMessage
+    ) {
+        if (toEmails == null || toEmails.isEmpty()) {
+            log.warn("PREONS-EMAILER: Cannot send group secured link invitation because recipient list is empty.");
+            return;
+        }
+
+        List<String> validTo = toEmails.stream()
+                .filter(e -> e != null && !e.isBlank())
+                .map(String::trim)
+                .distinct()
+                .toList();
+
+        if (validTo.isEmpty()) {
+            log.warn("PREONS-EMAILER: Cannot send group secured link invitation because all recipient emails are blank.");
+            return;
+        }
+
+        String displayName = (senderName != null && !senderName.isBlank()) ? senderName.trim() : "Someone";
+        String subject = (customSubject != null && !customSubject.isBlank())
+                ? customSubject.trim()
+                : displayName + " is sharing a secured url";
+
+        String primaryTo = validTo.get(0);
+        String htmlContent = buildInvitationEmailHtml(primaryTo, linkUrl, trackingPixelUrl, displayName, customMessage);
+        String textContent = displayName + " is sharing a secured url:\n\n" + linkUrl +
+                (customMessage != null && !customMessage.isBlank() ? "\n\nNote: " + customMessage : "");
+
+        log.info("PREONS-EMAILER [Mailtrap API] Dispatching single group secured link invitation to {} recipients (link: '{}')",
+                validTo.size(), linkUrl);
+
+        if (apiToken == null || apiToken.isBlank()) {
+            log.info("PREONS-EMAILER: Mailtrap API token not configured. Group invitation for '{}' logged for {}.", linkUrl, validTo);
+            return;
+        }
+
+        try {
+            MailtrapClient client = getClient();
+            if (client == null) {
+                log.info("PREONS-EMAILER: MailtrapClient unavailable. Group invitation for '{}' logged for {}.", linkUrl, validTo);
+                return;
+            }
+
+            Address from = new Address(senderEmail, senderName != null && !senderName.isBlank() ? senderName : this.senderName);
+            List<Address> toAddresses = validTo.stream()
+                    .map(e -> new Address(e, e))
+                    .toList();
+
+            MailtrapMail.MailtrapMailBuilder builder = MailtrapMail.builder()
+                    .from(from)
+                    .to(toAddresses)
+                    .subject(subject)
+                    .html(htmlContent)
+                    .text(textContent)
+                    .category("Secured Link Invitation");
+
+            if (ccEmails != null && !ccEmails.isEmpty()) {
+                List<Address> ccAddresses = ccEmails.stream()
+                        .filter(c -> c != null && !c.isBlank() && !validTo.contains(c.trim()))
+                        .map(String::trim)
+                        .distinct()
+                        .map(c -> new Address(c, c))
+                        .toList();
+                if (!ccAddresses.isEmpty()) {
+                    builder.cc(ccAddresses);
+                }
+            }
+
+            SendResponse response = client.send(builder.build());
+            log.info("PREONS-EMAILER: Single group secured link invitation successfully sent to {} recipients (response: {})",
+                    validTo.size(), response);
+        } catch (Exception e) {
+            log.warn("PREONS-EMAILER: Failed to dispatch group invitation to {}: {}", validTo, e.getMessage());
+        }
+    }
+
     private String buildInvitationEmailHtml(
             String toEmail,
             String linkUrl,

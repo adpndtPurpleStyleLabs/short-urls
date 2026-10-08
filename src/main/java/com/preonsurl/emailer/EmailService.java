@@ -1,5 +1,7 @@
 package com.preonsurl.emailer;
 
+import java.util.List;
+
 /**
  * Service interface for dispatching transactional and verification emails.
  */
@@ -76,6 +78,32 @@ public interface EmailService {
             String customMessage
     ) {
         sendSecuredLinkInvitation(toEmail, linkUrl, trackingPixelUrl);
+    }
+
+    /**
+     * Dispatches a single secured link invitation email to multiple recipients and optional CC addresses at once.
+     *
+     * @param toEmails          list of recipient email addresses
+     * @param ccEmails          optional list of CC email addresses
+     * @param linkUrl           the created shortened URL
+     * @param trackingPixelUrl  the tracking pixel URL for open detection
+     * @param senderName        the name of the sender sharing the link
+     * @param customSubject     optional custom subject line
+     * @param customMessage     optional personal message or note
+     */
+    default void sendSecuredLinkInvitationToMultiple(
+            List<String> toEmails,
+            List<String> ccEmails,
+            String linkUrl,
+            String trackingPixelUrl,
+            String senderName,
+            String customSubject,
+            String customMessage
+    ) {
+        if (toEmails == null || toEmails.isEmpty()) return;
+        for (String to : toEmails) {
+            sendSecuredLinkInvitation(to, linkUrl, trackingPixelUrl, senderName, customSubject, customMessage);
+        }
     }
 
     /**

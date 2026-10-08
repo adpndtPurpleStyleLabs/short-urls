@@ -1373,6 +1373,8 @@ public class NewUrlService {
                 ? entity.getNewUrl()
                 : (this.domain + "/" + entity.getShortCode());
 
+        boolean sendIndividually = request.sendIndividually() == null || Boolean.TRUE.equals(request.sendIndividually());
+
         String rawEmails = request.recipientEmail();
         List<String> targetEmails = new java.util.ArrayList<>(Arrays.stream(rawEmails.split("[,;\\s]+"))
                 .map(String::trim)
@@ -1381,6 +1383,7 @@ public class NewUrlService {
                 .distinct()
                 .toList());
 
+        List<String> ccEmailList = new java.util.ArrayList<>();
         if (request.ccEmail() != null && !request.ccEmail().isBlank()) {
             List<String> ccEmails = Arrays.stream(request.ccEmail().split("[,;\\s]+"))
                     .map(String::trim)
@@ -1389,8 +1392,8 @@ public class NewUrlService {
                     .distinct()
                     .toList();
             for (String cc : ccEmails) {
-                if (!targetEmails.contains(cc)) {
-                    targetEmails.add(cc);
+                if (!targetEmails.contains(cc) && !ccEmailList.contains(cc)) {
+                    ccEmailList.add(cc);
                 }
             }
         }
@@ -1409,36 +1412,101 @@ public class NewUrlService {
                 ? request.message().trim()
                 : null;
 
-        for (String email : targetEmails) {
-            Optional<LinkRecipient> existing = linkRecipientRepository.findByShortUrlIdAndEmailIgnoreCase(shortUrlId, email);
-            LinkRecipient recipient;
-            if (existing.isPresent()) {
-                recipient = existing.get();
-                if (recipient.getTrackingToken() == null || recipient.getTrackingToken().isBlank()) {
-                    recipient.setTrackingToken(UUID.randomUUID().toString().replace("-", ""));
+        if (sendIndividually) {
+            List<String> allIndividualEmails = new java.util.ArrayList<>(targetEmails);
+            for (String cc : ccEmailList) {
+                if (!allIndividualEmails.contains(cc)) {
+                    allIndividualEmails.add(cc);
                 }
-            } else {
-                String token = UUID.randomUUID().toString().replace("-", "");
-                recipient = new LinkRecipient(shortUrlId, email, token);
             }
 
-            String trackingPixelUrl = this.domain + "/api/track/email-open/" + recipient.getTrackingToken();
+            for (String email : allIndividualEmails) {
+                Optional<LinkRecipient> existing = linkRecipientRepository.findByShortUrlIdAndEmailIgnoreCase(shortUrlId, email);
+                LinkRecipient recipient;
+                if (existing.isPresent()) {
+                    recipient = existing.get();
+                    if (recipient.getTrackingToken() == null || recipient.getTrackingToken().isBlank()) {
+                        recipient.setTrackingToken(UUID.randomUUID().toString().replace("-", ""));
+                    }
+                } else {
+                    String token = UUID.randomUUID().toString().replace("-", "");
+                    recipient = new LinkRecipient(shortUrlId, email, token);
+                }
+
+                String trackingPixelUrl = this.domain + "/api/track/email-open/" + recipient.getTrackingToken();
+
+                if (emailService != null) {
+                    try {
+                        emailService.sendSecuredLinkInvitation(email, linkUrl, trackingPixelUrl, senderName, subject, message);
+                        recipient.setEmailSent(true);
+                        recipient.setEmailSentAt(Instant.now());
+                    } catch (Exception e) {
+                        log.warn("Failed to dispatch tracked share email to '{}': {}", email, e.getMessage());
+                    }
+                } else {
+                    log.info("EmailService unavailable, logging invitation to '{}' with tracking url '{}'", email, trackingPixelUrl);
+                    recipient.setEmailSent(true);
+                    recipient.setEmailSentAt(Instant.now());
+                }
+
+                linkRecipientRepository.save(recipient);
+            }
+        } else {
+            List<String> allEmails = new java.util.ArrayList<>(targetEmails);
+            for (String cc : ccEmailList) {
+                if (!allEmails.contains(cc)) {
+                    allEmails.add(cc);
+                }
+            }
+
+            List<LinkRecipient> recipientsToSave = new java.util.ArrayList<>();
+            for (String email : allEmails) {
+                Optional<LinkRecipient> existing = linkRecipientRepository.findByShortUrlIdAndEmailIgnoreCase(shortUrlId, email);
+                LinkRecipient recipient;
+                if (existing.isPresent()) {
+                    recipient = existing.get();
+                    if (recipient.getTrackingToken() == null || recipient.getTrackingToken().isBlank()) {
+                        recipient.setTrackingToken(UUID.randomUUID().toString().replace("-", ""));
+                    }
+                } else {
+                    String token = UUID.randomUUID().toString().replace("-", "");
+                    recipient = new LinkRecipient(shortUrlId, email, token);
+                }
+                recipientsToSave.add(recipient);
+            }
+
+            String trackingPixelUrl = this.domain + "/api/track/email-open/email_" + entity.getPublicId();
 
             if (emailService != null) {
                 try {
-                    emailService.sendSecuredLinkInvitation(email, linkUrl, trackingPixelUrl, senderName, subject, message);
-                    recipient.setEmailSent(true);
-                    recipient.setEmailSentAt(Instant.now());
+                    emailService.sendSecuredLinkInvitationToMultiple(
+                            targetEmails,
+                            ccEmailList,
+                            linkUrl,
+                            trackingPixelUrl,
+                            senderName,
+                            subject,
+                            message
+                    );
+                    for (LinkRecipient recipient : recipientsToSave) {
+                        recipient.setEmailSent(true);
+                        recipient.setEmailSentAt(Instant.now());
+                    }
                 } catch (Exception e) {
-                    log.warn("Failed to dispatch tracked share email to '{}': {}", email, e.getMessage());
+                    log.warn("Failed to dispatch single group tracked share email: {}", e.getMessage());
                 }
             } else {
-                log.info("EmailService unavailable, logging invitation to '{}' with tracking url '{}'", email, trackingPixelUrl);
-                recipient.setEmailSent(true);
-                recipient.setEmailSentAt(Instant.now());
+                log.info("EmailService unavailable, logging single group invitation for {} with tracking url '{}'",
+                        targetEmails, trackingPixelUrl);
+                for (LinkRecipient recipient : recipientsToSave) {
+                    recipient.setEmailSent(true);
+                    recipient.setEmailSentAt(Instant.now());
+                }
             }
 
-            linkRecipientRepository.save(recipient);
+            for (LinkRecipient recipient : recipientsToSave) {
+                linkRecipientRepository.save(recipient);
+            }
         }
 
         return getLinkRecipients(userId, publicId);
