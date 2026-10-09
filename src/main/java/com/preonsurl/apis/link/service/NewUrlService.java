@@ -1673,22 +1673,33 @@ public class NewUrlService {
 
         Page<com.preonsurl.apis.link.entity.NewUrlAccessLog> page = accessLogRepository.findByShortUrlId(newUrl.getId(), effectivePageable);
 
-        return page.map(log -> new LinkAccessLogResponse(
-                log.getId(),
-                log.getShortUrlId(),
-                log.getShortCode(),
-                log.getIpAddress(),
-                log.getUserAgent(),
-                log.getReferer(),
-                log.getAccessedAt(),
-                log.getCountry(),
-                log.getCity(),
-                log.getLatitude(),
-                log.getLongitude(),
-                log.getDevice(),
-                log.getBrowser(),
-                log.getOs()
-        ));
+        return page.map(log -> {
+            String region = log.getRegion();
+            if (region == null || region.isBlank()) {
+                if (log.getCity() != null && !log.getCity().isBlank() && log.getCountry() != null && !log.getCountry().isBlank()) {
+                    region = log.getCity() + ", " + log.getCountry();
+                } else if (log.getCountry() != null && !log.getCountry().isBlank()) {
+                    region = log.getCountry();
+                }
+            }
+            return new LinkAccessLogResponse(
+                    log.getId(),
+                    log.getShortUrlId(),
+                    log.getShortCode(),
+                    log.getIpAddress(),
+                    log.getUserAgent(),
+                    log.getReferer(),
+                    log.getAccessedAt(),
+                    log.getCountry(),
+                    log.getCity(),
+                    log.getLatitude(),
+                    log.getLongitude(),
+                    log.getDevice(),
+                    log.getBrowser(),
+                    log.getOs(),
+                    region
+            );
+        });
     }
 
     public NewUrl getNewUrlByPublicId(String publicId){

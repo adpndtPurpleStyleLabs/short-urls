@@ -51,7 +51,8 @@ public class AnalyticsSchemaInitializer implements ApplicationRunner {
                     new ColumnDef("accuracy", "DOUBLE NULL"),
                     new ColumnDef("device", "VARCHAR(64) NULL"),
                     new ColumnDef("browser", "VARCHAR(64) NULL"),
-                    new ColumnDef("os", "VARCHAR(64) NULL")
+                    new ColumnDef("os", "VARCHAR(64) NULL"),
+                    new ColumnDef("region", "VARCHAR(256) NULL")
             );
 
             // 3. Verify and update link_recipients table for 1px email open IP & location tracking

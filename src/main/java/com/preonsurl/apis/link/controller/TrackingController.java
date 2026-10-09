@@ -56,6 +56,7 @@ public class TrackingController {
     private final ClientIpResolver clientIpResolver;
     private final CountryResolver countryResolver;
     private final DatabaseReader databaseReader;
+    private final com.preonsurl.apis.link.service.ReverseGeocodingService reverseGeocodingService;
 
     @Autowired
     public TrackingController(
@@ -64,7 +65,8 @@ public class TrackingController {
             NewUrlAccessLogRepository accessLogRepository,
             ClientIpResolver clientIpResolver,
             CountryResolver countryResolver,
-            @Autowired(required = false) DatabaseReader databaseReader
+            @Autowired(required = false) DatabaseReader databaseReader,
+            @Autowired(required = false) com.preonsurl.apis.link.service.ReverseGeocodingService reverseGeocodingService
     ) {
         this.linkRecipientRepository = linkRecipientRepository;
         this.newUrlRepository = newUrlRepository;
@@ -72,10 +74,22 @@ public class TrackingController {
         this.clientIpResolver = clientIpResolver;
         this.countryResolver = countryResolver;
         this.databaseReader = databaseReader;
+        this.reverseGeocodingService = reverseGeocodingService;
+    }
+
+    public TrackingController(
+            LinkRecipientRepository linkRecipientRepository,
+            NewUrlRepository newUrlRepository,
+            NewUrlAccessLogRepository accessLogRepository,
+            ClientIpResolver clientIpResolver,
+            CountryResolver countryResolver,
+            DatabaseReader databaseReader
+    ) {
+        this(linkRecipientRepository, newUrlRepository, accessLogRepository, clientIpResolver, countryResolver, databaseReader, null);
     }
 
     public TrackingController(LinkRecipientRepository linkRecipientRepository) {
-        this(linkRecipientRepository, null, null, null, null, null);
+        this(linkRecipientRepository, null, null, null, null, null, null);
     }
 
     public ResponseEntity<byte[]> trackEmailOpen(String token) {
@@ -219,6 +233,34 @@ public class TrackingController {
                                         String country, String city, Double latitude, Double longitude,
                                         String device, String browser, String os) {
         try {
+            String region = null;
+            if (latitude != null && longitude != null && reverseGeocodingService != null) {
+                try {
+                    var geo = reverseGeocodingService.reverseGeocode(latitude, longitude);
+                    if (geo != null) {
+                        if ((city == null || city.isBlank()) && geo.city() != null && !geo.city().isBlank()) {
+                            city = geo.city();
+                        }
+                        if ((country == null || country.isBlank()) && geo.country() != null && !geo.country().isBlank()) {
+                            country = geo.country();
+                        }
+                        if (geo.region() != null && !geo.region().isBlank()) {
+                            region = geo.region();
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+
+            if (region == null || region.isBlank()) {
+                if (reverseGeocodingService != null) {
+                    region = reverseGeocodingService.formatRegion(city, null, country);
+                } else if (city != null && !city.isBlank() && country != null && !country.isBlank()) {
+                    region = city + ", " + country;
+                } else if (country != null && !country.isBlank()) {
+                    region = country;
+                }
+            }
+
             NewUrlAccessLog accessLog = new NewUrlAccessLog(
                     url.getId(),
                     url.getShortCode(),
@@ -227,6 +269,7 @@ public class TrackingController {
                     "Email Open Beacon (1px Tracking Pixel)",
                     country,
                     city,
+                    region,
                     latitude,
                     longitude,
                     device,

@@ -7279,6 +7279,55 @@
             border-radius: 0 0 9px 9px !important;
         }
 
+        .analytics-modal-body #analyticsAccessLogsView .table-wrapper {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            scrollbar-width: thin;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .table-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .table-wrapper::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .data-table {
+            min-width: 860px;
+            width: 100%;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .data-table th,
+        .analytics-modal-body #analyticsAccessLogsView .data-table td {
+            white-space: nowrap;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .data-table tbody tr.access-log-entry-row {
+            cursor: pointer;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .data-table tbody tr.access-log-entry-row:hover {
+            background-color: #f8fafc;
+        }
+
+        .analytics-modal-body #analyticsAccessLogsView .data-table tbody tr.access-log-entry-row.active-log-row {
+            background-color: #ecfdf5 !important;
+            box-shadow: inset 3px 0 0 #16a34a;
+        }
+
         .analytics-modal-body .table-pagination {
             padding: 8px 14px !important;
             font-size: 11.5px !important;
@@ -12250,20 +12299,21 @@
 
                     <!-- View 1: Access Logs View -->
                     <div id="analyticsAccessLogsView">
-                        <div class="table-wrapper" style="min-height: 160px;">
-                            <table class="data-table">
+                        <div class="table-wrapper" style="min-height: 160px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                            <table class="data-table" style="min-width: 860px; width: 100%;">
                                 <thead>
                                     <tr>
                                         <th>Accessed At</th>
                                         <th>IP Address</th>
                                         <th>Location</th>
                                         <th>Device &amp; Browser</th>
+                                        <th>Region</th>
                                         <th>Referrer</th>
                                     </tr>
                                 </thead>
                                 <tbody id="accessLogsTableBody">
                                     <tr>
-                                        <td colspan="5" class="table-empty-state" style="padding:22px 12px;">
+                                        <td colspan="6" class="table-empty-state" style="padding:22px 12px;">
                                             <div class="loading-state-box" style="padding:0;">
                                                 <svg class="spin-icon" width="20" height="20" viewBox="0 0 24 24"
                                                     fill="none" stroke="currentColor" stroke-width="2.5"
@@ -17203,7 +17253,7 @@
             if (!appState.selectedUrl && !appState.selectedPublicId) return;
 
             const tbody = document.getElementById("accessLogsTableBody");
-            tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state" style="padding:40px 16px;">${getSpinnerHtml(20, "Loading access logs...")}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state" style="padding:40px 16px;">${getSpinnerHtml(20, "Loading access logs...")}</td></tr>`;
 
             const prevBtn = document.getElementById("accessLogsPrevBtn");
             const nextBtn = document.getElementById("accessLogsNextBtn");
@@ -17212,7 +17262,7 @@
 
             const pubId = appState.selectedPublicId || (appState.currentLinksData || []).find(l => l.shortLink === appState.selectedUrl)?.publicId;
             if (!pubId) {
-                tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No public identifier available for this link.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state">No public identifier available for this link.</td></tr>`;
                 updateAnalyticsWorldMap([]);
                 updateAnalyticsStatsFromLogs([], 0);
                 return;
@@ -17246,12 +17296,12 @@
                     document.getElementById("accessLogsPrevBtn").disabled = data.first === true || page <= 0;
                     document.getElementById("accessLogsNextBtn").disabled = data.last === true || end >= total;
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No access logs found.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state">No access logs found.</td></tr>`;
                     updateAnalyticsWorldMap([]);
                     updateAnalyticsStatsFromLogs([], 0);
                 }
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">Unable to load access logs.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state">Unable to load access logs.</td></tr>`;
                 updateAnalyticsWorldMap([]);
                 updateAnalyticsStatsFromLogs([], 0);
             }
@@ -17429,7 +17479,7 @@
 
         let analyticsWorldMap = null;
         let analyticsMapMarkersGroup = null;
-
+        const analyticsMarkersMap = new Map();
         function createAccessPinIcon() {
             return L.divIcon({
                 className: 'access-pin-wrapper',
@@ -17447,6 +17497,108 @@
                 iconAnchor: [12, 30],
                 popupAnchor: [0, -32]
             });
+        }
+
+        function createMapPopupContent(pt, lat, lng) {
+            const cityName = pt.city ? `${escapeHtml(pt.city)}, ` : "";
+            const countryName = escapeHtml(pt.country || "Access Location");
+            let displayTitle = cityName + countryName;
+            let regionRow = "";
+
+            if (pt.region) {
+                displayTitle = escapeHtml(pt.region);
+                regionRow = `
+                    <div class="map-popup-row">
+                        <span class="map-popup-label">Region:</span>
+                        <span class="map-popup-value" style="font-weight:600; color:#0f172a;">${escapeHtml(pt.region)}</span>
+                    </div>
+                `;
+            }
+
+            const ipStr = pt.ipAddress ? `<code>${escapeHtml(pt.ipAddress)}</code>` : '<span style="color:#94a3b8;">Not Tracked</span>';
+            const deviceStr = pt.device ? escapeHtml(pt.device) : "Unknown";
+            const browserStr = pt.browser ? escapeHtml(pt.browser) : "Unknown";
+            const osStr = pt.os ? escapeHtml(pt.os) : "Unknown";
+            const timeStr = formatTimestamp(pt.accessedAt);
+
+            return `
+                <div class="map-popup-card">
+                    <div class="map-popup-header">
+                        <span>📍</span>
+                        <span>${displayTitle}</span>
+                    </div>
+                    ${regionRow}
+                    <div class="map-popup-row">
+                        <span class="map-popup-label">Time:</span>
+                        <span class="map-popup-value">${timeStr}</span>
+                    </div>
+                    <div class="map-popup-row">
+                        <span class="map-popup-label">IP:</span>
+                        <span class="map-popup-value">${ipStr}</span>
+                    </div>
+                    <div class="map-popup-row">
+                        <span class="map-popup-label">Device &amp; OS:</span>
+                        <span class="map-popup-value">${deviceStr} &bull; ${osStr}</span>
+                    </div>
+                    <div class="map-popup-row">
+                        <span class="map-popup-label">Browser:</span>
+                        <span class="map-popup-value">${browserStr}</span>
+                    </div>
+                    <div class="map-popup-row">
+                        <span class="map-popup-label">Coordinates:</span>
+                        <span class="map-popup-value">${lat.toFixed(4)}, ${lng.toFixed(4)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function zoomMapToLocation(lat, lng, rowEl = null) {
+            if (lat == null || lng == null) return false;
+            let nLat = Number(lat);
+            let nLng = Number(lng);
+            if (isNaN(nLat) || isNaN(nLng)) return false;
+
+            if ((nLat > 90 || nLat < -90) && (nLng >= -90 && nLng <= 90)) {
+                const tmp = nLat; nLat = nLng; nLng = tmp;
+            }
+            if (nLat < -90 || nLat > 90 || nLng < -180 || nLng > 180) return false;
+
+            const map = initOrGetAnalyticsWorldMap();
+            if (!map) return false;
+
+            // Highlight active clicked row
+            document.querySelectorAll("#accessLogsTableBody tr").forEach(tr => tr.classList.remove("active-log-row"));
+            if (rowEl) {
+                rowEl.classList.add("active-log-row");
+            }
+
+            // Smoothly bring map into view if scrolled out of dialog viewport
+            const mapCard = document.getElementById("analyticsWorldMap");
+            if (mapCard) {
+                const modalBody = document.querySelector(".analytics-modal-body");
+                if (modalBody) {
+                    const mapRect = mapCard.getBoundingClientRect();
+                    const bodyRect = modalBody.getBoundingClientRect();
+                    if (mapRect.top < bodyRect.top || mapRect.bottom > bodyRect.bottom + 100) {
+                        mapCard.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                }
+            }
+
+            map.invalidateSize(true);
+            map.flyTo([nLat, nLng], 14, {
+                animate: true,
+                duration: 1.0
+            });
+
+            const markerKey = `${nLat.toFixed(4)},${nLng.toFixed(4)}`;
+            const marker = analyticsMarkersMap.get(markerKey);
+            if (marker) {
+                setTimeout(() => {
+                    marker.openPopup();
+                }, 350);
+            }
+            return true;
         }
 
         function initOrGetAnalyticsWorldMap() {
@@ -17481,6 +17633,7 @@
                 document.getElementById("resetMapZoomBtn")?.addEventListener("click", () => {
                     if (analyticsWorldMap) {
                         analyticsWorldMap.invalidateSize(true);
+                        document.querySelectorAll("#accessLogsTableBody tr").forEach(tr => tr.classList.remove("active-log-row"));
                         if (analyticsMapMarkersGroup && analyticsMapMarkersGroup.getLayers().length > 0) {
                             const bounds = analyticsMapMarkersGroup.getBounds();
                             if (bounds.isValid()) {
@@ -17515,6 +17668,7 @@
 
             map.invalidateSize(true);
             analyticsMapMarkersGroup.clearLayers();
+            analyticsMarkersMap.clear();
 
             const parsedPoints = [];
             (logs || []).forEach(pt => {
@@ -17558,45 +17712,15 @@
                 const icon = createAccessPinIcon();
                 const marker = L.marker([lat, lng], { icon: icon });
 
-                const cityName = pt.city ? `${escapeHtml(pt.city)}, ` : "";
-                const countryName = escapeHtml(pt.country || "Access Location");
-                const ipStr = pt.ipAddress ? `<code>${escapeHtml(pt.ipAddress)}</code>` : '<span style="color:#94a3b8;">Not Tracked</span>';
-                const deviceStr = pt.device ? escapeHtml(pt.device) : "Unknown";
-                const browserStr = pt.browser ? escapeHtml(pt.browser) : "Unknown";
-                const osStr = pt.os ? escapeHtml(pt.os) : "Unknown";
-                const timeStr = formatTimestamp(pt.accessedAt);
-
-                const popupHtml = `
-                    <div class="map-popup-card">
-                        <div class="map-popup-header">
-                            <span>📍</span>
-                            <span>${cityName}${countryName}</span>
-                        </div>
-                        <div class="map-popup-row">
-                            <span class="map-popup-label">Time:</span>
-                            <span class="map-popup-value">${timeStr}</span>
-                        </div>
-                        <div class="map-popup-row">
-                            <span class="map-popup-label">IP:</span>
-                            <span class="map-popup-value">${ipStr}</span>
-                        </div>
-                        <div class="map-popup-row">
-                            <span class="map-popup-label">Device &amp; OS:</span>
-                            <span class="map-popup-value">${deviceStr} &bull; ${osStr}</span>
-                        </div>
-                        <div class="map-popup-row">
-                            <span class="map-popup-label">Browser:</span>
-                            <span class="map-popup-value">${browserStr}</span>
-                        </div>
-                        <div class="map-popup-row">
-                            <span class="map-popup-label">Coordinates:</span>
-                            <span class="map-popup-value">${lat.toFixed(4)}, ${lng.toFixed(4)}</span>
-                        </div>
-                    </div>
-                `;
-
+                const markerKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+                const popupHtml = createMapPopupContent(pt, lat, lng);
                 marker.bindPopup(popupHtml, { offset: [0, -20] });
+                marker._rawPoint = pt;
+                marker._markerLat = lat;
+                marker._markerLng = lng;
+
                 analyticsMapMarkersGroup.addLayer(marker);
+                analyticsMarkersMap.set(markerKey, marker);
             });
 
             try {
@@ -17631,42 +17755,91 @@
         function renderAccessLogsTable(logs) {
             const tbody = document.getElementById("accessLogsTableBody");
             if (!logs || !logs.length) {
-                tbody.innerHTML = `<tr><td colspan="5" class="table-empty-state">No access logs recorded for this link yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state">No access logs recorded for this link yet.</td></tr>`;
                 updateAnalyticsWorldMap([]);
                 return;
             }
 
-            tbody.innerHTML = logs.map(log => {
-                // 1. Location display
-                let locationHtml = `<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px;">Not Tracked</span>`;
-                if (log.country || (log.latitude != null && log.longitude != null)) {
-                    const countryName = log.country || "Known Location";
-                    const cityName = log.city ? `${log.city}, ` : "";
-                    let coords = "";
-                    if (log.latitude != null && log.longitude != null) {
-                        let displayLat = Number(log.latitude);
-                        let displayLng = Number(log.longitude);
-                        if (!isNaN(displayLat) && !isNaN(displayLng)) {
-                            if ((displayLat > 90 || displayLat < -90) && (displayLng >= -90 && displayLng <= 90)) {
-                                const tmp = displayLat;
-                                displayLat = displayLng;
-                                displayLng = tmp;
-                            }
-                            coords = `<span style="display:inline-block; font-family:monospace; font-size:10px; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; margin-top:3px;">${displayLat.toFixed(4)}, ${displayLng.toFixed(4)}</span>`;
+            // Ensure delegated click event listener is attached once to tbody
+            if (!tbody._hasEntryZoomListener) {
+                tbody._hasEntryZoomListener = true;
+                tbody.addEventListener("click", (e) => {
+                    const tr = e.target.closest("tr.access-log-entry-row");
+                    if (!tr) return;
+                    const latStr = tr.getAttribute("data-lat");
+                    const lngStr = tr.getAttribute("data-lng");
+                    if (latStr && lngStr) {
+                        const lat = parseFloat(latStr);
+                        const lng = parseFloat(lngStr);
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            zoomMapToLocation(lat, lng, tr);
+                            return;
                         }
+                    }
+                    showToast("info", "No Coordinates", "This log entry has no geographic coordinates recorded to zoom into.");
+                });
+            }
+
+            tbody.innerHTML = logs.map(log => {
+                let hasCoords = false;
+                let displayLat = null;
+                let displayLng = null;
+
+                if (log.latitude != null && log.longitude != null) {
+                    let lat = Number(log.latitude);
+                    let lng = Number(log.longitude);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        if ((lat > 90 || lat < -90) && (lng >= -90 && lng <= 90)) {
+                            const tmp = lat; lat = lng; lng = tmp;
+                        }
+                        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                            displayLat = lat;
+                            displayLng = lng;
+                            hasCoords = true;
+                        }
+                    }
+                }
+
+                // 1. Location (Coordinates) display
+                let locationHtml = `<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px;">Not Tracked</span>`;
+                if (hasCoords || log.country) {
+                    let coordsBadge = "";
+                    if (hasCoords) {
+                        coordsBadge = `<span style="display:inline-block; font-family:monospace; font-size:10.5px; color:#334155; background:#f1f5f9; padding:2px 6px; border-radius:4px; margin-top:2px; border:1px solid #e2e8f0;">${displayLat.toFixed(4)}, ${displayLng.toFixed(4)}</span>`;
                     }
                     locationHtml = `
                         <div style="display:flex; flex-direction:column; gap:2px;">
                             <span style="font-weight:600; font-size:12px; color:#0f172a; display:inline-flex; align-items:center; gap:4px;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-                                ${escapeHtml(cityName + countryName)}
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>${escapeHtml(log.city ? log.city + ', ' : '')}${escapeHtml(log.country || (hasCoords ? 'Coordinates' : 'Known Location'))}</span>
                             </span>
-                            ${coords}
+                            ${coordsBadge}
                         </div>
                     `;
                 }
 
-                // 2. Device & Browser display
+                // 2. Region display (City, State, Country fetched from database)
+                let regionText = log.region || "";
+                if (!regionText) {
+                    const fallbackParts = [];
+                    if (log.city) fallbackParts.push(log.city.trim());
+                    if (log.country && log.country.trim() !== (log.city || "").trim()) fallbackParts.push(log.country.trim());
+                    regionText = fallbackParts.join(", ");
+                }
+
+                let regionHtml = "";
+                if (regionText) {
+                    regionHtml = `
+                        <div style="font-size:12px; font-weight:600; color:#0f172a; display:inline-flex; align-items:center; gap:5px;" title="${escapeAttribute(regionText)}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span class="region-text" style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(regionText)}</span>
+                        </div>
+                    `;
+                } else {
+                    regionHtml = `<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px;">Not Tracked</span>`;
+                }
+
+                // 3. Device & Browser display
                 let clientHtml = `<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px;">Not Tracked</span>`;
                 if (log.device || log.browser || log.os || log.userAgent) {
                     const deviceLabel = log.device || "Unknown";
@@ -17683,17 +17856,24 @@
                     `;
                 }
 
-                // 3. IP Address display
+                // 4. IP Address display
                 const ipDisplay = log.ipAddress 
                     ? `<code style="font-size:12px; font-weight:600; color:#0f172a;">${escapeHtml(log.ipAddress)}</code>`
                     : `<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px;">Not Tracked</span>`;
 
+                const rowTitle = hasCoords 
+                    ? `Click entry to zoom to ${displayLat.toFixed(4)}, ${displayLng.toFixed(4)} on map` 
+                    : "No coordinates available for this log entry";
+
                 return `
-                <tr>
+                <tr class="access-log-entry-row" data-lat="${hasCoords ? displayLat : ''}" data-lng="${hasCoords ? displayLng : ''}" title="${escapeAttribute(rowTitle)}">
                     <td><div style="font-size:12px; font-weight:500; color:#0f172a;">${formatTimestamp(log.accessedAt)}</div></td>
                     <td>${ipDisplay}</td>
                     <td>${locationHtml}</td>
                     <td>${clientHtml}</td>
+                    <td class="region-cell" title="${escapeAttribute(regionText || '')}">
+                        ${regionHtml}
+                    </td>
                     <td title="${escapeAttribute(log.referer || "")}">
                         <div style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:#475569;">
                             ${escapeHtml(log.referer || "Direct")}

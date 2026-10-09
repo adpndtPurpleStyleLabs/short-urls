@@ -36,6 +36,9 @@ public class NewUrlAccessLog {
     @Column(name = "city", length = 128)
     private String city;
 
+    @Column(name = "region", length = 256)
+    private String region;
+
     @Column(name = "latitude")
     private Double latitude;
 
@@ -61,11 +64,17 @@ public class NewUrlAccessLog {
     }
 
     public NewUrlAccessLog(Long shortUrlId, String shortCode, String ipAddress, String userAgent, String referer) {
-        this(shortUrlId, shortCode, ipAddress, userAgent, referer, null, null, null, null, null, null, null);
+        this(shortUrlId, shortCode, ipAddress, userAgent, referer, null, null, null, null, null, null, null, null);
     }
 
     public NewUrlAccessLog(Long shortUrlId, String shortCode, String ipAddress, String userAgent, String referer,
                            String country, String city, Double latitude, Double longitude,
+                           String device, String browser, String os) {
+        this(shortUrlId, shortCode, ipAddress, userAgent, referer, country, city, null, latitude, longitude, device, browser, os);
+    }
+
+    public NewUrlAccessLog(Long shortUrlId, String shortCode, String ipAddress, String userAgent, String referer,
+                           String country, String city, String region, Double latitude, Double longitude,
                            String device, String browser, String os) {
         this.shortUrlId = shortUrlId;
         this.shortCode = shortCode;
@@ -74,6 +83,7 @@ public class NewUrlAccessLog {
         this.referer = truncate(referer, 1024);
         this.country = truncate(country, 128);
         this.city = truncate(city, 128);
+        this.region = truncate(region, 256);
         this.latitude = latitude;
         this.longitude = longitude;
         this.device = truncate(device, 64);
@@ -151,6 +161,14 @@ public class NewUrlAccessLog {
 
     public void setCity(String city) {
         this.city = truncate(city, 128);
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = truncate(region, 256);
     }
 
     public Double getLatitude() {

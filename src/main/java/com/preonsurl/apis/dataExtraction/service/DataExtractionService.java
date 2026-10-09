@@ -327,7 +327,7 @@ public class DataExtractionService {
 
     private String generateAnalyticsCsv(List<NewUrlAccessLog> logs) {
         StringBuilder sb = new StringBuilder();
-        sb.append("short_url_id,short_code,accessed_at,ip_address,country,city,latitude,longitude,accuracy,device,browser,os,user_agent,referer\n");
+        sb.append("short_url_id,short_code,accessed_at,ip_address,country,city,region,latitude,longitude,accuracy,device,browser,os,user_agent,referer\n");
         for (NewUrlAccessLog log : logs) {
             sb.append(escapeCsv(log.getShortUrlId())).append(",");
             sb.append(escapeCsv(log.getShortCode())).append(",");
@@ -335,6 +335,7 @@ public class DataExtractionService {
             sb.append(escapeCsv(log.getIpAddress())).append(",");
             sb.append(escapeCsv(log.getCountry())).append(",");
             sb.append(escapeCsv(log.getCity())).append(",");
+            sb.append(escapeCsv(log.getRegion())).append(",");
             sb.append(escapeCsv(log.getLatitude())).append(",");
             sb.append(escapeCsv(log.getLongitude())).append(",");
             sb.append(escapeCsv(log.getAccuracy())).append(",");
@@ -357,6 +358,7 @@ public class DataExtractionService {
             map.put("ipAddress", log.getIpAddress());
             map.put("country", log.getCountry());
             map.put("city", log.getCity());
+            map.put("region", log.getRegion());
             map.put("latitude", log.getLatitude());
             map.put("longitude", log.getLongitude());
             map.put("accuracy", log.getAccuracy());

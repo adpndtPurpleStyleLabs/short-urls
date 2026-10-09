@@ -31,17 +31,29 @@ public class ShortUrlEventListener {
     private final NewUrlLruCache lruCache;
     private final com.preonsurl.apis.link.repository.UsagePolicyRepository usagePolicyRepository;
     private final DatabaseReader databaseReader;
+    private final com.preonsurl.apis.link.service.ReverseGeocodingService reverseGeocodingService;
 
+    @Autowired
     public ShortUrlEventListener(NewUrlRepository repository,
                                  NewUrlAccessLogRepository accessLogRepository,
                                  NewUrlLruCache lruCache,
                                  com.preonsurl.apis.link.repository.UsagePolicyRepository usagePolicyRepository,
-                                 @Autowired(required = false) DatabaseReader databaseReader) {
+                                 @Autowired(required = false) DatabaseReader databaseReader,
+                                 @Autowired(required = false) com.preonsurl.apis.link.service.ReverseGeocodingService reverseGeocodingService) {
         this.repository = repository;
         this.accessLogRepository = accessLogRepository;
         this.lruCache = lruCache;
         this.usagePolicyRepository = usagePolicyRepository;
         this.databaseReader = databaseReader;
+        this.reverseGeocodingService = reverseGeocodingService;
+    }
+
+    public ShortUrlEventListener(NewUrlRepository repository,
+                                 NewUrlAccessLogRepository accessLogRepository,
+                                 NewUrlLruCache lruCache,
+                                 com.preonsurl.apis.link.repository.UsagePolicyRepository usagePolicyRepository,
+                                 DatabaseReader databaseReader) {
+        this(repository, accessLogRepository, lruCache, usagePolicyRepository, databaseReader, null);
     }
 
     @Async
@@ -88,6 +100,7 @@ public class ShortUrlEventListener {
             // 5. Resolve Geographic Location telemetry conditionally
             String country = null;
             String city = null;
+            String region = null;
             Double latitude = null;
             Double longitude = null;
 
@@ -146,6 +159,36 @@ public class ShortUrlEventListener {
                         longitude = 78.9629;
                     }
                 }
+
+                // Asynchronously reverse-geocode coordinates to city, state, country (region)
+                if (latitude != null && longitude != null && reverseGeocodingService != null) {
+                    try {
+                        var geo = reverseGeocodingService.reverseGeocode(latitude, longitude);
+                        if (geo != null) {
+                            if ((city == null || city.isBlank()) && geo.city() != null && !geo.city().isBlank()) {
+                                city = geo.city();
+                            }
+                            if ((country == null || country.isBlank()) && geo.country() != null && !geo.country().isBlank()) {
+                                country = geo.country();
+                            }
+                            if (geo.region() != null && !geo.region().isBlank()) {
+                                region = geo.region();
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.debug("Reverse geocode failed during async logging: {}", e.getMessage());
+                    }
+                }
+
+                if (region == null || region.isBlank()) {
+                    if (reverseGeocodingService != null) {
+                        region = reverseGeocodingService.formatRegion(city, null, country);
+                    } else if (city != null && !city.isBlank() && country != null && !country.isBlank()) {
+                        region = city + ", " + country;
+                    } else if (country != null && !country.isBlank()) {
+                        region = country;
+                    }
+                }
             }
 
             // 6. Save access log with populated telemetry
@@ -157,6 +200,7 @@ public class ShortUrlEventListener {
                     refererToSave,
                     country,
                     city,
+                    region,
                     latitude,
                     longitude,
                     device,
