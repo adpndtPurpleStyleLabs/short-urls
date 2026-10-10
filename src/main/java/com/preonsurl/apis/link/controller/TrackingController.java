@@ -266,7 +266,7 @@ public class TrackingController {
                     url.getShortCode(),
                     clientIp,
                     userAgent,
-                    "Email Open Beacon (1px Tracking Pixel)",
+                    "Email Opened",
                     country,
                     city,
                     region,

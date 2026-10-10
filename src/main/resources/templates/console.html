@@ -18226,7 +18226,7 @@
                 const result = await parseResponse(response);
 
                 if (response.ok && result.success) {
-                    showToast("success", "Tracked Email Sent", "1px tracking beacon embedded. Opens, IP, and location will be logged.");
+                    showToast("success", "Tracked Email Sent", "Opens, IP, and location will be logged.");
                     sendTrackedEmailChips.clearAll();
                     const msgField = document.getElementById("sendTrackedEmailMessage");
                     if (msgField) msgField.value = "";
